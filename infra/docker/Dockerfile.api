@@ -3,6 +3,7 @@
 FROM node:20-alpine AS base
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 WORKDIR /app
+ENV CI=true
 
 FROM base AS deps
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
@@ -11,13 +12,12 @@ COPY packages/types/package.json ./packages/types/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/validation/package.json ./packages/validation/
 COPY apps/api/package.json ./apps/api/
-RUN pnpm install --frozen-lockfile --filter @community-marketplace/api...
+RUN pnpm fetch
 
 FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
-COPY --from=deps /app/packages ./packages
+COPY --from=deps /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/package.json ./
 COPY . .
+RUN pnpm install --frozen-lockfile --prefer-offline
 RUN pnpm --filter "./packages/*" build \
  && cd apps/api && pnpm exec prisma generate \
  && pnpm --filter @community-marketplace/api build
