@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation';
 
-import type { PermissionCode, RbacRole } from '@community-marketplace/types';
+import type { AdminMeResponse, PermissionCode, RbacRole } from '@community-marketplace/types';
 
+import { ADMIN_API_ROUTES } from '@/lib/api-routes';
 import { ROUTE_PERMISSIONS } from '@/lib/navigation';
 import { hasPermission } from '@/lib/permissions';
 import { ADMIN_APP_ROUTES, getAdminDashboardPathForRole } from '@/lib/rbac-routes';
-import { getServerAdminContext } from '@/lib/server-api-client';
-import { adminAuthService } from '@/services/auth.service';
+import { getServerAdminContext, serverAdminApiClient } from '@/lib/server-api-client';
 
 export async function requireAdminPermission(section: keyof typeof ROUTE_PERMISSIONS) {
   const { role, token } = await getServerAdminContext();
@@ -20,7 +20,7 @@ export async function requireAdminPermission(section: keyof typeof ROUTE_PERMISS
   }
 
   try {
-    const me = await adminAuthService.fetchMe(token, role as 'ADMIN' | 'SUPER_ADMIN');
+    const me = await serverAdminApiClient<AdminMeResponse>(ADMIN_API_ROUTES.admin.me);
     if (!hasPermission(me.permissions as PermissionCode[], role, required)) {
       redirect(getAdminDashboardPathForRole(role as RbacRole));
     }

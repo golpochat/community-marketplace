@@ -18,6 +18,7 @@ interface AuthState {
   session: AuthSession | null;
   isAuthenticated: boolean;
   setAuth: (response: AuthResponse) => void;
+  updateSessionTokens: (accessToken: string, refreshToken: string) => void;
   clearUser: () => void;
 }
 
@@ -41,6 +42,13 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
         });
       },
+      updateSessionTokens: (accessToken, refreshToken) => {
+        set((state) => ({
+          session: state.session
+            ? { ...state.session, accessToken, refreshToken }
+            : null,
+        }));
+      },
       clearUser: () => {
         clearWebRoleCookie();
         set({ user: null, session: null, isAuthenticated: false });
@@ -51,11 +59,24 @@ export const useAuthStore = create<AuthState>()(
 );
 
 export function getStoredAccessToken(): string | null {
+  if (typeof window === 'undefined') return null;
   const raw = localStorage.getItem('cm-auth');
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as { state?: { session?: AuthSession | null } };
     return parsed.state?.session?.accessToken ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredRefreshToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem('cm-auth');
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as { state?: { session?: AuthSession | null } };
+    return parsed.state?.session?.refreshToken ?? null;
   } catch {
     return null;
   }

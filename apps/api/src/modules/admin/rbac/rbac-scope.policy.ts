@@ -81,7 +81,11 @@ export class RbacScopePolicy {
     actor: Pick<AuthenticatedUser, 'id' | 'role' | 'primaryRoleId'>,
     targetRoleCode: RbacRole,
   ): Promise<void> {
-    if (targetRoleCode === 'SUPER_ADMIN' || targetRoleCode === 'ADMIN') {
+    if (targetRoleCode === 'SUPER_ADMIN') {
+      throw new ForbiddenException('SUPER_ADMIN accounts cannot be created or assigned via the API');
+    }
+
+    if (targetRoleCode === 'ADMIN') {
       if (!this.isSuperAdmin(actor)) {
         throw new ForbiddenException('Only SUPER_ADMIN can assign admin roles');
       }

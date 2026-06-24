@@ -25,13 +25,24 @@ export function useChatSocket({
   const socketRef = useRef<Socket | null>(null);
   const [connected, setConnected] = useState(false);
 
+  const onMessageRef = useRef(onMessage);
+  const onTypingRef = useRef(onTyping);
+  const onReadReceiptRef = useRef(onReadReceipt);
+
+  onMessageRef.current = onMessage;
+  onTypingRef.current = onTyping;
+  onReadReceiptRef.current = onReadReceipt;
+
   useEffect(() => {
     if (!token) return;
 
     const wsBase = API_BASE_URL.replace(/\/api\/?$/, '');
     const socket = io(`${wsBase}/chat`, {
       auth: { token },
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
     });
 
     socketRef.current = socket;
@@ -39,20 +50,22 @@ export function useChatSocket({
     socket.on('connect', () => setConnected(true));
     socket.on('disconnect', () => setConnected(false));
     socket.on('message', (payload: { message: ChatMessage }) => {
-      onMessage?.(payload.message);
+      onMessageRef.current?.(payload.message);
     });
     socket.on('typing', (payload: { userId: string; event: string }) => {
-      onTyping?.(payload);
+      onTypingRef.current?.(payload);
     });
     socket.on('read_receipt', (payload: { readerId: string; messageIds: string[] }) => {
-      onReadReceipt?.(payload);
+      onReadReceiptRef.current?.(payload);
     });
 
     return () => {
+      socket.removeAllListeners();
       socket.disconnect();
       socketRef.current = null;
+      setConnected(false);
     };
-  }, [token, onMessage, onTyping, onReadReceipt]);
+  }, [token]);
 
   useEffect(() => {
     if (!threadId || !socketRef.current?.connected) return;

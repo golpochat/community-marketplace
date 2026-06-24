@@ -8,7 +8,7 @@ import type { AuthenticatedUser } from '../../common/decorators/current-user.dec
 import { AdminActionDto, SuspendUserDto } from './dto/admin.dto';
 import { AdminService } from './admin.service';
 
-@RequireRole('ADMIN')
+@RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}

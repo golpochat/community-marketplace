@@ -1,7 +1,7 @@
 # Development Credentials
 
 > **Local development only.** Change all passwords and secrets before staging or production.  
-> Values below match `apps/api/.env.example` and Docker defaults unless you have overridden them in `.env`.
+> Values below match seed scripts and `apps/api/.env.example` unless you have overridden them in `.env`.
 
 ---
 
@@ -21,63 +21,174 @@ Configured in `packages/config/src/platform.ts` and used by formatting utilities
 
 ## Application URLs
 
-| App | URL |
-|-----|-----|
-| Web (buyer / seller) | http://localhost:3000 |
-| Admin | http://localhost:3001 |
+All dashboards run in the **unified web app** on port **3000**. There is no separate admin frontend on port 3001.
+
+| Service | URL |
+|---------|-----|
+| Web (marketplace + all role dashboards) | http://localhost:3000 |
+| Sign in | http://localhost:3000/auth/login |
 | API | http://localhost:4000/api |
 | API health | http://localhost:4000/api/health |
+| API live probe | http://localhost:4000/api/health/live |
+
+### Role dashboard entry points
+
+| Role | Dashboard URL |
+|------|----------------|
+| `SUPER_ADMIN` | http://localhost:3000/super-admin/dashboard |
+| `ADMIN` | http://localhost:3000/admin/dashboard |
+| `SELLER` | http://localhost:3000/seller/dashboard |
+| `BUYER` | http://localhost:3000/buyer/dashboard |
 
 ---
 
-## Seeded application users
+## Local development modes
 
-Only one user account is created automatically by `pnpm seed:rbac` (or `prisma db seed`).
+Use **one** API process on port **4000**. Running Docker API and `pnpm dev` API at the same time causes `EADDRINUSE`.
 
-| Role | Email | Password | Display name | Login app | Notes |
-|------|-------|----------|--------------|-----------|-------|
-| `SUPER_ADMIN` | `superadmin@community.market` | `ChangeMe!SuperAdmin1` | Super Admin | Admin (`http://localhost:3001`) | Full platform access; assign other admin roles from super-admin dashboard |
+### Mode A — Hybrid (recommended)
 
-**Stable user ID (seed):** `00000000-0000-4000-8000-000000000010`
+Docker runs **infrastructure + API**; you run the **web app locally** for fast UI work.
 
-### Environment overrides
+```bash
+# 1. Start infra + API in Docker
+docker compose -f infra/docker/docker-compose.dev.yml up -d postgres redis meilisearch api worker
+
+# 2. Migrate + seed (from repo root)
+pnpm --filter @community-marketplace/api prisma:migrate:deploy
+pnpm seed:rbac
+pnpm seed:dev-users
+
+# 3. Web only (port 3000)
+pnpm dev:web
+```
+
+Point `apps/web/.env` at the Docker API:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:4000/api
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+### Mode B — Fully local (web + API via pnpm)
+
+Docker runs **infrastructure only**; API and web run on the host.
+
+```bash
+# 1. Start infra only (no api / web / admin containers)
+docker compose -f infra/docker/docker-compose.dev.yml up -d postgres redis meilisearch
+
+# 2. Copy env files
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+
+# 3. In apps/api/.env use Docker-mapped ports:
+#    DATABASE_URL=postgresql://cm:cm_dev_password@localhost:5434/community_marketplace
+#    REDIS_URL=redis://localhost:6380
+#    MEILISEARCH_HOST=http://localhost:7700
+
+# 4. Migrate + seed, then start both apps
+pnpm --filter @community-marketplace/api prisma:migrate:deploy
+pnpm seed:rbac
+pnpm seed:dev-users
+pnpm dev
+```
+
+### Deprecated
+
+| Item | Notes |
+|------|-------|
+| `apps/admin` (port 3001) | Retired — dashboards live under `apps/web` |
+| `pnpm dev:admin` | Removed from root scripts |
+| Docker `admin` service | Still in compose file for legacy; do not use for new work |
+
+---
+
+## Seeded application users (one per role)
+
+Run seeds in order:
+
+```bash
+pnpm seed:rbac
+pnpm seed:dev-users
+```
+
+| Role | Email | Password | Display name | User ID | After login |
+|------|-------|----------|--------------|---------|-------------|
+| `SUPER_ADMIN` | `superadmin@community.market` | `ChangeMe!SuperAdmin1` | Super Admin | `00000000-0000-4000-8000-000000000010` | `/super-admin/dashboard` |
+| `ADMIN` | `admin@community.market` | `ChangeMe!Admin1` | Platform Admin | `00000000-0000-4000-8000-000000000011` | `/admin/dashboard` |
+| `SELLER` | `seller@community.market` | `ChangeMe!Seller1` | Demo Seller | `00000000-0000-4000-8000-000000000012` | `/seller/dashboard` |
+| `BUYER` | `buyer@community.market` | `ChangeMe!Buyer1` | Demo Buyer | `00000000-0000-4000-8000-000000000013` | `/buyer/dashboard` |
+
+Sign in at http://localhost:3000/auth/login with any row above. All roles use the same web app; middleware sends each role to the correct dashboard.
+
+### Phone numbers (seller / buyer)
+
+| Role | Phone |
+|------|-------|
+| `SELLER` | `+353871000001` |
+| `BUYER` | `+353871000002` |
+
+Seller and buyer accounts support **email + password** login and OTP flows when needed.
+
+---
+
+## SUPER_ADMIN policy (immutable singleton)
+
+The bootstrap `SUPER_ADMIN` account is **seed-only**:
+
+| Rule | Enforced |
+|------|----------|
+| Only one `SUPER_ADMIN` exists | Created by `pnpm seed:rbac` / `pnpm seed:dev-users` |
+| Cannot create another `SUPER_ADMIN` via API | `POST /api/super-admin/users/assign-role` with `SUPER_ADMIN` role → **403** |
+| Cannot suspend, ban, or reassign the bootstrap account | Admin user management → **403** |
+| Cannot delete the bootstrap account | Protected at service layer |
+
+Additional `ADMIN`, `SELLER`, and `BUYER` users may be created through normal registration or admin tools.
+
+---
+
+## Seed environment overrides
 
 Configured in `apps/api/.env`:
 
-| Variable | Default |
-|----------|---------|
-| `RBAC_SUPER_ADMIN_EMAIL` | `superadmin@community.market` |
-| `RBAC_SUPER_ADMIN_PASSWORD` | `ChangeMe!SuperAdmin1` |
-| `RBAC_SUPER_ADMIN_DISPLAY_NAME` | `Super Admin` |
-| `RBAC_SEED_RESET_PASSWORD` | `false` (set `true` to re-hash password on next seed) |
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `RBAC_SUPER_ADMIN_EMAIL` | `superadmin@community.market` | Bootstrap super-admin email |
+| `RBAC_SUPER_ADMIN_PASSWORD` | `ChangeMe!SuperAdmin1` | Bootstrap super-admin password |
+| `RBAC_SUPER_ADMIN_DISPLAY_NAME` | `Super Admin` | Display name |
+| `RBAC_SEED_RESET_PASSWORD` | `false` | Set `true` to re-hash passwords on next seed |
+| `RBAC_SEED_ENABLED` | `true` | Disable seeding when `false` |
+| `RBAC_SEED_FORCE` | `false` | Allow seed in production when `true` (recovery only) |
+
+Dev user passwords (`ADMIN`, `SELLER`, `BUYER`) are defined in `apps/api/src/database/dev-users.seed.data.ts` and follow the same `RBAC_SEED_RESET_PASSWORD` behaviour.
 
 ---
 
-## Users **not** pre-seeded
-
-There are **no** default `BUYER`, `SELLER`, or `ADMIN` accounts with fixed passwords.
-
-| Role | How to create |
-|------|----------------|
-| `BUYER` | Register via web app OTP flow (`POST /api/auth/otp/send` → verify → `register/complete` → email activation) |
-| `SELLER` | Same registration flow; assign `SELLER` role via super admin or admin RBAC tools |
-| `ADMIN` | Super admin creates/provisions an admin user and assigns the `ADMIN` role |
-
-### OTP codes in development
+## OTP codes in development
 
 OTP is **not** a fixed code. When you call `POST /api/auth/otp/send`, the API logs the code to the **API console**:
 
 ```text
-[OtpService] OTP sent to phone +1... (dev code: 123456) [ip=...]
+[OtpService] OTP sent to phone +353... (dev code: 123456) [ip=...]
 ```
 
 Use that 6-digit code with `POST /api/auth/otp/verify`. Codes expire after **10 minutes**.
 
 ---
 
-## Infrastructure credentials (Docker)
+## Infrastructure (Docker dev stack)
 
-From `infra/docker/docker-compose.yml` and `apps/api/.env.example`.
+From `infra/docker/docker-compose.dev.yml`. Host-machine ports are what local `apps/api` and `apps/web` use when connecting from outside Docker.
+
+| Service | Host port | Container | Purpose |
+|---------|-----------|-----------|---------|
+| PostgreSQL | `5434` | `5432` | Primary database |
+| Redis | `6380` | `6379` | Cache, sessions, BullMQ |
+| Meilisearch | `7700` | `7700` | Full-text search |
+| API | `4000` | `4000` | NestJS REST + WebSocket |
+| Worker | `4001` | `4001` | BullMQ worker health |
+| Web | `3000` | `3000` | Next.js (optional — prefer `pnpm dev:web`) |
 
 ### PostgreSQL
 
@@ -94,7 +205,8 @@ From `infra/docker/docker-compose.yml` and `apps/api/.env.example`.
 
 | Field | Value |
 |-------|-------|
-| URL (local) | `redis://localhost:6379` |
+| URL (Docker dev stack — use this locally) | `redis://localhost:6380` |
+| URL (inside Docker network) | `redis://redis:6379` |
 | Password | *(none — default Redis image)* |
 
 ### Meilisearch
@@ -103,10 +215,7 @@ From `infra/docker/docker-compose.yml` and `apps/api/.env.example`.
 |-------|-------|
 | Host (local) | `http://localhost:7700` |
 | Master key (Docker default) | `dev-master-key` |
-| API key in `.env` | `MEILISEARCH_API_KEY=dev-master-key` (must match Docker master key) |
-| Start locally | `docker compose -f infra/docker/docker-compose.yml up -d meilisearch` |
-
-Compose sets `MEILI_ENV=development` so the short dev key is accepted and port `7700` is published to the host.
+| API key in `.env` | `MEILISEARCH_API_KEY=dev-master-key` |
 
 ---
 
@@ -115,7 +224,9 @@ Compose sets `MEILI_ENV=development` so the short dev key is accepted and port `
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `JWT_SECRET` | `dev-jwt-secret-change-in-production` | Access & refresh token signing |
-| `NODE_ENV` | `development` | Enables RBAC seed, OTP console logging |
+| `NODE_ENV` | `development` | Enables RBAC/dev-user seed, OTP console logging |
+| `CORS_ORIGIN` | `http://localhost:3000` | Allowed browser origin for API |
+| `WEB_APP_URL` | `http://localhost:3000` | Activation email links |
 
 Stripe, SendGrid, FCM, OpenAI, and R2 keys are **empty** in `.env.example` until you configure them.
 
@@ -123,16 +234,40 @@ Stripe, SendGrid, FCM, OpenAI, and R2 keys are **empty** in `.env.example` until
 
 ## Quick login checklist
 
-1. Start stack: `docker compose -f infra/docker/docker-compose.yml up -d`
-2. Migrate + seed: `pnpm --filter @community-marketplace/api prisma:migrate` then `pnpm seed:rbac`
-3. Start apps: `pnpm dev`
-4. **Super admin:** open http://localhost:3001 → login with `superadmin@community.market` / `ChangeMe!SuperAdmin1`
-5. **Buyer / seller:** register on http://localhost:3000 using phone OTP (watch API logs for the code)
+1. Start Docker infra (and API if using **Mode A**):
+   ```bash
+   docker compose -f infra/docker/docker-compose.dev.yml up -d postgres redis meilisearch api worker
+   ```
+2. Migrate + seed:
+   ```bash
+   pnpm --filter @community-marketplace/api prisma:migrate:deploy
+   pnpm seed:rbac
+   pnpm seed:dev-users
+   ```
+3. Start web:
+   - **Mode A:** `pnpm dev:web`
+   - **Mode B:** stop Docker `api` first, then `pnpm dev`
+4. Open http://localhost:3000/auth/login and sign in:
+
+| Role | Email | Password |
+|------|-------|----------|
+| Super admin | `superadmin@community.market` | `ChangeMe!SuperAdmin1` |
+| Admin | `admin@community.market` | `ChangeMe!Admin1` |
+| Seller | `seller@community.market` | `ChangeMe!Seller1` |
+| Buyer | `buyer@community.market` | `ChangeMe!Buyer1` |
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---------|-----|
+| `EADDRINUSE` on port `4000` | Docker `api` is already running. Use **Mode A** (`pnpm dev:web` only) or stop the container: `docker compose -f infra/docker/docker-compose.dev.yml stop api` |
+| `EADDRINUSE` on port `3000` | Stop Docker `web` or another Next.js process: `docker compose -f infra/docker/docker-compose.dev.yml stop web` |
+| API cannot reach Redis | Set `REDIS_URL=redis://localhost:6380` in `apps/api/.env` when using the Docker dev stack |
 
 ---
 
 ## Security reminder
 
 - Do **not** commit real production credentials to git.
-- Rotate `RBAC_SUPER_ADMIN_PASSWORD` after first login in any shared environment.
-- RBAC seeding is **blocked in production** unless `RBAC_SEED_FORCE=true`.
+- Rotate all `ChangeMe!*` passwords after first login in any shared environment.
+- RBAC and dev-user seeding is **blocked in production** unless `RBAC_SEED_FORCE=true`.

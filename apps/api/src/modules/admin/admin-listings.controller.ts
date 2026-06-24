@@ -15,7 +15,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { ListingsService } from '../listings/listings.service';
 
-@RequireRole('ADMIN')
+@RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin/listings')
 export class AdminListingsController {
   constructor(private readonly listingsService: ListingsService) {}

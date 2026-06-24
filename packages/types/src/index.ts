@@ -180,5 +180,12 @@ export {
   SUSPENSION_DURATIONS,
   APPEAL_STATUSES,
 } from './moderation';
+export type {
+  StoreSection,
+  StoreReview,
+  StorePolicy,
+  StoreAnalytics,
+  SellerStorefront,
+} from './storefront';
 export type { PaginationMeta, ApiResponse, ApiError, PaginatedResult } from './api';
 export type { AdminDashboardStats, PlatformSettings, AdminMeResponse } from './admin';

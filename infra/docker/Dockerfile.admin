@@ -16,6 +16,7 @@ COPY packages/types/package.json ./packages/types/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/validation/package.json ./packages/validation/
 COPY packages/ui/package.json ./packages/ui/
+COPY packages/ui-dashboard/package.json ./packages/ui-dashboard/
 COPY apps/admin/package.json ./apps/admin/
 RUN pnpm fetch
 

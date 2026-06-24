@@ -6,6 +6,9 @@ export type { ButtonProps } from './components/button';
 export { Input } from './components/input';
 export type { InputProps } from './components/input';
 
+export { PasswordInput } from './components/password-input';
+export type { PasswordInputProps } from './components/password-input';
+
 export { Label } from './components/label';
 
 export { Badge, badgeVariants } from './components/badge';

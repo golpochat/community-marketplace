@@ -1,1 +1,7 @@
-export { default } from '../../dashboard/layout';
+export default function SuperAdminDashboardNestedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return children;
+}

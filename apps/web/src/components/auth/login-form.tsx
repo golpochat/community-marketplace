@@ -3,12 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { Button } from '@community-marketplace/ui';
+import { Button, PasswordInput } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
 import { authService } from '@/services/auth.service';
-
-const ADMIN_APP_URL = process.env.NEXT_PUBLIC_ADMIN_APP_URL ?? 'http://localhost:3001';
 
 export function LoginForm() {
   const router = useRouter();
@@ -25,13 +23,6 @@ export function LoginForm() {
 
     try {
       const response = await authService.login({ email, password });
-
-      if (response.appTarget === 'admin') {
-        const target = `${ADMIN_APP_URL}${response.redirectPath}`;
-        window.location.href = `${target}?accessToken=${encodeURIComponent(response.accessToken)}&refreshToken=${encodeURIComponent(response.refreshToken)}`;
-        return;
-      }
-
       setAuth(response);
       router.push(response.redirectPath);
     } catch (err) {
@@ -61,13 +52,12 @@ export function LoginForm() {
         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
           Password
         </label>
-        <input
+        <PasswordInput
           id="password"
-          type="password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="mt-1 h-10 rounded-lg border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500"
         />
       </div>
       <Button type="submit" disabled={loading} className="w-full">

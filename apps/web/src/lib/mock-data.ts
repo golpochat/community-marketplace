@@ -1,0 +1,190 @@
+import type { Category, Listing, ListingSummary } from '@community-marketplace/types';
+import type { SellerStorefront } from '@community-marketplace/types';
+
+export const MOCK_CATEGORIES: Category[] = [
+  { id: 'cat-1', name: 'Electronics', slug: 'electronics', icon: '📱', isActive: true, createdAt: '', updatedAt: '' },
+  { id: 'cat-2', name: 'Furniture', slug: 'furniture', icon: '🪑', isActive: true, createdAt: '', updatedAt: '' },
+  { id: 'cat-3', name: 'Sports', slug: 'sports', icon: '⚽', isActive: true, createdAt: '', updatedAt: '' },
+  { id: 'cat-4', name: 'Garden', slug: 'garden', icon: '🌿', isActive: true, createdAt: '', updatedAt: '' },
+  { id: 'cat-5', name: 'Books', slug: 'books', icon: '📚', isActive: true, createdAt: '', updatedAt: '' },
+  { id: 'cat-6', name: 'Fashion', slug: 'fashion', icon: '👕', isActive: true, createdAt: '', updatedAt: '' },
+];
+
+const baseListings: ListingSummary[] = [
+  {
+    id: '1',
+    title: 'Vintage Bicycle',
+    price: 150,
+    currency: 'EUR',
+    location: { label: 'Dublin', latitude: 53.35, longitude: -6.26 },
+    status: 'active',
+    condition: 'good',
+    categoryId: 'cat-3',
+    favoriteCount: 12,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: '2',
+    title: 'Office Desk',
+    price: 80,
+    currency: 'EUR',
+    location: { label: 'Cork', latitude: 51.9, longitude: -8.47 },
+    status: 'active',
+    condition: 'like_new',
+    categoryId: 'cat-2',
+    favoriteCount: 5,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: '3',
+    title: 'Garden Tools Set',
+    price: 45,
+    currency: 'EUR',
+    location: { label: 'Galway', latitude: 53.27, longitude: -9.05 },
+    status: 'active',
+    condition: 'good',
+    categoryId: 'cat-4',
+    favoriteCount: 8,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: '4',
+    title: 'Wireless Headphones',
+    price: 65,
+    currency: 'EUR',
+    location: { label: 'Dublin', latitude: 53.35, longitude: -6.26 },
+    status: 'active',
+    condition: 'like_new',
+    categoryId: 'cat-1',
+    favoriteCount: 20,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: '5',
+    title: 'Coffee Table',
+    price: 120,
+    currency: 'EUR',
+    location: { label: 'Limerick', latitude: 52.66, longitude: -8.63 },
+    status: 'active',
+    condition: 'good',
+    categoryId: 'cat-2',
+    favoriteCount: 3,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: '6',
+    title: 'Running Shoes',
+    price: 35,
+    currency: 'EUR',
+    location: { label: 'Waterford', latitude: 52.26, longitude: -7.11 },
+    status: 'active',
+    condition: 'fair',
+    categoryId: 'cat-6',
+    favoriteCount: 7,
+    createdAt: new Date().toISOString(),
+  },
+];
+
+export const MOCK_LISTING_SUMMARIES = baseListings;
+
+export const MOCK_LISTINGS: Record<string, Listing> = {
+  '1': {
+    id: '1',
+    sellerId: 'seller-1',
+    title: 'Vintage Bicycle',
+    description: 'Well-maintained vintage bicycle in great condition. Recently serviced with new brake pads.',
+    price: 150,
+    currency: 'EUR',
+    categoryId: 'cat-3',
+    condition: 'good',
+    status: 'active',
+    location: { label: 'Dublin', latitude: 53.35, longitude: -6.26 },
+    images: [],
+    viewCount: 142,
+    favoriteCount: 12,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  '2': {
+    id: '2',
+    sellerId: 'seller-2',
+    title: 'Office Desk',
+    description: 'Solid wood desk, perfect for home office. Minor wear on corners.',
+    price: 80,
+    currency: 'EUR',
+    categoryId: 'cat-2',
+    condition: 'like_new',
+    status: 'active',
+    location: { label: 'Cork', latitude: 51.9, longitude: -8.47 },
+    images: [],
+    viewCount: 89,
+    favoriteCount: 5,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  '3': {
+    id: '3',
+    sellerId: 'seller-1',
+    title: 'Garden Tools Set',
+    description: 'Complete set of garden tools including spade, rake, and shears.',
+    price: 45,
+    currency: 'EUR',
+    categoryId: 'cat-4',
+    condition: 'good',
+    status: 'active',
+    location: { label: 'Galway', latitude: 53.27, longitude: -9.05 },
+    images: [],
+    viewCount: 56,
+    favoriteCount: 8,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+};
+
+export const MOCK_STOREFRONTS: Record<string, SellerStorefront> = {
+  'dublin-cycles': {
+    id: 'store-1',
+    sellerId: 'seller-1',
+    slug: 'dublin-cycles',
+    name: 'Dublin Cycles & More',
+    tagline: 'Quality bikes and outdoor gear',
+    description:
+      'Family-run shop selling refurbished bicycles, sports equipment, and garden tools across Dublin and beyond.',
+    location: 'Dublin, Ireland',
+    memberSince: '2023-03-15',
+    verified: true,
+    sections: [
+      { id: 'sec-1', name: 'Bicycles', slug: 'bicycles', listingIds: ['1'], order: 0 },
+      { id: 'sec-2', name: 'Garden', slug: 'garden', listingIds: ['3'], order: 1 },
+    ],
+    policies: {
+      returns: '7-day returns on unused items',
+      shipping: 'Local pickup preferred; delivery within Dublin for €10',
+      responseTime: 'Usually responds within 2 hours',
+    },
+    analytics: { totalViews: 1240, totalSales: 48, averageRating: 4.8, reviewCount: 23 },
+    listings: [baseListings[0]!, baseListings[2]!],
+    reviews: [
+      {
+        id: 'rev-1',
+        reviewerName: 'Sarah M.',
+        rating: 5,
+        comment: 'Great seller, bike was exactly as described!',
+        createdAt: '2025-11-20T10:00:00Z',
+      },
+      {
+        id: 'rev-2',
+        reviewerName: 'James K.',
+        rating: 4,
+        comment: 'Fast response and smooth transaction.',
+        createdAt: '2025-10-15T14:30:00Z',
+      },
+    ],
+  },
+};
+
+export function getMockListingSummaries(page = 1, limit = 12): { data: ListingSummary[]; meta: { page: number; limit: number; total: number } } {
+  const start = (page - 1) * limit;
+  const data = baseListings.slice(start, start + limit);
+  return { data, meta: { page, limit, total: baseListings.length } };
+}

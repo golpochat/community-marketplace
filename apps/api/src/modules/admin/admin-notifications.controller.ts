@@ -12,7 +12,7 @@ import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.de
 import { SendNotificationDto } from '../notifications/dto/notifications.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 
-@RequireRole('ADMIN')
+@RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin/notifications')
 export class AdminNotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}

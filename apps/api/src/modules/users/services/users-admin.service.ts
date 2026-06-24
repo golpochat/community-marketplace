@@ -1,8 +1,4 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
 import type { RbacRole, User, UserBan } from '@community-marketplace/types';
@@ -13,6 +9,7 @@ import {
 } from '@community-marketplace/validation';
 
 import { AuthorizationService } from '../../../common/authorization/authorization.service';
+import { assertBootstrapSuperAdminImmutable } from '../../../common/constants/bootstrap-users';
 import { PrismaService } from '../../../database/prisma.service';
 import { mapUser, mapUserProfile, userProfileInclude } from '../mappers/user.mapper';
 import { UserAuditService } from './user-audit.service';
@@ -191,6 +188,8 @@ export class UsersAdminService {
   }
 
   private async assertCanManageUser(actorId: string, actorRole: RbacRole, targetUserId: string) {
+    assertBootstrapSuperAdminImmutable(targetUserId);
+
     const target = await this.prisma.user.findUnique({
       where: { id: targetUserId },
       include: { primaryRole: true },

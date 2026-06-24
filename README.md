@@ -28,12 +28,11 @@ Enterprise-grade community marketplace platform built as a **pnpm monorepo**. Bu
 
 ## Project Overview
 
-Community Marketplace is a full-stack platform for local and niche community trading. It separates concerns across three applications:
+Community Marketplace is a full-stack platform for local and niche community trading. A single **web** application (`apps/web`) serves the public marketplace and all role dashboards; the **API** (`apps/api`) powers every client.
 
 | Application | Audience | Purpose |
 |-------------|----------|---------|
-| **Web** (`apps/web`) | Buyers & sellers | Public marketplace PWA |
-| **Admin** (`apps/admin`) | Operators | Platform administration dashboard |
+| **Web** (`apps/web`) | All roles | Public marketplace + unified dashboards (port 3000) |
 | **API** (`apps/api`) | All clients | Unified REST + WebSocket backend |
 
 Shared contracts — types, validation, UI primitives, and configuration — live in workspace packages so every app stays type-safe and consistent.
@@ -46,8 +45,8 @@ Shared contracts — types, validation, UI primitives, and configuration — liv
 community-marketplace/
 ├── apps/
 │   ├── api/              # NestJS REST + WebSocket API (Prisma, auth, domain modules)
-│   ├── web/              # Next.js 15 public marketplace (port 3000)
-│   └── admin/            # Next.js 15 admin dashboard (port 3001)
+│   ├── web/              # Next.js 15 unified frontend — marketplace + all dashboards (port 3000)
+│   └── admin/            # DEPRECATED — dashboards merged into apps/web
 ├── packages/
 │   ├── config/           # Zod env loaders, constants, TS base configs
 │   ├── types/            # Canonical TypeScript interfaces (RBAC, auth, domain)
@@ -169,7 +168,6 @@ pnpm install
 
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
-cp apps/admin/.env.example apps/admin/.env
 
 docker compose -f infra/docker/docker-compose.yml up -d
 
@@ -182,8 +180,7 @@ pnpm dev
 
 | Service | URL |
 |---------|-----|
-| Web | http://localhost:3000 |
-| Admin | http://localhost:3001 |
+| Web (all roles) | http://localhost:3000 |
 | API | http://localhost:4000/api |
 
 ---
@@ -194,9 +191,8 @@ pnpm dev
 
 | Command | Description |
 |---------|-------------|
-| `pnpm dev` | Start all apps in parallel |
-| `pnpm dev:web` | Web app only |
-| `pnpm dev:admin` | Admin app only |
+| `pnpm dev` | Start web + API |
+| `pnpm dev:web` | Web app only (port 3000) |
 | `pnpm dev:api` | Build packages + API with hot reload |
 | `pnpm build` | Production build (packages → apps) |
 | `pnpm typecheck` | TypeScript across monorepo |
@@ -209,7 +205,7 @@ pnpm dev
 2. Zod schemas → `packages/validation`
 3. Prisma schema + migration → `apps/api/prisma`
 4. NestJS module → `apps/api/src/modules`
-5. Frontend service + pages → `apps/web` or `apps/admin`
+5. Frontend service + pages → `apps/web`
 
 ### API conventions
 
@@ -230,7 +226,7 @@ pnpm dev
 | `NODE_ENV` | Environment | `development` |
 | `DATABASE_URL` | PostgreSQL URL | `postgresql://cm:cm_dev_password@localhost:5434/community_marketplace` |
 | `JWT_SECRET` | JWT signing secret (≥ 16 chars) | Strong random value in prod |
-| `CORS_ORIGIN` | Allowed origins (comma-separated) | `http://localhost:3000,http://localhost:3001` |
+| `CORS_ORIGIN` | Allowed origins (comma-separated) | `http://localhost:3000` |
 | `WEB_APP_URL` | Activation email base URL | `http://localhost:3000` |
 | `STRIPE_SECRET_KEY` | Stripe API key | |
 | `MEILISEARCH_HOST` | Search server | `http://localhost:7700` |
@@ -238,13 +234,12 @@ pnpm dev
 | `FCM_PROJECT_ID` | Firebase project | |
 | `RBAC_SEED_*` | Dev super-admin bootstrap | See `.env.example` |
 
-### Web & Admin
+### Web (`apps/web/.env`)
 
 | Variable | Description |
 |----------|-------------|
 | `NEXT_PUBLIC_API_URL` | API base (`http://localhost:4000/api`) |
-| `NEXT_PUBLIC_APP_URL` | App origin |
-| `NEXT_PUBLIC_ADMIN_APP_URL` | Admin app URL (web login redirect for admin roles) |
+| `NEXT_PUBLIC_APP_URL` | App origin (`http://localhost:3000`) |
 
 > Never commit `.env` files. Only `.env.example` templates are tracked.
 

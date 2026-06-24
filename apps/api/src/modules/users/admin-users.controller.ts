@@ -8,7 +8,7 @@ import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.de
 import { BanUserDto, SuspendUserDto, VerificationReviewDto } from './dto/users.dto';
 import { UsersService } from './users.service';
 
-@RequireRole('ADMIN')
+@RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin/users')
 export class AdminUsersController {
   constructor(private readonly usersService: UsersService) {}

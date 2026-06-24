@@ -15,7 +15,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { ModerationService } from '../moderation/moderation.service';
 
-@RequireRole('ADMIN')
+@RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin/moderation')
 export class AdminModerationController {
   constructor(private readonly moderationService: ModerationService) {}

@@ -114,8 +114,8 @@ const LOGIN_REDIRECT_PATHS: Record<RbacRole, string> = {
 };
 
 const LOGIN_APP_TARGETS: Record<RbacRole, LoginAppTarget> = {
-  SUPER_ADMIN: 'admin',
-  ADMIN: 'admin',
+  SUPER_ADMIN: 'web',
+  ADMIN: 'web',
   SELLER: 'web',
   BUYER: 'web',
 };

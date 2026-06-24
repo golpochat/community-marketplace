@@ -20,7 +20,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { PaymentsService } from '../payments/payments.service';
 
-@RequireRole('ADMIN')
+@RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin/payments')
 export class AdminPaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}

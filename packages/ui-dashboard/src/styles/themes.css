@@ -1,0 +1,109 @@
+/* Role-based dashboard theme tokens — applied via data-dashboard-role on layout root */
+
+[data-dashboard-role='SUPER_ADMIN'] {
+  --dashboard-sidebar-bg: 270 45% 12%;
+  --dashboard-sidebar-fg: 270 20% 96%;
+  --dashboard-sidebar-muted: 270 15% 65%;
+  --dashboard-sidebar-active: 270 55% 28%;
+  --dashboard-sidebar-border: 270 30% 20%;
+  --dashboard-accent: 270 70% 58%;
+  --dashboard-topbar-bg: 270 40% 8%;
+  --dashboard-topbar-fg: 270 15% 95%;
+  --dashboard-main-bg: 270 25% 6%;
+  --dashboard-main-fg: 270 10% 96%;
+}
+
+/* Light super-admin theme — high-contrast text on soft violet surfaces */
+[data-dashboard-theme='superAdmin'] {
+  --dashboard-sidebar-bg: 250 60% 98%;
+  --dashboard-sidebar-fg: 222 47% 11%;
+  --dashboard-sidebar-muted: 215 16% 40%;
+  --dashboard-sidebar-active: 250 55% 94%;
+  --dashboard-sidebar-border: 250 28% 88%;
+  --dashboard-accent: 250 84% 54%;
+  --dashboard-topbar-bg: 0 0% 100%;
+  --dashboard-topbar-fg: 222 47% 11%;
+  --dashboard-main-bg: 250 40% 99%;
+  --dashboard-main-fg: 222 47% 11%;
+}
+
+/* Light admin theme — high-contrast text on soft blue surfaces */
+[data-dashboard-theme='admin'] {
+  --dashboard-sidebar-bg: 214 60% 98%;
+  --dashboard-sidebar-fg: 222 47% 11%;
+  --dashboard-sidebar-muted: 215 16% 40%;
+  --dashboard-sidebar-active: 214 55% 94%;
+  --dashboard-sidebar-border: 214 28% 88%;
+  --dashboard-accent: 217 91% 55%;
+  --dashboard-topbar-bg: 0 0% 100%;
+  --dashboard-topbar-fg: 222 47% 11%;
+  --dashboard-main-bg: 214 40% 99%;
+  --dashboard-main-fg: 222 47% 11%;
+}
+
+[data-dashboard-role='ADMIN'] {
+  --dashboard-sidebar-bg: 215 28% 17%;
+  --dashboard-sidebar-fg: 210 20% 98%;
+  --dashboard-sidebar-muted: 215 15% 65%;
+  --dashboard-sidebar-active: 215 50% 32%;
+  --dashboard-sidebar-border: 215 25% 25%;
+  --dashboard-accent: 217 91% 60%;
+  --dashboard-topbar-bg: 0 0% 100%;
+  --dashboard-topbar-fg: 222 47% 11%;
+  --dashboard-main-bg: 210 40% 98%;
+  --dashboard-main-fg: 222 47% 11%;
+}
+
+/* Light seller theme — high-contrast text on soft teal surfaces */
+[data-dashboard-theme='seller'] {
+  --dashboard-sidebar-bg: 158 55% 97%;
+  --dashboard-sidebar-fg: 222 47% 11%;
+  --dashboard-sidebar-muted: 215 16% 40%;
+  --dashboard-sidebar-active: 158 50% 92%;
+  --dashboard-sidebar-border: 158 28% 86%;
+  --dashboard-accent: 160 84% 36%;
+  --dashboard-topbar-bg: 0 0% 100%;
+  --dashboard-topbar-fg: 222 47% 11%;
+  --dashboard-main-bg: 158 40% 98%;
+  --dashboard-main-fg: 222 47% 11%;
+}
+
+[data-dashboard-role='SELLER'] {
+  --dashboard-sidebar-bg: 160 84% 8%;
+  --dashboard-sidebar-fg: 152 30% 96%;
+  --dashboard-sidebar-muted: 160 15% 60%;
+  --dashboard-sidebar-active: 160 60% 18%;
+  --dashboard-sidebar-border: 160 40% 14%;
+  --dashboard-accent: 160 84% 39%;
+  --dashboard-topbar-bg: 160 50% 6%;
+  --dashboard-topbar-fg: 152 30% 96%;
+  --dashboard-main-bg: 160 30% 5%;
+  --dashboard-main-fg: 152 20% 95%;
+}
+
+/* Light buyer theme — high-contrast text on soft warm surfaces */
+[data-dashboard-theme='buyer'] {
+  --dashboard-sidebar-bg: 32 60% 98%;
+  --dashboard-sidebar-fg: 222 47% 11%;
+  --dashboard-sidebar-muted: 215 16% 40%;
+  --dashboard-sidebar-active: 32 55% 93%;
+  --dashboard-sidebar-border: 32 28% 88%;
+  --dashboard-accent: 24 95% 50%;
+  --dashboard-topbar-bg: 0 0% 100%;
+  --dashboard-topbar-fg: 222 47% 11%;
+  --dashboard-main-bg: 32 40% 99%;
+  --dashboard-main-fg: 222 47% 11%;
+}
+
+[data-dashboard-role='BUYER'] {
+  --dashboard-sidebar-bg: 0 0% 100%;
+  --dashboard-sidebar-fg: 24 10% 10%;
+  --dashboard-sidebar-muted: 24 6% 45%;
+  --dashboard-sidebar-active: 24 95% 95%;
+  --dashboard-sidebar-border: 24 10% 90%;
+  --dashboard-accent: 24 95% 53%;
+  --dashboard-topbar-bg: 0 0% 100%;
+  --dashboard-topbar-fg: 24 10% 10%;
+  --dashboard-main-bg: 30 20% 98%;
+  --dashboard-main-fg: 24 10% 10%;
+}

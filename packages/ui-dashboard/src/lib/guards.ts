@@ -1,0 +1,50 @@
+import type { RbacRole } from '@community-marketplace/types';
+
+import { getDashboardRouteByRole } from './routes';
+
+const ROLE_ROUTE_PREFIXES: Record<RbacRole, string> = {
+  SUPER_ADMIN: '/super-admin',
+  ADMIN: '/admin',
+  SELLER: '/seller',
+  BUYER: '/buyer',
+};
+
+const ADMIN_ROLES: RbacRole[] = ['SUPER_ADMIN', 'ADMIN'];
+const WEB_ROLES: RbacRole[] = ['SUPER_ADMIN', 'ADMIN', 'SELLER', 'BUYER'];
+
+export function getRoleRoutePrefix(role: RbacRole): string {
+  return ROLE_ROUTE_PREFIXES[role];
+}
+
+export function isAdminDashboardRole(role: RbacRole): boolean {
+  return ADMIN_ROLES.includes(role);
+}
+
+export function isWebDashboardRole(role: RbacRole): boolean {
+  return WEB_ROLES.includes(role);
+}
+
+export function getRequiredRoleForPath(pathname: string): RbacRole | null {
+  if (pathname.startsWith('/super-admin')) return 'SUPER_ADMIN';
+  if (pathname.startsWith('/admin')) return 'ADMIN';
+  if (pathname.startsWith('/seller')) return 'SELLER';
+  if (pathname.startsWith('/buyer')) return 'BUYER';
+  return null;
+}
+
+export function isDashboardRouteAllowed(role: RbacRole | null, pathname: string): boolean {
+  if (!role) return false;
+
+  const required = getRequiredRoleForPath(pathname);
+  if (!required) return false;
+
+  if (required === 'SUPER_ADMIN') return role === 'SUPER_ADMIN';
+  if (required === 'ADMIN') return role === 'ADMIN' || role === 'SUPER_ADMIN';
+
+  return role === required;
+}
+
+export function getUnauthorizedRedirectPath(role: RbacRole | null): string {
+  if (role) return getDashboardRouteByRole(role);
+  return '/auth/login';
+}

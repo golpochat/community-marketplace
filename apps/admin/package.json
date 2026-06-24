@@ -2,19 +2,20 @@
   "name": "@community-marketplace/admin",
   "version": "0.0.0",
   "private": true,
-  "description": "Community Marketplace admin dashboard",
+  "description": "DEPRECATED — dashboards live in apps/web on port 3000",
   "scripts": {
-    "dev": "next dev --port 3001",
-    "build": "next build",
-    "start": "next start --port 3001",
+    "dev": "node -e \"console.error('\\n[deprecated] apps/admin is retired. Run: pnpm dev:web (http://localhost:3000)\\n'); process.exit(1)\"",
+    "build": "node -e \"console.error('[deprecated] apps/admin is retired. Build apps/web instead.'); process.exit(1)\"",
+    "start": "node -e \"console.error('[deprecated] apps/admin is retired.'); process.exit(1)\"",
     "clean": "rimraf .next out",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "next lint"
+    "typecheck": "echo \"[deprecated] apps/admin — use apps/web\"",
+    "lint": "echo \"[deprecated] apps/admin — use apps/web\""
   },
   "dependencies": {
     "@community-marketplace/config": "workspace:*",
     "@community-marketplace/types": "workspace:*",
     "@community-marketplace/ui": "workspace:*",
+    "@community-marketplace/ui-dashboard": "workspace:*",
     "@community-marketplace/utils": "workspace:*",
     "@community-marketplace/validation": "workspace:*",
     "next": "^15.1.3",

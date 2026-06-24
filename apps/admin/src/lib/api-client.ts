@@ -1,7 +1,7 @@
 import type { ApiError, ApiResponse } from '@community-marketplace/types';
 
 import { API_BASE_URL } from './constants';
-import { getStoredAdminAccessToken } from '@/store/admin-auth.store';
+import { refreshClientSession, resolveClientAccessToken } from './admin-session';
 
 type RequestOptions = RequestInit & {
   params?: Record<string, string>;
@@ -29,17 +29,41 @@ export async function adminApiClient<T>(
     Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, value));
   }
 
-  const token = getStoredAdminAccessToken();
-  const response = await fetch(url.toString(), {
-    credentials: 'include',
-    cache: 'no-store',
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...init.headers,
-    },
-  });
+  let token = resolveClientAccessToken();
+
+  const doFetch = (bearer: string | null) =>
+    fetch(url.toString(), {
+      credentials: 'include',
+      cache: 'no-store',
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+        ...init.headers,
+      },
+    });
+
+  let response: Response;
+  try {
+    response = await doFetch(token);
+  } catch (err) {
+    if (err instanceof TypeError) {
+      throw new AdminApiClientError(
+        `Cannot reach the API at ${API_BASE_URL}. Start it with: pnpm --filter api dev`,
+        0,
+        'NETWORK_ERROR',
+      );
+    }
+    throw err;
+  }
+
+  if (response.status === 401) {
+    const refreshed = await refreshClientSession();
+    if (refreshed) {
+      token = refreshed;
+      response = await doFetch(token);
+    }
+  }
 
   if (!response.ok) {
     const error = (await response.json().catch(() => null)) as ApiError | null;

@@ -3,8 +3,7 @@ import { Inter } from 'next/font/google';
 
 import { APP_NAME, PLATFORM_LOCALE } from '@community-marketplace/config';
 
-import { Header } from '@/components/layout/header';
-import { Footer } from '@/components/layout/footer';
+import { ServiceWorkerCleanup } from '@/components/dev/service-worker-cleanup';
 
 import './globals.css';
 
@@ -32,11 +31,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang={PLATFORM_LOCALE}>
       <body className={`${inter.variable} font-sans`}>
-        <div className="flex min-h-screen flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+        <ServiceWorkerCleanup />
+        {children}
       </body>
     </html>
   );

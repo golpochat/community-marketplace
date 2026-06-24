@@ -1,11 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ChatInboxItem, ChatMessage } from '@community-marketplace/types';
 
-import { ChatWindow } from '@/components/chat/chat-window';
-import { ConversationList } from '@/components/chat/conversation-list';
+import { ChatLayout } from '@/components/layout/chat-layout';
 import { useChatSocket } from '@/hooks/use-chat-socket';
 import { chatService } from '@/services/chat.service';
 
@@ -24,14 +23,20 @@ export function ChatPageClient({
   const [activeThreadId, setActiveThreadId] = useState<string>();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typingLabel, setTypingLabel] = useState<string>();
+  const activeThreadIdRef = useRef(activeThreadId);
+
+  activeThreadIdRef.current = activeThreadId;
 
   const loadInbox = useCallback(async () => {
     const result = await chatService.getInbox();
-    setInbox(result.data);
-    if (!activeThreadId && result.data[0]) {
-      setActiveThreadId(result.data[0].thread.id);
-    }
-  }, [activeThreadId]);
+    setInbox(Array.isArray(result.data) ? result.data : []);
+    setActiveThreadId((current) => {
+      if (!current && result.data?.[0]) {
+        return result.data[0].thread.id;
+      }
+      return current;
+    });
+  }, []);
 
   useEffect(() => {
     void loadInbox();
@@ -40,29 +45,27 @@ export function ChatPageClient({
   useEffect(() => {
     if (!activeThreadId) return;
     void chatService.getMessages(activeThreadId).then((res) => {
-      setMessages(res.data);
+      setMessages(Array.isArray(res.data) ? res.data : []);
       void chatService.markRead(activeThreadId);
     });
   }, [activeThreadId]);
 
   const handleMessage = useCallback((message: ChatMessage) => {
-    if (message.threadId !== activeThreadId) {
+    if (message.threadId !== activeThreadIdRef.current) {
       void loadInbox();
       return;
     }
     setMessages((prev) => [...prev, message]);
     void chatService.markRead(message.threadId, [message.id]);
-  }, [activeThreadId, loadInbox]);
+  }, [loadInbox]);
 
-  const { sendMessage, sendTyping } = useChatSocket({
-    threadId: activeThreadId,
-    token: accessToken,
-    onMessage: handleMessage,
-    onTyping: ({ event }) => {
-      setTypingLabel(event === 'buyer_typing' ? 'Buyer is typing…' : 'Seller is typing…');
-      setTimeout(() => setTypingLabel(undefined), 2000);
-    },
-    onReadReceipt: ({ messageIds }) => {
+  const handleTyping = useCallback(({ event }: { userId: string; event: string }) => {
+    setTypingLabel(event === 'buyer_typing' ? 'Buyer is typing…' : 'Seller is typing…');
+    setTimeout(() => setTypingLabel(undefined), 2000);
+  }, []);
+
+  const handleReadReceipt = useCallback(
+    ({ messageIds }: { readerId: string; messageIds: string[] }) => {
       setMessages((prev) =>
         prev.map((m) =>
           messageIds.includes(m.id)
@@ -71,6 +74,15 @@ export function ChatPageClient({
         ),
       );
     },
+    [currentUserId],
+  );
+
+  const { sendMessage, sendTyping } = useChatSocket({
+    threadId: activeThreadId,
+    token: accessToken,
+    onMessage: handleMessage,
+    onTyping: handleTyping,
+    onReadReceipt: handleReadReceipt,
   });
 
   const handleSend = async (content: string) => {
@@ -80,33 +92,20 @@ export function ChatPageClient({
     setMessages((prev) => [...prev.filter((m) => m.id !== sent.id), sent]);
   };
 
-  const handleTyping = () => {
+  const handleTypingInput = () => {
     sendTyping(role === 'BUYER' ? 'buyer_typing' : 'seller_typing');
   };
 
   return (
-    <div className="grid gap-4 md:grid-cols-[280px_1fr]">
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <ConversationList
-          items={inbox}
-          activeThreadId={activeThreadId}
-          onSelect={setActiveThreadId}
-        />
-      </div>
-      {activeThreadId ? (
-        <ChatWindow
-          threadId={activeThreadId}
-          currentUserId={currentUserId}
-          messages={messages}
-          onSend={handleSend}
-          onTyping={handleTyping}
-          typingLabel={typingLabel}
-        />
-      ) : (
-        <div className="flex h-[32rem] items-center justify-center rounded-xl border border-dashed border-gray-300 text-sm text-gray-500">
-          Select a conversation
-        </div>
-      )}
-    </div>
+    <ChatLayout
+      inbox={inbox}
+      activeThreadId={activeThreadId}
+      messages={messages}
+      currentUserId={currentUserId}
+      typingLabel={typingLabel}
+      onSelectThread={setActiveThreadId}
+      onSend={handleSend}
+      onTyping={handleTypingInput}
+    />
   );
 }

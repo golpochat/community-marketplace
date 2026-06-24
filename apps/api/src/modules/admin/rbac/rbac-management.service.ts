@@ -13,6 +13,10 @@ import {
 import { toIsoString } from '@community-marketplace/utils';
 
 import { DEV_ROLE_IDS } from '../../../common/constants/dev-role-ids';
+import {
+  assertBootstrapSuperAdminImmutable,
+  assertSuperAdminRoleNotAssignable,
+} from '../../../common/constants/bootstrap-users';
 import { AuthorizationService } from '../../../common/authorization/authorization.service';
 import type { AuthenticatedUser } from '../../../common/decorators/current-user.decorator';
 import { PrismaService } from '../../../database/prisma.service';
@@ -144,6 +148,8 @@ export class RbacManagementService {
 
   async assignUserRole(actor: AuthenticatedUser, dto: AssignUserRoleDto) {
     const role = await this.getRoleById(dto.roleId);
+    assertSuperAdminRoleNotAssignable(role.code);
+    assertBootstrapSuperAdminImmutable(dto.userId);
     await this.scopePolicy.assertCanAssignRole(actor, role.code);
 
     await this.findUserOrThrow(dto.userId);
@@ -161,7 +167,9 @@ export class RbacManagementService {
   }
 
   async removeUserRole(actor: AuthenticatedUser, userId: string, fallbackRoleId?: string) {
+    assertBootstrapSuperAdminImmutable(userId);
     const fallbackRole = await this.getRoleById(fallbackRoleId ?? DEV_ROLE_IDS.BUYER);
+    assertSuperAdminRoleNotAssignable(fallbackRole.code);
     await this.scopePolicy.assertCanAssignRole(actor, fallbackRole.code);
 
     await this.findUserOrThrow(userId);

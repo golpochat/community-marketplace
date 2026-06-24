@@ -16,6 +16,6 @@ export function getWebRoleFromCookie(cookieHeader: string | undefined): RbacRole
   if (!cookieHeader) return null;
   const match = cookieHeader.match(new RegExp(`${ROLE_COOKIE_NAME}=([^;]+)`));
   const value = match?.[1];
-  if (value === 'SELLER' || value === 'BUYER') return value;
+  if (value === 'SELLER' || value === 'BUYER' || value === 'SUPER_ADMIN' || value === 'ADMIN') return value;
   return null;
 }

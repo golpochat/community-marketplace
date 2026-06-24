@@ -21,7 +21,8 @@ export function AdminSidebar() {
     if (!role) return;
 
     if (permissions.length === 0 && user) {
-      void adminAuthService.fetchMe().then((me) => {
+      const adminRole = role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN';
+      void adminAuthService.fetchMe(undefined, adminRole).then((me) => {
         setPermissions(me.permissions as PermissionCode[]);
         setNavItems(buildAdminNav(role, me.permissions as PermissionCode[]));
       });

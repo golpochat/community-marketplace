@@ -2,6 +2,7 @@ import { API_NAMESPACES } from './rbac-routes';
 
 export const WEB_API_ROUTES = {
   buyer: {
+    favorites: `${API_NAMESPACES.BUYER}/favorites`,
     payments: `${API_NAMESPACES.BUYER}/payments`,
     paymentsIntent: `${API_NAMESPACES.BUYER}/payments/intent`,
     paymentsConfirm: `${API_NAMESPACES.BUYER}/payments/confirm`,
@@ -17,6 +18,7 @@ export const WEB_API_ROUTES = {
   },
   seller: {
     listings: `${API_NAMESPACES.SELLER}/listings`,
+    listingsAnalyticsSummary: `${API_NAMESPACES.SELLER}/listings/analytics/summary`,
     listingImages: (id: string) => `${API_NAMESPACES.SELLER}/listings/${id}/images`,
     earnings: `${API_NAMESPACES.SELLER}/earnings`,
     earningsPayouts: `${API_NAMESPACES.SELLER}/earnings/payouts`,

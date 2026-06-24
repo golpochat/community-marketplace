@@ -9,17 +9,17 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "dev": "pnpm --filter \"./packages/*\" build && pnpm -r --parallel --filter \"./apps/**\" run dev",
+    "dev": "pnpm --filter \"./packages/*\" build && pnpm --parallel --filter @community-marketplace/web --filter @community-marketplace/api run dev",
     "dev:web": "pnpm --filter @community-marketplace/web dev",
     "dev:api": "pnpm --filter \"./packages/*\" build && pnpm --filter @community-marketplace/api dev",
-    "dev:admin": "pnpm --filter @community-marketplace/admin dev",
-    "build": "pnpm --filter \"./packages/*\" build && pnpm --filter \"./apps/*\" build",
+    "build": "pnpm --filter \"./packages/*\" build && pnpm --filter @community-marketplace/web build && pnpm --filter @community-marketplace/api build",
     "lint": "pnpm -r run lint",
     "test": "pnpm -r run test",
     "typecheck": "pnpm -r run typecheck",
     "clean": "pnpm -r run clean && rimraf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "seed:rbac": "pnpm --filter @community-marketplace/api run seed:rbac",
+    "seed:dev-users": "pnpm --filter @community-marketplace/api run seed:dev-users",
     "docs:index": "node scripts/generate-docs-index.mjs"
   },
   "devDependencies": {

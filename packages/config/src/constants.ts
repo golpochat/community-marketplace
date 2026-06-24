@@ -43,7 +43,6 @@ export const API_PREFIX = '/api';
 
 export const PORTS = {
   web: 3000,
-  admin: 3001,
   api: 4000,
 } as const;
 

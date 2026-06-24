@@ -45,12 +45,16 @@ export class RedisCacheService implements OnModuleInit, OnModuleDestroy {
   async set(key: string, value: unknown, ttlSeconds = 60): Promise<void> {
     const serialized = JSON.stringify(value);
     if (this.client) {
-      await this.client.set(key, serialized, 'EX', ttlSeconds);
+      if (ttlSeconds > 0) {
+        await this.client.set(key, serialized, 'EX', ttlSeconds);
+      } else {
+        await this.client.set(key, serialized);
+      }
       return;
     }
     this.memory.set(key, {
       value: serialized,
-      expiresAt: Date.now() + ttlSeconds * 1000,
+      expiresAt: ttlSeconds > 0 ? Date.now() + ttlSeconds * 1000 : Number.MAX_SAFE_INTEGER,
     });
   }
 

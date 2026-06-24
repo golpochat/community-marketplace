@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { Button } from '@community-marketplace/ui';
+import { Button, PasswordInput } from '@community-marketplace/ui';
 
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { adminAuthService } from '@/services/auth.service';
@@ -32,7 +32,10 @@ export function AdminLoginForm() {
 
       setAuth(response);
       try {
-        const me = await adminAuthService.fetchMe(response.accessToken);
+        const me = await adminAuthService.fetchMe(
+          response.accessToken,
+          response.user.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN',
+        );
         useAdminAuthStore.getState().setPermissions(me.permissions as import('@community-marketplace/types').PermissionCode[]);
       } catch {
         // Permissions will load on next navigation
@@ -65,13 +68,12 @@ export function AdminLoginForm() {
         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
           Password
         </label>
-        <input
+        <PasswordInput
           id="password"
-          type="password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="mt-1 h-10 rounded-lg border-gray-300 text-sm"
         />
       </div>
       <Button type="submit" disabled={loading} className="w-full">

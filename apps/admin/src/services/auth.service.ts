@@ -2,7 +2,11 @@ import type { AdminMeResponse, AuthResponse } from '@community-marketplace/types
 import { loginSchema } from '@community-marketplace/validation';
 
 import { API_BASE_URL } from '@/lib/constants';
-import { getStoredAdminAccessToken } from '@/store/admin-auth.store';
+import {
+  refreshClientSession,
+  resolveClientAccessToken,
+} from '@/lib/admin-session';
+import { getStoredAdminRole } from '@/store/admin-auth.store';
 
 interface AuthCredentials {
   email: string;
@@ -28,6 +32,11 @@ async function fetchAuth<T>(endpoint: string, init?: RequestInit): Promise<T> {
   return json.data;
 }
 
+function resolveAdminRole(role?: 'ADMIN' | 'SUPER_ADMIN'): 'ADMIN' | 'SUPER_ADMIN' {
+  if (role === 'SUPER_ADMIN' || role === 'ADMIN') return role;
+  return getStoredAdminRole() ?? 'ADMIN';
+}
+
 export const adminAuthService = {
   async login(credentials: AuthCredentials): Promise<AuthResponse> {
     loginSchema.parse(credentials);
@@ -38,7 +47,7 @@ export const adminAuthService = {
   },
 
   async logout(session: { refreshToken?: string; sessionId?: string }): Promise<void> {
-    const token = getStoredAdminAccessToken();
+    const token = resolveClientAccessToken();
     await fetchAuth<{ loggedOut: boolean }>('/auth/logout', {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -54,16 +63,29 @@ export const adminAuthService = {
   },
 
   async fetchMe(token?: string, role?: 'ADMIN' | 'SUPER_ADMIN'): Promise<AdminMeResponse> {
-    const accessToken = token ?? getStoredAdminAccessToken();
-    const rolePrefix = role === 'SUPER_ADMIN' ? '/super-admin' : '/admin';
+    const resolvedRole = resolveAdminRole(role);
+    const rolePrefix = resolvedRole === 'SUPER_ADMIN' ? '/super-admin' : '/admin';
 
-    const response = await fetch(`${API_BASE_URL}${rolePrefix}/me`, {
-      cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      },
-    });
+    let accessToken = resolveClientAccessToken(token);
+
+    const doFetch = (bearer: string | null) =>
+      fetch(`${API_BASE_URL}${rolePrefix}/me`, {
+        cache: 'no-store',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+        },
+      });
+
+    let response = await doFetch(accessToken);
+
+    if (response.status === 401) {
+      const refreshed = await refreshClientSession();
+      if (refreshed) {
+        accessToken = refreshed;
+        response = await doFetch(accessToken);
+      }
+    }
 
     if (!response.ok) throw new Error('Failed to fetch admin profile');
     const json = (await response.json()) as { data: AdminMeResponse };

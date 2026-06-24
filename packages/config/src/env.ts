@@ -11,9 +11,7 @@ export const baseEnvSchema = z.object({
 export const apiEnvSchema = baseEnvSchema.extend({
   PORT: z.coerce.number().int().positive().default(PORTS.api),
   APP_NAME: z.string().default('community-marketplace-api'),
-  CORS_ORIGIN: z
-    .string()
-    .default(`http://localhost:${PORTS.web},http://localhost:${PORTS.admin}`),
+  CORS_ORIGIN: z.string().default(`http://localhost:${PORTS.web}`),
   DATABASE_URL: z
     .string()
     .default('postgresql://cm:cm_dev_password@localhost:5434/community_marketplace'),
@@ -53,7 +51,7 @@ export const webEnvSchema = z.object({
 export const adminEnvSchema = z.object({
   NODE_ENV: nodeEnvSchema,
   NEXT_PUBLIC_API_URL: z.string().url().default(DEFAULT_API_URL),
-  NEXT_PUBLIC_APP_URL: z.string().url().default(`http://localhost:${PORTS.admin}`),
+  NEXT_PUBLIC_APP_URL: z.string().url().default(`http://localhost:${PORTS.web}`),
   CSRF_SECRET: z.string().min(16).optional(),
 });
 

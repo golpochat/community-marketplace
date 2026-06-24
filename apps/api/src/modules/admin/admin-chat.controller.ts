@@ -14,7 +14,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { ChatService } from '../chat/chat.service';
 
-@RequireRole('ADMIN')
+@RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin/chat')
 export class AdminChatController {
   constructor(private readonly chatService: ChatService) {}

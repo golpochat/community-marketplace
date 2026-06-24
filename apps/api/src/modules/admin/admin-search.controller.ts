@@ -11,7 +11,7 @@ import {
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 import { SearchService } from '../search/search.service';
 
-@RequireRole('ADMIN')
+@RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin/search')
 export class AdminSearchController {
   constructor(private readonly searchService: SearchService) {}

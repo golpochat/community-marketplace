@@ -18,6 +18,7 @@
     "prisma:migrate:deploy": "ts-node -P tsconfig.scripts.json scripts/ensure-env.ts && prisma migrate deploy",
     "prisma:seed": "ts-node -P tsconfig.scripts.json scripts/ensure-env.ts && prisma db seed",
     "seed:rbac": "ts-node -P tsconfig.scripts.json scripts/seed-rbac.ts",
+    "seed:dev-users": "ts-node -P tsconfig.scripts.json scripts/seed-dev-users.ts",
     "migrate:seed": "ts-node -P tsconfig.scripts.json scripts/ensure-env.ts && prisma migrate dev --name init_rbac && pnpm run seed:rbac"
   },
   "prisma": {
