@@ -1,10 +1,10 @@
 'use client';
 
-import { AdminPageContent } from '@/components/admin/admin-page-content';
+import { RolePageContent } from '@/components/dashboard/role-page-content';
 
 export default function AdminListingsPage() {
   return (
-    <AdminPageContent
+    <RolePageContent
       title="Listings"
       description="Review and moderate marketplace listings."
       cardTitle="Listing management"

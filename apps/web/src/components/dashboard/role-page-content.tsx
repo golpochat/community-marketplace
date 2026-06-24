@@ -1,22 +1,22 @@
 'use client';
 
-import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
+import { Card, PageHeader } from '@community-marketplace/ui-dashboard';
 
-interface SuperAdminPageContentProps {
+interface RolePageContentProps {
   title: string;
   description?: string;
   cardTitle?: string;
 }
 
-export function SuperAdminPageContent({ title, description, cardTitle }: SuperAdminPageContentProps) {
+export function RolePageContent({ title, description, cardTitle }: RolePageContentProps) {
   return (
     <>
       <PageHeader title={title} description={description} />
-      <DashboardCard title={cardTitle ?? 'Coming soon'}>
+      <Card title={cardTitle ?? 'Coming soon'}>
         <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           This section is ready for feature integration.
         </p>
-      </DashboardCard>
+      </Card>
     </>
   );
 }

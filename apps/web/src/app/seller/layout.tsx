@@ -1,5 +1,9 @@
-import { WebSellerDashboardShell } from '@/components/layout/web-seller-dashboard-shell';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
-  return <WebSellerDashboardShell>{children}</WebSellerDashboardShell>;
+  return (
+    <DashboardLayout role="SELLER" theme="seller">
+      {children}
+    </DashboardLayout>
+  );
 }

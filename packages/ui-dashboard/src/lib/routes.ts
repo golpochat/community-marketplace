@@ -7,15 +7,15 @@ import {
   SELLER_SIDEBAR,
   SUPER_ADMIN_SIDEBAR,
   type SidebarNavItem,
-} from './sidebar-config';
+} from '../sidebar/sidebar-config';
 
-export type { SidebarNavItem } from './sidebar-config';
+export type { SidebarNavItem } from '../sidebar/sidebar-config';
 export {
   SUPER_ADMIN_SIDEBAR,
   ADMIN_SIDEBAR,
   SELLER_SIDEBAR,
   BUYER_SIDEBAR,
-} from './sidebar-config';
+} from '../sidebar/sidebar-config';
 
 const SIDEBAR_BY_ROLE: Record<RbacRole, SidebarNavItem[]> = {
   SUPER_ADMIN: SUPER_ADMIN_SIDEBAR,

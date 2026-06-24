@@ -1,13 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
 
 import type { ListingSummary } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
+import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { searchService } from '@/services/search.service';
-import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
 export default function SellerSearchPage() {
   const [query, setQuery] = useState('');
@@ -44,59 +43,62 @@ export default function SellerSearchPage() {
   }, [query]);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Search Marketplace</h1>
-        <Link href={WEB_APP_ROUTES.sellerDashboard} className="text-sm text-blue-600 hover:underline">
-          Dashboard
-        </Link>
-      </div>
+    <>
+      <PageHeader
+        title="Search Marketplace"
+        description="Find listings, categories, and sellers across the marketplace."
+      />
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void runSearch(query);
-        }}
-        className="mb-4"
-      >
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search listings, categories, sellers..."
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-        />
-      </form>
+      <DashboardCard>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void runSearch(query);
+          }}
+          className="mb-4"
+        >
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search listings, categories, sellers..."
+            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
+          />
+        </form>
 
-      {suggestions.length > 0 && (
-        <ul className="mb-4 rounded-md border border-gray-200 bg-white text-sm">
-          {suggestions.map((label) => (
-            <li key={label}>
-              <button
-                type="button"
-                className="block w-full px-3 py-2 text-left hover:bg-gray-50"
-                onClick={() => {
-                  setQuery(label);
-                  void runSearch(label);
-                }}
-              >
-                {label}
-              </button>
+        {suggestions.length > 0 && (
+          <ul className="mb-4 rounded-lg border border-gray-200 bg-white text-sm">
+            {suggestions.map((label) => (
+              <li key={label}>
+                <button
+                  type="button"
+                  className="block w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50"
+                  onClick={() => {
+                    setQuery(label);
+                    void runSearch(label);
+                  }}
+                >
+                  {label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+        {loading && <p className="text-sm text-gray-700">Searching...</p>}
+
+        <ul className="space-y-2">
+          {results.map((listing) => (
+            <li
+              key={listing.id}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+            >
+              <p className="font-medium text-gray-900">{listing.title}</p>
+              <p className="text-gray-700">{formatCurrency(listing.price, listing.currency)}</p>
             </li>
           ))}
         </ul>
-      )}
-
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
-      {loading && <p className="text-sm text-gray-500">Searching...</p>}
-
-      <ul className="space-y-2">
-        {results.map((listing) => (
-          <li key={listing.id} className="rounded-md border border-gray-200 px-3 py-2 text-sm">
-            <p className="font-medium text-gray-900">{listing.title}</p>
-            <p className="text-gray-600">{formatCurrency(listing.price, listing.currency)}</p>
-          </li>
-        ))}
-      </ul>
-    </div>
+      </DashboardCard>
+    </>
   );
 }

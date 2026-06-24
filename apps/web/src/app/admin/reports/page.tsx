@@ -1,10 +1,10 @@
 'use client';
 
-import { AdminPageContent } from '@/components/admin/admin-page-content';
+import { RolePageContent } from '@/components/dashboard/role-page-content';
 
 export default function AdminReportsPage() {
   return (
-    <AdminPageContent
+    <RolePageContent
       title="Reports"
       description="Review user-submitted reports and flagged content."
       cardTitle="Report queue"

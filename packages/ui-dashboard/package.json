@@ -14,14 +14,14 @@
     },
     "./themes.css": "./src/styles/themes.css",
     "./sidebar-config": {
-      "types": "./src/lib/sidebar-config.ts",
-      "import": "./src/lib/sidebar-config.ts",
-      "default": "./src/lib/sidebar-config.ts"
+      "types": "./src/sidebar/sidebar-config.ts",
+      "import": "./src/sidebar/sidebar-config.ts",
+      "default": "./src/sidebar/sidebar-config.ts"
     },
     "./theme": {
-      "types": "./src/lib/theme.ts",
-      "import": "./src/lib/theme.ts",
-      "default": "./src/lib/theme.ts"
+      "types": "./src/theme/theme-tokens.ts",
+      "import": "./src/theme/theme-tokens.ts",
+      "default": "./src/theme/theme-tokens.ts"
     },
     "./layouts/DashboardLayout": {
       "types": "./src/layouts/DashboardLayout.tsx",

@@ -1,46 +1,20 @@
 import {
-  getDashboardRouteByRole,
-  getRequiredRoleForPath,
-  isDashboardRouteAllowed,
-} from '@community-marketplace/ui-dashboard';
+  canAccessDashboardRoute,
+  getRoleFromRequest,
+  isDashboardPath,
+  resolveDashboardRedirect,
+} from '@/lib/route-guards';
+import { getDashboardRouteByRole } from '@community-marketplace/ui-dashboard';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-import { WEB_APP_ROUTES, isWebDashboardRouteAllowed } from '@/lib/rbac-routes';
-import { getWebRoleFromCookie } from '@/lib/role-cookie';
-
-const LEGACY_REDIRECTS: Record<string, string> = {
-  '/seller/dashboard/chat': '/seller/chat',
-  '/buyer/dashboard/chat': '/buyer/chat',
-  '/buyer/payments': '/buyer/purchases',
-};
-
-const DASHBOARD_PREFIXES = ['/super-admin', '/admin', '/seller', '/buyer'] as const;
-
-function isDashboardPath(pathname: string): boolean {
-  return DASHBOARD_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
-}
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const role = getWebRoleFromCookie(request.headers.get('cookie') ?? undefined);
+  const role = getRoleFromRequest(request.headers.get('cookie'));
 
-  const legacyTarget = LEGACY_REDIRECTS[pathname];
-  if (legacyTarget) {
-    return NextResponse.redirect(new URL(legacyTarget, request.url));
-  }
-
-  if (pathname === '/super-admin') {
-    return NextResponse.redirect(new URL('/super-admin/dashboard', request.url));
-  }
-
-  if (pathname === '/admin') {
-    return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-  }
-
-  if (pathname.startsWith('/dashboard')) {
-    const target = role ? getDashboardRouteByRole(role) : WEB_APP_ROUTES.login;
-    return NextResponse.redirect(new URL(target, request.url));
+  const redirectTarget = resolveDashboardRedirect(pathname, role);
+  if (redirectTarget) {
+    return NextResponse.redirect(new URL(redirectTarget, request.url));
   }
 
   if (!isDashboardPath(pathname)) {
@@ -48,18 +22,10 @@ export function middleware(request: NextRequest) {
   }
 
   if (!role) {
-    return NextResponse.redirect(new URL(WEB_APP_ROUTES.login, request.url));
+    return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  const requiredRole = getRequiredRoleForPath(pathname);
-  if (!requiredRole) {
-    return NextResponse.next();
-  }
-
-  const allowed =
-    isDashboardRouteAllowed(role, pathname) && isWebDashboardRouteAllowed(role, pathname);
-
-  if (!allowed) {
+  if (!canAccessDashboardRoute(role, pathname)) {
     return NextResponse.redirect(new URL(getDashboardRouteByRole(role), request.url));
   }
 

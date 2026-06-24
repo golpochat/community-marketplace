@@ -1,5 +1,9 @@
-import { WebSuperAdminDashboardShell } from '@/components/layout/web-super-admin-dashboard-shell';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
-  return <WebSuperAdminDashboardShell>{children}</WebSuperAdminDashboardShell>;
+  return (
+    <DashboardLayout role="SUPER_ADMIN" theme="superAdmin">
+      {children}
+    </DashboardLayout>
+  );
 }

@@ -1,10 +1,10 @@
 'use client';
 
-import { AdminPageContent } from '@/components/admin/admin-page-content';
+import { RolePageContent } from '@/components/dashboard/role-page-content';
 
 export default function AdminNotificationsPage() {
   return (
-    <AdminPageContent
+    <RolePageContent
       title="Notifications"
       description="View and manage admin notifications."
       cardTitle="Notification inbox"

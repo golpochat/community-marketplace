@@ -1,10 +1,10 @@
 'use client';
 
-import { SuperAdminPageContent } from '@/components/super-admin/super-admin-page-content';
+import { RolePageContent } from '@/components/dashboard/role-page-content';
 
 export default function SuperAdminListingsPage() {
   return (
-    <SuperAdminPageContent
+    <RolePageContent
       title="Listings"
       description="Review and manage all marketplace listings."
       cardTitle="Listing catalog"

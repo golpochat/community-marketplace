@@ -1,11 +1,11 @@
 'use client';
 
-import { SuperAdminPageContent } from '@/components/super-admin/super-admin-page-content';
+import { RolePageContent } from '@/components/dashboard/role-page-content';
 
 export default function SuperAdminSettingsPage() {
   return (
-    <SuperAdminPageContent
-      title="System Settings"
+    <RolePageContent
+      title="Settings"
       description="Configure global platform settings and feature flags."
       cardTitle="System configuration"
     />

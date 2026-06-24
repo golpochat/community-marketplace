@@ -1,10 +1,10 @@
 'use client';
 
-import { AdminPageContent } from '@/components/admin/admin-page-content';
+import { RolePageContent } from '@/components/dashboard/role-page-content';
 
 export default function AdminModerationPage() {
   return (
-    <AdminPageContent
+    <RolePageContent
       title="Moderation"
       description="Take action on policy violations and appeals."
       cardTitle="Moderation tools"

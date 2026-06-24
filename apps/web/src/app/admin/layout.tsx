@@ -1,5 +1,9 @@
-import { WebAdminDashboardShell } from '@/components/layout/web-admin-dashboard-shell';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <WebAdminDashboardShell>{children}</WebAdminDashboardShell>;
+  return (
+    <DashboardLayout role="ADMIN" theme="admin">
+      {children}
+    </DashboardLayout>
+  );
 }

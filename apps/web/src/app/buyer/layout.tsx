@@ -1,5 +1,9 @@
-import { WebBuyerDashboardShell } from '@/components/layout/web-buyer-dashboard-shell';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 
 export default function BuyerLayout({ children }: { children: React.ReactNode }) {
-  return <WebBuyerDashboardShell>{children}</WebBuyerDashboardShell>;
+  return (
+    <DashboardLayout role="BUYER" theme="buyer">
+      {children}
+    </DashboardLayout>
+  );
 }

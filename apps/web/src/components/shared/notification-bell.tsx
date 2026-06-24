@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+
+import { NotificationBell as DashboardNotificationBell } from '@community-marketplace/ui-dashboard';
 
 import { notificationsService } from '@/services/notifications.service';
 
@@ -33,19 +34,5 @@ export function NotificationBell({ href, role = 'BUYER' }: NotificationBellProps
     void loadCount();
   }, [loadCount]);
 
-  return (
-    <Link href={href} className="relative inline-flex items-center p-2 text-gray-600 hover:text-gray-900">
-      <span className="text-xl" aria-hidden>
-        🔔
-      </span>
-      {unreadCount > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-medium text-white">
-          {unreadCount > 9 ? '9+' : unreadCount}
-        </span>
-      )}
-      <span className="sr-only">
-        Notifications{unreadCount > 0 ? `, ${unreadCount} unread` : ''}
-      </span>
-    </Link>
-  );
+  return <DashboardNotificationBell href={href} unreadCount={unreadCount} />;
 }
