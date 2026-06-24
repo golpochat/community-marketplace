@@ -226,6 +226,42 @@ enum BanType {
   permanent
 }
 
+enum ModerationReportStatus {
+  pending
+  reviewed
+  action_taken
+}
+
+enum ModerationReportReason {
+  fraud
+  harassment
+  spam
+  inappropriate_content
+  scams
+  fake_listing
+}
+
+enum ModerationActionType {
+  warn
+  suspend
+  ban
+  delete_listing
+  delete_message
+}
+
+enum SuspensionDuration {
+  hours_24
+  days_7
+  days_30
+  permanent
+}
+
+enum AppealStatus {
+  pending
+  approved
+  rejected
+}
+
 enum OtpChannel {
   email
   phone
@@ -299,6 +335,14 @@ model User {
   requestedRefunds           PaymentRefund[]    @relation("RefundRequester")
   approvedRefunds            PaymentRefund[]    @relation("RefundApprover")
   paymentAuditLogs           PaymentAuditLog[]  @relation("PaymentAuditActor")
+  moderationReportsFiled     ModerationReport[] @relation("ModerationReportReporter")
+  moderationReportsTargeted  ModerationReport[] @relation("ModerationReportTarget")
+  moderationReportsAssigned  ModerationReport[] @relation("ModerationReportAdmin")
+  moderationActionsTaken     ModerationAction[] @relation("ModerationActionAdmin")
+  moderationActionsReceived  ModerationAction[] @relation("ModerationActionUser")
+  moderationAppeals          ModerationAppeal[] @relation("ModerationAppealUser")
+  moderationAppealsReviewed  ModerationAppeal[] @relation("ModerationAppealAdmin")
+  moderationAuditLogs        ModerationAuditLog[] @relation("ModerationAuditActor")
 
   @@index([primaryRoleId])
   @@index([status])
@@ -503,9 +547,10 @@ model Listing {
   favoriteCount   Int              @default(0) @map("favorite_count")
   bannedAt        DateTime?        @map("banned_at")
   bannedById      String?          @map("banned_by_id")
-  moderationNotes String?          @map("moderation_notes")
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
+  moderationNotes    String?          @map("moderation_notes")
+  moderationHiddenAt DateTime?        @map("moderation_hidden_at")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
 
   seller    User              @relation(fields: [sellerId], references: [id])
   category  Category          @relation(fields: [categoryId], references: [id])
@@ -516,6 +561,7 @@ model Listing {
   reports   ListingReport[]
   auditLogs ListingAuditLog[]
   chatThreads ChatThread[]
+  moderationReports ModerationReport[]
 
   @@index([status, createdAt(sort: Desc)])
   @@index([sellerId])
@@ -873,6 +919,7 @@ model ChatMessage {
   thread ChatThread        @relation(fields: [threadId], references: [id], onDelete: Cascade)
   sender User              @relation("ChatMessageSender", fields: [senderId], references: [id])
   flags  ChatMessageFlag[]
+  moderationReports ModerationReport[]
 
   @@index([threadId, createdAt(sort: Desc)])
   @@map("chat_messages")
@@ -913,4 +960,104 @@ model ChatBan {
 
   @@index([userId, expiresAt])
   @@map("chat_bans")
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Moderation
+// ══════════════════════════════════════════════════════════════════════════════
+
+model ModerationReport {
+  id           String                 @id @default(uuid())
+  reporterId   String                 @map("reporter_id")
+  targetUserId String?                @map("target_user_id")
+  listingId    String?                @map("listing_id")
+  messageId    String?                @map("message_id")
+  reason       ModerationReportReason
+  description  String?
+  status       ModerationReportStatus @default(pending)
+  adminId      String?                @map("admin_id")
+  autoFlagged  Boolean                @default(false) @map("auto_flagged")
+  autoHidden   Boolean                @default(false) @map("auto_hidden")
+  notes        String?
+  createdAt    DateTime               @default(now()) @map("created_at")
+  updatedAt    DateTime               @updatedAt @map("updated_at")
+
+  reporter   User              @relation("ModerationReportReporter", fields: [reporterId], references: [id])
+  targetUser User?             @relation("ModerationReportTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  listing    Listing?          @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  message    ChatMessage?      @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  admin      User?             @relation("ModerationReportAdmin", fields: [adminId], references: [id], onDelete: SetNull)
+  appeals    ModerationAppeal[]
+  actions    ModerationAction[]
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([listingId])
+  @@index([targetUserId])
+  @@index([messageId])
+  @@index([reporterId])
+  @@map("moderation_reports")
+}
+
+model ModerationAction {
+  id                 String               @id @default(uuid())
+  adminId            String               @map("admin_id")
+  userId             String?              @map("user_id")
+  listingId          String?              @map("listing_id")
+  messageId          String?              @map("message_id")
+  reportId           String?              @map("report_id")
+  actionType         ModerationActionType @map("action_type")
+  suspensionDuration SuspensionDuration?  @map("suspension_duration")
+  notes              String?
+  expiresAt          DateTime?            @map("expires_at")
+  liftedAt           DateTime?            @map("lifted_at")
+  createdAt          DateTime             @default(now()) @map("created_at")
+
+  admin   User              @relation("ModerationActionAdmin", fields: [adminId], references: [id])
+  user    User?             @relation("ModerationActionUser", fields: [userId], references: [id], onDelete: SetNull)
+  report  ModerationReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  appeals ModerationAppeal[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([reportId])
+  @@index([expiresAt, liftedAt])
+  @@map("moderation_actions")
+}
+
+model ModerationAppeal {
+  id                 String       @id @default(uuid())
+  userId             String       @map("user_id")
+  reportId           String?      @map("report_id")
+  moderationActionId String?      @map("moderation_action_id")
+  message            String
+  status             AppealStatus @default(pending)
+  adminId            String?      @map("admin_id")
+  adminNotes         String?      @map("admin_notes")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  user             User              @relation("ModerationAppealUser", fields: [userId], references: [id])
+  report           ModerationReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  moderationAction ModerationAction? @relation(fields: [moderationActionId], references: [id], onDelete: SetNull)
+  admin            User?             @relation("ModerationAppealAdmin", fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([userId])
+  @@map("moderation_appeals")
+}
+
+model ModerationAuditLog {
+  id        String   @id @default(uuid())
+  eventType String   @map("event_type") @db.VarChar(60)
+  actorId   String?  @map("actor_id")
+  reportId  String?  @map("report_id")
+  userId    String?  @map("user_id")
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  actor User? @relation("ModerationAuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([reportId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([eventType, createdAt(sort: Desc)])
+  @@map("moderation_audit_logs")
 }

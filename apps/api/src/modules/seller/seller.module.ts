@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { ChatModule } from '../chat/chat.module';
 import { ListingsModule } from '../listings/listings.module';
+import { ModerationModule } from '../moderation/moderation.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { SearchModule } from '../search/search.module';
@@ -11,10 +12,11 @@ import { SellerEarningsController } from './seller-earnings.controller';
 import { SellerListingsController } from './seller-listings.controller';
 import { SellerNotificationsController } from './seller-notifications.controller';
 import { SellerProfileController } from './seller-profile.controller';
+import { SellerReportsController } from './seller-reports.controller';
 import { SellerSearchController } from './seller-search.controller';
 
 @Module({
-  imports: [ListingsModule, PaymentsModule, UsersModule, ChatModule, NotificationsModule, SearchModule],
+  imports: [ListingsModule, PaymentsModule, UsersModule, ChatModule, NotificationsModule, SearchModule, ModerationModule],
   controllers: [
     SellerListingsController,
     SellerEarningsController,
@@ -22,6 +24,7 @@ import { SellerSearchController } from './seller-search.controller';
     SellerSearchController,
     SellerProfileController,
     SellerChatController,
+    SellerReportsController,
   ],
 })
 export class SellerModule {}

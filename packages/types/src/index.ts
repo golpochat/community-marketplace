@@ -141,7 +141,6 @@ export type {
   DispatchNotificationInput,
   BroadcastNotificationInput,
 } from './notification';
-export type { PaginationMeta, ApiResponse, ApiError, PaginatedResult } from './api';
 export type {
   SearchIndexName,
   SearchEntityType,
@@ -158,3 +157,28 @@ export type {
   ReindexJobStatus,
   SearchSynonymGroup,
 } from './search';
+export type {
+  ModerationReportReason,
+  ModerationReportStatus,
+  ModerationActionType,
+  SuspensionDuration,
+  AppealStatus,
+  ModerationReportTargetType,
+  ModerationReport,
+  ModerationReportDetail,
+  ModerationAction,
+  ModerationAppeal,
+  ModerationAuditEventType,
+  ModerationAuditLog,
+  ModerationAnalytics,
+  ModerationReportFilters,
+} from './moderation';
+export {
+  MODERATION_REPORT_REASONS,
+  MODERATION_REPORT_STATUSES,
+  MODERATION_ACTION_TYPES,
+  SUSPENSION_DURATIONS,
+  APPEAL_STATUSES,
+} from './moderation';
+export type { PaginationMeta, ApiResponse, ApiError, PaginatedResult } from './api';
+export type { AdminDashboardStats, PlatformSettings, AdminMeResponse } from './admin';

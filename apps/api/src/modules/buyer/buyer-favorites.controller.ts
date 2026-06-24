@@ -14,6 +14,7 @@ import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.de
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { ListingsService } from '../listings/listings.service';
+import { ModerationService } from '../moderation/moderation.service';
 
 @RequireRole('BUYER', 'SELLER')
 @Controller('buyer/favorites')
@@ -56,7 +57,7 @@ export class BuyerFavoritesController {
 @RequireRole('BUYER', 'SELLER')
 @Controller('buyer/listings')
 export class BuyerListingReportsController {
-  constructor(private readonly listingsService: ListingsService) {}
+  constructor(private readonly moderationService: ModerationService) {}
 
   @RequirePermissions(PERMISSIONS.REPORT_LISTING)
   @Post(':listingId/report')
@@ -65,6 +66,6 @@ export class BuyerListingReportsController {
     @Param('listingId') listingId: string,
     @Body() body: unknown,
   ) {
-    return this.listingsService.reportListing(user.id, listingId, body);
+    return this.moderationService.reportListing(user.id, { ...(body as object), listingId });
   }
 }

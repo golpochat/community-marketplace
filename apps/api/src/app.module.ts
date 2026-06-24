@@ -16,6 +16,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BuyerModule } from './modules/buyer/buyer.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { HealthModule } from './modules/health/health.module';
+import { MetricsModule } from './modules/metrics/metrics.module';
 import { ListingsModule } from './modules/listings/listings.module';
 import { ModerationModule } from './modules/moderation/moderation.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -36,6 +37,7 @@ import { UtilsModule } from './utils/utils.module';
     EventsModule,
     JobsModule,
     HealthModule,
+    MetricsModule,
     AuthModule,
     UsersModule,
     ListingsModule,

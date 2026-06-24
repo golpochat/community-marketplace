@@ -15,9 +15,9 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { ModerationService } from '../moderation/moderation.service';
 
-@RequireRole('ADMIN')
-@Controller('admin/moderation')
-export class AdminModerationController {
+@RequireRole('SUPER_ADMIN')
+@Controller('super-admin/moderation')
+export class SuperAdminModerationController {
   constructor(private readonly moderationService: ModerationService) {}
 
   @RequirePermissions(PERMISSIONS.VIEW_REPORTS)
@@ -32,26 +32,6 @@ export class AdminModerationController {
     return this.moderationService.getReport(id);
   }
 
-  @RequirePermissions(PERMISSIONS.MANAGE_REPORTS)
-  @Patch('reports/:id/assign')
-  assignReport(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() body: unknown,
-  ) {
-    return this.moderationService.assignReport(id, user.id, body);
-  }
-
-  @RequirePermissions(PERMISSIONS.MANAGE_REPORTS)
-  @Patch('reports/:id/notes')
-  addNotes(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() body: unknown,
-  ) {
-    return this.moderationService.addReportNotes(id, user.id, body);
-  }
-
   @RequirePermissions(PERMISSIONS.RESOLVE_REPORT)
   @Post('reports/:id/actions')
   takeAction(
@@ -62,22 +42,6 @@ export class AdminModerationController {
     return this.moderationService.takeAction(id, user.id, body);
   }
 
-  @RequirePermissions(PERMISSIONS.RESOLVE_REPORT)
-  @Patch('reports/:id')
-  resolveReport(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() body: unknown,
-  ) {
-    return this.moderationService.addReportNotes(id, user.id, body);
-  }
-
-  @RequirePermissions(PERMISSIONS.VIEW_REPORTS)
-  @Get('actions')
-  listActions(@Query() query: unknown) {
-    return this.moderationService.listActions(query);
-  }
-
   @RequirePermissions(PERMISSIONS.VIEW_REPORTS)
   @Get('bans')
   getBans() {
@@ -85,21 +49,9 @@ export class AdminModerationController {
   }
 
   @RequirePermissions(PERMISSIONS.VIEW_REPORTS)
-  @Get('bans/check/:userId')
-  checkBan(@Param('userId') userId: string) {
-    return this.moderationService.isUserBanned(userId);
-  }
-
-  @RequirePermissions(PERMISSIONS.VIEW_REPORTS)
   @Get('appeals')
   listAppeals(@Query() query: unknown) {
     return this.moderationService.listAppeals(query);
-  }
-
-  @RequirePermissions(PERMISSIONS.VIEW_REPORTS)
-  @Get('appeals/:id')
-  getAppeal(@Param('id') id: string) {
-    return this.moderationService.getAppeal(id);
   }
 
   @RequirePermissions(PERMISSIONS.RESOLVE_REPORT)
@@ -109,7 +61,7 @@ export class AdminModerationController {
     @CurrentUser() user: AuthenticatedUser,
     @Body() body: unknown,
   ) {
-    return this.moderationService.reviewAppeal(id, user.id, body);
+    return this.moderationService.reviewAppeal(id, user.id, body, true);
   }
 
   @RequirePermissions(PERMISSIONS.VIEW_AUDIT_LOG)
