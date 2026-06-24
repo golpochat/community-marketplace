@@ -1,0 +1,158 @@
+# Development stack — hot-reload friendly, published ports, no TLS
+# Usage: docker compose -f infra/docker/docker-compose.dev.yml up -d
+
+name: community-marketplace-dev
+
+x-api-env: &api-env
+  NODE_ENV: development
+  PORT: 4000
+  DATABASE_URL: postgresql://cm:cm_dev_password@postgres:5432/community_marketplace
+  REDIS_URL: redis://redis:6379
+  MEILISEARCH_HOST: http://meilisearch:7700
+  MEILISEARCH_API_KEY: dev-master-key
+  CORS_ORIGIN: http://localhost:3000,http://localhost:3001,http://web.localhost,http://admin.localhost
+  JWT_SECRET: dev-jwt-secret-change-in-production
+  WEB_APP_URL: http://localhost:3000
+  BULLMQ_MODE: producer
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_USER: cm
+      POSTGRES_PASSWORD: cm_dev_password
+      POSTGRES_DB: community_marketplace
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cm -d community_marketplace"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cm-network
+
+  redis:
+    build:
+      context: .
+      dockerfile: Dockerfile.redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cm-network
+
+  meilisearch:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.meilisearch
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: dev-master-key
+    volumes:
+      - meili_data:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:7700/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cm-network
+
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    environment:
+      <<: *api-env
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:4000/api/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - cm-network
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.worker
+    environment:
+      <<: *api-env
+      BULLMQ_MODE: worker
+    ports:
+      - "4001:4001"
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cm-network
+
+  web:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4000/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - cm-network
+
+  admin:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.admin
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:4000/api
+    ports:
+      - "3001:3001"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - cm-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  meili_data:
+
+networks:
+  cm-network:
+    driver: bridge

@@ -7,7 +7,7 @@ set -euo pipefail
 
 BACKUP_DIR="${1:-./backups/$(date +%Y-%m-%d_%H%M%S)}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-COMPOSE_FILE="${ROOT_DIR}/infra/docker/docker-compose.yml"
+COMPOSE_FILE="${ROOT_DIR}/infra/docker/docker-compose.dev.yml"
 
 echo "==> Community Marketplace backup"
 echo "    Destination: ${BACKUP_DIR}"
@@ -47,12 +47,20 @@ docker run --rm \
   alpine tar czf /backup/redis-data.tar.gz -C /data . \
   2>/dev/null || echo "WARN: Redis volume backup skipped"
 
+# R2 backup (when AWS CLI configured for R2)
+if command -v aws >/dev/null 2>&1 && [[ -n "${R2_BUCKET:-}" ]]; then
+  echo "==> Backing up R2 bucket prefix snapshots..."
+  aws s3 sync "s3://${R2_BUCKET}/" "${BACKUP_DIR}/r2/" \
+    --endpoint-url "${R2_ENDPOINT:-}" \
+    2>/dev/null || echo "WARN: R2 backup skipped"
+fi
+
 # ── Manifest ──────────────────────────────────────────────────────────────────
 cat > "${BACKUP_DIR}/manifest.json" <<EOF
 {
   "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
   "environment": "${NODE_ENV:-unknown}",
-  "components": ["postgres", "meilisearch", "redis"],
+  "components": ["postgres", "meilisearch", "redis", "r2"],
   "version": "$(git -C "${ROOT_DIR}" rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
 }
 EOF

@@ -1,0 +1,201 @@
+# Production simulation — Traefik TLS, observability, resource limits
+# Usage: docker compose -f infra/docker/docker-compose.prod.yml --env-file .env.prod up -d
+
+name: community-marketplace-prod
+
+x-api-env: &api-env
+  NODE_ENV: production
+  PORT: 4000
+  DATABASE_URL: postgresql://cm:${POSTGRES_PASSWORD}@postgres:5432/community_marketplace
+  REDIS_URL: redis://redis:6379
+  MEILISEARCH_HOST: http://meilisearch:7700
+  MEILISEARCH_API_KEY: ${MEILI_MASTER_KEY}
+  JWT_SECRET: ${JWT_SECRET}
+  CORS_ORIGIN: https://community.market,https://admin.community.market
+  WEB_APP_URL: https://community.market
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+  LOG_LEVEL: info
+
+services:
+  traefik:
+    image: traefik:v3.2
+    command:
+      - --configFile=/etc/traefik/traefik.prod.yml
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../traefik/traefik.prod.yml:/etc/traefik/traefik.prod.yml:ro
+      - ../traefik/dynamic:/etc/traefik/dynamic:ro
+      - traefik_acme:/etc/traefik/acme
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - cm-network
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: community_marketplace
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    networks:
+      - cm-network
+
+  redis:
+    build:
+      context: .
+      dockerfile: Dockerfile.redis
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cm-network
+
+  meilisearch:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.meilisearch
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
+    volumes:
+      - meili_data:/meili_data
+    networks:
+      - cm-network
+
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    environment:
+      <<: *api-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.api.rule=Host(`api.community.market`)
+      - traefik.http.routers.api.tls.certresolver=letsencrypt
+      - traefik.http.services.api.loadbalancer.server.port=4000
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1G
+    networks:
+      - cm-network
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.worker
+    environment:
+      <<: *api-env
+      WORKER_HEALTH_PORT: 4001
+    depends_on:
+      - api
+      - redis
+    deploy:
+      replicas: 2
+    networks:
+      - cm-network
+
+  web:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.web
+      args:
+        NEXT_PUBLIC_API_URL: https://api.community.market/api
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.web.rule=Host(`community.market`) || Host(`www.community.market`)
+      - traefik.http.routers.web.tls.certresolver=letsencrypt
+      - traefik.http.services.web.loadbalancer.server.port=3000
+    networks:
+      - cm-network
+
+  admin:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.admin
+      args:
+        NEXT_PUBLIC_API_URL: https://api.community.market/api
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.admin.rule=Host(`admin.community.market`)
+      - traefik.http.routers.admin.tls.certresolver=letsencrypt
+      - traefik.http.services.admin.loadbalancer.server.port=3001
+    networks:
+      - cm-network
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes:
+      - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../observability/alerts.yml:/etc/prometheus/alerts.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - cm-network
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3002:3000"
+    networks:
+      - cm-network
+
+  loki:
+    image: grafana/loki:3.2.1
+    command: -config.file=/etc/loki/loki.yml
+    volumes:
+      - ../observability/loki.yml:/etc/loki/loki.yml:ro
+    ports:
+      - "3100:3100"
+    networks:
+      - cm-network
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.114.0
+    command: ["--config=/etc/otel-collector.yml"]
+    volumes:
+      - ../observability/otel-collector.yml:/etc/otel-collector.yml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    networks:
+      - cm-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  meili_data:
+  traefik_acme:
+  grafana_data:
+
+networks:
+  cm-network:
+    driver: bridge

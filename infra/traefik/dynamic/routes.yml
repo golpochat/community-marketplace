@@ -1,5 +1,6 @@
 # Dynamic routing — Community Marketplace
 # Mounted at /etc/traefik/dynamic/routes.yml
+# Middlewares defined in middlewares.yml
 
 http:
   routers:
@@ -10,7 +11,7 @@ http:
         - web
       service: api
       middlewares:
-        - secure-headers
+        - api-chain
 
     web:
       rule: Host(`community.market`) || Host(`www.community.market`) || Host(`localhost`)
@@ -19,6 +20,7 @@ http:
         - web
       service: web
       middlewares:
+        - compress
         - secure-headers
 
     admin:
@@ -28,7 +30,7 @@ http:
         - web
       service: admin
       middlewares:
-        - secure-headers
+        - api-chain
         - admin-ip-whitelist
 
     meilisearch:
@@ -59,25 +61,3 @@ http:
       loadBalancer:
         servers:
           - url: http://meilisearch:7700
-
-  middlewares:
-    secure-headers:
-      headers:
-        frameDeny: true
-        contentTypeNosniff: true
-        browserXssFilter: true
-        referrerPolicy: strict-origin-when-cross-origin
-        stsSeconds: 31536000
-        stsIncludeSubdomains: true
-
-    admin-ip-whitelist:
-      ipAllowList:
-        sourceRange:
-          - "127.0.0.1/32"
-          - "10.0.0.0/8"
-
-    internal-only:
-      ipAllowList:
-        sourceRange:
-          - "10.0.0.0/8"
-          - "172.16.0.0/12"

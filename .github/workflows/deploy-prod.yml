@@ -1,0 +1,81 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type "deploy" to confirm production release
+        required: true
+
+env:
+  K8S_OVERLAY: infra/k8s/overlays/prod
+  REGISTRY: ghcr.io/${{ github.repository_owner }}/community-marketplace
+
+jobs:
+  deploy:
+    if: github.event.inputs.confirm == 'deploy'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+        run: pnpm --filter @community-marketplace/api exec prisma migrate deploy
+
+      - name: Build & push images
+        run: |
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          TAG=prod-${{ github.sha }}
+          docker build -f infra/docker/Dockerfile.api -t ${{ env.REGISTRY }}/api:$TAG .
+          docker build -f infra/docker/Dockerfile.worker -t ${{ env.REGISTRY }}/worker:$TAG .
+          docker build -f infra/docker/Dockerfile.web -t ${{ env.REGISTRY }}/web:$TAG .
+          docker build -f infra/docker/Dockerfile.admin -t ${{ env.REGISTRY }}/admin:$TAG .
+          docker push ${{ env.REGISTRY }}/api:$TAG
+          docker push ${{ env.REGISTRY }}/worker:$TAG
+          docker push ${{ env.REGISTRY }}/web:$TAG
+          docker push ${{ env.REGISTRY }}/admin:$TAG
+
+      - name: Deploy to Kubernetes
+        env:
+          KUBECONFIG_DATA: ${{ secrets.PROD_KUBECONFIG }}
+        run: |
+          echo "$KUBECONFIG_DATA" | base64 -d > kubeconfig
+          export KUBECONFIG=kubeconfig
+          kubectl apply -k ${{ env.K8S_OVERLAY }}
+          kubectl rollout status deployment/prod-api -n community-marketplace --timeout=600s
+
+      - name: Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {"text": "🚀 Production deploy ${{ job.status }} — ${{ github.sha }}"}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Email notification
+        if: always()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: Production deploy ${{ job.status }}
+          to: ${{ secrets.DEPLOY_NOTIFY_EMAIL }}
+          from: ${{ secrets.SMTP_FROM }}
+          body: Deploy ${{ github.sha }} finished with status ${{ job.status }}.

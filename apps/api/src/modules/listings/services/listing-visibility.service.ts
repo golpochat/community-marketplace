@@ -27,6 +27,7 @@ export class ListingVisibilityService {
   visibleListingWhere(extra?: Record<string, unknown>) {
     return {
       status: 'active' as const,
+      moderationHiddenAt: null,
       seller: { status: 'active' as const },
       ...extra,
     };

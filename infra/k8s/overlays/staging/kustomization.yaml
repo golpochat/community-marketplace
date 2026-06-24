@@ -1,0 +1,39 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../base
+
+namePrefix: staging-
+
+namespace: community-marketplace-staging
+
+patches:
+  - target:
+      kind: Deployment
+      name: api
+    patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 2
+  - target:
+      kind: ConfigMap
+      name: api-config
+    patch: |
+      - op: replace
+        path: /data/NODE_ENV
+        value: staging
+  - target:
+      kind: ConfigMap
+      name: web-config
+    patch: |
+      - op: replace
+        path: /data/NEXT_PUBLIC_API_URL
+        value: https://api.staging.community.market/api
+  - target:
+      kind: ConfigMap
+      name: admin-config
+    patch: |
+      - op: replace
+        path: /data/NEXT_PUBLIC_API_URL
+        value: https://api.staging.community.market/api

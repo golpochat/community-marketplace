@@ -62,6 +62,19 @@ export class RedisCacheService implements OnModuleInit, OnModuleDestroy {
     this.memory.delete(key);
   }
 
+  async ping(): Promise<boolean> {
+    if (!this.client) return false;
+    try {
+      return (await this.client.ping()) === 'PONG';
+    } catch {
+      return false;
+    }
+  }
+
+  getClient(): Redis | null {
+    return this.client;
+  }
+
   private readMemory(key: string): string | null {
     const entry = this.memory.get(key);
     if (!entry) return null;

@@ -4,6 +4,7 @@ import { DatabaseModule } from '../../database/database.module';
 import { EventsModule } from '../../events/events.module';
 import { LibsModule } from '../../libs/libs.module';
 import { SearchModule } from '../search/search.module';
+import { UsersModule } from '../users/users.module';
 import { UtilsModule } from '../../utils/utils.module';
 import { CategoriesService } from './services/categories.service';
 import { ListingAnalyticsService } from './services/listing-analytics.service';
@@ -21,7 +22,7 @@ import { ListingsController } from './listings.controller';
 import { ListingsService } from './listings.service';
 
 @Module({
-  imports: [DatabaseModule, UtilsModule, EventsModule, LibsModule, SearchModule],
+  imports: [DatabaseModule, UtilsModule, EventsModule, LibsModule, SearchModule, UsersModule],
   controllers: [ListingsController],
   providers: [
     ListingsService,

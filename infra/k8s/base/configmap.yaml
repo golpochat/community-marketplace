@@ -7,6 +7,9 @@ data:
   NODE_ENV: production
   PORT: "4000"
   MEILISEARCH_HOST: http://meilisearch:7700
+  REDIS_URL: redis://redis:6379
+  BULLMQ_MODE: producer
+  LOG_LEVEL: info
   CORS_ORIGIN: https://community.market,https://admin.community.market
 ---
 apiVersion: v1

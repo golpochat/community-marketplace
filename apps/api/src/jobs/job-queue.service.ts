@@ -1,7 +1,9 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Queue, Worker, type Job as BullJob } from 'bullmq';
+import { Gauge } from 'prom-client';
 
 import { LoggerLib } from '../libs/logger.lib';
+import { metricsRegistry } from '../modules/metrics/metrics.registry';
 
 export interface QueueJob {
   name: string;
@@ -10,14 +12,23 @@ export interface QueueJob {
 
 type JobHandler = (payload: Record<string, unknown>) => Promise<void>;
 
+type BullmqMode = 'producer' | 'worker' | 'both';
+
+const QUEUE_NAME = 'community-marketplace';
+
 @Injectable()
 export class JobQueueService implements OnModuleInit, OnModuleDestroy {
   private queue: Queue | null = null;
   private worker: Worker | null = null;
   private readonly handlers = new Map<string, JobHandler>();
   private readonly pendingLocal: QueueJob[] = [];
+  private readonly mode: BullmqMode;
+  private queueWaitingGauge: Gauge<string> | null = null;
 
-  constructor(private readonly logger: LoggerLib) {}
+  constructor(private readonly logger: LoggerLib) {
+    const raw = process.env.BULLMQ_MODE ?? 'both';
+    this.mode = raw === 'producer' || raw === 'worker' ? raw : 'both';
+  }
 
   async onModuleInit() {
     const redisUrl = process.env.REDIS_URL;
@@ -27,21 +38,34 @@ export class JobQueueService implements OnModuleInit, OnModuleDestroy {
     }
 
     const connection = { url: redisUrl };
-    this.queue = new Queue('community-marketplace', { connection });
-    this.worker = new Worker(
-      'community-marketplace',
-      async (job: BullJob) => {
-        const handler = this.handlers.get(job.name);
-        if (!handler) {
-          this.logger.log('JobQueueService', `No handler for job ${job.name}`);
-          return;
-        }
-        await handler((job.data ?? {}) as Record<string, unknown>);
-      },
-      { connection },
-    );
 
-    this.logger.log('JobQueueService', 'BullMQ worker started');
+    if (this.mode === 'producer' || this.mode === 'both') {
+      this.queue = new Queue(QUEUE_NAME, { connection });
+    }
+
+    if (this.mode === 'worker' || this.mode === 'both') {
+      this.worker = new Worker(
+        QUEUE_NAME,
+        async (job: BullJob) => {
+          const handler = this.handlers.get(job.name);
+          if (!handler) {
+            this.logger.log('JobQueueService', `No handler for job ${job.name}`);
+            return;
+          }
+          await handler((job.data ?? {}) as Record<string, unknown>);
+        },
+        { connection },
+      );
+      this.logger.log('JobQueueService', `BullMQ worker started (mode=${this.mode})`);
+    } else {
+      this.logger.log('JobQueueService', `BullMQ producer only (mode=${this.mode})`);
+    }
+
+    this.queueWaitingGauge = new Gauge({
+      name: 'bullmq_queue_waiting',
+      help: 'Number of jobs waiting in the queue',
+      registers: [metricsRegistry],
+    });
   }
 
   async onModuleDestroy() {
@@ -67,13 +91,31 @@ export class JobQueueService implements OnModuleInit, OnModuleDestroy {
     if (handler) {
       void Promise.resolve(handler(job.payload ?? {})).catch((error) => {
         const message = error instanceof Error ? error.message : String(error);
-        this.logger.log('JobQueueService', `Inline job ${job.name} failed: ${message}`);
+        this.logger.error('JobQueueService', `Inline job ${job.name} failed: ${message}`);
       });
       return;
     }
 
     this.pendingLocal.push(job);
     this.logger.log('JobQueueService', `Queued locally: ${job.name}`);
+  }
+
+  async getQueueStats() {
+    if (!this.queue) {
+      return { connected: false, counts: null };
+    }
+
+    const counts = await this.queue.getJobCounts(
+      'waiting',
+      'active',
+      'completed',
+      'failed',
+      'delayed',
+      'paused',
+    );
+    this.queueWaitingGauge?.set(counts.waiting ?? 0);
+
+    return { connected: true, queue: QUEUE_NAME, counts };
   }
 
   private async flushPending(name: string) {

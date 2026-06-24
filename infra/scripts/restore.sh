@@ -13,7 +13,7 @@ fi
 
 BACKUP_DIR="$1"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-COMPOSE_FILE="${ROOT_DIR}/infra/docker/docker-compose.yml"
+COMPOSE_FILE="${ROOT_DIR}/infra/docker/docker-compose.dev.yml"
 
 if [[ ! -d "${BACKUP_DIR}" ]]; then
   echo "ERROR: Backup directory not found: ${BACKUP_DIR}"

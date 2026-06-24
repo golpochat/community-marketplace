@@ -20,6 +20,9 @@ spec:
           image: community-marketplace/api:latest  # TODO: pin image digest
           ports:
             - containerPort: 4000
+          env:
+            - name: BULLMQ_MODE
+              value: producer
           envFrom:
             - configMapRef:
                 name: api-config
@@ -27,13 +30,13 @@ spec:
                 name: api-secrets
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: /api/health/ready
               port: 4000
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /api/health
+              path: /api/health/live
               port: 4000
             initialDelaySeconds: 30
             periodSeconds: 30

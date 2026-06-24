@@ -1,0 +1,50 @@
+# Shared Traefik middlewares — rate limiting, compression, security
+
+http:
+  middlewares:
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 200
+        period: 1m
+
+    compress:
+      compress:
+        excludedContentTypes:
+          - text/event-stream
+
+    secure-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: strict-origin-when-cross-origin
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        forceSTSHeader: true
+        contentSecurityPolicy: "default-src 'self'; frame-ancestors 'none'"
+        permissionsPolicy: "camera=(), microphone=(), geolocation=()"
+
+    api-chain:
+      chain:
+        middlewares:
+          - rate-limit
+          - compress
+          - secure-headers
+
+    dashboard-auth:
+      basicAuth:
+        users:
+          - "${TRAEFIK_DASHBOARD_USER:-admin}:${TRAEFIK_DASHBOARD_PASSWORD_HASH:-}"
+
+    admin-ip-whitelist:
+      ipAllowList:
+        sourceRange:
+          - "127.0.0.1/32"
+          - "10.0.0.0/8"
+
+    internal-only:
+      ipAllowList:
+        sourceRange:
+          - "10.0.0.0/8"
+          - "172.16.0.0/12"

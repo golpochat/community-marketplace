@@ -6,9 +6,12 @@ import cookieParser from 'cookie-parser';
 import { getCorsOrigins } from '@community-marketplace/config';
 
 import { AppModule } from './app.module';
+import { initTracing } from './libs/tracing.lib';
+
+initTracing();
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create(AppModule, { rawBody: true, bufferLogs: true });
 
   app.setGlobalPrefix('api');
   app.use(cookieParser());

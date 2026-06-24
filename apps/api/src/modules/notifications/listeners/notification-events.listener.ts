@@ -33,6 +33,21 @@ export class NotificationEventsListener implements OnModuleInit {
     );
     this.eventBus.subscribe('seller.warned', (e) => void this.onSellerWarned(e.payload));
     this.eventBus.subscribe('admin.action', (e) => void this.onAdminAction(e.payload));
+    this.eventBus.subscribe('moderation.report_created', (e) =>
+      void this.onModerationReportCreated(e.payload),
+    );
+    this.eventBus.subscribe('moderation.user_warned', (e) =>
+      void this.onModerationUserWarned(e.payload),
+    );
+    this.eventBus.subscribe('moderation.user_suspended', (e) =>
+      void this.onModerationUserSuspended(e.payload),
+    );
+    this.eventBus.subscribe('moderation.user_banned', (e) =>
+      void this.onModerationUserBanned(e.payload),
+    );
+    this.eventBus.subscribe('moderation.appeal_decided', (e) =>
+      void this.onAppealDecided(e.payload),
+    );
   }
 
   private async onMessageSent(payload: Record<string, unknown>) {
@@ -256,6 +271,84 @@ export class NotificationEventsListener implements OnModuleInit {
       templateKey: 'admin_warning',
       variables: { message },
       channels: ['in_app'],
+    });
+  }
+
+  private async onModerationReportCreated(payload: Record<string, unknown>) {
+    const admins = await this.prisma.user.findMany({
+      where: { primaryRole: { code: { in: ['ADMIN', 'SUPER_ADMIN'] } } },
+      select: { id: true },
+      take: 20,
+    });
+
+    for (const admin of admins) {
+      await this.dispatcher.dispatch({
+        userId: admin.id,
+        type: 'system',
+        templateKey: 'admin_warning',
+        variables: {
+          message: `New moderation report received (${payload.targetType ?? 'unknown'}).`,
+        },
+        actionUrl: '/admin/dashboard/moderation',
+        channels: ['in_app'],
+      });
+    }
+  }
+
+  private async onModerationUserWarned(payload: Record<string, unknown>) {
+    const userId = payload.userId as string;
+    const message = (payload.message as string) ?? 'You received a warning from moderation.';
+    if (!userId) return;
+    await this.dispatcher.dispatch({
+      userId,
+      type: 'admin_warning',
+      templateKey: 'admin_warning',
+      variables: { message },
+      channels: ['in_app', 'push'],
+    });
+  }
+
+  private async onModerationUserSuspended(payload: Record<string, unknown>) {
+    const userId = payload.userId as string;
+    const duration = (payload.duration as string) ?? 'temporary';
+    if (!userId) return;
+    await this.dispatcher.dispatch({
+      userId,
+      type: 'admin_warning',
+      templateKey: 'admin_warning',
+      variables: { message: `Your account has been suspended (${duration}).` },
+      channels: ['in_app', 'push', 'email'],
+    });
+  }
+
+  private async onModerationUserBanned(payload: Record<string, unknown>) {
+    const userId = payload.userId as string;
+    if (!userId) return;
+    await this.dispatcher.dispatch({
+      userId,
+      type: 'admin_warning',
+      templateKey: 'admin_warning',
+      variables: { message: 'Your account has been permanently banned.' },
+      channels: ['in_app', 'push', 'email'],
+    });
+  }
+
+  private async onAppealDecided(payload: Record<string, unknown>) {
+    const userId = payload.userId as string;
+    const status = payload.status as string;
+    const adminNotes = payload.adminNotes as string | undefined;
+    if (!userId) return;
+    await this.dispatcher.dispatch({
+      userId,
+      type: 'system',
+      templateKey: 'admin_warning',
+      variables: {
+        message:
+          status === 'approved'
+            ? `Your appeal was approved.${adminNotes ? ` ${adminNotes}` : ''}`
+            : `Your appeal was rejected.${adminNotes ? ` ${adminNotes}` : ''}`,
+      },
+      channels: ['in_app', 'push'],
     });
   }
 }

@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 
 import type { ListingUploadUrlResponse } from '@community-marketplace/types';
 import { listingImageUploadRequestSchema } from '@community-marketplace/validation';
+
+import { R2StorageService } from '../../users/services/r2-storage.service';
 
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -10,22 +12,17 @@ const MAX_IMAGES = 10;
 
 @Injectable()
 export class ListingR2StorageService {
-  private readonly accountId = process.env.R2_ACCOUNT_ID;
-  private readonly accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  private readonly secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  private readonly bucket = process.env.R2_BUCKET ?? 'community-marketplace';
-  private readonly publicBaseUrl =
-    process.env.R2_PUBLIC_URL ?? 'https://assets.community.marketplace';
+  constructor(private readonly r2: R2StorageService) {}
 
   isConfigured(): boolean {
-    return Boolean(this.accountId && this.accessKeyId && this.secretAccessKey);
+    return this.r2.isConfigured();
   }
 
-  createListingImageUploadUrl(
+  async createListingImageUploadUrl(
     listingId: string,
     sellerId: string,
     input: unknown,
-  ): ListingUploadUrlResponse {
+  ): Promise<ListingUploadUrlResponse> {
     const parsed = listingImageUploadRequestSchema.parse(input);
 
     if (!ALLOWED_TYPES.has(parsed.contentType)) {
@@ -35,36 +32,31 @@ export class ListingR2StorageService {
       throw new Error('Image exceeds maximum file size of 5MB');
     }
 
-    const ext =
-      parsed.fileName?.split('.').pop() ??
-      parsed.contentType.split('/')[1] ??
-      'jpg';
-    const key = `listings/${sellerId}/${listingId}/${randomUUID()}.${ext}`;
-    const publicUrl = this.buildPublicUrl(key);
-    const optimizedUrl = this.buildOptimizedUrl(publicUrl);
-    const expiresInSeconds = 900;
+    const signed = await this.r2.createSignedUploadUrl({
+      category: 'listing-images',
+      ownerId: `${sellerId}/${listingId}`,
+      contentType: parsed.contentType,
+      fileName: parsed.fileName,
+    });
 
-    if (!this.isConfigured()) {
-      return {
-        uploadUrl: `${process.env.WEB_APP_URL ?? 'http://localhost:3000'}/api/dev-upload?key=${encodeURIComponent(key)}`,
-        publicUrl,
-        key,
-        expiresInSeconds,
-        optimizedUrl,
-      };
-    }
-
-    const uploadUrl = `https://${this.accountId}.r2.cloudflarestorage.com/${this.bucket}/${key}?X-Amz-Expires=${expiresInSeconds}`;
-
-    return { uploadUrl, publicUrl, key, expiresInSeconds, optimizedUrl };
+    const publicUrl = this.buildPublicUrl(signed.key);
+    return {
+      ...signed,
+      publicUrl,
+      optimizedUrl: this.buildOptimizedUrl(publicUrl),
+    };
   }
 
   verifyListingImageKey(key: string, sellerId: string, listingId: string) {
-    return key.startsWith(`listings/${sellerId}/${listingId}/`);
+    return (
+      key.startsWith(`listing-images/${sellerId}/${listingId}/`) ||
+      key.startsWith(`listings/${sellerId}/${listingId}/`)
+    );
   }
 
   buildPublicUrl(key: string): string {
-    return `${this.publicBaseUrl.replace(/\/$/, '')}/${key}`;
+    const base = process.env.R2_PUBLIC_URL ?? 'https://assets.community.marketplace';
+    return `${base.replace(/\/$/, '')}/${key}`;
   }
 
   buildOptimizedUrl(publicUrl: string): string {
