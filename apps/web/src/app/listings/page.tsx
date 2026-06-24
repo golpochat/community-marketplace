@@ -5,9 +5,9 @@ import { ListingCard } from '@/components/listings/listing-card';
 export const metadata = { title: 'Listings' };
 
 const PLACEHOLDER_LISTINGS = [
-  { id: '1', title: 'Vintage Bicycle', price: 150, location: 'Downtown' },
-  { id: '2', title: 'Office Desk', price: 80, location: 'Westside' },
-  { id: '3', title: 'Garden Tools Set', price: 45, location: 'North Park' },
+  { id: '1', title: 'Vintage Bicycle', price: 150, location: 'Dublin' },
+  { id: '2', title: 'Office Desk', price: 80, location: 'Cork' },
+  { id: '3', title: 'Garden Tools Set', price: 45, location: 'Galway' },
 ];
 
 export default function ListingsPage() {

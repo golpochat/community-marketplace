@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 
-import type { Listing } from '@community-marketplace/types';
-
 import { EventBusService } from '../../events/event-bus.service';
 import { ListingsService } from '../listings/listings.service';
 import { ModerationService } from '../moderation/moderation.service';
@@ -20,38 +18,39 @@ export class AdminService {
     private readonly eventBus: EventBusService,
   ) {}
 
-  getStats() {
-    const users = this.usersService.findAll(1, 1000);
-    const listings = this.listingsService.findAll(1, 1000);
+  async getStats() {
+    const users = await this.usersService.listUsers({ page: 1, limit: 1 });
+    const listings = await this.listingsService.adminList({ page: 1, limit: 1, status: 'active' });
     const reports = this.moderationService.getReports();
     const bans = this.moderationService.getBans();
 
     return {
       totalUsers: users.meta.total,
-      activeListings: (listings.data as Listing[]).filter((l) => l.status === 'active').length,
+      activeListings: listings.meta.total,
       pendingReports: reports.filter((r) => r.status === 'open').length,
       activeBans: bans.length,
       revenue: 0,
     };
   }
 
-  getUsers(page = 1, limit = 20) {
-    return this.usersService.findAll(page, limit);
+  getUsers(page = 1, limit = 20, query: Record<string, string | undefined> = {}) {
+    return this.usersService.listUsers({ page, limit, ...query });
   }
 
   getListings(page = 1, limit = 20) {
-    return this.listingsService.findAll(page, limit);
+    return this.listingsService.adminList({ page, limit });
   }
 
-  suspendUser(adminId: string, dto: SuspendUserDto) {
-    this.logAction(adminId, 'user_suspend', 'user', dto.userId, { reason: dto.reason });
-    return { userId: dto.userId, status: 'suspended' };
+  getModerationReports() {
+    return this.moderationService.getReports();
   }
 
-  approveListing(adminId: string, listingId: string) {
-    const listing = this.listingsService.update(listingId, { status: 'active' });
-    this.logAction(adminId, 'listing_approve', 'listing', listingId);
-    return listing;
+  getModerationBans() {
+    return this.moderationService.getBans();
+  }
+
+  suspendUser(adminId: string, adminRole: 'ADMIN' | 'SUPER_ADMIN', dto: SuspendUserDto) {
+    return this.usersService.suspendUser(adminId, adminRole, dto);
   }
 
   executeAction(adminId: string, dto: AdminActionDto) {

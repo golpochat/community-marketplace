@@ -1,1 +1,1 @@
-export { default } from '../../dashboard/super-admin/page';
+export { default, metadata } from '../../dashboard/page';

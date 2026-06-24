@@ -8,7 +8,7 @@ import { getCorsOrigins } from '@community-marketplace/config';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { rawBody: true });
 
   app.setGlobalPrefix('api');
   app.use(cookieParser());

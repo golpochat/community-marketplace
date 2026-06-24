@@ -15,11 +15,18 @@ export const ADMIN_APP_ROUTES = {
   users: '/admin/dashboard/users',
   listings: '/admin/dashboard/listings',
   analytics: '/admin/dashboard/analytics',
+  search: '/admin/dashboard/search',
   settings: '/admin/dashboard/settings',
+  superAdminSearch: '/super-admin/dashboard/search',
 } as const;
 
 const SUPER_ADMIN_ONLY_PREFIXES = ['/super-admin/dashboard'];
 const ADMIN_BLOCKED_FROM_SUPER = ['/super-admin/dashboard'];
+
+export function getAdminDashboardBaseForRole(role: RbacRole): string {
+  if (role === 'SUPER_ADMIN') return ADMIN_APP_ROUTES.superAdminDashboard;
+  return ADMIN_APP_ROUTES.adminDashboard;
+}
 
 export function getAdminDashboardPathForRole(role: RbacRole): string {
   if (role === 'SUPER_ADMIN') return ADMIN_APP_ROUTES.superAdminDashboard;
@@ -34,6 +41,11 @@ export function isAdminAppRouteAllowed(role: RbacRole | null, pathname: string):
     return !SUPER_ADMIN_ONLY_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   }
   return false;
+}
+
+export function getSearchDashboardPathForRole(role: RbacRole): string {
+  if (role === 'SUPER_ADMIN') return ADMIN_APP_ROUTES.superAdminSearch;
+  return ADMIN_APP_ROUTES.search;
 }
 
 export function getRequiredAdminRoleForPath(pathname: string): RbacRole | null {

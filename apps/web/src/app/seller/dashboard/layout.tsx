@@ -18,7 +18,25 @@ export default function SellerDashboardLayout({ children }: { children: React.Re
             My Listings
           </Link>
           <Link
-            href="/chat"
+            href="/seller/search"
+            className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          >
+            Search
+          </Link>
+          <Link
+            href="/seller/notifications"
+            className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          >
+            Notifications
+          </Link>
+          <Link
+            href="/seller/earnings"
+            className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+          >
+            Earnings
+          </Link>
+          <Link
+            href="/seller/dashboard/chat"
             className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
           >
             Messages

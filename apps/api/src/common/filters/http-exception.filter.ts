@@ -21,7 +21,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const message =
       exception instanceof HttpException
         ? exception.message
-        : 'Internal server error';
+        : exception instanceof Error
+          ? exception.message
+          : 'Internal server error';
+
+    if (!(exception instanceof HttpException) && process.env.NODE_ENV !== 'production') {
+      console.error('[GlobalExceptionFilter]', exception);
+    }
 
     const body: ApiError = {
       code: `HTTP_${status}`,

@@ -291,16 +291,11 @@ export class RbacManagementService {
 
   // ── Persistence helpers ─────────────────────────────────────────────────────
 
-  private async persistUserRole(userId: string, roleId: string, roleCode: RbacRole) {
-    try {
-      await this.prisma.user.update({
-        where: { id: userId },
-        data: { primaryRoleId: roleId },
-      });
-    } catch {
-      // in-memory / dev user store
-    }
-    this.usersService.updatePrimaryRole(userId, roleId, roleCode);
+  private async persistUserRole(userId: string, roleId: string, _roleCode: RbacRole) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { primaryRoleId: roleId },
+    });
   }
 
   private async persistRolePermissionAdd(roleId: string, permissionId: string) {
@@ -427,9 +422,9 @@ export class RbacManagementService {
   // ── Read helpers ────────────────────────────────────────────────────────────
 
   private async findUserOrThrow(userId: string) {
-    const inMemory = this.usersService.findById(userId);
-    if (inMemory) {
-      return inMemory;
+    const user = await this.usersService.findById(userId);
+    if (user) {
+      return user;
     }
 
     try {
@@ -446,6 +441,9 @@ export class RbacManagementService {
           primaryRoleId: dbUser.primaryRoleId,
           role: dbUser.primaryRole.code as RbacRole,
           status: dbUser.status,
+          emailVerified: Boolean(dbUser.emailVerifiedAt),
+          phoneVerified: Boolean(dbUser.phoneVerifiedAt),
+          profileCompleted: dbUser.profileCompleted,
           createdAt: dbUser.createdAt.toISOString(),
           updatedAt: dbUser.updatedAt.toISOString(),
         };

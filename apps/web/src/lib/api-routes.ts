@@ -1,23 +1,46 @@
 import { API_NAMESPACES } from './rbac-routes';
 
 export const WEB_API_ROUTES = {
-  seller: {
-    listings: `${API_NAMESPACES.SELLER}/listings`,
-    listingImages: (id: string) => `${API_NAMESPACES.SELLER}/listings/${id}/images`,
-    payments: `${API_NAMESPACES.SELLER}/payments`,
-    connectOnboard: `${API_NAMESPACES.SELLER}/payments/connect/onboard`,
-    connectAccount: `${API_NAMESPACES.SELLER}/payments/connect/account`,
-    profile: `${API_NAMESPACES.SELLER}/profile`,
-  },
   buyer: {
-    purchases: `${API_NAMESPACES.BUYER}/purchases`,
+    payments: `${API_NAMESPACES.BUYER}/payments`,
+    paymentsIntent: `${API_NAMESPACES.BUYER}/payments/intent`,
+    paymentsConfirm: `${API_NAMESPACES.BUYER}/payments/confirm`,
+    paymentsRefunds: `${API_NAMESPACES.BUYER}/payments/refunds`,
+    notifications: `${API_NAMESPACES.BUYER}/notifications`,
+    notificationPreferences: `${API_NAMESPACES.BUYER}/notifications/preferences`,
+    notificationsRead: `${API_NAMESPACES.BUYER}/notifications/read`,
+    notificationsReadAll: `${API_NAMESPACES.BUYER}/notifications/read-all`,
     reviews: `${API_NAMESPACES.BUYER}/reviews`,
     profile: `${API_NAMESPACES.BUYER}/profile`,
     reports: `${API_NAMESPACES.BUYER}/reports`,
+    chat: `${API_NAMESPACES.BUYER}/chat`,
+  },
+  seller: {
+    listings: `${API_NAMESPACES.SELLER}/listings`,
+    listingImages: (id: string) => `${API_NAMESPACES.SELLER}/listings/${id}/images`,
+    earnings: `${API_NAMESPACES.SELLER}/earnings`,
+    earningsPayouts: `${API_NAMESPACES.SELLER}/earnings/payouts`,
+    connectOnboard: `${API_NAMESPACES.SELLER}/earnings/connect/onboard`,
+    connectStatus: `${API_NAMESPACES.SELLER}/earnings/connect/status`,
+    notifications: `${API_NAMESPACES.SELLER}/notifications`,
+    notificationPreferences: `${API_NAMESPACES.SELLER}/notifications/preferences`,
+    notificationsRead: `${API_NAMESPACES.SELLER}/notifications/read`,
+    notificationsReadAll: `${API_NAMESPACES.SELLER}/notifications/read-all`,
+    profile: `${API_NAMESPACES.SELLER}/profile`,
+    chat: `${API_NAMESPACES.SELLER}/chat`,
+  },
+  chat: {
+    inbox: '/chat/inbox',
+    threads: '/chat/threads',
+    messages: '/chat/messages',
+    markRead: '/chat/messages/read',
   },
   public: {
     listings: '/listings',
+    listingSearch: '/listings/search',
     search: '/search',
+    autocomplete: '/search/autocomplete',
+    globalSearch: '/search/global',
     auth: {
       login: '/auth/login',
       register: '/auth/register',
@@ -29,5 +52,10 @@ export const WEB_API_ROUTES = {
       activate: '/auth/activate',
       activateResend: '/auth/activate/resend',
     },
+  },
+  users: {
+    me: '/users/me',
+    mePermissions: '/users/me/permissions',
+    meSettings: '/users/me/settings',
   },
 } as const;

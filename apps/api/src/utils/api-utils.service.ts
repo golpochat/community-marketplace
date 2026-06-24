@@ -8,11 +8,21 @@ export class ApiUtilsService {
     return slugify(text);
   }
 
-  paginate<T>(items: T[], page: number, limit: number) {
-    const start = (page - 1) * limit;
+  paginate<T>(items: T[], page: number, limit: number, total?: number) {
+    const totalCount = total ?? items.length;
+    const data =
+      total !== undefined
+        ? items
+        : items.slice((page - 1) * limit, (page - 1) * limit + limit);
+
     return {
-      data: items.slice(start, start + limit),
-      meta: { page, limit, total: items.length },
+      data,
+      meta: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      },
     };
   }
 }

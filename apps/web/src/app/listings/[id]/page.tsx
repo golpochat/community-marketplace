@@ -7,9 +7,9 @@ import { formatCurrency } from '@community-marketplace/utils';
 export const metadata = { title: 'Listing Details' };
 
 const PLACEHOLDER_LISTINGS: Record<string, { title: string; price: number; location: string; description: string }> = {
-  '1': { title: 'Vintage Bicycle', price: 150, location: 'Downtown', description: 'Well-maintained vintage bicycle in great condition.' },
-  '2': { title: 'Office Desk', price: 80, location: 'Westside', description: 'Solid wood desk, perfect for home office.' },
-  '3': { title: 'Garden Tools Set', price: 45, location: 'North Park', description: 'Complete set of garden tools.' },
+  '1': { title: 'Vintage Bicycle', price: 150, location: 'Dublin', description: 'Well-maintained vintage bicycle in great condition.' },
+  '2': { title: 'Office Desk', price: 80, location: 'Cork', description: 'Solid wood desk, perfect for home office.' },
+  '3': { title: 'Garden Tools Set', price: 45, location: 'Galway', description: 'Complete set of garden tools.' },
 };
 
 interface ListingDetailPageProps {

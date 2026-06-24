@@ -1,54 +1,68 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { slugify } from '@community-marketplace/utils';
+import type { Category } from '@community-marketplace/types';
+import { createCategorySchema } from '@community-marketplace/validation';
 
-import { CategoryEntity } from '../entities/category.entity';
-import type { CreateCategoryDto } from '../dto/listings.dto';
+import { PrismaService } from '../../../database/prisma.service';
+import { EventBusService } from '../../../events/event-bus.service';
+import { mapCategory } from '../mappers/listing.mapper';
 
 @Injectable()
 export class CategoriesService {
-  private readonly categories = new Map<string, CategoryEntity>();
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventBus: EventBusService,
+  ) {}
 
-  constructor() {
-    this.seed('Electronics', 'electronics');
-    this.seed('Furniture', 'furniture');
-    this.seed('Sports', 'sports');
+  async findAll(): Promise<Category[]> {
+    const rows = await this.prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+    });
+    return rows.map(mapCategory);
   }
 
-  findAll(): CategoryEntity[] {
-    return [...this.categories.values()].filter((c) => c.isActive);
-  }
-
-  findById(id: string): CategoryEntity {
-    const category = this.categories.get(id);
-    if (!category) {
+  async findById(id: string): Promise<Category> {
+    const row = await this.prisma.category.findUnique({ where: { id } });
+    if (!row || !row.isActive) {
       throw new NotFoundException(`Category ${id} not found`);
     }
-    return category;
+    return mapCategory(row);
   }
 
-  create(dto: CreateCategoryDto): CategoryEntity {
-    const category = new CategoryEntity();
-    category.id = `cat-${Date.now()}`;
-    category.name = dto.name;
-    category.slug = slugify(dto.name);
-    category.description = dto.description;
-    category.parentId = dto.parentId;
-    category.isActive = true;
-    category.createdAt = new Date();
-    category.updatedAt = new Date();
-    this.categories.set(category.id, category);
-    return category;
+  async findBySlug(slug: string): Promise<Category> {
+    const row = await this.prisma.category.findUnique({ where: { slug } });
+    if (!row || !row.isActive) {
+      throw new NotFoundException(`Category ${slug} not found`);
+    }
+    return mapCategory(row);
   }
 
-  private seed(name: string, slug: string) {
-    const category = new CategoryEntity();
-    category.id = `cat-${slug}`;
-    category.name = name;
-    category.slug = slug;
-    category.isActive = true;
-    category.createdAt = new Date();
-    category.updatedAt = new Date();
-    this.categories.set(category.id, category);
+  async create(input: unknown): Promise<Category> {
+    const parsed = createCategorySchema.parse(input);
+    const slug =
+      parsed.slug ??
+      parsed.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+    const row = await this.prisma.category.create({
+      data: {
+        name: parsed.name,
+        slug,
+        icon: parsed.icon,
+        description: parsed.description,
+        parentId: parsed.parentId,
+      },
+    });
+
+    this.eventBus.publish({
+      type: 'category.created',
+      payload: { categoryId: row.id },
+      timestamp: new Date(),
+    });
+
+    return mapCategory(row);
   }
 }

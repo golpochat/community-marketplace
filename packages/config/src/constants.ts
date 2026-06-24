@@ -5,20 +5,29 @@ export const RBAC_ROLES = ['SUPER_ADMIN', 'ADMIN', 'SELLER', 'BUYER'] as const;
 export const USER_ROLES = RBAC_ROLES;
 export const USER_STATUSES = ['active', 'inactive', 'suspended'] as const;
 
-export const LISTING_STATUSES = ['draft', 'active', 'sold', 'archived'] as const;
+export const LISTING_STATUSES = ['draft', 'active', 'sold', 'archived', 'banned'] as const;
 export const LISTING_CONDITIONS = ['new', 'like_new', 'good', 'fair', 'poor'] as const;
 
-export const PAYMENT_STATUSES = ['pending', 'processing', 'completed', 'failed', 'refunded'] as const;
+export const PAYMENT_STATUSES = ['pending', 'processing', 'succeeded', 'failed', 'refunded', 'disputed'] as const;
 export const PAYMENT_METHODS = ['card', 'bank_transfer', 'wallet'] as const;
 
 export const NOTIFICATION_TYPES = [
   'listing_sold',
+  'listing_created',
   'new_message',
+  'message_read',
+  'thread_created',
   'payment_received',
   'payment_sent',
+  'payment_refunded',
   'listing_approved',
+  'verification_approved',
+  'verification_rejected',
+  'admin_warning',
   'system',
 ] as const;
+
+export const NOTIFICATION_CHANNELS = ['email', 'push', 'in_app'] as const;
 
 export const CHAT_MESSAGE_TYPES = ['text', 'image', 'system'] as const;
 export const CHAT_MESSAGE_STATUSES = ['sent', 'delivered', 'read'] as const;
@@ -27,8 +36,8 @@ export const DEFAULT_PAGE = 1;
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 
-export const DEFAULT_CURRENCY = 'USD';
-export const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'] as const;
+export const DEFAULT_CURRENCY = 'EUR';
+export const SUPPORTED_CURRENCIES = ['EUR', 'GBP', 'USD', 'CAD', 'AUD'] as const;
 
 export const API_PREFIX = '/api';
 

@@ -21,10 +21,10 @@
     "lint": "echo \"lint: utils\""
   },
   "dependencies": {
+    "@community-marketplace/config": "workspace:*",
     "@community-marketplace/types": "workspace:*"
   },
   "devDependencies": {
-    "@community-marketplace/config": "workspace:*",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.2"
   }

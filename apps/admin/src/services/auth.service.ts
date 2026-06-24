@@ -2,6 +2,7 @@ import type { AuthResponse } from '@community-marketplace/types';
 import { loginSchema } from '@community-marketplace/validation';
 
 import { API_BASE_URL } from '@/lib/constants';
+import { getStoredAdminAccessToken } from '@/store/admin-auth.store';
 
 interface AuthCredentials {
   email: string;
@@ -52,17 +53,3 @@ export const adminAuthService = {
     });
   },
 };
-
-function getStoredAdminAccessToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  const raw = localStorage.getItem('cm-admin-auth');
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as {
-      state?: { session?: { accessToken?: string } | null };
-    };
-    return parsed.state?.session?.accessToken ?? null;
-  } catch {
-    return null;
-  }
-}

@@ -1,50 +1,57 @@
-import type { ApiResponse, User } from '@community-marketplace/types';
+import type { RbacRole, UserProfile } from '@community-marketplace/types';
 
-import { API_BASE_URL } from '@/lib/constants';
-import { ADMIN_API_ROUTES } from '@/lib/api-routes';
+import { adminApiClient } from '@/lib/api-client';
+import { ADMIN_API_ROUTES, moderationRoutes } from '@/lib/api-routes';
+import { getStoredAdminRole } from '@/store/admin-auth.store';
 
-async function fetchApi<T>(endpoint: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    cache: 'no-store',
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
-  });
-  if (!response.ok) throw new Error(`API error: ${response.status}`);
-  const json = (await response.json()) as ApiResponse<T>;
-  return json.data;
+function resolveRole(role?: RbacRole | null): RbacRole | null {
+  return role ?? getStoredAdminRole();
+}
+
+function routesForRole(role?: RbacRole | null) {
+  return resolveRole(role) === 'SUPER_ADMIN'
+    ? ADMIN_API_ROUTES.superAdmin
+    : ADMIN_API_ROUTES.admin;
+}
+
+function moderationRoutesForRole(role?: RbacRole | null) {
+  const resolved = resolveRole(role);
+  if (resolved !== 'SUPER_ADMIN' && resolved !== 'ADMIN') {
+    return moderationRoutes('ADMIN');
+  }
+  return moderationRoutes(resolved);
 }
 
 export const adminService = {
-  async getStats() {
+  async getStats(role?: RbacRole | null) {
     try {
-      return await fetchApi<{
+      return await adminApiClient<{
         totalUsers: number;
         activeListings: number;
         revenue: number;
         pendingReports: number;
-      }>(ADMIN_API_ROUTES.admin.stats);
+      }>(routesForRole(role).stats);
     } catch {
-      return { totalUsers: 1284, activeListings: 342, revenue: 45230, pendingReports: 12 };
+      return { totalUsers: 0, activeListings: 0, revenue: 0, pendingReports: 0 };
     }
   },
 
-  async getUsers(): Promise<User[]> {
+  async getUsers(role?: RbacRole | null): Promise<UserProfile[]> {
     try {
-      const result = await fetchApi<{ data: User[]; meta: unknown }>(ADMIN_API_ROUTES.admin.users);
-      return Array.isArray(result) ? result : (result.data ?? []);
+      const result = await adminApiClient<{ data: UserProfile[]; meta: { total: number } }>(
+        routesForRole(role).users,
+      );
+      return result.data ?? [];
     } catch {
       return [];
     }
   },
 
-  async getListings() {
+  async getListings(role?: RbacRole | null) {
     try {
-      const result = await fetchApi<{ data: Array<{ id: string; title: string; price: number; location: string; status: string }> }>(
-        ADMIN_API_ROUTES.admin.listings,
-      );
+      const result = await adminApiClient<{
+        data: Array<{ id: string; title: string; price: number; location: string; status: string }>;
+      }>(routesForRole(role).listings);
       const listings = Array.isArray(result) ? result : (result.data ?? []);
       return listings.map((l) => ({ ...l, status: l.status ?? 'active' }));
     } catch {
@@ -52,7 +59,20 @@ export const adminService = {
     }
   },
 
-  getModerationReports: () => fetchApi(ADMIN_API_ROUTES.admin.moderation.reports),
-  getModerationBans: () => fetchApi(ADMIN_API_ROUTES.admin.moderation.bans),
-  getSearchIndexes: () => fetchApi(ADMIN_API_ROUTES.admin.search.indexes),
+  getModerationReports: (role?: RbacRole | null) =>
+    adminApiClient(moderationRoutesForRole(role).reports),
+  getModerationBans: (role?: RbacRole | null) =>
+    adminApiClient(moderationRoutesForRole(role).bans),
+  getSearchIndexes: (role?: RbacRole | null) =>
+    adminApiClient(routesForRole(role).search.indexes),
+  getSearchHealth: (role?: RbacRole | null) => adminApiClient(routesForRole(role).search.health),
+  getSearchAnalytics: (role?: RbacRole | null) =>
+    adminApiClient(routesForRole(role).search.analytics),
+  reindexSearch: (type: string, role?: RbacRole | null) =>
+    adminApiClient(routesForRole(role).search.reindex, {
+      method: 'POST',
+      body: JSON.stringify({ type }),
+    }),
+  getReindexStatus: (type: string, role?: RbacRole | null) =>
+    adminApiClient(routesForRole(role).search.reindexStatus(type)),
 };

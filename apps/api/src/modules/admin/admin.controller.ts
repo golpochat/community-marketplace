@@ -8,7 +8,7 @@ import type { AuthenticatedUser } from '../../common/decorators/current-user.dec
 import { AdminActionDto, SuspendUserDto } from './dto/admin.dto';
 import { AdminService } from './admin.service';
 
-@RequireRole('ADMIN', 'SUPER_ADMIN')
+@RequireRole('ADMIN')
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
@@ -21,32 +21,28 @@ export class AdminController {
 
   @RequirePermissions(PERMISSIONS.VIEW_USERS)
   @Get('users')
-  getUsers(@Query('page') page?: string, @Query('limit') limit?: string) {
+  getUsers(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('role') role?: string,
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+  ) {
     return this.adminService.getUsers(
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20,
-    );
-  }
-
-  @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
-  @Get('listings')
-  getListings(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.adminService.getListings(
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 20,
+      {
+        ...(role ? { role } : {}),
+        ...(status ? { status } : {}),
+        ...(search ? { search } : {}),
+      },
     );
   }
 
   @RequirePermissions(PERMISSIONS.SUSPEND_USER)
   @Post('users/suspend')
   suspendUser(@CurrentUser() user: AuthenticatedUser, @Body() dto: SuspendUserDto) {
-    return this.adminService.suspendUser(user?.id ?? 'admin-1', dto);
-  }
-
-  @RequirePermissions(PERMISSIONS.APPROVE_LISTING)
-  @Patch('listings/:id/approve')
-  approveListing(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.adminService.approveListing(user?.id ?? 'admin-1', id);
+    return this.adminService.suspendUser(user.id, user.role as 'ADMIN' | 'SUPER_ADMIN', dto);
   }
 
   @RequirePermissions(PERMISSIONS.EXECUTE_ADMIN_ACTION)

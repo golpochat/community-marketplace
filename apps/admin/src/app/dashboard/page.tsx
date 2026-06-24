@@ -1,12 +1,12 @@
 import { formatCurrency } from '@community-marketplace/utils';
 
 import { StatCard } from '@/components/dashboard/stat-card';
-import { adminService } from '@/services/admin.service';
+import { adminServerService } from '@/services/admin.service.server';
 
 export const metadata = { title: 'Dashboard' };
 
 export default async function DashboardPage() {
-  const stats = await adminService.getStats();
+  const stats = await adminServerService.getStats();
 
   return (
     <div>

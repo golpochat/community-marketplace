@@ -1,91 +1,124 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
-import type { Payment } from '@community-marketplace/types';
+import type {
+  Payment,
+  PaymentDispute,
+  PaymentIntentResponse,
+  PaymentRefund,
+  Payout,
+  SellerEarningsSummary,
+  StripeConnectAccount,
+} from '@community-marketplace/types';
+import type {
+  ApproveRefundInput,
+  ConfirmPaymentInput,
+  ConnectOnboardInput,
+  CreatePaymentIntentInput,
+  DisputeEvidenceInput,
+  RequestRefundInput,
+} from '@community-marketplace/validation';
 
-import { EventBusService } from '../../events/event-bus.service';
-import { PaymentEntity } from './entities/payment.entity';
-import type { CreatePaymentDto } from './dto/payments.dto';
+import type { ManualPayoutInput, PaymentAdminFiltersInput } from './dto/payments.dto';
+import { PaymentsCrudService } from './services/payments-crud.service';
+import { PaymentsDisputesService } from './services/payments-disputes.service';
+import { PaymentsIntentsService } from './services/payments-intents.service';
+import { PaymentsLedgerService } from './services/payments-ledger.service';
+import { PaymentsPayoutsService } from './services/payments-payouts.service';
+import { PaymentsRefundsService } from './services/payments-refunds.service';
 import { StripeConnectService } from './services/stripe-connect.service';
 
 @Injectable()
 export class PaymentsService {
-  private readonly payments = new Map<string, PaymentEntity>();
-
   constructor(
-    private readonly stripeConnectService: StripeConnectService,
-    private readonly eventBus: EventBusService,
+    private readonly crud: PaymentsCrudService,
+    private readonly intents: PaymentsIntentsService,
+    private readonly refunds: PaymentsRefundsService,
+    private readonly disputes: PaymentsDisputesService,
+    private readonly payouts: PaymentsPayoutsService,
+    private readonly ledger: PaymentsLedgerService,
+    private readonly stripeConnect: StripeConnectService,
   ) {}
 
-  async create(buyerId: string, sellerId: string, dto: CreatePaymentDto): Promise<Payment> {
-    const connectAccount = this.stripeConnectService.getAccount(sellerId);
-    const intent = await this.stripeConnectService.createPaymentIntent(
-      dto.amount,
-      dto.currency,
-      connectAccount?.stripeAccountId,
-    );
-
-    const payment = new PaymentEntity();
-    payment.id = `pay-${Date.now()}`;
-    payment.buyerId = buyerId;
-    payment.sellerId = sellerId;
-    payment.listingId = dto.listingId;
-    payment.amount = dto.amount;
-    payment.currency = dto.currency.toUpperCase();
-    payment.method = dto.method;
-    payment.status = 'pending';
-    payment.stripePaymentIntentId = intent.paymentIntentId;
-    payment.transactionRef = intent.clientSecret;
-    payment.createdAt = new Date();
-    payment.updatedAt = new Date();
-
-    this.payments.set(payment.id, payment);
-
-    this.eventBus.publish({
-      type: 'payment.created',
-      payload: { paymentId: payment.id, listingId: dto.listingId },
-      timestamp: new Date(),
-    });
-
-    return this.toPayment(payment);
+  createPaymentIntent(
+    buyerId: string,
+    dto: CreatePaymentIntentInput,
+  ): Promise<PaymentIntentResponse> {
+    return this.intents.createPaymentIntent(buyerId, dto);
   }
 
-  findById(id: string): Payment {
-    const payment = this.payments.get(id);
-    if (!payment) {
-      throw new NotFoundException(`Payment ${id} not found`);
-    }
-    return this.toPayment(payment);
+  confirmPayment(buyerId: string, dto: ConfirmPaymentInput): Promise<Payment> {
+    return this.intents.confirmPayment(buyerId, dto);
   }
 
-  findByUser(userId: string): Payment[] {
-    return [...this.payments.values()]
-      .filter((p) => p.buyerId === userId || p.sellerId === userId)
-      .map((p) => this.toPayment(p));
+  findById(id: string): Promise<Payment> {
+    return this.crud.findById(id);
   }
 
-  markCompleted(id: string): Payment {
-    const payment = this.payments.get(id);
-    if (!payment) {
-      throw new NotFoundException(`Payment ${id} not found`);
-    }
-    payment.status = 'completed';
-    payment.updatedAt = new Date();
-    return this.toPayment(payment);
+  findByUser(userId: string, page?: number, limit?: number) {
+    return this.crud.findByUser(userId, page, limit);
   }
 
-  private toPayment(entity: PaymentEntity): Payment {
-    return {
-      id: entity.id,
-      buyerId: entity.buyerId,
-      sellerId: entity.sellerId,
-      listingId: entity.listingId,
-      amount: entity.amount,
-      currency: entity.currency,
-      method: entity.method,
-      status: entity.status,
-      transactionRef: entity.transactionRef,
-      createdAt: entity.createdAt.toISOString(),
-      updatedAt: entity.updatedAt.toISOString(),
-    };
+  findBuyerHistory(buyerId: string, page?: number, limit?: number) {
+    return this.crud.findBuyerHistory(buyerId, page, limit);
+  }
+
+  adminList(filters: PaymentAdminFiltersInput) {
+    return this.crud.adminList(filters);
+  }
+
+  onboardConnect(userId: string, dto: ConnectOnboardInput): Promise<StripeConnectAccount> {
+    return this.stripeConnect.createConnectAccount(userId, dto);
+  }
+
+  getConnectAccount(userId: string): Promise<StripeConnectAccount | null> {
+    return this.stripeConnect.getAccount(userId);
+  }
+
+  getConnectAccountForAdmin(userId: string): Promise<StripeConnectAccount | null> {
+    return this.stripeConnect.getAccountForAdmin(userId);
+  }
+
+  requestRefund(buyerId: string, dto: RequestRefundInput): Promise<PaymentRefund> {
+    return this.refunds.requestRefund(buyerId, dto);
+  }
+
+  approveRefund(adminId: string, dto: ApproveRefundInput): Promise<PaymentRefund> {
+    return this.refunds.approveRefund(adminId, dto);
+  }
+
+  listPendingRefunds(page?: number, limit?: number) {
+    return this.refunds.listPending(page, limit);
+  }
+
+  listDisputes(page?: number, limit?: number) {
+    return this.disputes.list(page, limit);
+  }
+
+  getDispute(id: string): Promise<PaymentDispute> {
+    return this.disputes.findById(id);
+  }
+
+  addDisputeEvidence(adminId: string, dto: DisputeEvidenceInput): Promise<PaymentDispute> {
+    return this.disputes.addEvidence(adminId, dto);
+  }
+
+  listPayouts(sellerId: string, page?: number, limit?: number) {
+    return this.payouts.listForSeller(sellerId, page, limit);
+  }
+
+  getEarningsSummary(sellerId: string): Promise<SellerEarningsSummary> {
+    return this.payouts.getEarningsSummary(sellerId);
+  }
+
+  triggerManualPayout(adminId: string, dto: ManualPayoutInput): Promise<Payout> {
+    return this.payouts.triggerManualPayout(adminId, dto);
+  }
+
+  listLedger(page?: number, limit?: number) {
+    return this.ledger.listAll(page, limit);
+  }
+
+  listUserLedger(userId: string, page?: number, limit?: number) {
+    return this.ledger.listForUser(userId, page, limit);
   }
 }

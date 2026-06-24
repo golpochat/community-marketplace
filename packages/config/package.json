@@ -18,6 +18,12 @@
       "require": "./dist/constants.js",
       "default": "./src/constants.ts"
     },
+    "./platform": {
+      "types": "./src/platform.ts",
+      "import": "./src/platform.ts",
+      "require": "./dist/platform.js",
+      "default": "./src/platform.ts"
+    },
     "./env": {
       "types": "./src/env.ts",
       "import": "./src/env.ts",

@@ -1,12 +1,12 @@
 import { formatCurrency } from '@community-marketplace/utils';
 
 import { ListingsTable } from '@/components/listings/listings-table';
-import { adminService } from '@/services/admin.service';
+import { adminServerService } from '@/services/admin.service.server';
 
 export const metadata = { title: 'Listings' };
 
 export default async function ListingsPage() {
-  const listings = await adminService.getListings();
+  const listings = await adminServerService.getListings();
 
   return (
     <div>

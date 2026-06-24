@@ -71,7 +71,10 @@ services:
       context: ../..
       dockerfile: infra/docker/Dockerfile.meilisearch
     environment:
+      MEILI_ENV: development
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-dev-master-key}
+    ports:
+      - "7700:7700"
     volumes:
       - meili_data:/meili_data
     networks:

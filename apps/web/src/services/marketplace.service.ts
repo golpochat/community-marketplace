@@ -5,14 +5,14 @@ export const sellerService = {
   getListings: () => apiClient(WEB_API_ROUTES.seller.listings),
   createListing: (body: unknown) =>
     apiClient(WEB_API_ROUTES.seller.listings, { method: 'POST', body: JSON.stringify(body) }),
-  getPayments: () => apiClient(WEB_API_ROUTES.seller.payments),
+  getEarnings: () => apiClient(WEB_API_ROUTES.seller.earnings),
   getProfile: () => apiClient(WEB_API_ROUTES.seller.profile),
 };
 
 export const buyerService = {
-  getPurchases: () => apiClient(WEB_API_ROUTES.buyer.purchases),
-  createPurchase: (body: unknown) =>
-    apiClient(WEB_API_ROUTES.buyer.purchases, { method: 'POST', body: JSON.stringify(body) }),
+  getPayments: () => apiClient(WEB_API_ROUTES.buyer.payments),
+  createPaymentIntent: (body: unknown) =>
+    apiClient(WEB_API_ROUTES.buyer.paymentsIntent, { method: 'POST', body: JSON.stringify(body) }),
   getReviews: () => apiClient(WEB_API_ROUTES.buyer.reviews),
   createReview: (body: unknown) =>
     apiClient(WEB_API_ROUTES.buyer.reviews, { method: 'POST', body: JSON.stringify(body) }),

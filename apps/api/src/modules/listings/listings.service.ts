@@ -1,162 +1,160 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
-import type { Listing } from '@community-marketplace/types';
-import { DEFAULT_CURRENCY } from '@community-marketplace/config';
-import { paginationSchema } from '@community-marketplace/validation';
+import type { Listing, RbacRole } from '@community-marketplace/types';
 
-import { EventBusService } from '../../events/event-bus.service';
-import { ApiUtilsService } from '../../utils/api-utils.service';
-import { ListingEntity } from './entities/listing.entity';
-import type { CreateListingDto, UpdateListingDto } from './dto/listings.dto';
 import { CategoriesService } from './services/categories.service';
+import { ListingAnalyticsService } from './services/listing-analytics.service';
+import { ListingFavoritesService } from './services/listing-favorites.service';
+import { ListingFeedsService } from './services/listing-feeds.service';
 import { ListingImagesService } from './services/listing-images.service';
+import { ListingLifecycleService } from './services/listing-lifecycle.service';
+import { ListingReportsService } from './services/listing-reports.service';
+import { ListingSearchService } from './services/listing-search.service';
+import { ListingsCrudService } from './services/listings-crud.service';
 
+/** Facade for listing domain operations. */
 @Injectable()
 export class ListingsService {
-  private readonly listings = new Map<string, ListingEntity>();
-
   constructor(
-    private readonly apiUtils: ApiUtilsService,
-    private readonly categoriesService: CategoriesService,
-    private readonly imagesService: ListingImagesService,
-    private readonly eventBus: EventBusService,
+    private readonly crud: ListingsCrudService,
+    private readonly categories: CategoriesService,
+    private readonly images: ListingImagesService,
+    private readonly lifecycle: ListingLifecycleService,
+    private readonly searchService: ListingSearchService,
+    private readonly feeds: ListingFeedsService,
+    private readonly favorites: ListingFavoritesService,
+    private readonly reports: ListingReportsService,
+    private readonly analytics: ListingAnalyticsService,
+  ) {}
+
+  findAll(page?: number, limit?: number) {
+    return this.crud.findPublic(page, limit);
+  }
+
+  findById(id: string, incrementView = false): Promise<Listing> {
+    return this.crud.findById(id, incrementView);
+  }
+
+  findCategories() {
+    return this.categories.findAll();
+  }
+
+  create(sellerId: string, input: unknown) {
+    return this.crud.create(sellerId, input);
+  }
+
+  update(listingId: string, actorId: string, actorRole: RbacRole, input: unknown) {
+    return this.crud.update(listingId, actorId, actorRole, input);
+  }
+
+  remove(listingId: string, actorId: string, actorRole: RbacRole) {
+    return this.crud.remove(listingId, actorId, actorRole);
+  }
+
+  findBySeller(
+    sellerId: string,
+    filters: { status?: string; page?: number; limit?: number },
   ) {
-    this.seedListing({
-      id: '1',
-      sellerId: 'user-1',
-      title: 'Vintage Bicycle',
-      description: 'Well-maintained vintage bicycle.',
-      price: 150,
-      categoryId: 'cat-sports',
-      location: 'Downtown',
-    });
-    this.seedListing({
-      id: '2',
-      sellerId: 'user-2',
-      title: 'Office Desk',
-      description: 'Solid wood desk.',
-      price: 80,
-      categoryId: 'cat-furniture',
-      location: 'Westside',
-    });
+    return this.crud.findBySeller(sellerId, filters);
   }
 
-  findAll(page = 1, limit = 20) {
-    const { page: p, limit: l } = paginationSchema.parse({ page, limit });
-    return this.apiUtils.paginate([...this.listings.values()].map((l) => this.toListing(l)), p, l);
+  markSold(listingId: string, actorId: string, actorRole: RbacRole) {
+    return this.lifecycle.markSold(listingId, actorId, actorRole);
   }
 
-  findById(id: string): Listing {
-    const listing = this.listings.get(id);
-    if (!listing) {
-      throw new NotFoundException(`Listing ${id} not found`);
-    }
-    return this.toListing(listing);
+  archive(listingId: string, actorId: string, actorRole: RbacRole) {
+    return this.lifecycle.archive(listingId, actorId, actorRole);
   }
 
-  create(sellerId: string, dto: CreateListingDto): Listing {
-    this.categoriesService.findById(dto.categoryId);
-
-    const listing = new ListingEntity();
-    listing.id = `listing-${Date.now()}`;
-    listing.sellerId = sellerId;
-    listing.title = dto.title;
-    listing.description = dto.description;
-    listing.price = dto.price;
-    listing.currency = dto.currency.toUpperCase();
-    listing.categoryId = dto.categoryId;
-    listing.condition = dto.condition;
-    listing.status = 'active';
-    listing.location = dto.location;
-    listing.createdAt = new Date();
-    listing.updatedAt = new Date();
-
-    this.listings.set(listing.id, listing);
-
-    dto.imageUrls?.forEach((url, index) => {
-      this.imagesService.add(listing.id, { url, isPrimary: index === 0 });
-    });
-
-    this.eventBus.publish({
-      type: 'listing.created',
-      payload: { listingId: listing.id, sellerId },
-      timestamp: new Date(),
-    });
-
-    return this.toListing(listing);
+  unarchive(listingId: string, actorId: string, actorRole: RbacRole) {
+    return this.lifecycle.unarchive(listingId, actorId, actorRole);
   }
 
-  update(id: string, dto: UpdateListingDto): Listing {
-    const listing = this.listings.get(id);
-    if (!listing) {
-      throw new NotFoundException(`Listing ${id} not found`);
-    }
-
-    if (dto.categoryId) {
-      this.categoriesService.findById(dto.categoryId);
-    }
-
-    Object.assign(listing, dto, { updatedAt: new Date() });
-    this.listings.set(id, listing);
-
-    this.eventBus.publish({
-      type: 'listing.updated',
-      payload: { listingId: id },
-      timestamp: new Date(),
-    });
-
-    return this.toListing(listing);
+  ban(listingId: string, adminId: string, notes?: string) {
+    return this.lifecycle.ban(listingId, adminId, notes);
   }
 
-  remove(id: string): void {
-    if (!this.listings.delete(id)) {
-      throw new NotFoundException(`Listing ${id} not found`);
-    }
-
-    this.eventBus.publish({
-      type: 'listing.deleted',
-      payload: { listingId: id },
-      timestamp: new Date(),
-    });
+  unban(listingId: string, adminId: string) {
+    return this.lifecycle.unban(listingId, adminId);
   }
 
-  private toListing(entity: ListingEntity): Listing {
-    const images = this.imagesService.findByListingId(entity.id);
-    return {
-      id: entity.id,
-      sellerId: entity.sellerId,
-      title: entity.title,
-      description: entity.description,
-      price: entity.price,
-      currency: entity.currency,
-      category: entity.categoryId,
-      condition: entity.condition,
-      status: entity.status,
-      location: entity.location,
-      imageUrls: images.map((img) => img.url),
-      createdAt: entity.createdAt.toISOString(),
-      updatedAt: entity.updatedAt.toISOString(),
-    };
+  searchListings(input: unknown) {
+    return this.searchService.search(input);
   }
 
-  private seedListing(data: {
-    id: string;
-    sellerId: string;
-    title: string;
-    description: string;
-    price: number;
-    categoryId: string;
-    location: string;
+  getFeed(input: unknown) {
+    return this.feeds.getFeed(input);
+  }
+
+  getImages(listingId: string) {
+    return this.images.findByListingId(listingId);
+  }
+
+  createImageUploadUrl(listingId: string, sellerId: string, input: unknown) {
+    return this.images.createUploadUrl(listingId, sellerId, input);
+  }
+
+  confirmImages(listingId: string, sellerId: string, input: unknown) {
+    return this.images.confirmUploads(listingId, sellerId, input);
+  }
+
+  reorderImages(listingId: string, sellerId: string, input: unknown) {
+    return this.images.reorder(listingId, sellerId, input);
+  }
+
+  removeImage(
+    listingId: string,
+    imageId: string,
+    actorId: string,
+    actorRole: RbacRole,
+  ) {
+    return this.images.remove(listingId, imageId, actorId, actorRole);
+  }
+
+  addFavorite(userId: string, listingId: string) {
+    return this.favorites.add(userId, listingId);
+  }
+
+  removeFavorite(userId: string, listingId: string) {
+    return this.favorites.remove(userId, listingId);
+  }
+
+  listFavorites(userId: string, page?: number, limit?: number) {
+    return this.favorites.listForUser(userId, page, limit);
+  }
+
+  reportListing(reporterId: string, listingId: string, input: unknown) {
+    return this.reports.report(reporterId, listingId, input);
+  }
+
+  listReports(page?: number, limit?: number) {
+    return this.reports.listOpen(page, limit);
+  }
+
+  moderateReport(reportId: string, moderatorId: string, input: unknown) {
+    return this.reports.takeAction(reportId, moderatorId, input);
+  }
+
+  adminList(filters: {
+    status?: string;
+    categoryId?: string;
+    sellerId?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
   }) {
-    const listing = new ListingEntity();
-    Object.assign(listing, {
-      ...data,
-      currency: DEFAULT_CURRENCY,
-      condition: 'good',
-      status: 'active',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    this.listings.set(data.id, listing);
+    return this.crud.adminList(filters);
+  }
+
+  adminOverride(listingId: string, adminId: string, input: unknown) {
+    return this.crud.adminOverride(listingId, adminId, input);
+  }
+
+  getAnalytics(listingId: string, sellerId: string) {
+    return this.analytics.getForListing(listingId, sellerId);
+  }
+
+  getSellerAnalyticsSummary(sellerId: string) {
+    return this.analytics.getSellerSummary(sellerId);
   }
 }

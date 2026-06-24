@@ -51,7 +51,7 @@ const RBAC_ROLE_MUTATION_PERMISSIONS = [
  *
  * @see ./README.md for full endpoint documentation and authorization matrix.
  */
-@RequireRole('ADMIN', 'SUPER_ADMIN')
+@RequireRole('ADMIN')
 @Controller('admin/rbac')
 export class AdminRbacController {
   constructor(private readonly rbacManagement: RbacManagementService) {}

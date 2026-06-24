@@ -12,7 +12,7 @@ import {
 } from '../moderation/dto/moderation.dto';
 import { ModerationService } from '../moderation/moderation.service';
 
-@RequireRole('ADMIN', 'SUPER_ADMIN')
+@RequireRole('ADMIN')
 @Controller('admin/moderation')
 export class AdminModerationController {
   constructor(private readonly moderationService: ModerationService) {}

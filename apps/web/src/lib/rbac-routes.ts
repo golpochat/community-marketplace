@@ -12,6 +12,14 @@ export const WEB_APP_ROUTES = {
   home: '/',
   listings: '/listings',
   chat: '/chat',
+  buyerChat: '/buyer/dashboard/chat',
+  buyerPayments: '/buyer/payments',
+  buyerNotifications: '/buyer/notifications',
+  buyerSearch: '/buyer/search',
+  sellerChat: '/seller/dashboard/chat',
+  sellerEarnings: '/seller/earnings',
+  sellerNotifications: '/seller/notifications',
+  sellerSearch: '/seller/search',
   sellerDashboard: '/seller/dashboard',
   buyerDashboard: '/buyer/dashboard',
   login: '/auth/login',
@@ -29,7 +37,11 @@ export function getWebDashboardPathForRole(role: RbacRole): string {
 
 export function isWebDashboardRouteAllowed(role: RbacRole | null, pathname: string): boolean {
   if (!role) return false;
-  if (pathname.startsWith('/seller/dashboard')) return role === 'SELLER';
-  if (pathname.startsWith('/buyer/dashboard')) return role === 'BUYER';
+  if (pathname.startsWith('/seller/dashboard') || pathname.startsWith('/seller/earnings') || pathname.startsWith('/seller/notifications') || pathname.startsWith('/seller/search')) {
+    return role === 'SELLER';
+  }
+  if (pathname.startsWith('/buyer/dashboard') || pathname.startsWith('/buyer/payments') || pathname.startsWith('/buyer/notifications') || pathname.startsWith('/buyer/search')) {
+    return role === 'BUYER';
+  }
   return false;
 }

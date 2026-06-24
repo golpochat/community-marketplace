@@ -11,6 +11,12 @@
       "import": "./src/index.ts",
       "require": "./dist/index.js",
       "default": "./src/index.ts"
+    },
+    "./search": {
+      "types": "./src/search.schema.ts",
+      "import": "./src/search.schema.ts",
+      "require": "./dist/search.schema.js",
+      "default": "./src/search.schema.ts"
     }
   },
   "scripts": {
@@ -18,14 +24,15 @@
     "dev": "tsc -p tsconfig.json --watch",
     "clean": "rimraf dist",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "echo \"lint: validation\""
+    "lint": "echo \"lint: validation\"",
+    "prepare": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@community-marketplace/config": "workspace:*",
     "@community-marketplace/types": "workspace:*",
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@community-marketplace/config": "workspace:*",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.2"
   }

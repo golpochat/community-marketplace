@@ -1,83 +1,122 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
-import type { Notification } from '@community-marketplace/types';
+import type {
+  BroadcastNotificationInput,
+  DispatchNotificationInput,
+  Notification,
+  NotificationPreferences,
+} from '@community-marketplace/types';
+import type {
+  NotificationPreferencesUpdateInput,
+  NotificationProviderInput,
+  NotificationTemplateInput,
+  TemplatePreviewInput,
+} from '@community-marketplace/validation';
 
-import { EventBusService } from '../../events/event-bus.service';
-import { NotificationEntity } from './entities/notification.entity';
+import { NotificationDeliveryService } from './services/notification-delivery.service';
+import { NotificationDispatcherService } from './services/notification-dispatcher.service';
+import { NotificationPreferencesService } from './services/notification-preferences.service';
+import { NotificationProvidersService } from './services/notification-providers.service';
+import { NotificationTemplatesService } from './services/notification-templates.service';
+import { NotificationsCrudService } from './services/notifications-crud.service';
 import type { SendNotificationDto } from './dto/notifications.dto';
-import { DeviceTokenService, FcmService } from './services/fcm.service';
 
 @Injectable()
 export class NotificationsService {
-  private readonly notifications = new Map<string, NotificationEntity[]>();
-
   constructor(
-    private readonly fcmService: FcmService,
-    private readonly deviceTokenService: DeviceTokenService,
-    private readonly eventBus: EventBusService,
+    private readonly crud: NotificationsCrudService,
+    private readonly dispatcher: NotificationDispatcherService,
+    private readonly preferences: NotificationPreferencesService,
+    private readonly templates: NotificationTemplatesService,
+    private readonly providers: NotificationProvidersService,
+    private readonly delivery: NotificationDeliveryService,
   ) {}
 
   async send(dto: SendNotificationDto): Promise<Notification> {
-    const notification = new NotificationEntity();
-    notification.id = `notif-${Date.now()}`;
-    notification.userId = dto.userId;
-    notification.type = dto.type;
-    notification.title = dto.title;
-    notification.body = dto.body;
-    notification.read = false;
-    notification.actionUrl = dto.actionUrl;
-    notification.createdAt = new Date();
-    notification.updatedAt = new Date();
-
-    const userNotifications = this.notifications.get(dto.userId) ?? [];
-    this.notifications.set(dto.userId, [notification, ...userNotifications]);
-
-    const tokens = this.deviceTokenService.getActiveTokens(dto.userId);
-    if (tokens.length) {
-      await this.fcmService.sendToDevices(tokens, {
-        title: dto.title,
-        body: dto.body,
-        data: { type: dto.type, notificationId: notification.id },
-      });
-    }
-
-    this.eventBus.publish({
-      type: 'notification.sent',
-      payload: { notificationId: notification.id, userId: dto.userId },
-      timestamp: new Date(),
+    const result = await this.dispatcher.dispatch({
+      userId: dto.userId,
+      type: dto.type,
+      templateKey: 'admin_broadcast',
+      variables: { title: dto.title, message: dto.body },
+      actionUrl: dto.actionUrl,
+      channels: ['in_app', 'push', 'email'],
     });
 
-    return this.toNotification(notification);
+    const inApp = result.results?.in_app as { notification?: Notification } | undefined;
+    if (inApp?.notification) return inApp.notification;
+
+    return this.crud.createRecord({
+      userId: dto.userId,
+      type: dto.type,
+      title: dto.title,
+      message: dto.body,
+      channel: 'in_app',
+      status: 'sent',
+      actionUrl: dto.actionUrl,
+    });
   }
 
-  findByUser(userId: string): Notification[] {
-    return (this.notifications.get(userId) ?? []).map((n) => this.toNotification(n));
+  dispatch(input: DispatchNotificationInput) {
+    return this.dispatcher.dispatch(input);
   }
 
-  markRead(userId: string, notificationId: string): Notification {
-    const items = this.notifications.get(userId) ?? [];
-    const notification = items.find((n) => n.id === notificationId);
-
-    if (!notification) {
-      throw new NotFoundException(`Notification ${notificationId} not found`);
-    }
-
-    notification.read = true;
-    notification.updatedAt = new Date();
-    return this.toNotification(notification);
+  broadcast(input: BroadcastNotificationInput) {
+    return this.dispatcher.broadcast(input);
   }
 
-  private toNotification(entity: NotificationEntity): Notification {
-    return {
-      id: entity.id,
-      userId: entity.userId,
-      type: entity.type,
-      title: entity.title,
-      body: entity.body,
-      read: entity.read,
-      actionUrl: entity.actionUrl,
-      metadata: entity.metadata,
-      createdAt: entity.createdAt.toISOString(),
-    };
+  findByUser(userId: string, page?: number, limit?: number, unreadOnly?: boolean) {
+    return this.crud.listForUser(userId, page, limit, unreadOnly);
+  }
+
+  markRead(userId: string, notificationId: string) {
+    return this.crud.markRead(userId, notificationId);
+  }
+
+  markAllRead(userId: string) {
+    return this.crud.markAllRead(userId);
+  }
+
+  delete(userId: string, notificationId: string) {
+    return this.crud.delete(userId, notificationId);
+  }
+
+  getPreferences(userId: string): Promise<NotificationPreferences> {
+    return this.preferences.get(userId);
+  }
+
+  updatePreferences(userId: string, input: NotificationPreferencesUpdateInput) {
+    return this.preferences.update(userId, input);
+  }
+
+  listTemplates(page?: number, limit?: number) {
+    return this.templates.list(page, limit);
+  }
+
+  createTemplate(input: NotificationTemplateInput) {
+    return this.templates.create(input);
+  }
+
+  previewTemplate(input: TemplatePreviewInput) {
+    return this.templates.preview(input);
+  }
+
+  listProviders() {
+    return this.providers.list();
+  }
+
+  createProvider(input: NotificationProviderInput) {
+    return this.providers.create(input);
+  }
+
+  updateProvider(id: string, input: Partial<NotificationProviderInput>) {
+    return this.providers.update(id, input);
+  }
+
+  providerHealth(id: string) {
+    return this.providers.healthCheck(id);
+  }
+
+  listDeliveryLogs(page = 1, limit = 50) {
+    return this.delivery.listLogs(page, limit);
   }
 }

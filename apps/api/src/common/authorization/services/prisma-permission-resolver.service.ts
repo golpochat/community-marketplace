@@ -41,6 +41,10 @@ export class PrismaPermissionResolverService implements PermissionResolverPort {
       return this.resolveFromRoleDefaults(user);
     }
 
+    if (!dbUser?.primaryRole) {
+      return this.resolveFromRoleDefaults(user);
+    }
+
     const roleCode = dbUser.primaryRole.code as RbacRole;
     const rolePermissions =
       dbUser.primaryRole.permissions.length > 0

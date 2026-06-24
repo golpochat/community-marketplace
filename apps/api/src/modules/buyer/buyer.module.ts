@@ -1,16 +1,36 @@
 import { Module } from '@nestjs/common';
 
+import { ChatModule } from '../chat/chat.module';
+import { ListingsModule } from '../listings/listings.module';
 import { ModerationModule } from '../moderation/moderation.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { PaymentsModule } from '../payments/payments.module';
+import { SearchModule } from '../search/search.module';
 import { UsersModule } from '../users/users.module';
+import { BuyerChatController } from './buyer-chat.controller';
+import {
+  BuyerFavoritesController,
+  BuyerListingReportsController,
+} from './buyer-favorites.controller';
+import { BuyerNotificationsController } from './buyer-notifications.controller';
+import { BuyerPaymentsController } from './buyer-payments.controller';
 import { BuyerProfileController } from './buyer-profile.controller';
-import { BuyerPurchasesController } from './buyer-purchases.controller';
 import { BuyerReviewsController } from './buyer-reviews.controller';
+import { BuyerSearchController } from './buyer-search.controller';
 import { BuyerReviewsService } from './buyer-reviews.service';
 
 @Module({
-  imports: [PaymentsModule, UsersModule, ModerationModule],
-  controllers: [BuyerPurchasesController, BuyerReviewsController, BuyerProfileController],
+  imports: [PaymentsModule, UsersModule, ListingsModule, ChatModule, NotificationsModule, SearchModule, ModerationModule],
+  controllers: [
+    BuyerPaymentsController,
+    BuyerNotificationsController,
+    BuyerSearchController,
+    BuyerReviewsController,
+    BuyerProfileController,
+    BuyerFavoritesController,
+    BuyerListingReportsController,
+    BuyerChatController,
+  ],
   providers: [BuyerReviewsService],
 })
 export class BuyerModule {}

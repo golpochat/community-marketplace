@@ -17,10 +17,17 @@ export class SendNotificationDto {
 
   @IsEnum([
     'listing_sold',
+    'listing_created',
     'new_message',
+    'message_read',
+    'thread_created',
     'payment_received',
     'payment_sent',
+    'payment_refunded',
     'listing_approved',
+    'verification_approved',
+    'verification_rejected',
+    'admin_warning',
     'system',
   ])
   type!: NotificationType;
@@ -30,7 +37,7 @@ export class SendNotificationDto {
   title!: string;
 
   @IsString()
-  @MaxLength(1000)
+  @MaxLength(2000)
   body!: string;
 
   @IsOptional()

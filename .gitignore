@@ -38,5 +38,8 @@ coverage/
 .turbo/
 .cache/
 
+# Prisma client (generated into apps/api)
+apps/api/generated/
+
 # Docker
 infra/docker/volumes/

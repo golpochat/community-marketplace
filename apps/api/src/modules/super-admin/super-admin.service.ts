@@ -20,13 +20,33 @@ export class SuperAdminService {
     private readonly usersService: UsersService,
   ) {}
 
-  getPlatformOverview() {
-    const stats = this.adminService.getStats();
+  async getPlatformOverview() {
+    const stats = await this.adminService.getStats();
     return {
       ...stats,
       roles: RBAC_ROLES.length,
       permissions: PERMISSION_CODES.length,
     };
+  }
+
+  getStats() {
+    return this.adminService.getStats();
+  }
+
+  getUsers(page = 1, limit = 20, query: Record<string, string | undefined> = {}) {
+    return this.adminService.getUsers(page, limit, query);
+  }
+
+  getListings(page = 1, limit = 20) {
+    return this.adminService.getListings(page, limit);
+  }
+
+  getModerationReports() {
+    return this.adminService.getModerationReports();
+  }
+
+  getModerationBans() {
+    return this.adminService.getModerationBans();
   }
 
   listRoles() {
@@ -41,8 +61,8 @@ export class SuperAdminService {
     return PERMISSION_CODES.map((code) => ({ code }));
   }
 
-  listAdmins(page = 1, limit = 20) {
-    const users = this.usersService.findAll(page, limit);
+  async listAdmins(page = 1, limit = 20) {
+    const users = await this.usersService.findAll(page, limit);
     return {
       ...users,
       data: users.data.filter((user) => user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),

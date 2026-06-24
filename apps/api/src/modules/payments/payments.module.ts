@@ -1,13 +1,39 @@
 import { Module } from '@nestjs/common';
 
+import { DatabaseModule } from '../../database/database.module';
+import { EventsModule } from '../../events/events.module';
 import { LibsModule } from '../../libs/libs.module';
+import { PaymentsWebhooksController } from './payments-webhooks.controller';
 import { PaymentsService } from './payments.service';
+import { PaymentsAccessService } from './services/payments-access.service';
+import { PaymentsAuditService } from './services/payments-audit.service';
+import { PaymentsCrudService } from './services/payments-crud.service';
+import { PaymentsDisputesService } from './services/payments-disputes.service';
+import { PaymentsFraudService } from './services/payments-fraud.service';
+import { PaymentsIntentsService } from './services/payments-intents.service';
+import { PaymentsLedgerService } from './services/payments-ledger.service';
+import { PaymentsPayoutsService } from './services/payments-payouts.service';
+import { PaymentsRefundsService } from './services/payments-refunds.service';
+import { PaymentsWebhooksService } from './services/payments-webhooks.service';
 import { StripeConnectService } from './services/stripe-connect.service';
 
-/** Payment mutations live under /seller/payments and /buyer/purchases */
 @Module({
-  imports: [LibsModule],
-  providers: [PaymentsService, StripeConnectService],
-  exports: [PaymentsService, StripeConnectService],
+  imports: [DatabaseModule, EventsModule, LibsModule],
+  controllers: [PaymentsWebhooksController],
+  providers: [
+    PaymentsService,
+    PaymentsCrudService,
+    PaymentsAccessService,
+    PaymentsAuditService,
+    PaymentsLedgerService,
+    PaymentsFraudService,
+    PaymentsIntentsService,
+    PaymentsRefundsService,
+    PaymentsDisputesService,
+    PaymentsPayoutsService,
+    PaymentsWebhooksService,
+    StripeConnectService,
+  ],
+  exports: [PaymentsService, StripeConnectService, PaymentsAccessService],
 })
 export class PaymentsModule {}

@@ -1,10 +1,22 @@
-import { IsEmail, IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUrl,
+  IsUUID,
+  MaxLength,
+} from 'class-validator';
 
 export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   @MaxLength(100)
   displayName?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 
   @IsOptional()
   @IsUrl()
@@ -17,6 +29,11 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(255)
+  address?: string;
+
+  @IsOptional()
+  @IsString()
   @MaxLength(120)
   location?: string;
 
@@ -26,17 +43,50 @@ export class UpdateProfileDto {
   phone?: string;
 }
 
-export class VerifyIdentityDto {
+export class SellerVerificationDto {
   @IsUrl()
-  documentUrl!: string;
+  idDocumentFrontUrl!: string;
+
+  @IsUrl()
+  idDocumentBackUrl!: string;
+
+  @IsUrl()
+  selfieUrl!: string;
+
+  @IsUrl()
+  addressProofUrl!: string;
+}
+
+export class SuspendUserDto {
+  @IsUUID()
+  userId!: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  notes?: string;
+  reason?: string;
 }
 
-export class VerifyEmailDto {
-  @IsEmail()
-  email!: string;
+export class BanUserDto {
+  @IsUUID()
+  userId!: string;
+
+  @IsEnum(['temporary', 'permanent'])
+  type!: 'temporary' | 'permanent';
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
+
+  @IsOptional()
+  @IsString()
+  expiresAt?: string;
+}
+
+export class VerificationReviewDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
 }

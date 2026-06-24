@@ -1,5 +1,13 @@
 import { API_NAMESPACES } from './rbac-routes';
 
+export function moderationRoutes(role: 'SUPER_ADMIN' | 'ADMIN') {
+  const prefix = role === 'SUPER_ADMIN' ? API_NAMESPACES.SUPER_ADMIN : API_NAMESPACES.ADMIN;
+  return {
+    reports: `${prefix}/moderation/reports`,
+    bans: `${prefix}/moderation/bans`,
+  };
+}
+
 export const ADMIN_API_ROUTES = {
   superAdmin: {
     platform: `${API_NAMESPACES.SUPER_ADMIN}/platform`,
@@ -20,6 +28,16 @@ export const ADMIN_API_ROUTES = {
     admins: `${API_NAMESPACES.SUPER_ADMIN}/admins`,
     audit: `${API_NAMESPACES.SUPER_ADMIN}/audit`,
     actions: `${API_NAMESPACES.SUPER_ADMIN}/actions`,
+    stats: `${API_NAMESPACES.SUPER_ADMIN}/stats`,
+    users: `${API_NAMESPACES.SUPER_ADMIN}/users`,
+    listings: `${API_NAMESPACES.SUPER_ADMIN}/listings`,
+    search: {
+      indexes: `${API_NAMESPACES.SUPER_ADMIN}/search/indexes`,
+      health: `${API_NAMESPACES.SUPER_ADMIN}/search/health`,
+      reindex: `${API_NAMESPACES.SUPER_ADMIN}/search/reindex`,
+      analytics: `${API_NAMESPACES.SUPER_ADMIN}/search/analytics`,
+      reindexStatus: (type: string) => `${API_NAMESPACES.SUPER_ADMIN}/search/reindex/${type}/status`,
+    },
   },
   admin: {
     stats: `${API_NAMESPACES.ADMIN}/stats`,
@@ -35,7 +53,10 @@ export const ADMIN_API_ROUTES = {
     },
     search: {
       indexes: `${API_NAMESPACES.ADMIN}/search/indexes`,
+      health: `${API_NAMESPACES.ADMIN}/search/health`,
       reindex: `${API_NAMESPACES.ADMIN}/search/reindex`,
+      analytics: `${API_NAMESPACES.ADMIN}/search/analytics`,
+      reindexStatus: (type: string) => `${API_NAMESPACES.ADMIN}/search/reindex/${type}/status`,
     },
     notifications: {
       send: `${API_NAMESPACES.ADMIN}/notifications/send`,

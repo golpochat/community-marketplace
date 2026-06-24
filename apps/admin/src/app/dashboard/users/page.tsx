@@ -1,10 +1,10 @@
 import { UsersTable } from '@/components/users/users-table';
-import { adminService } from '@/services/admin.service';
+import { adminServerService } from '@/services/admin.service.server';
 
 export const metadata = { title: 'Users' };
 
 export default async function UsersPage() {
-  const users = await adminService.getUsers();
+  const users = await adminServerService.getUsers();
 
   return (
     <div>

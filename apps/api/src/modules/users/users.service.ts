@@ -1,72 +1,154 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
-import type { User } from '@community-marketplace/types';
+import type { RbacRole, User, UserEffectivePermissions } from '@community-marketplace/types';
 import { paginationSchema } from '@community-marketplace/validation';
 
-import { devRoleIdFor } from '../../common/constants/dev-role-ids';
+import { AuthorizationService } from '../../common/authorization/authorization.service';
+import { PrismaService } from '../../database/prisma.service';
 import { ApiUtilsService } from '../../utils/api-utils.service';
-import type { UpdateProfileDto, VerifyEmailDto, VerifyIdentityDto } from './dto/users.dto';
+import { mapUser, userProfileInclude } from './mappers/user.mapper';
+import { R2StorageService } from './services/r2-storage.service';
+import { UserAuditService } from './services/user-audit.service';
+import { UsersAdminService } from './services/users-admin.service';
 import { UsersProfileService } from './services/users-profile.service';
+import { UsersSettingsService } from './services/users-settings.service';
 import { UsersVerificationService } from './services/users-verification.service';
 
 @Injectable()
 export class UsersService {
-  private readonly users: User[] = [
-    {
-      id: 'user-1',
-      email: 'admin@community.market',
-      displayName: 'Admin User',
-      primaryRoleId: devRoleIdFor('ADMIN'),
-      role: 'ADMIN',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ];
-
   constructor(
+    private readonly prisma: PrismaService,
     private readonly apiUtils: ApiUtilsService,
     private readonly profileService: UsersProfileService,
+    private readonly settingsService: UsersSettingsService,
     private readonly verificationService: UsersVerificationService,
+    private readonly adminService: UsersAdminService,
+    private readonly storageService: R2StorageService,
+    private readonly auditService: UserAuditService,
+    private readonly authorization: AuthorizationService,
   ) {}
 
   findAll(page = 1, limit = 20) {
     const { page: p, limit: l } = paginationSchema.parse({ page, limit });
-    return this.apiUtils.paginate(this.users, p, l);
+    return this.adminService.listUsers({ page: p, limit: l });
   }
 
-  findById(id: string): User | undefined {
-    return this.users.find((u) => u.id === id);
-  }
-
-  updatePrimaryRole(userId: string, roleId: string, role: User['role']): User | undefined {
-    const user = this.users.find((u) => u.id === userId);
-    if (!user) return undefined;
-    user.primaryRoleId = roleId;
-    user.role = role;
-    user.updatedAt = new Date().toISOString();
-    return user;
+  async findById(id: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: { primaryRole: true },
+    });
+    return user ? mapUser(user) : null;
   }
 
   getProfile(userId: string) {
-    const profile = this.profileService.findByUserId(userId);
-    return this.profileService.toProfile(profile);
+    return this.profileService.getProfile(userId);
   }
 
-  updateProfile(userId: string, dto: UpdateProfileDto) {
-    const profile = this.profileService.update(userId, dto);
-    return this.profileService.toProfile(profile);
+  updateProfile(actorId: string, actorRole: RbacRole, targetUserId: string, dto: unknown) {
+    return this.profileService.updateProfile(actorId, actorRole, targetUserId, dto as never);
   }
 
-  requestIdentityVerification(userId: string, dto: VerifyIdentityDto) {
-    return this.verificationService.requestIdentityVerification(userId, dto);
+  completeProfile(userId: string, actorRole: RbacRole, dto: unknown) {
+    return this.profileService.completeProfile(userId, actorRole, dto as never);
   }
 
-  verifyEmail(userId: string, dto: VerifyEmailDto) {
-    return this.verificationService.verifyEmail(userId, dto);
+  getSettings(userId: string) {
+    return this.settingsService.getSettings(userId);
   }
 
-  getVerifications(userId: string) {
-    return this.verificationService.getByUserId(userId);
+  updateSettings(userId: string, dto: unknown) {
+    return this.settingsService.updateSettings(userId, dto as never);
+  }
+
+  requestDeletion(userId: string) {
+    return this.settingsService.requestDeletion(userId);
+  }
+
+  createAvatarUploadUrl(userId: string, dto: unknown) {
+    const parsed = dto as { contentType: string; fileName?: string };
+    return this.storageService.createAvatarUploadUrl(
+      userId,
+      parsed.contentType,
+      parsed.fileName,
+    );
+  }
+
+  async confirmAvatar(actorId: string, userId: string, publicUrl: string) {
+    return this.profileService.setAvatarUrl(actorId, userId, publicUrl);
+  }
+
+  submitSellerVerification(userId: string, dto: unknown) {
+    return this.verificationService.submitSellerVerification(userId, dto);
+  }
+
+  getVerificationStatus(userId: string) {
+    return this.verificationService.getLatestForUser(userId);
+  }
+
+  async getEffectivePermissions(
+    user: { id: string; role: RbacRole; primaryRoleId: string },
+  ): Promise<UserEffectivePermissions> {
+    return this.authorization.resolveForUser(user);
+  }
+
+  // Admin delegation
+  listUsers(query: unknown) {
+    return this.adminService.listUsers(query);
+  }
+
+  getUserDetails(userId: string) {
+    return this.adminService.getUserDetails(userId);
+  }
+
+  suspendUser(actorId: string, actorRole: RbacRole, dto: unknown) {
+    return this.adminService.suspendUser(actorId, actorRole, dto);
+  }
+
+  unsuspendUser(actorId: string, actorRole: RbacRole, userId: string) {
+    return this.adminService.unsuspendUser(actorId, actorRole, userId);
+  }
+
+  banUser(actorId: string, actorRole: RbacRole, dto: unknown) {
+    return this.adminService.banUser(actorId, actorRole, dto);
+  }
+
+  unbanUser(actorId: string, actorRole: RbacRole, userId: string, banId: string) {
+    return this.adminService.unbanUser(actorId, actorRole, userId, banId);
+  }
+
+  listPendingVerifications(page?: number, limit?: number) {
+    return this.verificationService.listPending(page, limit);
+  }
+
+  approveVerification(verificationId: string, reviewerId: string, dto?: unknown) {
+    return this.verificationService.approve(verificationId, reviewerId, dto);
+  }
+
+  rejectVerification(verificationId: string, reviewerId: string, dto?: unknown) {
+    return this.verificationService.reject(verificationId, reviewerId, dto);
+  }
+
+  getAuditLogs(query: unknown) {
+    return this.auditService.listForAdmin(query as never);
+  }
+
+  async updatePrimaryRole(
+    actorId: string,
+    actorRole: RbacRole,
+    userId: string,
+    roleId: string,
+    role: RbacRole,
+  ) {
+    return this.adminService.updatePrimaryRole(actorId, actorRole, userId, roleId, role);
+  }
+
+  async findUserOrThrow(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: userProfileInclude,
+    });
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 }

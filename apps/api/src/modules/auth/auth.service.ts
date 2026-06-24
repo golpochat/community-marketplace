@@ -659,6 +659,10 @@ export class AuthService {
 
     emailVerifiedAt?: Date | null;
 
+    phoneVerifiedAt?: Date | null;
+
+    profileCompleted?: boolean;
+
     createdAt: Date;
 
     updatedAt: Date;
@@ -680,6 +684,12 @@ export class AuthService {
       role: dbUser.primaryRole.code as RbacRole,
 
       status: dbUser.status as User['status'],
+
+      emailVerified: Boolean(dbUser.emailVerifiedAt),
+
+      phoneVerified: Boolean(dbUser.phoneVerifiedAt),
+
+      profileCompleted: dbUser.profileCompleted ?? false,
 
       createdAt: dbUser.createdAt.toISOString(),
 
