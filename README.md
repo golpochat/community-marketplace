@@ -55,10 +55,17 @@ community-marketplace/
 │   ├── utils/            # Date, string, currency helpers
 │   └── ui/               # Shared React component library
 ├── docs/
-│   ├── architecture/     # System design, module boundaries
-│   ├── api/              # REST endpoint reference (incl. auth.md)
-│   ├── db/               # Schema, ERD, migration guides
-│   └── product/          # Requirements, user stories, roadmap
+│   ├── README.md           # Master documentation index
+│   ├── architecture/       # System design, diagrams
+│   ├── api/                # REST endpoint reference
+│   ├── features/           # Functional specifications
+│   ├── infrastructure/     # Docker, K8s, CI/CD
+│   ├── admin/              # Admin operator guides
+│   ├── security/           # RBAC, hardening, checklist
+│   ├── runbooks/           # Operational procedures
+│   ├── onboarding/         # Developer setup
+│   ├── product/            # Requirements, roadmap
+│   └── db/                 # Schema, ERD, migrations
 ├── infra/
 │   ├── docker/           # Docker Compose + Dockerfiles
 │   ├── k8s/              # Kubernetes base + dev/prod overlays
@@ -273,14 +280,19 @@ Manifests under `infra/k8s/` with `dev` and `prod` overlays. See [`infra/k8s/REA
 
 ## Documentation
 
+**Master index:** [`docs/README.md`](docs/README.md) · **Search index:** [`docs/index.json`](docs/index.json)
+
 | Area | Location |
 |------|----------|
-| Auth API (OTP, JWT, sessions, RBAC redirect) | [`docs/api/auth.md`](docs/api/auth.md) |
+| Developer Quickstart | [`docs/onboarding/quickstart.md`](docs/onboarding/quickstart.md) |
 | Architecture | [`docs/architecture/`](docs/architecture/README.md) |
-| Database schema | [`docs/db/`](docs/db/README.md) |
-| Product requirements | [`docs/product/`](docs/product/README.md) |
-| Docker | [`infra/docker/`](infra/docker/README.md) |
-| Kubernetes | [`infra/k8s/`](infra/k8s/README.md) |
+| API reference | [`docs/api/`](docs/api/README.md) |
+| Feature specs | [`docs/features/`](docs/features/README.md) |
+| Infrastructure & runbooks | [`docs/infrastructure/`](docs/infrastructure/README.md) · [`docs/runbooks/`](docs/runbooks/README.md) |
+| Admin guide | [`docs/admin/`](docs/admin/README.md) |
+| Security | [`docs/security/`](docs/security/README.md) |
+| Database | [`docs/db/`](docs/db/README.md) |
+| Contributing | [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`CHANGELOG.md`](CHANGELOG.md) |
 
 ---
 

@@ -19,7 +19,8 @@
     "typecheck": "pnpm -r run typecheck",
     "clean": "pnpm -r run clean && rimraf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
-    "seed:rbac": "pnpm --filter @community-marketplace/api run seed:rbac"
+    "seed:rbac": "pnpm --filter @community-marketplace/api run seed:rbac",
+    "docs:index": "node scripts/generate-docs-index.mjs"
   },
   "devDependencies": {
     "prettier": "^3.4.2",

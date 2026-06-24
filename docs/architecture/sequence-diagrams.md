@@ -1,8 +1,8 @@
 # Sequence Diagrams
 
-> **Status:** Placeholder — align with implemented API endpoints.
+> **Category:** Architecture · Aligns with implemented API (OTP registration + activation flow).
 
-## 1. Registration with email activation
+## 1. Registration with phone OTP + email activation
 
 ```mermaid
 sequenceDiagram
@@ -13,18 +13,17 @@ sequenceDiagram
     participant Email as EmailActivationService
     participant DB as PostgreSQL
 
-    User->>Web: Submit register form
-    Web->>API: POST /api/auth/register
-    API->>DB: Create user (pending)
-    API->>Email: createActivation(userId, email)
-    Email-->>API: activation token
-    API-->>Web: { accessToken, refreshToken, user }
-    API->>User: Send activation email (async)
+    User->>Web: Enter phone
+    Web->>API: POST /api/auth/otp/send (purpose: register)
+    API->>OTP: sendOtp
+    User->>Web: Enter OTP + name + email
+    Web->>API: POST /api/auth/otp/verify
+    Web->>API: POST /api/auth/register/complete
+    API->>Email: send activation JWT email
     User->>Web: Click activation link
     Web->>API: POST /api/auth/activate { token }
-    API->>Email: activate(token)
-    Email->>DB: Mark email verified
-    API-->>Web: { activated: true }
+    Email->>DB: Create user, mark verified
+    API-->>Web: { activated, login? }
 ```
 
 ## 2. OTP login

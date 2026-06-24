@@ -1,6 +1,6 @@
 # Module Boundaries
 
-> **Status:** Placeholder — reflects current `apps/api/src/modules` scaffold.
+> **Category:** Architecture · Reflects `apps/api/src/modules`
 
 ## Monorepo layout
 

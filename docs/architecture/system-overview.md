@@ -1,8 +1,8 @@
 # System Overview
 
-> **Status:** Placeholder — update as architecture stabilizes.
+> **Category:** Architecture · **Version:** 0.1.0
 
-Community Marketplace is a pnpm monorepo with three client apps, a NestJS API, shared packages, and supporting infrastructure services.
+Community Marketplace is a pnpm monorepo with three client apps, a NestJS API, shared packages, BullMQ workers, and supporting infrastructure services.
 
 ## High-level architecture
 
@@ -78,9 +78,12 @@ flowchart TB
 | Environment | Tooling |
 |-------------|---------|
 | Local | `docker compose` + `infra/scripts/deploy.sh` |
-| Kubernetes | `infra/k8s/base` + overlays (`dev`, `prod`) |
+| Kubernetes | `infra/k8s/base` + overlays (`dev`, `staging`, `prod`) |
 
 ## Related docs
 
+- [Modular Monolith](./modular-monolith.md)
+- [Domain Modules](./domain-modules.md)
+- [Deployment Architecture](./deployment-architecture.md)
 - [Module boundaries](./module-boundaries.md)
 - [Sequence diagrams](./sequence-diagrams.md)

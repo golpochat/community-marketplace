@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import type { EmailActivationResponse } from '@community-marketplace/types';
@@ -13,6 +13,14 @@ import { WEB_API_ROUTES } from '@/lib/api-routes';
 const ADMIN_APP_URL = process.env.NEXT_PUBLIC_ADMIN_APP_URL ?? 'http://localhost:3001';
 
 export default function ActivateEmailPage() {
+  return (
+    <Suspense fallback={<p className="mx-auto max-w-md py-16 text-center text-gray-700">Activating your account...</p>}>
+      <ActivateEmailContent />
+    </Suspense>
+  );
+}
+
+function ActivateEmailContent() {
   const router = useRouter();
   const { setAuth } = useAuth();
   const searchParams = useSearchParams();

@@ -1,0 +1,941 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-06-24T13:17:16.863Z",
+  "docCount": 71,
+  "categories": {
+    "admin-panel.md": {
+      "label": "admin-panel.md",
+      "files": [
+        {
+          "path": "admin-panel.md",
+          "title": "Admin Panel (moved)",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "admin": {
+      "label": "Admin Guide",
+      "files": [
+        {
+          "path": "admin/listings-moderation.md",
+          "title": "Listings & Moderation (Admin)",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "admin/notifications.md",
+          "title": "Notification Management (Admin)",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "admin/payments.md",
+          "title": "Payments & Refunds (Admin)",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "admin/README.md",
+          "title": "Admin Panel — Operator Guide",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "admin/search.md",
+          "title": "Search Management (Admin)",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "admin/seller-verification.md",
+          "title": "Seller Verification (Admin)",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "admin/settings.md",
+          "title": "System Settings (Super Admin)",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "admin/user-management.md",
+          "title": "User Management (Admin)",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "api": {
+      "label": "API Reference",
+      "files": [
+        {
+          "path": "api/admin.md",
+          "title": "Admin & Super-Admin API",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "api/auth.md",
+          "title": "Auth API",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "api/chat.md",
+          "title": "Chat API",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "api/listings.md",
+          "title": "Listings API",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "api/moderation.md",
+          "title": "Moderation API",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "api/notifications.md",
+          "title": "Notifications API",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "api/payments.md",
+          "title": "Payments API",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "api/README.md",
+          "title": "API Documentation",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "api/search.md",
+          "title": "Search API",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "api/users.md",
+          "title": "Users API",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "architecture": {
+      "label": "Architecture",
+      "files": [
+        {
+          "path": "architecture/data-flow.md",
+          "title": "Data Flow Diagrams",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "architecture/deployment-architecture.md",
+          "title": "Deployment Architecture",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "architecture/domain-modules.md",
+          "title": "Domain Modules",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "architecture/event-driven.md",
+          "title": "Event-Driven Architecture",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "architecture/modular-monolith.md",
+          "title": "Modular Monolith Architecture",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "architecture/module-boundaries.md",
+          "title": "Module Boundaries",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "architecture/README.md",
+          "title": "Architecture Documentation",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "architecture/sequence-diagrams.md",
+          "title": "Sequence Diagrams",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "architecture/system-overview.md",
+          "title": "System Overview",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "db": {
+      "label": "Database",
+      "files": [
+        {
+          "path": "db/erd.md",
+          "title": "Entity Relationship Diagram",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "db/migrations/README.md",
+          "title": "Database Migrations",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "db/README.md",
+          "title": "Database Documentation",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "dev-credentials.md": {
+      "label": "dev-credentials.md",
+      "files": [
+        {
+          "path": "dev-credentials.md",
+          "title": "Development Credentials",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "features": {
+      "label": "Feature Specifications",
+      "files": [
+        {
+          "path": "features/admin-panel.md",
+          "title": "Admin Panel",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "features/authentication.md",
+          "title": "Authentication System",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "features/chat.md",
+          "title": "Chat Module",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "features/listings.md",
+          "title": "Listings Module",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "features/moderation.md",
+          "title": "Moderation Module",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "features/notifications.md",
+          "title": "Notifications Module",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "features/payments.md",
+          "title": "Payments Module",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "features/rbac.md",
+          "title": "RBAC System",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "features/README.md",
+          "title": "Feature Specifications",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "features/search.md",
+          "title": "Search Module",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "features/users.md",
+          "title": "User Module",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "infrastructure.md": {
+      "label": "infrastructure.md",
+      "files": [
+        {
+          "path": "infrastructure.md",
+          "title": "Infrastructure (moved)",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "infrastructure": {
+      "label": "Infrastructure",
+      "files": [
+        {
+          "path": "infrastructure/README.md",
+          "title": "Infrastructure — Community Marketplace",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "onboarding": {
+      "label": "Developer Onboarding",
+      "files": [
+        {
+          "path": "onboarding/deployment.md",
+          "title": "Deployment (Developer Guide)",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "onboarding/local-development.md",
+          "title": "Local Development",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "onboarding/migrations.md",
+          "title": "Database Migrations",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "onboarding/monorepo-setup.md",
+          "title": "Monorepo Setup",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "onboarding/queues.md",
+          "title": "Running Queues (BullMQ)",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "onboarding/quickstart.md",
+          "title": "Developer Quickstart",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "onboarding/README.md",
+          "title": "Developer Onboarding",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "onboarding/testing.md",
+          "title": "Testing & Quality",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "product": {
+      "label": "Product",
+      "files": [
+        {
+          "path": "product/functional-requirements.md",
+          "title": "Functional Requirements",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "product/non-functional-requirements.md",
+          "title": "Non-Functional Requirements",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "product/README.md",
+          "title": "Product Documentation",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "product/roadmap.md",
+          "title": "Product Roadmap",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "product/user-stories.md",
+          "title": "User Stories",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "README.md": {
+      "label": "README.md",
+      "files": [
+        {
+          "path": "README.md",
+          "title": "Community Marketplace — Documentation",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "RELEASE.md": {
+      "label": "RELEASE.md",
+      "files": [
+        {
+          "path": "RELEASE.md",
+          "title": "Release Process",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "runbooks": {
+      "label": "Runbooks",
+      "files": [
+        {
+          "path": "runbooks/deploy.md",
+          "title": "Runbook: Deploy",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "runbooks/README.md",
+          "title": "Operational Runbooks",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "runbooks/restore-backup.md",
+          "title": "Runbook: Restore Backup",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "runbooks/rollback.md",
+          "title": "Runbook: Rollback",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "runbooks/scaling.md",
+          "title": "Runbook: Scaling",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "security": {
+      "label": "Security",
+      "files": [
+        {
+          "path": "security/api-security.md",
+          "title": "API Security",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "security/authentication.md",
+          "title": "Authentication Security",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "security/checklist.md",
+          "title": "Developer Security Checklist",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "security/rbac.md",
+          "title": "RBAC Security Model",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "security/README.md",
+          "title": "Security Documentation",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "STANDARDS.md": {
+      "label": "STANDARDS.md",
+      "files": [
+        {
+          "path": "STANDARDS.md",
+          "title": "Documentation Quality Standards",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    }
+  },
+  "files": [
+    {
+      "path": "admin-panel.md",
+      "title": "Admin Panel (moved)",
+      "category": "admin-panel.md",
+      "categoryId": "admin-panel.md",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "admin/listings-moderation.md",
+      "title": "Listings & Moderation (Admin)",
+      "category": "Admin Guide",
+      "categoryId": "admin",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "admin/notifications.md",
+      "title": "Notification Management (Admin)",
+      "category": "Admin Guide",
+      "categoryId": "admin",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "admin/payments.md",
+      "title": "Payments & Refunds (Admin)",
+      "category": "Admin Guide",
+      "categoryId": "admin",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "admin/README.md",
+      "title": "Admin Panel — Operator Guide",
+      "category": "Admin Guide",
+      "categoryId": "admin",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "admin/search.md",
+      "title": "Search Management (Admin)",
+      "category": "Admin Guide",
+      "categoryId": "admin",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "admin/seller-verification.md",
+      "title": "Seller Verification (Admin)",
+      "category": "Admin Guide",
+      "categoryId": "admin",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "admin/settings.md",
+      "title": "System Settings (Super Admin)",
+      "category": "Admin Guide",
+      "categoryId": "admin",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "admin/user-management.md",
+      "title": "User Management (Admin)",
+      "category": "Admin Guide",
+      "categoryId": "admin",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "api/admin.md",
+      "title": "Admin & Super-Admin API",
+      "category": "API Reference",
+      "categoryId": "api",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "api/auth.md",
+      "title": "Auth API",
+      "category": "API Reference",
+      "categoryId": "api",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "api/chat.md",
+      "title": "Chat API",
+      "category": "API Reference",
+      "categoryId": "api",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "api/listings.md",
+      "title": "Listings API",
+      "category": "API Reference",
+      "categoryId": "api",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "api/moderation.md",
+      "title": "Moderation API",
+      "category": "API Reference",
+      "categoryId": "api",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "api/notifications.md",
+      "title": "Notifications API",
+      "category": "API Reference",
+      "categoryId": "api",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "api/payments.md",
+      "title": "Payments API",
+      "category": "API Reference",
+      "categoryId": "api",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "api/README.md",
+      "title": "API Documentation",
+      "category": "API Reference",
+      "categoryId": "api",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "api/search.md",
+      "title": "Search API",
+      "category": "API Reference",
+      "categoryId": "api",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "api/users.md",
+      "title": "Users API",
+      "category": "API Reference",
+      "categoryId": "api",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "architecture/data-flow.md",
+      "title": "Data Flow Diagrams",
+      "category": "Architecture",
+      "categoryId": "architecture",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "architecture/deployment-architecture.md",
+      "title": "Deployment Architecture",
+      "category": "Architecture",
+      "categoryId": "architecture",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "architecture/domain-modules.md",
+      "title": "Domain Modules",
+      "category": "Architecture",
+      "categoryId": "architecture",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "architecture/event-driven.md",
+      "title": "Event-Driven Architecture",
+      "category": "Architecture",
+      "categoryId": "architecture",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "architecture/modular-monolith.md",
+      "title": "Modular Monolith Architecture",
+      "category": "Architecture",
+      "categoryId": "architecture",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "architecture/module-boundaries.md",
+      "title": "Module Boundaries",
+      "category": "Architecture",
+      "categoryId": "architecture",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "architecture/README.md",
+      "title": "Architecture Documentation",
+      "category": "Architecture",
+      "categoryId": "architecture",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "architecture/sequence-diagrams.md",
+      "title": "Sequence Diagrams",
+      "category": "Architecture",
+      "categoryId": "architecture",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "architecture/system-overview.md",
+      "title": "System Overview",
+      "category": "Architecture",
+      "categoryId": "architecture",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "db/erd.md",
+      "title": "Entity Relationship Diagram",
+      "category": "Database",
+      "categoryId": "db",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "db/migrations/README.md",
+      "title": "Database Migrations",
+      "category": "Database",
+      "categoryId": "db",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "db/README.md",
+      "title": "Database Documentation",
+      "category": "Database",
+      "categoryId": "db",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "dev-credentials.md",
+      "title": "Development Credentials",
+      "category": "dev-credentials.md",
+      "categoryId": "dev-credentials.md",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "features/admin-panel.md",
+      "title": "Admin Panel",
+      "category": "Feature Specifications",
+      "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "features/authentication.md",
+      "title": "Authentication System",
+      "category": "Feature Specifications",
+      "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "features/chat.md",
+      "title": "Chat Module",
+      "category": "Feature Specifications",
+      "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "features/listings.md",
+      "title": "Listings Module",
+      "category": "Feature Specifications",
+      "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "features/moderation.md",
+      "title": "Moderation Module",
+      "category": "Feature Specifications",
+      "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "features/notifications.md",
+      "title": "Notifications Module",
+      "category": "Feature Specifications",
+      "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "features/payments.md",
+      "title": "Payments Module",
+      "category": "Feature Specifications",
+      "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "features/rbac.md",
+      "title": "RBAC System",
+      "category": "Feature Specifications",
+      "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "features/README.md",
+      "title": "Feature Specifications",
+      "category": "Feature Specifications",
+      "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "features/search.md",
+      "title": "Search Module",
+      "category": "Feature Specifications",
+      "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "features/users.md",
+      "title": "User Module",
+      "category": "Feature Specifications",
+      "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "infrastructure.md",
+      "title": "Infrastructure (moved)",
+      "category": "infrastructure.md",
+      "categoryId": "infrastructure.md",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "infrastructure/README.md",
+      "title": "Infrastructure — Community Marketplace",
+      "category": "Infrastructure",
+      "categoryId": "infrastructure",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "onboarding/deployment.md",
+      "title": "Deployment (Developer Guide)",
+      "category": "Developer Onboarding",
+      "categoryId": "onboarding",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "onboarding/local-development.md",
+      "title": "Local Development",
+      "category": "Developer Onboarding",
+      "categoryId": "onboarding",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "onboarding/migrations.md",
+      "title": "Database Migrations",
+      "category": "Developer Onboarding",
+      "categoryId": "onboarding",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "onboarding/monorepo-setup.md",
+      "title": "Monorepo Setup",
+      "category": "Developer Onboarding",
+      "categoryId": "onboarding",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "onboarding/queues.md",
+      "title": "Running Queues (BullMQ)",
+      "category": "Developer Onboarding",
+      "categoryId": "onboarding",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "onboarding/quickstart.md",
+      "title": "Developer Quickstart",
+      "category": "Developer Onboarding",
+      "categoryId": "onboarding",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "onboarding/README.md",
+      "title": "Developer Onboarding",
+      "category": "Developer Onboarding",
+      "categoryId": "onboarding",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "onboarding/testing.md",
+      "title": "Testing & Quality",
+      "category": "Developer Onboarding",
+      "categoryId": "onboarding",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "product/functional-requirements.md",
+      "title": "Functional Requirements",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "product/non-functional-requirements.md",
+      "title": "Non-Functional Requirements",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "product/README.md",
+      "title": "Product Documentation",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "product/roadmap.md",
+      "title": "Product Roadmap",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "product/user-stories.md",
+      "title": "User Stories",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "README.md",
+      "title": "Community Marketplace — Documentation",
+      "category": "README.md",
+      "categoryId": "README.md",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "RELEASE.md",
+      "title": "Release Process",
+      "category": "RELEASE.md",
+      "categoryId": "RELEASE.md",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "runbooks/deploy.md",
+      "title": "Runbook: Deploy",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "runbooks/README.md",
+      "title": "Operational Runbooks",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "runbooks/restore-backup.md",
+      "title": "Runbook: Restore Backup",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "runbooks/rollback.md",
+      "title": "Runbook: Rollback",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "runbooks/scaling.md",
+      "title": "Runbook: Scaling",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "security/api-security.md",
+      "title": "API Security",
+      "category": "Security",
+      "categoryId": "security",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "security/authentication.md",
+      "title": "Authentication Security",
+      "category": "Security",
+      "categoryId": "security",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "security/checklist.md",
+      "title": "Developer Security Checklist",
+      "category": "Security",
+      "categoryId": "security",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "security/rbac.md",
+      "title": "RBAC Security Model",
+      "category": "Security",
+      "categoryId": "security",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "security/README.md",
+      "title": "Security Documentation",
+      "category": "Security",
+      "categoryId": "security",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "STANDARDS.md",
+      "title": "Documentation Quality Standards",
+      "category": "STANDARDS.md",
+      "categoryId": "STANDARDS.md",
+      "updatedAt": "2026-06-24"
+    }
+  ]
+}

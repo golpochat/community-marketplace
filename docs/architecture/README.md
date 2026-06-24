@@ -1,7 +1,14 @@
 # Architecture Documentation
 
+System design references for Community Marketplace.
+
 | Document | Description |
 |----------|-------------|
-| [system-overview.md](./system-overview.md) | High-level system diagram and service map |
-| [module-boundaries.md](./module-boundaries.md) | Monorepo and API module ownership rules |
-| [sequence-diagrams.md](./sequence-diagrams.md) | Auth, listings, payments, and chat flows |
+| [System Overview](./system-overview.md) | High-level diagram & service map |
+| [Modular Monolith](./modular-monolith.md) | Monolith pattern & layering |
+| [Domain Modules](./domain-modules.md) | API module catalog |
+| [Event-Driven Architecture](./event-driven.md) | Events, jobs, async pipelines |
+| [Data Flow](./data-flow.md) | Request, cache, upload flows |
+| [Sequence Diagrams](./sequence-diagrams.md) | Auth, payments, chat |
+| [Deployment Architecture](./deployment-architecture.md) | K8s + Traefik + CI/CD |
+| [Module Boundaries](./module-boundaries.md) | Cross-module rules |
