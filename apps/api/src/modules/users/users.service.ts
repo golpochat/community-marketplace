@@ -65,7 +65,7 @@ export class UsersService {
     return this.settingsService.requestDeletion(userId);
   }
 
-  createAvatarUploadUrl(userId: string, dto: unknown) {
+  async createAvatarUploadUrl(userId: string, dto: unknown) {
     const parsed = dto as { contentType: string; fileName?: string };
     return this.storageService.createAvatarUploadUrl(
       userId,

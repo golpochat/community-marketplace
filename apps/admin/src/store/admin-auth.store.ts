@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-import type { AuthResponse, User } from '@community-marketplace/types';
+import type { AuthResponse, PermissionCode, User } from '@community-marketplace/types';
 
 import { clearAdminRoleCookie, clearAdminAuthTokenCookie, setAdminAuthTokenCookie, setAdminRoleCookie } from '@/lib/role-cookie';
 
@@ -16,7 +16,9 @@ interface AuthSession {
 interface AdminAuthState {
   user: User | null;
   session: AuthSession | null;
+  permissions: PermissionCode[];
   setAuth: (response: AuthResponse) => void;
+  setPermissions: (permissions: PermissionCode[]) => void;
   clearUser: () => void;
 }
 
@@ -25,6 +27,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
     (set) => ({
       user: null,
       session: null,
+      permissions: [],
       setAuth: (response) => {
         setAdminRoleCookie(response.user.role);
         setAdminAuthTokenCookie(response.accessToken);
@@ -39,10 +42,11 @@ export const useAdminAuthStore = create<AdminAuthState>()(
           },
         });
       },
+      setPermissions: (permissions) => set({ permissions }),
       clearUser: () => {
         clearAdminRoleCookie();
         clearAdminAuthTokenCookie();
-        set({ user: null, session: null });
+        set({ user: null, session: null, permissions: [] });
       },
     }),
     { name: 'cm-admin-auth' },

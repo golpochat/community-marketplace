@@ -1,5 +1,8 @@
 import { Module } from '@nestjs/common';
 
+import { DatabaseModule } from '../../database/database.module';
+import { EventsModule } from '../../events/events.module';
+import { LibsModule } from '../../libs/libs.module';
 import { ChatModule } from '../chat/chat.module';
 import { ListingsModule } from '../listings/listings.module';
 import { ModerationModule } from '../moderation/moderation.module';
@@ -21,6 +24,9 @@ import { RbacScopePolicy } from './rbac/rbac-scope.policy';
 
 @Module({
   imports: [
+    DatabaseModule,
+    LibsModule,
+    EventsModule,
     UsersModule,
     ListingsModule,
     ChatModule,

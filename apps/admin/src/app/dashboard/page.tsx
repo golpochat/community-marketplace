@@ -1,22 +1,19 @@
-import { formatCurrency } from '@community-marketplace/utils';
+import type { AdminDashboardStats } from '@community-marketplace/types';
 
-import { StatCard } from '@/components/dashboard/stat-card';
+import { DashboardOverview } from '@/components/dashboard/dashboard-overview';
 import { adminServerService } from '@/services/admin.service.server';
 
 export const metadata = { title: 'Dashboard' };
 
 export default async function DashboardPage() {
-  const stats = await adminServerService.getStats();
+  const stats = (await adminServerService.getStats()) as AdminDashboardStats;
 
   return (
     <div>
       <h1 className="text-2xl font-semibold text-foreground">Dashboard Overview</h1>
-      <p className="mt-1 text-sm text-gray-600">Platform metrics at a glance</p>
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Users" value={String(stats.totalUsers)} />
-        <StatCard label="Active Listings" value={String(stats.activeListings)} />
-        <StatCard label="Revenue" value={formatCurrency(stats.revenue)} />
-        <StatCard label="Pending Reports" value={String(stats.pendingReports)} />
+      <p className="mt-1 text-sm text-muted-foreground">Platform metrics at a glance</p>
+      <div className="mt-8">
+        <DashboardOverview stats={stats} />
       </div>
     </div>
   );

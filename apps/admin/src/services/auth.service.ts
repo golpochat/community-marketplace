@@ -1,4 +1,4 @@
-import type { AuthResponse } from '@community-marketplace/types';
+import type { AdminMeResponse, AuthResponse } from '@community-marketplace/types';
 import { loginSchema } from '@community-marketplace/validation';
 
 import { API_BASE_URL } from '@/lib/constants';
@@ -51,5 +51,22 @@ export const adminAuthService = {
       method: 'POST',
       body: JSON.stringify({ refreshToken }),
     });
+  },
+
+  async fetchMe(token?: string, role?: 'ADMIN' | 'SUPER_ADMIN'): Promise<AdminMeResponse> {
+    const accessToken = token ?? getStoredAdminAccessToken();
+    const rolePrefix = role === 'SUPER_ADMIN' ? '/super-admin' : '/admin';
+
+    const response = await fetch(`${API_BASE_URL}${rolePrefix}/me`, {
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch admin profile');
+    const json = (await response.json()) as { data: AdminMeResponse };
+    return json.data;
   },
 };

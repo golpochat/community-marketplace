@@ -29,6 +29,7 @@ import { UsersService } from './users.service';
     UsersVerificationService,
     UsersAdminService,
     UserAuditService,
+    R2StorageService,
   ],
 })
 export class UsersModule {}

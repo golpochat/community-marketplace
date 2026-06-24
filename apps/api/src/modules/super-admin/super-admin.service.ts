@@ -94,4 +94,12 @@ export class SuperAdminService {
   getRolePermissionMatrix(): Readonly<Record<RbacRole, readonly PermissionCode[]>> {
     return DEFAULT_ROLE_PERMISSIONS;
   }
+
+  getPlatformSettings() {
+    return this.adminService.getPlatformSettings();
+  }
+
+  updatePlatformSettings(settings: Record<string, unknown>) {
+    return this.adminService.updatePlatformSettings(settings as Parameters<AdminService['updatePlatformSettings']>[0]);
+  }
 }

@@ -7,6 +7,7 @@ import { Button } from '@community-marketplace/ui';
 
 import { useAdminAuth } from '@/hooks/use-admin-auth';
 import { adminAuthService } from '@/services/auth.service';
+import { useAdminAuthStore } from '@/store/admin-auth.store';
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -30,6 +31,12 @@ export function AdminLoginForm() {
       }
 
       setAuth(response);
+      try {
+        const me = await adminAuthService.fetchMe(response.accessToken);
+        useAdminAuthStore.getState().setPermissions(me.permissions as import('@community-marketplace/types').PermissionCode[]);
+      } catch {
+        // Permissions will load on next navigation
+      }
       router.push(response.redirectPath);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Invalid credentials');

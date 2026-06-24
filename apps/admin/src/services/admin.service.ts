@@ -1,4 +1,10 @@
-import type { RbacRole, UserProfile } from '@community-marketplace/types';
+import type {
+  AdminDashboardStats,
+  ModerationAnalytics,
+  PlatformSettings,
+  RbacRole,
+  UserProfile,
+} from '@community-marketplace/types';
 
 import { adminApiClient } from '@/lib/api-client';
 import { ADMIN_API_ROUTES, moderationRoutes } from '@/lib/api-routes';
@@ -23,29 +29,57 @@ function moderationRoutesForRole(role?: RbacRole | null) {
 }
 
 export const adminService = {
-  async getStats(role?: RbacRole | null) {
+  async getStats(role?: RbacRole | null): Promise<AdminDashboardStats> {
     try {
-      return await adminApiClient<{
-        totalUsers: number;
-        activeListings: number;
-        revenue: number;
-        pendingReports: number;
-      }>(routesForRole(role).stats);
+      return await adminApiClient<AdminDashboardStats>(routesForRole(role).stats);
     } catch {
-      return { totalUsers: 0, activeListings: 0, revenue: 0, pendingReports: 0 };
+      return {
+        totalUsers: 0,
+        totalSellers: 0,
+        totalBuyers: 0,
+        activeListings: 0,
+        totalPayments: 0,
+        pendingVerifications: 0,
+        pendingReports: 0,
+        activeBans: 0,
+        revenue: 0,
+        platformHealth: { database: 'healthy', search: 'degraded', payments: 'degraded' },
+        generatedAt: new Date().toISOString(),
+      };
     }
   },
 
-  async getUsers(role?: RbacRole | null): Promise<UserProfile[]> {
-    try {
-      const result = await adminApiClient<{ data: UserProfile[]; meta: { total: number } }>(
-        routesForRole(role).users,
-      );
-      return result.data ?? [];
-    } catch {
-      return [];
-    }
-  },
+  getUsers: (role?: RbacRole | null, query?: string) =>
+    adminApiClient<{ data: UserProfile[]; meta: { total: number } }>(
+      `${routesForRole(role).users}${query ? `?${query}` : ''}`,
+    ),
+
+  getUser: (id: string, role?: RbacRole | null) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.user(id)),
+
+  suspendUser: (body: Record<string, unknown>) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.userSuspend, { method: 'POST', body: JSON.stringify(body) }),
+
+  unsuspendUser: (id: string) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.userUnsuspend(id), { method: 'POST' }),
+
+  banUser: (body: Record<string, unknown>) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.userBan, { method: 'POST', body: JSON.stringify(body) }),
+
+  getPendingVerifications: (role?: RbacRole | null) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.verificationsPending),
+
+  approveVerification: (id: string, body?: Record<string, unknown>) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.verificationApprove(id), {
+      method: 'POST',
+      body: JSON.stringify(body ?? {}),
+    }),
+
+  rejectVerification: (id: string, body: Record<string, unknown>) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.verificationReject(id), {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
 
   async getListings(role?: RbacRole | null) {
     try {
@@ -63,6 +97,24 @@ export const adminService = {
     adminApiClient(moderationRoutesForRole(role).reports),
   getModerationBans: (role?: RbacRole | null) =>
     adminApiClient(moderationRoutesForRole(role).bans),
+  getModerationAppeals: (role?: RbacRole | null) =>
+    adminApiClient(moderationRoutesForRole(role).appeals),
+  getModerationAnalytics: (role?: RbacRole | null) =>
+    adminApiClient<ModerationAnalytics>(moderationRoutesForRole(role).analytics),
+  takeModerationAction: (
+    reportId: string,
+    body: Record<string, unknown>,
+    role?: RbacRole | null,
+  ) =>
+    adminApiClient(moderationRoutesForRole(role).reportAction(reportId), {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  reviewAppeal: (appealId: string, body: Record<string, unknown>, role?: RbacRole | null) =>
+    adminApiClient(moderationRoutesForRole(role).appeal(appealId), {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
   getSearchIndexes: (role?: RbacRole | null) =>
     adminApiClient(routesForRole(role).search.indexes),
   getSearchHealth: (role?: RbacRole | null) => adminApiClient(routesForRole(role).search.health),
@@ -75,4 +127,70 @@ export const adminService = {
     }),
   getReindexStatus: (type: string, role?: RbacRole | null) =>
     adminApiClient(routesForRole(role).search.reindexStatus(type)),
+
+  updateSearchSynonyms: (body: unknown, role?: RbacRole | null) =>
+    adminApiClient(routesForRole(role).search.synonyms, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  updateSearchStopWords: (body: unknown, role?: RbacRole | null) =>
+    adminApiClient(routesForRole(role).search.stopWords, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  updateSearchRelevance: (body: unknown, role?: RbacRole | null) =>
+    adminApiClient(routesForRole(role).search.relevance, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
+
+  getPayments: (query?: string) =>
+    adminApiClient(`${ADMIN_API_ROUTES.admin.payments}${query ? `?${query}` : ''}`),
+
+  getPendingRefunds: () => adminApiClient(ADMIN_API_ROUTES.admin.refundsPending),
+
+  approveRefund: (body: unknown) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.refundsApprove, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  getDisputes: () => adminApiClient(ADMIN_API_ROUTES.admin.disputes),
+
+  getNotificationTemplates: () => adminApiClient(ADMIN_API_ROUTES.admin.notifications.templates),
+
+  getNotificationProviders: () => adminApiClient(ADMIN_API_ROUTES.admin.notifications.providers),
+
+  broadcastNotification: (body: unknown) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.notifications.broadcast, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  getNotificationLogs: () => adminApiClient(ADMIN_API_ROUTES.admin.notifications.logs),
+
+  getAuditLog: (role?: RbacRole | null) => adminApiClient(routesForRole(role).audit),
+
+  getPlatformSettings: () => adminApiClient<PlatformSettings>(ADMIN_API_ROUTES.superAdmin.settings),
+
+  updatePlatformSettings: (body: Partial<PlatformSettings>) =>
+    adminApiClient<PlatformSettings>(ADMIN_API_ROUTES.superAdmin.settings, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
+
+  getAdmins: () => adminApiClient(ADMIN_API_ROUTES.superAdmin.admins),
+
+  getRoleMatrix: () => adminApiClient(ADMIN_API_ROUTES.superAdmin.roleMatrix),
+
+  banListing: (id: string, body?: unknown) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.listingBan(id), {
+      method: 'POST',
+      body: JSON.stringify(body ?? {}),
+    }),
+
+  unbanListing: (id: string) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.listingUnban(id), { method: 'POST' }),
 };

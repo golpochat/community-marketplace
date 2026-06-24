@@ -19,3 +19,11 @@ export {
   CardDescription,
   CardContent,
 } from './components/card';
+
+export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './components/table';
+export { Dialog } from './components/dialog';
+export { Select } from './components/select';
+export type { SelectProps } from './components/select';
+export { BarChart } from './components/bar-chart';
+export { ToastProvider, useToast } from './components/toast';
+export type { ToastMessage, ToastVariant } from './components/toast';

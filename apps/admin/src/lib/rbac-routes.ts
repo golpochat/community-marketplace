@@ -16,8 +16,10 @@ export const ADMIN_APP_ROUTES = {
   listings: '/admin/dashboard/listings',
   analytics: '/admin/dashboard/analytics',
   search: '/admin/dashboard/search',
+  moderation: '/admin/dashboard/moderation',
   settings: '/admin/dashboard/settings',
   superAdminSearch: '/super-admin/dashboard/search',
+  superAdminModeration: '/super-admin/dashboard/moderation',
 } as const;
 
 const SUPER_ADMIN_ONLY_PREFIXES = ['/super-admin/dashboard'];
@@ -32,6 +34,11 @@ export function getAdminDashboardPathForRole(role: RbacRole): string {
   if (role === 'SUPER_ADMIN') return ADMIN_APP_ROUTES.superAdminDashboard;
   if (role === 'ADMIN') return ADMIN_APP_ROUTES.adminDashboard;
   return ADMIN_APP_ROUTES.login;
+}
+
+export function getModerationDashboardPathForRole(role: RbacRole): string {
+  if (role === 'SUPER_ADMIN') return ADMIN_APP_ROUTES.superAdminModeration;
+  return ADMIN_APP_ROUTES.moderation;
 }
 
 export function isAdminAppRouteAllowed(role: RbacRole | null, pathname: string): boolean {

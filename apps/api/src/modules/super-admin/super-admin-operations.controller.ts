@@ -1,8 +1,10 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
 
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { SuperAdminService } from './super-admin.service';
 
 @RequireRole('SUPER_ADMIN')
@@ -14,6 +16,28 @@ export class SuperAdminOperationsController {
   @Get('stats')
   getStats() {
     return this.superAdminService.getStats();
+  }
+
+  @Get('me')
+  getMe(@CurrentUser() user: AuthenticatedUser) {
+    return {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      permissions: user.permissions?.effective ?? [],
+    };
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PLATFORM_PERMISSIONS)
+  @Get('settings')
+  getSettings() {
+    return this.superAdminService.getPlatformSettings();
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PLATFORM_PERMISSIONS)
+  @Patch('settings')
+  updateSettings(@Body() body: Record<string, unknown>) {
+    return this.superAdminService.updatePlatformSettings(body);
   }
 
   @RequirePermissions(PERMISSIONS.VIEW_USERS)

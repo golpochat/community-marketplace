@@ -19,6 +19,16 @@ export class AdminController {
     return this.adminService.getStats();
   }
 
+  @Get('me')
+  getMe(@CurrentUser() user: AuthenticatedUser) {
+    return {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      permissions: user.permissions?.effective ?? [],
+    };
+  }
+
   @RequirePermissions(PERMISSIONS.VIEW_USERS)
   @Get('users')
   getUsers(
