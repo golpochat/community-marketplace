@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: community-marketplace
+  labels:
+    app.kubernetes.io/name: community-marketplace
+    app.kubernetes.io/part-of: community-marketplace

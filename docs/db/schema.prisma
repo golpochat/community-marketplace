@@ -1,0 +1,299 @@
+// Community Marketplace — Prisma schema (documentation mirror)
+// Canonical source: apps/api/prisma/schema.prisma
+//
+// Commands (run from apps/api):
+//   pnpm --filter @community-marketplace/api exec prisma generate
+//   pnpm --filter @community-marketplace/api exec prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// RBAC
+// ══════════════════════════════════════════════════════════════════════════════
+
+enum RbacRoleCode {
+  SUPER_ADMIN
+  ADMIN
+  SELLER
+  BUYER
+}
+
+enum PermissionEffect {
+  GRANT
+  DENY
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  code        RbacRoleCode @unique
+  name        String
+  description String?
+  isSystem    Boolean      @default(true) @map("is_system")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  permissions RolePermission[]
+  users       User[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  code        String   @unique @db.VarChar(80)
+  name        String
+  description String?
+  resource    String   @db.VarChar(40)
+  action      String   @db.VarChar(40)
+  isSystem    Boolean  @default(true) @map("is_system")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  roles           RolePermission[]
+  userPermissions UserPermission[]
+
+  @@index([resource, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String   @map("role_id")
+  permissionId String   @map("permission_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserPermission {
+  id           String           @id @default(uuid())
+  userId       String           @map("user_id")
+  permissionId String           @map("permission_id")
+  effect       PermissionEffect
+  reason       String?
+  grantedById  String?          @map("granted_by_id")
+  expiresAt    DateTime?        @map("expires_at")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  user       User       @relation("UserPermissionOverrides", fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  grantedBy  User?      @relation("GrantedPermissionOverrides", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, permissionId])
+  @@index([userId, effect])
+  @@map("user_permissions")
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Core domain
+// ══════════════════════════════════════════════════════════════════════════════
+
+enum UserStatus {
+  active
+  inactive
+  suspended
+}
+
+enum ListingStatus {
+  draft
+  active
+  sold
+  archived
+}
+
+enum ListingCondition {
+  new
+  like_new
+  good
+  fair
+  poor
+}
+
+enum PaymentStatus {
+  pending
+  processing
+  completed
+  failed
+  refunded
+}
+
+enum PaymentMethod {
+  card
+  bank_transfer
+  wallet
+}
+
+enum ChatMessageType {
+  text
+  image
+  system
+}
+
+enum ChatMessageStatus {
+  sent
+  delivered
+  read
+}
+
+enum NotificationType {
+  listing_sold
+  new_message
+  payment_received
+  payment_sent
+  listing_approved
+  system
+}
+
+enum ReportStatus {
+  open
+  reviewing
+  resolved
+  dismissed
+}
+
+enum BanType {
+  temporary
+  permanent
+}
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  passwordHash  String?    @map("password_hash")
+  displayName   String?    @map("display_name")
+  avatarUrl     String?    @map("avatar_url")
+  primaryRoleId String     @map("primary_role_id")
+  status        UserStatus @default(active)
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  primaryRole                Role             @relation(fields: [primaryRoleId], references: [id])
+  profile                    UserProfile?
+  permissionOverrides        UserPermission[] @relation("UserPermissionOverrides")
+  grantedPermissionOverrides UserPermission[] @relation("GrantedPermissionOverrides")
+  listings                   Listing[]
+  buyerPayments              Payment[]        @relation("BuyerPayments")
+  sellerPayments             Payment[]        @relation("SellerPayments")
+  notifications              Notification[]
+  deviceTokens               DeviceToken[]
+
+  @@index([primaryRoleId])
+  @@index([status])
+  @@map("users")
+}
+
+model UserProfile {
+  id       String  @id @default(uuid())
+  userId   String  @unique @map("user_id")
+  bio      String?
+  location String?
+  phone    String?
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  description String?
+  parentId    String?   @map("parent_id")
+  isActive    Boolean   @default(true) @map("is_active")
+  listings    Listing[]
+
+  @@map("categories")
+}
+
+model Listing {
+  id          String           @id @default(uuid())
+  sellerId    String           @map("seller_id")
+  categoryId  String           @map("category_id")
+  title       String
+  description String
+  price       Decimal          @db.Decimal(12, 2)
+  currency    String           @default("USD") @db.Char(3)
+  condition   ListingCondition
+  status      ListingStatus    @default(draft)
+  location    String
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  seller   User           @relation(fields: [sellerId], references: [id])
+  category Category       @relation(fields: [categoryId], references: [id])
+  images   ListingImage[]
+  payments Payment[]
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([sellerId])
+  @@map("listings")
+}
+
+model ListingImage {
+  id        String  @id @default(uuid())
+  listingId String  @map("listing_id")
+  url       String
+  altText   String? @map("alt_text")
+  sortOrder Int     @default(0) @map("sort_order")
+  isPrimary Boolean @default(false) @map("is_primary")
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("listing_images")
+}
+
+model Payment {
+  id                    String        @id @default(uuid())
+  buyerId               String        @map("buyer_id")
+  sellerId              String        @map("seller_id")
+  listingId             String        @map("listing_id")
+  amount                Decimal       @db.Decimal(12, 2)
+  currency              String        @db.Char(3)
+  method                PaymentMethod
+  status                PaymentStatus @default(pending)
+  stripePaymentIntentId String?       @map("stripe_payment_intent_id")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  buyer   User    @relation("BuyerPayments", fields: [buyerId], references: [id])
+  seller  User    @relation("SellerPayments", fields: [sellerId], references: [id])
+  listing Listing @relation(fields: [listingId], references: [id])
+
+  @@map("payments")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  title     String
+  body      String
+  read      Boolean          @default(false)
+  actionUrl String?          @map("action_url")
+  createdAt DateTime         @default(now()) @map("created_at")
+  user      User             @relation(fields: [userId], references: [id])
+
+  @@index([userId, read, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model DeviceToken {
+  id       String  @id @default(uuid())
+  userId   String  @map("user_id")
+  token    String
+  platform String
+  isActive Boolean @default(true) @map("is_active")
+  user     User    @relation(fields: [userId], references: [id])
+
+  @@map("device_tokens")
+}

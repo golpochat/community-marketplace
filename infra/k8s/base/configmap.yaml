@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: community-marketplace
+data:
+  NODE_ENV: production
+  PORT: "4000"
+  MEILISEARCH_HOST: http://meilisearch:7700
+  CORS_ORIGIN: https://community.market,https://admin.community.market
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+  namespace: community-marketplace
+data:
+  NEXT_PUBLIC_API_URL: https://api.community.market/api
+  NEXT_PUBLIC_APP_URL: https://community.market
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: admin-config
+  namespace: community-marketplace
+data:
+  NEXT_PUBLIC_API_URL: https://api.community.market/api
+  NEXT_PUBLIC_APP_URL: https://admin.community.market

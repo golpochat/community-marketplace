@@ -1,0 +1,41 @@
+export const APP_NAME = 'Community Marketplace';
+export const APP_SHORT_NAME = 'CMarket';
+
+export const RBAC_ROLES = ['SUPER_ADMIN', 'ADMIN', 'SELLER', 'BUYER'] as const;
+export const USER_ROLES = RBAC_ROLES;
+export const USER_STATUSES = ['active', 'inactive', 'suspended'] as const;
+
+export const LISTING_STATUSES = ['draft', 'active', 'sold', 'archived'] as const;
+export const LISTING_CONDITIONS = ['new', 'like_new', 'good', 'fair', 'poor'] as const;
+
+export const PAYMENT_STATUSES = ['pending', 'processing', 'completed', 'failed', 'refunded'] as const;
+export const PAYMENT_METHODS = ['card', 'bank_transfer', 'wallet'] as const;
+
+export const NOTIFICATION_TYPES = [
+  'listing_sold',
+  'new_message',
+  'payment_received',
+  'payment_sent',
+  'listing_approved',
+  'system',
+] as const;
+
+export const CHAT_MESSAGE_TYPES = ['text', 'image', 'system'] as const;
+export const CHAT_MESSAGE_STATUSES = ['sent', 'delivered', 'read'] as const;
+
+export const DEFAULT_PAGE = 1;
+export const DEFAULT_PAGE_SIZE = 20;
+export const MAX_PAGE_SIZE = 100;
+
+export const DEFAULT_CURRENCY = 'USD';
+export const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD'] as const;
+
+export const API_PREFIX = '/api';
+
+export const PORTS = {
+  web: 3000,
+  admin: 3001,
+  api: 4000,
+} as const;
+
+export const DEFAULT_API_URL = `http://localhost:${PORTS.api}${API_PREFIX}`;

@@ -1,0 +1,23 @@
+# ── Meilisearch (extends official image) ─────────────────────────────────────
+# Build:  docker build -f infra/docker/Dockerfile.meilisearch -t cm-meilisearch .
+# Run:    docker run -p 7700:7700 -v meili_data:/meili_data cm-meilisearch
+#
+# For production, prefer pinning to a specific Meilisearch version.
+
+FROM getmeili/meilisearch:v1.12
+
+# Placeholder: add custom dictionaries, stop words, or bootstrap scripts here.
+# COPY infra/docker/meilisearch/entrypoint.sh /entrypoint.sh
+# RUN chmod +x /entrypoint.sh
+
+ENV MEILI_ENV=production
+ENV MEILI_NO_ANALYTICS=true
+ENV MEILI_HTTP_ADDR=0.0.0.0:7700
+
+VOLUME ["/meili_data"]
+EXPOSE 7700
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+  CMD wget -qO- http://localhost:7700/health || exit 1
+
+# ENTRYPOINT ["/entrypoint.sh"]

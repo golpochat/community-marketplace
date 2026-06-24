@@ -5,117 +5,70 @@
 [![pnpm](https://img.shields.io/badge/pnpm-%3E%3D9-F69220?logo=pnpm&logoColor=white)](https://pnpm.io/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-Full-stack community marketplace platform built as an enterprise-grade **pnpm monorepo**. Buyers and sellers connect through listings, real-time messaging, payments, and search — with a dedicated admin dashboard for operations, moderation, and platform governance.
+Enterprise-grade community marketplace platform built as a **pnpm monorepo**. Buyers and sellers trade through listings, messaging, payments, and search — with dedicated admin tooling for operations, moderation, and platform governance.
 
 ---
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
-- [Architecture](#architecture)
+- [Project Overview](#project-overview)
+- [Monorepo Structure](#monorepo-structure)
 - [Technology Stack](#technology-stack)
-- [Repository Structure](#repository-structure)
-- [Prerequisites](#prerequisites)
+- [RBAC Model](#rbac-model)
+- [Authentication System](#authentication-system)
 - [Getting Started](#getting-started)
-- [Environment Configuration](#environment-configuration)
-- [Development](#development)
-- [Build & Deployment](#build--deployment)
-- [API Modules](#api-modules)
+- [Development Workflow](#development-workflow)
+- [Environment Variables](#environment-variables)
+- [Deployment Overview](#deployment-overview)
 - [Documentation](#documentation)
-- [Contributing](#contributing)
+- [Future Roadmap](#future-roadmap)
 - [License](#license)
 
 ---
 
-## Overview
+## Project Overview
 
-Community Marketplace is a multi-tenant-style community trading platform designed for local and niche marketplaces. The system separates **public buyer/seller experiences** (web PWA), **internal operations** (admin dashboard), and a **unified backend API** (NestJS) backed by PostgreSQL, Redis, and Meilisearch.
+Community Marketplace is a full-stack platform for local and niche community trading. It separates concerns across three applications:
 
-Shared contracts — types, validation schemas, UI primitives, and configuration — live in workspace packages so all applications stay consistent and type-safe end to end.
+| Application | Audience | Purpose |
+|-------------|----------|---------|
+| **Web** (`apps/web`) | Buyers & sellers | Public marketplace PWA |
+| **Admin** (`apps/admin`) | Operators | Platform administration dashboard |
+| **API** (`apps/api`) | All clients | Unified REST + WebSocket backend |
 
----
-
-## Features
-
-| Domain | Capabilities |
-|--------|--------------|
-| **Authentication** | Email/password registration, JWT sessions, OTP login, email activation |
-| **Users & Profiles** | Profile management, identity verification, RBAC (buyer, seller, admin) |
-| **Listings** | CRUD, categories, images, lifecycle states (draft → active → sold) |
-| **Search** | Full-text search via Meilisearch with automatic indexing |
-| **Messaging** | Real-time buyer–seller chat over WebSockets (Socket.IO) |
-| **Payments** | Stripe Connect onboarding and card payments |
-| **Notifications** | Push notifications via Firebase Cloud Messaging (FCM) |
-| **Moderation** | User reports, bans, and admin review workflows |
-| **Administration** | Platform stats, user/listing management, audit logging |
+Shared contracts — types, validation, UI primitives, and configuration — live in workspace packages so every app stays type-safe and consistent.
 
 ---
 
-## Architecture
+## Monorepo Structure
 
-```mermaid
-flowchart TB
-    subgraph Clients
-        WEB[apps/web<br/>Next.js PWA · :3000]
-        ADMIN[apps/admin<br/>Next.js Dashboard · :3001]
-    end
-
-    subgraph Edge
-        TRAEFIK[Traefik<br/>Reverse Proxy / TLS]
-    end
-
-    subgraph API Layer
-        API[apps/api<br/>NestJS · :4000]
-        WS[WebSocket Gateway<br/>Chat]
-    end
-
-    subgraph Shared Packages
-        TYPES[packages/types]
-        VAL[packages/validation]
-        UTILS[packages/utils]
-        UI[packages/ui]
-        CFG[packages/config]
-    end
-
-    subgraph Data and Search
-        PG[(PostgreSQL)]
-        REDIS[(Redis)]
-        MEILI[(Meilisearch)]
-    end
-
-    subgraph External
-        STRIPE[Stripe Connect]
-        FCM[Firebase FCM]
-    end
-
-    WEB --> TRAEFIK
-    ADMIN --> TRAEFIK
-    TRAEFIK --> WEB
-    TRAEFIK --> ADMIN
-    TRAEFIK --> API
-    WEB -. REST .-> API
-    ADMIN -. REST .-> API
-    WEB -. WS .-> WS
-    API --> WS
-    API --> PG
-    API --> REDIS
-    API --> MEILI
-    API --> STRIPE
-    API --> FCM
-    WEB --> UI
-    ADMIN --> UI
+```
+community-marketplace/
+├── apps/
+│   ├── api/              # NestJS REST + WebSocket API (Prisma, auth, domain modules)
+│   ├── web/              # Next.js 15 public marketplace (port 3000)
+│   └── admin/            # Next.js 15 admin dashboard (port 3001)
+├── packages/
+│   ├── config/           # Zod env loaders, constants, TS base configs
+│   ├── types/            # Canonical TypeScript interfaces (RBAC, auth, domain)
+│   ├── validation/       # Shared Zod schemas
+│   ├── utils/            # Date, string, currency helpers
+│   └── ui/               # Shared React component library
+├── docs/
+│   ├── architecture/     # System design, module boundaries
+│   ├── api/              # REST endpoint reference (incl. auth.md)
+│   ├── db/               # Schema, ERD, migration guides
+│   └── product/          # Requirements, user stories, roadmap
+├── infra/
+│   ├── docker/           # Docker Compose + Dockerfiles
+│   ├── k8s/              # Kubernetes base + dev/prod overlays
+│   ├── traefik/          # Reverse proxy / TLS
+│   └── scripts/          # Deploy, migrate, seed, backup
+├── package.json
+└── pnpm-workspace.yaml
 ```
 
-| Service | Default Port | Responsibility |
-|---------|--------------|----------------|
-| `web` | 3000 | Public marketplace UI (PWA-capable) |
-| `admin` | 3001 | Operations and moderation dashboard |
-| `api` | 4000 | REST API + WebSocket backend |
-| `postgres` | 5432 | Primary relational datastore |
-| `redis` | 6379 | Cache, sessions, job queues |
-| `meilisearch` | 7700 | Full-text search index |
-| `traefik` | 80 / 443 | Routing and TLS termination |
+**Package build order:** `config → types → validation → utils → ui → apps`
 
 ---
 
@@ -123,230 +76,198 @@ flowchart TB
 
 | Layer | Technologies |
 |-------|--------------|
-| **Monorepo** | pnpm workspaces, TypeScript project references |
+| **Monorepo** | pnpm workspaces, TypeScript 5.7 project references |
 | **Frontend** | Next.js 15, React 19, Tailwind CSS, Zustand |
-| **Backend** | NestJS 10, Prisma ORM, Passport JWT, Socket.IO |
-| **Database** | PostgreSQL |
+| **Backend** | NestJS 10, Prisma ORM, Socket.IO |
+| **Database** | PostgreSQL 16 |
+| **Cache / queues** | Redis 7 (infra provisioned; BullMQ integration planned) |
 | **Search** | Meilisearch |
+| **Object storage** | Cloudflare R2 (planned for listing images) |
 | **Payments** | Stripe Connect |
-| **Validation** | Zod (shared schemas), class-validator (API DTOs) |
-| **Infrastructure** | Docker Compose, Kubernetes manifests, Traefik |
+| **Push** | Firebase Cloud Messaging (FCM) |
+| **Validation** | Zod (shared) + class-validator (API DTOs) |
+| **Infrastructure** | Docker Compose, Kubernetes, Traefik |
 
 ---
 
-## Repository Structure
+## RBAC Model
 
-```
-community-marketplace/
-├── apps/
-│   ├── api/          # NestJS REST + WebSocket API (Prisma, auth, listings, payments, chat)
-│   ├── web/          # Public Next.js marketplace application
-│   └── admin/        # Next.js admin dashboard
-├── packages/
-│   ├── config/       # Shared env loaders, constants, TypeScript base configs
-│   ├── types/        # Shared TypeScript interfaces and enums
-│   ├── validation/   # Shared Zod validation schemas
-│   ├── utils/        # Shared utility functions
-│   └── ui/           # Shared React component library
-├── docs/
-│   ├── architecture/ # System design, module boundaries, sequence diagrams
-│   ├── api/          # REST endpoint documentation
-│   ├── db/           # Schema and migration guides
-│   └── product/      # Requirements, user stories, roadmap
-├── infra/
-│   ├── docker/       # Dockerfiles and docker-compose stack
-│   ├── k8s/          # Kubernetes base manifests and overlays
-│   └── traefik/      # Reverse proxy configuration
-├── package.json      # Root workspace scripts
-└── pnpm-workspace.yaml
-```
+Four hierarchical roles with granular permissions:
+
+| Role | Scope | Default dashboard |
+|------|-------|-------------------|
+| `SUPER_ADMIN` | Full platform governance | `/super-admin/dashboard` (admin app) |
+| `ADMIN` | Operations, moderation, scoped RBAC delegation | `/admin/dashboard` (admin app) |
+| `SELLER` | Listings, sales, seller profile | `/seller/dashboard` (web app) |
+| `BUYER` | Purchases, reviews, buyer profile | `/buyer/dashboard` (web app) |
+
+**Permission model:**
+
+- Permissions are defined in `packages/types` (`PERMISSIONS`, `DEFAULT_ROLE_PERMISSIONS`)
+- Stored in PostgreSQL: `roles`, `permissions`, `role_permissions`, `user_permissions`
+- Per-user **GRANT** / **DENY** overrides via `user_permissions`
+- API enforcement: global `AuthGuard` + `RolesPermissionsGuard` with `@RequireRole` / `@RequirePermissions`
+- Seed: `pnpm seed:rbac`
 
 ---
 
-## Prerequisites
+## Authentication System
 
-| Tool | Version |
-|------|---------|
-| [Node.js](https://nodejs.org/) | ≥ 20.0.0 |
-| [pnpm](https://pnpm.io/) | ≥ 9.0.0 |
-| [PostgreSQL](https://www.postgresql.org/) | 15+ (local or Docker) |
-| [Docker](https://www.docker.com/) | Optional — for full local stack |
+Phone-first registration with JWT email activation and secure session management.
+
+### Registration flow
+
+1. **Send OTP** — `POST /api/auth/otp/send` (phone, purpose `register`)
+2. **Verify OTP** — `POST /api/auth/otp/verify` → returns `phoneVerificationToken` (**no user created**)
+3. **Complete registration** — `POST /api/auth/register/complete` (name, email, phone token) → activation email
+4. **Activate** — `POST /api/auth/activate` (JWT from email) → user created with `email_verified_at` + `phone_verified_at`
+
+### Login & sessions
+
+- **Password login** for provisioned accounts (e.g. seeded super admin)
+- **OTP login** for existing users (phone or email)
+- **Access token** — JWT, 15 min, `Authorization: Bearer`
+- **Refresh token** — JWT, 7 days, hashed in `auth_sessions`, rotated on refresh
+- **httpOnly cookie** — `cm_refresh_token` for web clients (`credentials: include`)
+
+### Security controls
+
+- Brute-force lockout (10 failures / 15 min)
+- OTP rate limiting (5 sends / 10 min)
+- Device fingerprinting (`User-Agent` + IP + `X-Device-Fingerprint`)
+- Audit log table (`auth_login_audit`)
+- Email and phone uniqueness constraints
+
+Full API reference: [`docs/api/auth.md`](docs/api/auth.md)
 
 ---
 
 ## Getting Started
 
-### 1. Clone the repository
+### Prerequisites
+
+| Tool | Version |
+|------|---------|
+| Node.js | ≥ 20 |
+| pnpm | ≥ 9 |
+| PostgreSQL | 15+ (or Docker) |
+| Docker | Optional — full local stack |
+
+### Quick start
 
 ```bash
 git clone https://github.com/golpochat/community-marketplace.git
 cd community-marketplace
-```
-
-### 2. Install dependencies
-
-```bash
 pnpm install
-```
 
-### 3. Configure environment variables
-
-Copy the example env files and adjust values for your environment:
-
-```bash
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
 cp apps/admin/.env.example apps/admin/.env
-```
 
-See [Environment Configuration](#environment-configuration) for variable details.
-
-### 4. Start infrastructure services
-
-Using Docker Compose (recommended for local development):
-
-```bash
 docker compose -f infra/docker/docker-compose.yml up -d
-```
 
-### 5. Initialize the database
-
-```bash
 pnpm --filter @community-marketplace/api prisma:generate
 pnpm --filter @community-marketplace/api prisma:migrate
-pnpm --filter @community-marketplace/api prisma:seed
-```
+pnpm seed:rbac
 
-### 6. Build shared packages and start development
-
-```bash
-# All apps in parallel
 pnpm dev
-
-# Or run individually
-pnpm dev:web    # http://localhost:3000
-pnpm dev:admin  # http://localhost:3001
-pnpm dev:api    # http://localhost:4000
 ```
+
+| Service | URL |
+|---------|-----|
+| Web | http://localhost:3000 |
+| Admin | http://localhost:3001 |
+| API | http://localhost:4000/api |
 
 ---
 
-## Environment Configuration
+## Development Workflow
+
+### Root scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start all apps in parallel |
+| `pnpm dev:web` | Web app only |
+| `pnpm dev:admin` | Admin app only |
+| `pnpm dev:api` | Build packages + API with hot reload |
+| `pnpm build` | Production build (packages → apps) |
+| `pnpm typecheck` | TypeScript across monorepo |
+| `pnpm lint` | ESLint in all workspaces |
+| `pnpm seed:rbac` | Seed roles, permissions, super admin |
+
+### Adding a feature
+
+1. Types → `packages/types`
+2. Zod schemas → `packages/validation`
+3. Prisma schema + migration → `apps/api/prisma`
+4. NestJS module → `apps/api/src/modules`
+5. Frontend service + pages → `apps/web` or `apps/admin`
+
+### API conventions
+
+- Global prefix: `/api`
+- Responses wrapped as `{ data: T }`
+- `@Public()` for unauthenticated routes
+- Shared validation via `@community-marketplace/validation`
+
+---
+
+## Environment Variables
 
 ### API (`apps/api/.env`)
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `PORT` | API listen port | `4000` |
-| `NODE_ENV` | Runtime environment | `development` |
-| `CORS_ORIGIN` | Allowed frontend origins (comma-separated) | `http://localhost:3000,http://localhost:3001` |
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://localhost:5432/community_marketplace` |
-| `JWT_SECRET` | Secret for signing JWT tokens | *(set a strong value in production)* |
-| `STRIPE_SECRET_KEY` | Stripe API secret key | |
-| `MEILISEARCH_HOST` | Meilisearch server URL | `http://localhost:7700` |
-| `MEILISEARCH_API_KEY` | Meilisearch API key | |
-| `FCM_PROJECT_ID` | Firebase Cloud Messaging project ID | |
+| `PORT` | API port | `4000` |
+| `NODE_ENV` | Environment | `development` |
+| `DATABASE_URL` | PostgreSQL URL | `postgresql://cm:cm_dev_password@localhost:5434/community_marketplace` |
+| `JWT_SECRET` | JWT signing secret (≥ 16 chars) | Strong random value in prod |
+| `CORS_ORIGIN` | Allowed origins (comma-separated) | `http://localhost:3000,http://localhost:3001` |
+| `WEB_APP_URL` | Activation email base URL | `http://localhost:3000` |
+| `STRIPE_SECRET_KEY` | Stripe API key | |
+| `MEILISEARCH_HOST` | Search server | `http://localhost:7700` |
+| `MEILISEARCH_API_KEY` | Search API key | |
+| `FCM_PROJECT_ID` | Firebase project | |
+| `RBAC_SEED_*` | Dev super-admin bootstrap | See `.env.example` |
 
-### Web & Admin (`apps/web/.env`, `apps/admin/.env`)
+### Web & Admin
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | Base URL for API requests | `http://localhost:4000/api` |
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_API_URL` | API base (`http://localhost:4000/api`) |
+| `NEXT_PUBLIC_APP_URL` | App origin |
+| `NEXT_PUBLIC_ADMIN_APP_URL` | Admin app URL (web login redirect for admin roles) |
 
-> **Security note:** Never commit `.env` files. Only `.env.example` templates are tracked in version control.
-
----
-
-## Development
-
-### Root workspace scripts
-
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start all apps in parallel |
-| `pnpm dev:web` | Start public web app only |
-| `pnpm dev:admin` | Start admin dashboard only |
-| `pnpm dev:api` | Build packages, then start API with hot reload |
-| `pnpm build` | Build all packages, then all apps |
-| `pnpm typecheck` | Run TypeScript checks across the monorepo |
-| `pnpm lint` | Run linters in all workspaces |
-| `pnpm test` | Run tests in all workspaces |
-| `pnpm format` | Format code with Prettier |
-| `pnpm clean` | Remove build artifacts and `node_modules` |
-
-### Package build order
-
-Shared packages must be built before apps that depend on them. The root `build` and `dev:api` scripts handle this automatically:
-
-```
-packages/config → packages/types → packages/validation → packages/utils → packages/ui → apps/*
-```
-
-### API-specific commands
-
-```bash
-pnpm --filter @community-marketplace/api prisma:generate   # Regenerate Prisma client
-pnpm --filter @community-marketplace/api prisma:migrate      # Run migrations
-pnpm --filter @community-marketplace/api prisma:seed         # Seed development data
-```
+> Never commit `.env` files. Only `.env.example` templates are tracked.
 
 ---
 
-## Build & Deployment
-
-### Production build
-
-```bash
-pnpm build
-```
+## Deployment Overview
 
 ### Docker
 
-Build individual service images from the repository root:
-
 ```bash
+pnpm build
 docker build -f infra/docker/Dockerfile.api   -t cm-api .
 docker build -f infra/docker/Dockerfile.web   -t cm-web .
 docker build -f infra/docker/Dockerfile.admin -t cm-admin .
-```
-
-Run the full local stack:
-
-```bash
 docker compose -f infra/docker/docker-compose.yml up -d
 ```
 
 ### Kubernetes
 
-Kubernetes manifests live under `infra/k8s/` with environment-specific overlays (`dev`, `prod`). See [`infra/k8s/README.md`](infra/k8s/README.md) for deployment instructions.
+Manifests under `infra/k8s/` with `dev` and `prod` overlays. See [`infra/k8s/README.md`](infra/k8s/README.md).
 
-### Deployment targets
+### Production checklist
 
-| Environment | Tooling |
-|-------------|---------|
-| Local | Docker Compose + `infra/scripts/deploy.sh` |
-| Kubernetes | `infra/k8s/base` with `dev` / `prod` overlays |
-
----
-
-## API Modules
-
-The NestJS API is organized into domain modules under `apps/api/src/modules/`:
-
-| Module | Responsibility |
-|--------|----------------|
-| `auth` | Registration, login, JWT, OTP, email activation |
-| `users` | Profiles, verification, account management |
-| `listings` | Listing CRUD, categories, images |
-| `search` | Meilisearch integration and query endpoints |
-| `chat` | Conversations, messages, WebSocket gateway |
-| `payments` | Stripe Connect, payment records |
-| `notifications` | FCM push notifications, device tokens |
-| `moderation` | Reports, bans, content review |
-| `admin` | Platform administration and audit logs |
-| `health` | Health check endpoints |
-
-REST endpoint documentation is available in [`docs/api/`](docs/api/README.md).
+- [ ] Set strong `JWT_SECRET`
+- [ ] Enable `secure` cookies (`NODE_ENV=production`)
+- [ ] Wire SMS/email providers for OTP and activation
+- [ ] Run `prisma migrate deploy`
+- [ ] Seed RBAC (`pnpm seed:rbac`) or provision roles via migration
+- [ ] Configure Traefik TLS termination
+- [ ] Set up Meilisearch, Redis, PostgreSQL backups
 
 ---
 
@@ -354,22 +275,29 @@ REST endpoint documentation is available in [`docs/api/`](docs/api/README.md).
 
 | Area | Location |
 |------|----------|
-| Architecture & system design | [`docs/architecture/`](docs/architecture/README.md) |
-| API reference | [`docs/api/`](docs/api/README.md) |
-| Database schema & migrations | [`docs/db/`](docs/db/README.md) |
-| Product requirements & roadmap | [`docs/product/`](docs/product/README.md) |
-| Docker infrastructure | [`infra/docker/`](infra/docker/README.md) |
-| Kubernetes deployment | [`infra/k8s/`](infra/k8s/README.md) |
+| Auth API (OTP, JWT, sessions, RBAC redirect) | [`docs/api/auth.md`](docs/api/auth.md) |
+| Architecture | [`docs/architecture/`](docs/architecture/README.md) |
+| Database schema | [`docs/db/`](docs/db/README.md) |
+| Product requirements | [`docs/product/`](docs/product/README.md) |
+| Docker | [`infra/docker/`](infra/docker/README.md) |
+| Kubernetes | [`infra/k8s/`](infra/k8s/README.md) |
 
 ---
 
-## Contributing
+## Future Roadmap
 
-1. Fork the repository and create a feature branch from `main`.
-2. Follow existing code conventions — TypeScript strict mode, functional React components, NestJS module patterns.
-3. Run `pnpm typecheck` and `pnpm lint` before opening a pull request.
-4. Keep changes scoped; shared types and validation belong in `packages/`, not duplicated in apps.
-5. Open a pull request with a clear description of the change and test plan.
+| Area | Planned work |
+|------|--------------|
+| **Domain persistence** | Migrate listings, payments, chat from stubs to Prisma |
+| **Redis** | BullMQ job queues, optional permission cache |
+| **Storage** | Cloudflare R2 for listing images |
+| **Messaging** | WebSocket JWT auth, conversation persistence |
+| **Notifications** | FCM delivery pipeline |
+| **Search** | Automated Meilisearch reindex on listing changes |
+| **Observability** | OpenAPI generation, structured logging, metrics |
+| **Auth** | Passkey/WebAuthn, social login, SMS provider integration |
+
+See [`docs/product/roadmap.md`](docs/product/roadmap.md) for detailed product planning.
 
 ---
 
@@ -379,6 +307,4 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-<p align="center">
-  <strong>Community Marketplace</strong> — built with pnpm, Next.js, and NestJS
-</p>
+<p align="center"><strong>Community Marketplace</strong> — pnpm · Next.js · NestJS · PostgreSQL</p>

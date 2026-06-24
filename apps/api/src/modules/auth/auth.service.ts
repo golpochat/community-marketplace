@@ -1,0 +1,694 @@
+import {
+
+  BadRequestException,
+
+  ConflictException,
+
+  ForbiddenException,
+
+  Injectable,
+
+  UnauthorizedException,
+
+} from '@nestjs/common';
+
+
+
+import type { LoginResponse, RbacRole, User } from '@community-marketplace/types';
+
+import {
+  completeRegistrationSchema,
+  loginSchema,
+  logoutSchema,
+  refreshTokenSchema,
+} from '@community-marketplace/validation';
+
+import { PrismaService } from '../../database/prisma.service';
+import { verifyPassword } from '../../database/seeds/password-hash';
+
+import { EventBusService } from '../../events/event-bus.service';
+
+import type {
+
+  ActivateEmailDto,
+
+  CompleteRegistrationDto,
+
+  LoginDto,
+
+  LogoutDto,
+
+  RefreshTokenDto,
+
+  RegisterDto,
+
+  ResendActivationDto,
+
+  SendOtpDto,
+
+  VerifyOtpDto,
+
+} from './dto/auth.dto';
+
+import { AuthAuditService } from './services/auth-audit.service';
+
+import { AuthSecurityService } from './services/auth-security.service';
+
+import {
+
+  buildActivationUrl,
+
+  EmailActivationService,
+
+} from './services/email-activation.service';
+
+import { JwtAuthService } from './services/jwt-auth.service';
+
+import { OtpService } from './services/otp.service';
+
+import { PhoneVerificationService } from './services/phone-verification.service';
+
+import type { SessionContext } from './services/session.service';
+
+import { SessionService } from './services/session.service';
+
+import { generateSessionId } from './utils/token-hash';
+
+
+
+@Injectable()
+
+export class AuthService {
+
+  constructor(
+
+    private readonly otpService: OtpService,
+
+    private readonly jwtAuthService: JwtAuthService,
+
+    private readonly emailActivationService: EmailActivationService,
+
+    private readonly phoneVerificationService: PhoneVerificationService,
+
+    private readonly sessionService: SessionService,
+
+    private readonly securityService: AuthSecurityService,
+
+    private readonly auditService: AuthAuditService,
+
+    private readonly eventBus: EventBusService,
+
+    private readonly prisma: PrismaService,
+
+  ) {}
+
+
+
+  async register(_dto: RegisterDto) {
+    throw new BadRequestException(
+      'Password self-registration is disabled. Use the phone OTP registration flow: POST /auth/otp/send, /auth/otp/verify, then /auth/register/complete.',
+    );
+  }
+
+  async login(dto: LoginDto, context: SessionContext): Promise<LoginResponse> {
+
+    loginSchema.parse(dto);
+
+
+
+    await this.securityService.assertLoginAllowed(dto.email, context.ipAddress);
+
+
+
+    const dbUser = await this.prisma.user.findUnique({
+
+      where: { email: dto.email },
+
+      include: { primaryRole: true },
+
+    });
+
+
+
+    if (!dbUser?.passwordHash || !verifyPassword(dto.password, dbUser.passwordHash)) {
+
+      await this.auditService.record('login', false, { ...context, email: dto.email }, 'Invalid credentials');
+
+      throw new UnauthorizedException('Invalid email or password');
+
+    }
+
+
+
+    if (!dbUser.emailVerifiedAt) {
+
+      await this.auditService.record('login', false, { ...context, email: dto.email, userId: dbUser.id }, 'Email not activated');
+
+      throw new ForbiddenException('Email not activated. Check your inbox or request a new link.');
+
+    }
+
+
+
+    if (dbUser.status === 'suspended') {
+
+      await this.auditService.record('login', false, { ...context, email: dto.email, userId: dbUser.id }, 'Account suspended');
+
+      throw new ForbiddenException('Account is suspended');
+
+    }
+
+
+
+    const user = this.toUserFromDb(dbUser);
+
+    const response = await this.establishSession(user, context);
+
+    await this.auditService.record('login', true, { ...context, email: dto.email, userId: user.id });
+
+    return response;
+
+  }
+
+
+
+  sendOtp(dto: SendOtpDto, context: SessionContext) {
+
+    return this.otpService.sendOtp(dto, context);
+
+  }
+
+
+
+  async verifyOtp(dto: VerifyOtpDto, context: SessionContext) {
+
+    const verified = await this.otpService.verifyOtp(dto, context);
+
+
+
+    if (verified.purpose === 'register' && verified.channel === 'phone') {
+
+      const { token, expiresInSeconds } = this.phoneVerificationService.createToken(verified.recipient);
+
+      return {
+
+        verified: true as const,
+
+        phone: verified.recipient,
+
+        phoneVerificationToken: token,
+
+        expiresInSeconds,
+
+        message: 'Phone verified. Complete registration with your name and email.',
+
+      };
+
+    }
+
+
+
+    const user = await this.resolveUserForOtp(verified.channel, verified.recipient);
+
+
+
+    if (!user.phoneVerifiedAt && verified.channel === 'phone') {
+
+      await this.prisma.user.update({
+
+        where: { id: user.id },
+
+        data: { phoneVerifiedAt: new Date() },
+
+      });
+
+    }
+
+
+
+    const refreshed = await this.prisma.user.findUnique({
+
+      where: { id: user.id },
+
+      include: { primaryRole: true },
+
+    });
+
+
+
+    if (!refreshed?.emailVerifiedAt) {
+
+      throw new ForbiddenException('Email not activated. Complete email activation first.');
+
+    }
+
+
+
+    const loginResponse = await this.establishSession(this.toUserFromDb(refreshed), context);
+
+    await this.auditService.record('otp_verify', true, {
+
+      ...context,
+
+      phone: verified.channel === 'phone' ? verified.recipient : undefined,
+
+      email: verified.channel === 'email' ? verified.recipient : refreshed.email,
+
+      userId: refreshed.id,
+
+    });
+
+    return loginResponse;
+
+  }
+
+
+
+  async completeRegistration(dto: CompleteRegistrationDto, context: SessionContext) {
+
+    const parsed = completeRegistrationSchema.parse(dto);
+
+    const phonePayload = this.phoneVerificationService.verifyToken(parsed.phoneVerificationToken);
+
+
+
+    if (await this.prisma.user.findUnique({ where: { email: parsed.email } })) {
+
+      throw new ConflictException('Email is already registered');
+
+    }
+
+
+
+    if (await this.prisma.userProfile.findUnique({ where: { phone: phonePayload.phone } })) {
+
+      throw new ConflictException('Phone number is already registered');
+
+    }
+
+
+
+    if (await this.prisma.pendingRegistration.findUnique({ where: { phone: phonePayload.phone } })) {
+
+      const pending = await this.prisma.pendingRegistration.findUnique({ where: { phone: phonePayload.phone } });
+
+      if (pending && pending.email !== parsed.email) {
+
+        throw new ConflictException('Phone number is already pending registration');
+
+      }
+
+    }
+
+
+
+    await this.emailActivationService.stageRegistration({
+
+      name: parsed.name,
+
+      email: parsed.email,
+
+      phone: phonePayload.phone,
+
+    });
+
+
+
+    const activationToken = this.emailActivationService.createActivationToken({
+
+      name: parsed.name,
+
+      email: parsed.email,
+
+      phone: phonePayload.phone,
+
+    });
+
+
+
+    const appBaseUrl = process.env.WEB_APP_URL ?? 'http://localhost:3000';
+
+
+
+    this.eventBus.publish({
+
+      type: 'user.registration_pending',
+
+      payload: {
+
+        email: parsed.email,
+
+        phone: phonePayload.phone,
+
+        activationToken,
+
+        activationUrl: buildActivationUrl(appBaseUrl, activationToken),
+
+      },
+
+      timestamp: new Date(),
+
+    });
+
+
+
+    await this.auditService.record('registration_complete', true, {
+
+      ...context,
+
+      email: parsed.email,
+
+      phone: phonePayload.phone,
+
+    });
+
+
+
+    return {
+
+      email: parsed.email,
+
+      activationExpiresIn: this.emailActivationService.getActivationExpiresIn(),
+
+      message: 'Check your email to activate your account.',
+
+    };
+
+  }
+
+
+
+  async activateEmail(dto: ActivateEmailDto, context: SessionContext) {
+
+    const result = await this.emailActivationService.activate(dto.token);
+
+
+
+    if (result.alreadyActivated) {
+      await this.auditService.record('activation', true, {
+        ...context,
+        email: result.email,
+        userId: result.userId,
+      });
+      return {
+        activated: false,
+        email: result.email,
+        userId: result.userId,
+      };
+    }
+
+    if (!result.user) {
+      throw new BadRequestException('Activation failed');
+    }
+
+    const user = this.toUserFromDb(result.user);
+
+    const loginResponse = await this.establishSession(user, context);
+
+
+
+    await this.auditService.record('activation', true, {
+
+      ...context,
+
+      email: result.email,
+
+      userId: result.userId,
+
+    });
+
+
+
+    return {
+
+      activated: true,
+
+      email: result.email,
+
+      userId: result.userId,
+
+      login: loginResponse,
+
+    };
+
+  }
+
+
+
+  async resendActivation(dto: ResendActivationDto) {
+
+    const result = await this.emailActivationService.resend(dto.email);
+
+    const appBaseUrl = process.env.WEB_APP_URL ?? 'http://localhost:3000';
+
+
+
+    this.eventBus.publish({
+
+      type: 'user.activation_resent',
+
+      payload: {
+
+        email: result.email,
+
+        activationToken: result.token,
+
+        activationUrl: buildActivationUrl(appBaseUrl, result.token),
+
+      },
+
+      timestamp: new Date(),
+
+    });
+
+
+
+    return {
+
+      email: result.email,
+
+      message: 'Activation email resent',
+
+    };
+
+  }
+
+
+
+  async refreshToken(dto: RefreshTokenDto, context: SessionContext, cookieRefreshToken?: string) {
+
+    const refreshToken = dto.refreshToken ?? cookieRefreshToken;
+
+    if (!refreshToken) {
+
+      throw new UnauthorizedException('Refresh token is required');
+
+    }
+
+
+
+    refreshTokenSchema.parse({ refreshToken });
+
+    const payload = this.jwtAuthService.verifyRefreshToken(refreshToken);
+
+
+
+    await this.sessionService.assertRefreshSession(payload.sid, refreshToken, payload.sub);
+
+
+
+    const dbUser = await this.prisma.user.findUnique({
+
+      where: { id: payload.sub },
+
+      include: { primaryRole: true },
+
+    });
+
+
+
+    if (!dbUser) {
+
+      throw new UnauthorizedException('User not found');
+
+    }
+
+
+
+    const user = this.toUserFromDb(dbUser);
+
+    const newSessionId = generateSessionId();
+
+    const tokens = this.jwtAuthService.issueTokenPair(user, newSessionId);
+
+    await this.sessionService.revokeSession(payload.sid);
+
+    await this.sessionService.createSession(user, tokens.refreshToken, context);
+
+
+
+    await this.auditService.record('refresh', true, { ...context, userId: user.id, email: user.email });
+
+
+
+    return this.jwtAuthService.toAuthResponse(user, tokens);
+
+  }
+
+
+
+  async logout(user: { id: string }, dto: LogoutDto, context: SessionContext) {
+
+    logoutSchema.parse(dto);
+
+
+
+    if (dto.sessionId) {
+
+      await this.sessionService.revokeSession(dto.sessionId);
+
+    } else if (dto.refreshToken) {
+
+      await this.sessionService.revokeByRefreshToken(dto.refreshToken);
+
+    } else {
+
+      await this.sessionService.revokeAllForUser(user.id);
+
+    }
+
+
+
+    await this.auditService.record('logout', true, { ...context, userId: user.id });
+
+
+
+    return { loggedOut: true };
+
+  }
+
+
+
+  private async establishSession(user: User, context: SessionContext): Promise<LoginResponse> {
+
+    const sessionId = generateSessionId();
+
+    const tokens = this.jwtAuthService.issueTokenPair(user, sessionId);
+
+    await this.sessionService.createSession(user, tokens.refreshToken, context);
+
+
+
+    this.eventBus.publish({
+
+      type: 'user.logged_in',
+
+      payload: { userId: user.id, sessionId },
+
+      timestamp: new Date(),
+
+    });
+
+
+
+    return this.jwtAuthService.toAuthResponse(user, tokens);
+
+  }
+
+
+
+  private async resolveUserForOtp(channel: 'email' | 'phone', recipient: string) {
+
+    if (channel === 'email') {
+
+      const user = await this.prisma.user.findUnique({
+
+        where: { email: recipient },
+
+        include: { primaryRole: true },
+
+      });
+
+      if (!user) {
+
+        throw new BadRequestException('No account found for this email');
+
+      }
+
+      return user;
+
+    }
+
+
+
+    const profile = await this.prisma.userProfile.findFirst({
+
+      where: { phone: recipient },
+
+      include: { user: { include: { primaryRole: true } } },
+
+    });
+
+
+
+    if (!profile?.user) {
+
+      throw new BadRequestException('No account found for this phone number');
+
+    }
+
+
+
+    return profile.user;
+
+  }
+
+
+
+  private toUserFromDb(dbUser: {
+
+    id: string;
+
+    email: string;
+
+    displayName: string | null;
+
+    primaryRoleId: string;
+
+    status: string;
+
+    emailVerifiedAt?: Date | null;
+
+    createdAt: Date;
+
+    updatedAt: Date;
+
+    primaryRole: { code: string };
+
+  }): User {
+
+    return {
+
+      id: dbUser.id,
+
+      email: dbUser.email,
+
+      displayName: dbUser.displayName ?? undefined,
+
+      primaryRoleId: dbUser.primaryRoleId,
+
+      role: dbUser.primaryRole.code as RbacRole,
+
+      status: dbUser.status as User['status'],
+
+      createdAt: dbUser.createdAt.toISOString(),
+
+      updatedAt: dbUser.updatedAt.toISOString(),
+
+    };
+
+  }
+
+}
+
+

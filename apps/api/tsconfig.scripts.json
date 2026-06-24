@@ -1,0 +1,10 @@
+{
+  "extends": "@community-marketplace/config/tsconfig.node.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "rootDir": ".",
+    "noEmit": true
+  },
+  "include": ["scripts/**/*", "prisma/seed.ts", "src/database/seeds/**/*"]
+}

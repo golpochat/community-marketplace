@@ -1,0 +1,45 @@
+# syntax=docker/dockerfile:1
+
+# ── Community Marketplace Admin (Next.js) ────────────────────────────────────
+# Build:  docker build -f infra/docker/Dockerfile.admin -t cm-admin .
+# Run:    docker run -p 3001:3001 -e NEXT_PUBLIC_API_URL=http://api:4000/api cm-admin
+
+FROM node:20-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+WORKDIR /app
+
+FROM base AS deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages/config/package.json ./packages/config/
+COPY packages/types/package.json ./packages/types/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/validation/package.json ./packages/validation/
+COPY packages/ui/package.json ./packages/ui/
+COPY apps/admin/package.json ./apps/admin/
+RUN pnpm install --frozen-lockfile --filter @community-marketplace/admin...
+
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/admin/node_modules ./apps/admin/node_modules
+COPY --from=deps /app/packages ./packages
+COPY . .
+ARG NEXT_PUBLIC_API_URL=http://localhost:4000/api
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+RUN pnpm --filter "./packages/*" build \
+ && pnpm --filter @community-marketplace/admin build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+RUN addgroup -S cm && adduser -S cm -G cm
+USER cm
+
+COPY --from=builder /app/apps/admin/.next/standalone ./
+COPY --from=builder /app/apps/admin/.next/static ./apps/admin/.next/static
+COPY --from=builder /app/apps/admin/public ./apps/admin/public
+
+EXPOSE 3001
+ENV PORT=3001
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
+  CMD wget -qO- http://localhost:3001/ || exit 1
+CMD ["node", "apps/admin/server.js"]

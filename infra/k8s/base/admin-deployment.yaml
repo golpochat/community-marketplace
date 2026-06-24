@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin
+  namespace: community-marketplace
+  labels:
+    app: admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin
+  template:
+    metadata:
+      labels:
+        app: admin
+    spec:
+      containers:
+        - name: admin
+          image: community-marketplace/admin:latest
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: admin-config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin
+  namespace: community-marketplace
+spec:
+  selector:
+    app: admin
+  ports:
+    - port: 3001
+      targetPort: 3001
