@@ -1,13 +1,7 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { AdminPaymentsPage } from '@/components/dashboard/admin-resource-pages';
 
-export default function AdminPaymentsPage() {
-  return (
-    <RolePageContent
-      title="Payments"
-      description="Monitor transactions and payment-related issues."
-      cardTitle="Payment overview"
-    />
-  );
+export default function Page() {
+  return <AdminPaymentsPage role="ADMIN" />;
 }

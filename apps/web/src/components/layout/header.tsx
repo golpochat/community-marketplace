@@ -14,7 +14,13 @@ export function Header() {
   const hasAuthState = isAuthenticated || !!user;
 
   const notificationsHref =
-    user?.role === 'SELLER' ? WEB_APP_ROUTES.sellerNotifications : WEB_APP_ROUTES.buyerNotifications;
+    user?.role === 'SELLER'
+      ? WEB_APP_ROUTES.sellerNotifications
+      : user?.role === 'SUPER_ADMIN'
+        ? '/super-admin/notifications'
+        : user?.role === 'ADMIN'
+          ? '/admin/notifications'
+          : WEB_APP_ROUTES.buyerNotifications;
 
   async function handleSignOut() {
     try {
@@ -51,10 +57,7 @@ export function Header() {
           {hasAuthState ? (
             <>
               {user?.role && (
-                <NotificationBell
-                  href={notificationsHref}
-                  role={user.role === 'SELLER' ? 'SELLER' : 'BUYER'}
-                />
+                <NotificationBell href={notificationsHref} role={user.role} />
               )}
               <Link
                 href={dashboardPath ?? '/dashboard'}

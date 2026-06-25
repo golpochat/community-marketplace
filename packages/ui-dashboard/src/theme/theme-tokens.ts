@@ -24,20 +24,27 @@ export interface RoleThemeDefinition {
 export const superAdminTheme: RoleThemeDefinition = {
   id: 'superAdmin',
   label: 'Super Admin',
-  description: 'Light indigo operator theme',
-  primary: '239 84% 67%',
-  sidebarBackground: '228 100% 98%',
-  sidebarActive: '226 100% 94%',
+  description: 'Light purple operator theme',
+  /** #9333EA */
+  primary: '271 81% 56%',
+  /** #FAF5FF */
+  sidebarBackground: '270 100% 98%',
+  /** #F3E8FF */
+  sidebarActive: '270 100% 95%',
   text: '0 0% 10%',
 };
 
 export const adminTheme: RoleThemeDefinition = {
   id: 'admin',
   label: 'Admin',
-  description: 'Light blue management theme',
-  primary: '217 91% 60%',
-  sidebarBackground: '220 100% 98%',
-  sidebarActive: '214 100% 94%',
+  description: 'Neutral slate management theme',
+  /** #64748B */
+  primary: '215 16% 47%',
+  /** #F8FAFC */
+  sidebarBackground: '210 40% 98%',
+  /** #E2E8F0 */
+  sidebarActive: '214 32% 91%',
+  /** #1A1A1A */
   text: '0 0% 10%',
 };
 
@@ -54,10 +61,10 @@ export const sellerTheme: RoleThemeDefinition = {
 export const buyerTheme: RoleThemeDefinition = {
   id: 'buyer',
   label: 'Buyer',
-  description: 'Light amber marketplace theme',
-  primary: '38 92% 50%',
-  sidebarBackground: '40 100% 95%',
-  sidebarActive: '38 100% 87%',
+  description: 'Light blue marketplace theme',
+  primary: '217 91% 60%',
+  sidebarBackground: '220 100% 98%',
+  sidebarActive: '214 100% 94%',
   text: '0 0% 10%',
 };
 

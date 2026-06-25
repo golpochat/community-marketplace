@@ -2,19 +2,18 @@
 
 import { useEffect, useState } from 'react';
 
-import type { AdminDashboardStats } from '@community-marketplace/types';
 import { PageHeader } from '@community-marketplace/ui-dashboard';
 
-import { AdminDashboardOverview } from '@/components/dashboard/admin-dashboard-overview';
-import { adminService } from '@/services/admin.service';
+import { SuperAdminDashboardOverview } from '@/components/dashboard/super-admin-dashboard-overview';
+import { adminService, type SuperAdminPlatformOverview } from '@/services/admin.service';
 
-interface AdminDashboardHomeProps {
+interface SuperAdminDashboardHomeProps {
   title: string;
   description: string;
 }
 
-export function AdminDashboardHome({ title, description }: AdminDashboardHomeProps) {
-  const [stats, setStats] = useState<AdminDashboardStats | null>(null);
+export function SuperAdminDashboardHome({ title, description }: SuperAdminDashboardHomeProps) {
+  const [stats, setStats] = useState<SuperAdminPlatformOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +23,7 @@ export function AdminDashboardHome({ title, description }: AdminDashboardHomePro
     setError(null);
 
     void adminService
-      .getStats('ADMIN')
+      .getPlatformOverview()
       .then((data) => {
         if (!cancelled) setStats(data);
       })
@@ -47,7 +46,7 @@ export function AdminDashboardHome({ title, description }: AdminDashboardHomePro
         <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading platform metrics…</p>
       )}
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
-      {stats && !loading && <AdminDashboardOverview stats={stats} />}
+      {stats && !loading && <SuperAdminDashboardOverview stats={stats} />}
     </>
   );
 }

@@ -1,5 +1,26 @@
 import { API_NAMESPACES } from './rbac-routes';
 
+export type AdminApiRole = 'SUPER_ADMIN' | 'ADMIN';
+
+/**
+ * Endpoints implemented only under `/admin/*` but callable by SUPER_ADMIN
+ * (backend controllers use `@RequireRole('ADMIN', 'SUPER_ADMIN')`).
+ */
+const SUPER_ADMIN_ADMIN_NAMESPACE_PATHS = new Set([
+  '/payments',
+  '/users/verifications/pending',
+]);
+
+export function adminApiPath(role: AdminApiRole, path: string): string {
+  if (role === 'SUPER_ADMIN' && SUPER_ADMIN_ADMIN_NAMESPACE_PATHS.has(path)) {
+    return `${API_NAMESPACES.ADMIN}${path}`;
+  }
+
+  const namespace = role === 'SUPER_ADMIN' ? API_NAMESPACES.SUPER_ADMIN : API_NAMESPACES.ADMIN;
+  return `${namespace}${path}`;
+}
+
+/** @deprecated Use adminApiPath(role, path) */
 export const ADMIN_API_ROUTES = {
   superAdmin: {
     stats: `${API_NAMESPACES.SUPER_ADMIN}/stats`,
@@ -21,6 +42,6 @@ export const ADMIN_API_ROUTES = {
   },
 } as const;
 
-export function adminRoutesForRole(role: 'SUPER_ADMIN' | 'ADMIN') {
+export function adminRoutesForRole(role: AdminApiRole) {
   return role === 'SUPER_ADMIN' ? ADMIN_API_ROUTES.superAdmin : ADMIN_API_ROUTES.admin;
 }

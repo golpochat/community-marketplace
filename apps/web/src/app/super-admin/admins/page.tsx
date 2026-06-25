@@ -1,13 +1,7 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { SuperAdminAdminsPage } from '@/components/dashboard/admin-resource-pages';
 
-export default function SuperAdminAdminsPage() {
-  return (
-    <RolePageContent
-      title="Admins"
-      description="Create and manage administrator accounts."
-      cardTitle="Administrator accounts"
-    />
-  );
+export default function Page() {
+  return <SuperAdminAdminsPage />;
 }

@@ -1,13 +1,7 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { AdminRbacPage } from '@/components/dashboard/admin-resource-pages';
 
-export default function SuperAdminRbacPage() {
-  return (
-    <RolePageContent
-      title="RBAC"
-      description="Manage roles, permissions, and access control policies."
-      cardTitle="Role-based access control"
-    />
-  );
+export default function Page() {
+  return <AdminRbacPage role="SUPER_ADMIN" />;
 }

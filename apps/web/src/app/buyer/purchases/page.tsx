@@ -82,7 +82,7 @@ export default function BuyerPurchasesPage() {
               value={listingId}
               onChange={(e) => setListingId(e.target.value)}
               placeholder="Listing ID"
-              className="flex-1 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-white px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
+              className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
             />
             <button
               type="submit"
@@ -124,17 +124,17 @@ export default function BuyerPurchasesPage() {
             {payments.map((payment) => (
               <li
                 key={payment.id}
-                className="flex flex-col gap-2 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
-                  <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">
+                  <p className="font-semibold text-gray-900">
                     {formatCurrency(payment.amount, payment.currency)}
                   </p>
-                  <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                  <p className="text-xs text-gray-700">
                     Listing: {payment.listingId}
                   </p>
                 </div>
-                <span className="w-fit rounded-full bg-[hsl(var(--dashboard-sidebar-active))] px-2 py-0.5 text-xs capitalize text-[hsl(var(--dashboard-main-fg))]">
+                <span className="w-fit rounded-full bg-gray-100 px-2 py-0.5 text-xs capitalize text-gray-900">
                   {payment.status}
                 </span>
               </li>

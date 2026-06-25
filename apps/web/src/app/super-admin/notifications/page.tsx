@@ -1,13 +1,7 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { AdminNotificationsPage } from '@/components/dashboard/admin-resource-pages';
 
-export default function SuperAdminNotificationsPage() {
-  return (
-    <RolePageContent
-      title="Notifications"
-      description="Broadcast and manage platform notifications."
-      cardTitle="Notification center"
-    />
-  );
+export default function Page() {
+  return <AdminNotificationsPage role="SUPER_ADMIN" />;
 }

@@ -1,13 +1,7 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { AdminAuditLogPage } from '@/components/dashboard/admin-resource-pages';
 
-export default function SuperAdminAuditLogPage() {
-  return (
-    <RolePageContent
-      title="Audit Log"
-      description="Review privileged actions and system audit trails."
-      cardTitle="Audit trail"
-    />
-  );
+export default function Page() {
+  return <AdminAuditLogPage role="SUPER_ADMIN" />;
 }

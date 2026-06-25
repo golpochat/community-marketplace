@@ -1,13 +1,12 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { ProfileSettingsForm } from '@/components/dashboard/profile-settings-form';
 
-export default function AdminSettingsPage() {
+export default function Page() {
   return (
-    <RolePageContent
+    <ProfileSettingsForm
       title="Settings"
       description="Configure your admin profile and preferences."
-      cardTitle="Admin settings"
     />
   );
 }

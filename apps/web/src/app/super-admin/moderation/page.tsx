@@ -1,13 +1,7 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { AdminModerationPage } from '@/components/dashboard/admin-resource-pages';
 
-export default function SuperAdminModerationPage() {
-  return (
-    <RolePageContent
-      title="Moderation"
-      description="Handle reports, appeals, and content enforcement."
-      cardTitle="Moderation queue"
-    />
-  );
+export default function Page() {
+  return <AdminModerationPage role="SUPER_ADMIN" />;
 }

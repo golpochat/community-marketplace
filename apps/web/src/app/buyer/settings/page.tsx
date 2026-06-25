@@ -1,20 +1,15 @@
 'use client';
 
-import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
+import { ProfileSettingsForm } from '@/components/dashboard/profile-settings-form';
+import { buyerService } from '@/services/marketplace.service';
 
-import { EmptyState } from '@/components/shared/empty-state';
-
-export default function BuyerSettingsPage() {
+export default function Page() {
   return (
-    <>
-      <PageHeader title="Settings" description="Manage your profile and preferences." />
-      <DashboardCard>
-        <EmptyState
-          variant="dashboard"
-          title="Settings"
-          description="Profile and notification preferences will be available here."
-        />
-      </DashboardCard>
-    </>
+    <ProfileSettingsForm
+      title="Settings"
+      description="Manage your profile and preferences."
+      loadProfile={() => buyerService.getProfile()}
+      saveProfile={(body) => buyerService.updateProfile(body)}
+    />
   );
 }

@@ -1,13 +1,7 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { AdminUsersPage } from '@/components/dashboard/admin-resource-pages';
 
-export default function AdminUsersPage() {
-  return (
-    <RolePageContent
-      title="Users"
-      description="View and manage marketplace user accounts."
-      cardTitle="User management"
-    />
-  );
+export default function Page() {
+  return <AdminUsersPage role="ADMIN" />;
 }

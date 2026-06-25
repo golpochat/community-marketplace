@@ -1,13 +1,7 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { AdminAnalyticsPage } from '@/components/dashboard/admin-resource-pages';
 
-export default function SuperAdminAnalyticsPage() {
-  return (
-    <RolePageContent
-      title="Analytics"
-      description="Platform growth, engagement, and revenue insights."
-      cardTitle="Analytics dashboard"
-    />
-  );
+export default function Page() {
+  return <AdminAnalyticsPage role="SUPER_ADMIN" />;
 }

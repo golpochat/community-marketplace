@@ -1,13 +1,7 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { AdminSearchPage } from '@/components/dashboard/admin-resource-pages';
 
-export default function SuperAdminSearchPage() {
-  return (
-    <RolePageContent
-      title="Search"
-      description="Configure Meilisearch indexes and search relevance."
-      cardTitle="Search configuration"
-    />
-  );
+export default function Page() {
+  return <AdminSearchPage role="SUPER_ADMIN" />;
 }

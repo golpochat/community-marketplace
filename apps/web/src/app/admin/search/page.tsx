@@ -1,13 +1,7 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { AdminSearchPage } from '@/components/dashboard/admin-resource-pages';
 
-export default function AdminSearchPage() {
-  return (
-    <RolePageContent
-      title="Search Tools"
-      description="Inspect and tune search indexes and queries."
-      cardTitle="Search utilities"
-    />
-  );
+export default function Page() {
+  return <AdminSearchPage role="ADMIN" />;
 }

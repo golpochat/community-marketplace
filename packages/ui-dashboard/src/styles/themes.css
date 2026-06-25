@@ -1,13 +1,13 @@
 /* Role-based dashboard theme tokens — applied via data-dashboard-role on layout root */
 
-/* Light super-admin theme — indigo #6366F1, sidebar #F5F7FF, active #E0E7FF, text #1A1A1A */
+/* Light super-admin theme — purple #9333EA, sidebar #FAF5FF, active #F3E8FF, text #1A1A1A */
 [data-dashboard-theme='superAdmin'] {
-  --dashboard-sidebar-bg: 228 100% 98%;
+  --dashboard-sidebar-bg: 270 100% 98%;
   --dashboard-sidebar-fg: 0 0% 10%;
-  --dashboard-sidebar-muted: 215 16% 40%;
-  --dashboard-sidebar-active: 226 100% 94%;
-  --dashboard-sidebar-border: 226 40% 88%;
-  --dashboard-accent: 239 84% 67%;
+  --dashboard-sidebar-muted: 271 30% 45%;
+  --dashboard-sidebar-active: 270 100% 95%;
+  --dashboard-sidebar-border: 270 40% 88%;
+  --dashboard-accent: 271 81% 56%;
   --dashboard-topbar-bg: 0 0% 100%;
   --dashboard-topbar-fg: 0 0% 10%;
   --dashboard-main-bg: 0 0% 98%;
@@ -15,26 +15,26 @@
 }
 
 [data-dashboard-role='SUPER_ADMIN'] {
-  --dashboard-sidebar-bg: 228 100% 98%;
+  --dashboard-sidebar-bg: 270 100% 98%;
   --dashboard-sidebar-fg: 0 0% 10%;
-  --dashboard-sidebar-muted: 215 16% 40%;
-  --dashboard-sidebar-active: 226 100% 94%;
-  --dashboard-sidebar-border: 226 40% 88%;
-  --dashboard-accent: 239 84% 67%;
+  --dashboard-sidebar-muted: 271 30% 45%;
+  --dashboard-sidebar-active: 270 100% 95%;
+  --dashboard-sidebar-border: 270 40% 88%;
+  --dashboard-accent: 271 81% 56%;
   --dashboard-topbar-bg: 0 0% 100%;
   --dashboard-topbar-fg: 0 0% 10%;
   --dashboard-main-bg: 0 0% 98%;
   --dashboard-main-fg: 0 0% 10%;
 }
 
-/* Light admin theme — blue #3B82F6, sidebar #F3F7FF, active #E1ECFF, text #1A1A1A */
+/* Light admin theme — Neutral Slate — primary #64748B, sidebar #F8FAFC, active #E2E8F0, text #1A1A1A */
 [data-dashboard-theme='admin'] {
-  --dashboard-sidebar-bg: 220 100% 98%;
+  --dashboard-sidebar-bg: 210 40% 98%;
   --dashboard-sidebar-fg: 0 0% 10%;
-  --dashboard-sidebar-muted: 215 16% 40%;
-  --dashboard-sidebar-active: 214 100% 94%;
-  --dashboard-sidebar-border: 214 40% 88%;
-  --dashboard-accent: 217 91% 60%;
+  --dashboard-sidebar-muted: 215 16% 47%;
+  --dashboard-sidebar-active: 214 32% 91%;
+  --dashboard-sidebar-border: 214 32% 85%;
+  --dashboard-accent: 215 16% 47%;
   --dashboard-topbar-bg: 0 0% 100%;
   --dashboard-topbar-fg: 0 0% 10%;
   --dashboard-main-bg: 0 0% 98%;
@@ -42,12 +42,12 @@
 }
 
 [data-dashboard-role='ADMIN'] {
-  --dashboard-sidebar-bg: 220 100% 98%;
+  --dashboard-sidebar-bg: 210 40% 98%;
   --dashboard-sidebar-fg: 0 0% 10%;
-  --dashboard-sidebar-muted: 215 16% 40%;
-  --dashboard-sidebar-active: 214 100% 94%;
-  --dashboard-sidebar-border: 214 40% 88%;
-  --dashboard-accent: 217 91% 60%;
+  --dashboard-sidebar-muted: 215 16% 47%;
+  --dashboard-sidebar-active: 214 32% 91%;
+  --dashboard-sidebar-border: 214 32% 85%;
+  --dashboard-accent: 215 16% 47%;
   --dashboard-topbar-bg: 0 0% 100%;
   --dashboard-topbar-fg: 0 0% 10%;
   --dashboard-main-bg: 0 0% 98%;
@@ -81,14 +81,14 @@
   --dashboard-main-fg: 0 0% 10%;
 }
 
-/* Light buyer theme — amber #F59E0B, sidebar #FFF8E6, active #FFE8BF, text #1A1A1A */
+/* Light buyer theme — blue #3B82F6, sidebar #F3F7FF, active #E1ECFF, text #1A1A1A */
 [data-dashboard-theme='buyer'] {
-  --dashboard-sidebar-bg: 40 100% 95%;
+  --dashboard-sidebar-bg: 220 100% 98%;
   --dashboard-sidebar-fg: 0 0% 10%;
   --dashboard-sidebar-muted: 215 16% 40%;
-  --dashboard-sidebar-active: 38 100% 87%;
-  --dashboard-sidebar-border: 38 50% 88%;
-  --dashboard-accent: 38 92% 50%;
+  --dashboard-sidebar-active: 214 100% 94%;
+  --dashboard-sidebar-border: 214 40% 88%;
+  --dashboard-accent: 217 91% 60%;
   --dashboard-topbar-bg: 0 0% 100%;
   --dashboard-topbar-fg: 0 0% 10%;
   --dashboard-main-bg: 0 0% 98%;
@@ -96,12 +96,12 @@
 }
 
 [data-dashboard-role='BUYER'] {
-  --dashboard-sidebar-bg: 40 100% 95%;
+  --dashboard-sidebar-bg: 220 100% 98%;
   --dashboard-sidebar-fg: 0 0% 10%;
   --dashboard-sidebar-muted: 215 16% 40%;
-  --dashboard-sidebar-active: 38 100% 87%;
-  --dashboard-sidebar-border: 38 50% 88%;
-  --dashboard-accent: 38 92% 50%;
+  --dashboard-sidebar-active: 214 100% 94%;
+  --dashboard-sidebar-border: 214 40% 88%;
+  --dashboard-accent: 217 91% 60%;
   --dashboard-topbar-bg: 0 0% 100%;
   --dashboard-topbar-fg: 0 0% 10%;
   --dashboard-main-bg: 0 0% 98%;

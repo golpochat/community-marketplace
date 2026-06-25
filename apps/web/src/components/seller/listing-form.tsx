@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { cn } from '@community-marketplace/ui';
 import { Button, Input, Label, Select } from '@community-marketplace/ui';
@@ -27,12 +27,19 @@ const INITIAL: ListingFormData = {
 };
 
 interface ListingFormProps {
+  categories?: Array<{ id: string; name: string }>;
   onSubmit?: (data: ListingFormData) => void;
 }
 
-export function ListingForm({ onSubmit }: ListingFormProps) {
+export function ListingForm({ categories = [], onSubmit }: ListingFormProps) {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<ListingFormData>(INITIAL);
+
+  useEffect(() => {
+    if (categories.length > 0 && !data.categoryId) {
+      setData((prev) => ({ ...prev, categoryId: categories[0]!.id }));
+    }
+  }, [categories, data.categoryId]);
 
   function update(patch: Partial<ListingFormData>) {
     setData((prev) => ({ ...prev, ...patch }));
@@ -116,6 +123,22 @@ export function ListingForm({ onSubmit }: ListingFormProps) {
               <option value="poor">Poor</option>
             </Select>
           </div>
+          {categories.length > 0 && (
+            <div>
+              <Label htmlFor="categoryId">Category</Label>
+              <Select
+                id="categoryId"
+                value={data.categoryId}
+                onChange={(e) => update({ categoryId: e.target.value })}
+              >
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,13 +1,7 @@
 'use client';
 
-import { RolePageContent } from '@/components/dashboard/role-page-content';
+import { AdminVerificationsPage } from '@/components/dashboard/admin-resource-pages';
 
-export default function SuperAdminVerificationsPage() {
-  return (
-    <RolePageContent
-      title="Verifications"
-      description="Review seller identity verification requests and badges."
-      cardTitle="Verification queue"
-    />
-  );
+export default function Page() {
+  return <AdminVerificationsPage role="SUPER_ADMIN" />;
 }
