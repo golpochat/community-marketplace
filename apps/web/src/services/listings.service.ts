@@ -3,7 +3,6 @@ import { paginationSchema } from '@community-marketplace/validation';
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
-import { getMockListingSummaries, MOCK_CATEGORIES, MOCK_LISTINGS } from '@/lib/mock-data';
 import { normalizePaginated } from '@/lib/normalize-api-response';
 
 function toSearchParams(filters: ListingSearchFilters): Record<string, string> {
@@ -35,7 +34,7 @@ export const listingsService = {
       );
       return normalizePaginated(response, { page, limit });
     } catch {
-      return getMockListingSummaries(page, limit);
+      return { data: [], meta: { page, limit, total: 0 } };
     }
   },
 
@@ -51,7 +50,7 @@ export const listingsService = {
       );
       return normalizePaginated(response, { page: p, limit: l });
     } catch {
-      return getMockListingSummaries(p, l);
+      return { data: [], meta: { page: p, limit: l, total: 0 } };
     }
   },
 
@@ -60,7 +59,7 @@ export const listingsService = {
       const response = await apiClient<Listing>(`${WEB_API_ROUTES.public.listings}/${id}`);
       return response.data;
     } catch {
-      return MOCK_LISTINGS[id] ?? null;
+      return null;
     }
   },
 
@@ -69,7 +68,7 @@ export const listingsService = {
       const response = await apiClient<Category[]>(`${WEB_API_ROUTES.public.listings}/categories`);
       return response.data ?? [];
     } catch {
-      return MOCK_CATEGORIES;
+      return [];
     }
   },
 

@@ -11,13 +11,17 @@ import { ListingCard } from '@/components/listings/listing-card';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Pagination } from '@/components/shared/pagination';
 import { ListingCardSkeleton } from '@/components/shared/skeleton';
+import { useAuth } from '@/hooks/use-auth';
+import { buyerService } from '@/services/marketplace.service';
 import { listingsService } from '@/services/listings.service';
 
 export function ListingsBrowseClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [listings, setListings] = useState<ListingSummary[]>([]);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState({ page: 1, limit: 12, total: 0 });
 
@@ -42,9 +46,17 @@ export function ListingsBrowseClient() {
     setCategories(cats);
     setListings(result.data);
     setMeta(result.meta);
+
+    if (isAuthenticated && user?.role === 'BUYER' && result.data.length > 0) {
+      const favorites = await buyerService.getFavorites(1, 100);
+      setSavedIds(new Set(favorites.data.map((listing) => listing.id)));
+    } else {
+      setSavedIds(new Set());
+    }
+
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- filters derived from paramsKey
-  }, [paramsKey]);
+  }, [paramsKey, isAuthenticated, user?.role]);
 
   useEffect(() => {
     void load();
@@ -90,7 +102,12 @@ export function ListingsBrowseClient() {
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
+            <ListingCard
+              key={listing.id}
+              listing={listing}
+              showSave={isAuthenticated && user?.role === 'BUYER'}
+              initialSaved={savedIds.has(listing.id)}
+            />
           ))}
         </div>
       )}

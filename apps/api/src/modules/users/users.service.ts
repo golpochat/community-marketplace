@@ -74,6 +74,15 @@ export class UsersService {
     );
   }
 
+  async createVerificationDocumentUploadUrl(userId: string, dto: unknown) {
+    const parsed = dto as { contentType: string; fileName?: string };
+    return this.storageService.createVerificationDocumentUploadUrl(
+      userId,
+      parsed.contentType,
+      parsed.fileName,
+    );
+  }
+
   async confirmAvatar(actorId: string, userId: string, publicUrl: string) {
     return this.profileService.setAvatarUrl(actorId, userId, publicUrl);
   }

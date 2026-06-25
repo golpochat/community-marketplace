@@ -104,6 +104,19 @@ export class R2StorageService {
     });
   }
 
+  async createVerificationDocumentUploadUrl(
+    userId: string,
+    contentType: string,
+    fileName?: string,
+  ): Promise<AvatarUploadUrlResponse> {
+    return this.createSignedUploadUrl({
+      category: 'verification-documents',
+      ownerId: userId,
+      contentType,
+      fileName,
+    });
+  }
+
   verifyKeyBelongsToUser(key: string, userId: string): boolean {
     return (
       key.startsWith(`user-avatars/${userId}/`) || key.startsWith(`avatars/${userId}/`)

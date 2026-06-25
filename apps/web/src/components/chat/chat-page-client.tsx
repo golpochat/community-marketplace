@@ -12,35 +12,79 @@ interface ChatPageClientProps {
   currentUserId: string;
   accessToken?: string;
   role: 'BUYER' | 'SELLER';
+  listingId?: string;
+  sellerId?: string;
 }
 
 export function ChatPageClient({
   currentUserId,
   accessToken,
   role,
+  listingId,
+  sellerId,
 }: ChatPageClientProps) {
   const [inbox, setInbox] = useState<ChatInboxItem[]>([]);
   const [activeThreadId, setActiveThreadId] = useState<string>();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typingLabel, setTypingLabel] = useState<string>();
+  const [threadError, setThreadError] = useState<string | null>(null);
   const activeThreadIdRef = useRef(activeThreadId);
+  const autoThreadHandled = useRef(false);
 
   activeThreadIdRef.current = activeThreadId;
 
   const loadInbox = useCallback(async () => {
     const result = await chatService.getInbox();
-    setInbox(Array.isArray(result.data) ? result.data : []);
-    setActiveThreadId((current) => {
-      if (!current && result.data?.[0]) {
-        return result.data[0].thread.id;
-      }
-      return current;
-    });
+    const items = Array.isArray(result.data) ? result.data : [];
+    setInbox(items);
+    return items;
   }, []);
 
   useEffect(() => {
-    void loadInbox();
+    void loadInbox().then((items) => {
+      setActiveThreadId((current) => {
+        if (!current && items[0]) {
+          return items[0].thread.id;
+        }
+        return current;
+      });
+    });
   }, [loadInbox]);
+
+  useEffect(() => {
+    if (!listingId || autoThreadHandled.current) return;
+    autoThreadHandled.current = true;
+
+    async function openListingThread() {
+      setThreadError(null);
+      try {
+        const existing = await chatService.getThreadByListing(listingId!);
+        if (existing?.id) {
+          setActiveThreadId(existing.id);
+          return;
+        }
+
+        if (role === 'BUYER' && sellerId) {
+          const created = await chatService.createThread(listingId!, sellerId);
+          if (created?.id) {
+            setActiveThreadId(created.id);
+            await loadInbox();
+          }
+          return;
+        }
+
+        const items = await loadInbox();
+        const match = items.find((item) => item.thread.listingId === listingId);
+        if (match) {
+          setActiveThreadId(match.thread.id);
+        }
+      } catch (err) {
+        setThreadError(err instanceof Error ? err.message : 'Failed to open conversation');
+      }
+    }
+
+    void openListingThread();
+  }, [listingId, sellerId, role, loadInbox]);
 
   useEffect(() => {
     if (!activeThreadId) return;
@@ -97,7 +141,13 @@ export function ChatPageClient({
   };
 
   return (
-    <ChatLayout
+    <>
+      {threadError && (
+        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {threadError}
+        </p>
+      )}
+      <ChatLayout
       inbox={inbox}
       activeThreadId={activeThreadId}
       messages={messages}
@@ -107,5 +157,6 @@ export function ChatPageClient({
       onSend={handleSend}
       onTyping={handleTypingInput}
     />
+    </>
   );
 }

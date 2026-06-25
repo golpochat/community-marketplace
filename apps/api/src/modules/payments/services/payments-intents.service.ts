@@ -152,7 +152,19 @@ export class PaymentsIntentsService {
       return mapPayment(updated);
     }
 
+    const updated = await this.prisma.payment.update({
+      where: { id: row.id },
+      data: { status: 'succeeded' },
+    });
+
     await this.audit.record('payment_confirmed', buyerId, row.id);
-    return mapPayment(row);
+
+    this.eventBus.publish({
+      type: 'payment.succeeded',
+      payload: { paymentId: row.id, listingId: row.listingId },
+      timestamp: new Date(),
+    });
+
+    return mapPayment(updated);
   }
 }

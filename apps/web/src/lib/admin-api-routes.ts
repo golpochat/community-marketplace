@@ -9,10 +9,19 @@ export type AdminApiRole = 'SUPER_ADMIN' | 'ADMIN';
 const SUPER_ADMIN_ADMIN_NAMESPACE_PATHS = new Set([
   '/payments',
   '/users/verifications/pending',
+  '/users/suspend',
+  '/users/ban',
 ]);
 
+function superAdminUsesAdminNamespace(path: string): boolean {
+  return (
+    SUPER_ADMIN_ADMIN_NAMESPACE_PATHS.has(path) ||
+    path.startsWith('/users/verifications/')
+  );
+}
+
 export function adminApiPath(role: AdminApiRole, path: string): string {
-  if (role === 'SUPER_ADMIN' && SUPER_ADMIN_ADMIN_NAMESPACE_PATHS.has(path)) {
+  if (role === 'SUPER_ADMIN' && superAdminUsesAdminNamespace(path)) {
     return `${API_NAMESPACES.ADMIN}${path}`;
   }
 

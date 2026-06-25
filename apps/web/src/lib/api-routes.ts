@@ -14,6 +14,7 @@ export const WEB_API_ROUTES = {
     reviews: `${API_NAMESPACES.BUYER}/reviews`,
     profile: `${API_NAMESPACES.BUYER}/profile`,
     reports: `${API_NAMESPACES.BUYER}/reports`,
+    listingReport: (listingId: string) => `${API_NAMESPACES.BUYER}/listings/${listingId}/report`,
     chat: `${API_NAMESPACES.BUYER}/chat`,
   },
   seller: {

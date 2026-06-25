@@ -116,6 +116,16 @@ export const avatarUploadRequestSchema = z.object({
   fileName: z.string().min(1).max(120).optional(),
 });
 
+export const verificationDocumentUploadRequestSchema = z.object({
+  contentType: z.enum([
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'application/pdf',
+  ]),
+  fileName: z.string().min(1).max(120).optional(),
+});
+
 export const confirmAvatarSchema = z.object({
   publicUrl: z.string().url(),
 });

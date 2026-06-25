@@ -2,11 +2,44 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import type { ModerationReport, PlatformSettings, UserProfile, UserVerification } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
 import { Card } from '@community-marketplace/ui-dashboard';
 
 import { DashboardPageShell, DataTable, KeyValueList } from '@/components/dashboard/async-resource';
+import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
+import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { adminService, type AdminServiceRole } from '@/services/admin.service';
+
+function AdminRowButton({
+  label,
+  onClick,
+  disabled,
+  variant = 'primary',
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  variant?: 'primary' | 'danger' | 'secondary';
+}) {
+  const classes =
+    variant === 'danger'
+      ? 'border-red-200 text-red-700 hover:bg-red-50'
+      : variant === 'secondary'
+        ? 'border-gray-200 text-gray-700 hover:bg-gray-50'
+        : 'border-transparent bg-[hsl(var(--dashboard-accent))] text-white hover:opacity-90';
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded-md border px-2 py-1 text-xs font-medium disabled:opacity-50 ${classes}`}
+    >
+      {label}
+    </button>
+  );
+}
 
 function moderationReportTarget(report: {
   listingId?: string;
@@ -20,33 +53,77 @@ function moderationReportTarget(report: {
 }
 
 export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
-  const [rows, setRows] = useState<Array<Array<React.ReactNode>>>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [actingUserId, setActingUserId] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchUsers = useCallback(
+    (page: number, limit: number) => adminService.listUsers(role, { page, limit }),
+    [role],
+  );
+
+  const {
+    page,
+    setPage,
+    data: users,
+    meta,
+    loading,
+    error,
+    totalPages,
+    reload,
+  } = usePaginatedQuery({ fetcher: fetchUsers });
+
+  async function handleSuspend(user: UserProfile) {
+    const reason = window.prompt(`Reason for suspending ${user.email}?`) ?? undefined;
+    if (reason === null) return;
+    setActingUserId(user.id);
     try {
-      const result = await adminService.listUsers(role);
-      setRows(
-        result.data.map((user) => [
-          user.displayName ?? user.email,
-          user.email,
-          user.role,
-          user.status,
-        ]),
-      );
+      await adminService.suspendUser(role, user.id, reason || undefined);
+      await reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load users');
+      window.alert(err instanceof Error ? err.message : 'Failed to suspend user');
     } finally {
-      setLoading(false);
+      setActingUserId(null);
     }
-  }, [role]);
+  }
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  async function handleBan(user: UserProfile) {
+    const reason = window.prompt(`Reason for banning ${user.email}?`) ?? undefined;
+    if (reason === null) return;
+    setActingUserId(user.id);
+    try {
+      await adminService.banUser(role, user.id, 'permanent', reason || undefined);
+      await reload();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to ban user');
+    } finally {
+      setActingUserId(null);
+    }
+  }
+
+  const rows = users.map((user) => {
+    const isProtectedRole = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    const isActing = actingUserId === user.id;
+
+    return [
+      user.displayName ?? user.email,
+      user.email,
+      user.role,
+      user.status,
+      <div key={user.id} className="flex flex-wrap gap-2">
+        <AdminRowButton
+          label={isActing ? 'Working…' : 'Suspend'}
+          onClick={() => void handleSuspend(user)}
+          disabled={isProtectedRole || isActing || user.status === 'suspended'}
+          variant="secondary"
+        />
+        <AdminRowButton
+          label="Ban"
+          onClick={() => void handleBan(user)}
+          disabled={isProtectedRole || isActing}
+          variant="danger"
+        />
+      </div>,
+    ];
+  });
 
   return (
     <DashboardPageShell
@@ -58,43 +135,34 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
       emptyTitle="No users found"
     >
       <Card>
-        <DataTable columns={['Name', 'Email', 'Role', 'Status']} rows={rows} />
+        <DataTable columns={['Name', 'Email', 'Role', 'Status', 'Actions']} rows={rows} />
+        <AdminTableFooter
+          page={page}
+          totalPages={totalPages}
+          total={meta.total}
+          onPageChange={setPage}
+        />
       </Card>
     </DashboardPageShell>
   );
 }
 
 export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
-  const [rows, setRows] = useState<Array<Array<React.ReactNode>>>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const fetchListings = useCallback(
+    (page: number, limit: number) => adminService.listListings(role, { page, limit }),
+    [role],
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void adminService
-      .listListings(role)
-      .then((result) => {
-        if (cancelled) return;
-        setRows(
-          result.data.map((listing) => [
-            listing.title,
-            formatCurrency(listing.price, listing.currency),
-            listing.status,
-            new Date(listing.createdAt).toLocaleDateString(),
-          ]),
-        );
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [role]);
+  const { page, setPage, data, meta, loading, error, totalPages } = usePaginatedQuery({
+    fetcher: fetchListings,
+  });
+
+  const rows = data.map((listing) => [
+    listing.title,
+    formatCurrency(listing.price, listing.currency),
+    listing.status,
+    new Date(listing.createdAt).toLocaleDateString(),
+  ]);
 
   return (
     <DashboardPageShell
@@ -107,42 +175,33 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
     >
       <Card>
         <DataTable columns={['Title', 'Price', 'Status', 'Created']} rows={rows} />
+        <AdminTableFooter
+          page={page}
+          totalPages={totalPages}
+          total={meta.total}
+          onPageChange={setPage}
+        />
       </Card>
     </DashboardPageShell>
   );
 }
 
 export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
-  const [rows, setRows] = useState<Array<Array<React.ReactNode>>>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const fetchPayments = useCallback(
+    (page: number, limit: number) => adminService.listPayments(role, { page, limit }),
+    [role],
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void adminService
-      .listPayments(role)
-      .then((result) => {
-        if (cancelled) return;
-        setRows(
-          result.data.map((payment) => [
-            payment.id.slice(0, 8),
-            formatCurrency(payment.amount, payment.currency),
-            payment.status,
-            payment.listingId.slice(0, 8),
-          ]),
-        );
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [role]);
+  const { page, setPage, data, meta, loading, error, totalPages } = usePaginatedQuery({
+    fetcher: fetchPayments,
+  });
+
+  const rows = data.map((payment) => [
+    payment.id.slice(0, 8),
+    formatCurrency(payment.amount, payment.currency),
+    payment.status,
+    payment.listingId.slice(0, 8),
+  ]);
 
   return (
     <DashboardPageShell
@@ -155,42 +214,93 @@ export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
     >
       <Card>
         <DataTable columns={['ID', 'Amount', 'Status', 'Listing']} rows={rows} />
+        <AdminTableFooter
+          page={page}
+          totalPages={totalPages}
+          total={meta.total}
+          onPageChange={setPage}
+        />
       </Card>
     </DashboardPageShell>
   );
 }
 
 export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
-  const [rows, setRows] = useState<Array<Array<React.ReactNode>>>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [actingReportId, setActingReportId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void adminService
-      .listModerationReports(role)
-      .then((result) => {
-        if (cancelled) return;
-        setRows(
-          result.data.map((report) => [
-            report.id.slice(0, 8),
-            report.reason,
-            report.status,
-            moderationReportTarget(report),
-          ]),
-        );
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+  const fetchReports = useCallback(
+    (page: number, limit: number) => adminService.listModerationReports(role, { page, limit }),
+    [role],
+  );
+
+  const {
+    page,
+    setPage,
+    data: reports,
+    meta,
+    loading,
+    error,
+    totalPages,
+    reload,
+  } = usePaginatedQuery({ fetcher: fetchReports });
+
+  async function handleAction(
+    report: ModerationReport,
+    actionType: 'warn' | 'delete_listing' | 'suspend',
+  ) {
+    const notes = window.prompt(`Notes for ${actionType} on report ${report.id.slice(0, 8)}?`) ?? undefined;
+    if (notes === null) return;
+
+    setActingReportId(report.id);
+    try {
+      await adminService.takeModerationAction(role, report.id, {
+        actionType,
+        ...(actionType === 'suspend' ? { suspensionDuration: 'days_7' as const } : {}),
+        ...(notes ? { notes } : {}),
+        ...(actionType === 'warn' && notes ? { warnMessage: notes } : {}),
+        ...(actionType === 'delete_listing' ? { autoHideListing: true } : {}),
       });
-    return () => {
-      cancelled = true;
-    };
-  }, [role]);
+      await reload();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to take moderation action');
+    } finally {
+      setActingReportId(null);
+    }
+  }
+
+  const rows = reports.map((report) => {
+    const isActing = actingReportId === report.id;
+    const canAct = report.status === 'pending';
+
+    return [
+      report.id.slice(0, 8),
+      report.reason,
+      report.status,
+      moderationReportTarget(report),
+      <div key={report.id} className="flex flex-wrap gap-2">
+        <AdminRowButton
+          label={isActing ? 'Working…' : 'Warn'}
+          onClick={() => void handleAction(report, 'warn')}
+          disabled={!canAct || isActing}
+          variant="secondary"
+        />
+        {report.listingId && (
+          <AdminRowButton
+            label="Remove listing"
+            onClick={() => void handleAction(report, 'delete_listing')}
+            disabled={!canAct || isActing}
+            variant="danger"
+          />
+        )}
+        <AdminRowButton
+          label="Suspend user"
+          onClick={() => void handleAction(report, 'suspend')}
+          disabled={!canAct || isActing}
+          variant="danger"
+        />
+      </div>,
+    ];
+  });
 
   return (
     <DashboardPageShell
@@ -202,7 +312,13 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
       emptyTitle="No reports found"
     >
       <Card>
-        <DataTable columns={['ID', 'Reason', 'Status', 'Target']} rows={rows} />
+        <DataTable columns={['ID', 'Reason', 'Status', 'Target', 'Actions']} rows={rows} />
+        <AdminTableFooter
+          page={page}
+          totalPages={totalPages}
+          total={meta.total}
+          onPageChange={setPage}
+        />
       </Card>
     </DashboardPageShell>
   );
@@ -257,36 +373,73 @@ export function AdminReportsPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function AdminVerificationsPage({ role }: { role: AdminServiceRole }) {
-  const [rows, setRows] = useState<Array<Array<React.ReactNode>>>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [actingId, setActingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void adminService
-      .listPendingVerifications(role)
-      .then((result) => {
-        if (cancelled) return;
-        setRows(
-          result.data.map((item) => [
-            item.userId.slice(0, 8),
-            item.status,
-            item.badgeGranted ? 'Yes' : 'No',
-            new Date(item.createdAt).toLocaleDateString(),
-          ]),
-        );
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [role]);
+  const fetchVerifications = useCallback(
+    (page: number, limit: number) => adminService.listPendingVerifications(role, { page, limit }),
+    [role],
+  );
+
+  const {
+    page,
+    setPage,
+    data: verifications,
+    meta,
+    loading,
+    error,
+    totalPages,
+    reload,
+  } = usePaginatedQuery({ fetcher: fetchVerifications });
+
+  async function handleApprove(verification: UserVerification) {
+    setActingId(verification.id);
+    try {
+      await adminService.approveVerification(role, verification.id);
+      await reload();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to approve verification');
+    } finally {
+      setActingId(null);
+    }
+  }
+
+  async function handleReject(verification: UserVerification) {
+    const reason = window.prompt('Rejection reason (optional):') ?? undefined;
+    if (reason === null) return;
+    setActingId(verification.id);
+    try {
+      await adminService.rejectVerification(role, verification.id, reason || undefined);
+      await reload();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to reject verification');
+    } finally {
+      setActingId(null);
+    }
+  }
+
+  const rows = verifications.map((item) => {
+    const isActing = actingId === item.id;
+
+    return [
+      item.userId.slice(0, 8),
+      item.status,
+      item.badgeGranted ? 'Yes' : 'No',
+      new Date(item.createdAt).toLocaleDateString(),
+      <div key={item.id} className="flex flex-wrap gap-2">
+        <AdminRowButton
+          label={isActing ? 'Working…' : 'Approve'}
+          onClick={() => void handleApprove(item)}
+          disabled={isActing}
+        />
+        <AdminRowButton
+          label="Reject"
+          onClick={() => void handleReject(item)}
+          disabled={isActing}
+          variant="danger"
+        />
+      </div>,
+    ];
+  });
 
   return (
     <DashboardPageShell
@@ -298,7 +451,13 @@ export function AdminVerificationsPage({ role }: { role: AdminServiceRole }) {
       emptyTitle="No pending verifications"
     >
       <Card>
-        <DataTable columns={['User', 'Status', 'Badge', 'Submitted']} rows={rows} />
+        <DataTable columns={['User', 'Status', 'Badge', 'Submitted', 'Actions']} rows={rows} />
+        <AdminTableFooter
+          page={page}
+          totalPages={totalPages}
+          total={meta.total}
+          onPageChange={setPage}
+        />
       </Card>
     </DashboardPageShell>
   );
@@ -567,28 +726,49 @@ export function AdminRbacPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function SuperAdminSettingsPage() {
-  const [settings, setSettings] = useState<Record<string, unknown> | null>(null);
+  const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await adminService.getPlatformSettings();
+      setSettings(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load settings');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void adminService
-      .getPlatformSettings()
-      .then((data) => {
-        if (!cancelled) setSettings(data as Record<string, unknown> | null);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    void load();
+  }, [load]);
+
+  function updateField<K extends keyof PlatformSettings>(key: K, value: PlatformSettings[K]) {
+    setSettings((current) => (current ? { ...current, [key]: value } : current));
+  }
+
+  async function handleSave(event: React.FormEvent) {
+    event.preventDefault();
+    if (!settings) return;
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const updated = await adminService.updatePlatformSettings(settings);
+      setSettings(updated);
+      setMessage('Platform settings saved.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <DashboardPageShell
@@ -599,11 +779,88 @@ export function SuperAdminSettingsPage() {
       empty={!loading && !error && !settings}
       emptyTitle="Settings unavailable"
     >
-      <Card title="Platform settings">
-        <pre className="overflow-auto rounded-lg bg-gray-50 p-4 text-xs text-gray-900">
-          {JSON.stringify(settings, null, 2)}
-        </pre>
-      </Card>
+      {settings && (
+        <Card title="Platform settings">
+          <form onSubmit={(e) => void handleSave(e)} className="space-y-4">
+            <label className="flex items-center justify-between gap-4 text-sm">
+              <span>Maintenance mode</span>
+              <input
+                type="checkbox"
+                checked={settings.maintenanceMode}
+                onChange={(e) => updateField('maintenanceMode', e.target.checked)}
+              />
+            </label>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Platform name</label>
+              <input
+                type="text"
+                value={settings.platformName}
+                onChange={(e) => updateField('platformName', e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Support email</label>
+              <input
+                type="email"
+                value={settings.supportEmail}
+                onChange={(e) => updateField('supportEmail', e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Default currency</label>
+              <input
+                type="text"
+                value={settings.defaultCurrency}
+                onChange={(e) => updateField('defaultCurrency', e.target.value.toUpperCase())}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              />
+            </div>
+            <label className="flex items-center justify-between gap-4 text-sm">
+              <span>Email notifications enabled</span>
+              <input
+                type="checkbox"
+                checked={settings.emailNotificationsEnabled}
+                onChange={(e) => updateField('emailNotificationsEnabled', e.target.checked)}
+              />
+            </label>
+            <label className="flex items-center justify-between gap-4 text-sm">
+              <span>Push notifications enabled</span>
+              <input
+                type="checkbox"
+                checked={settings.pushNotificationsEnabled}
+                onChange={(e) => updateField('pushNotificationsEnabled', e.target.checked)}
+              />
+            </label>
+            <label className="flex items-center justify-between gap-4 text-sm">
+              <span>Require MFA for admins</span>
+              <input
+                type="checkbox"
+                checked={settings.securityMfaRequired}
+                onChange={(e) => updateField('securityMfaRequired', e.target.checked)}
+              />
+            </label>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Payment provider</label>
+              <input
+                type="text"
+                value={settings.paymentProvider}
+                onChange={(e) => updateField('paymentProvider', e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+            >
+              {saving ? 'Saving…' : 'Save settings'}
+            </button>
+            {message && <p className="text-sm text-green-700">{message}</p>}
+          </form>
+        </Card>
+      )}
     </DashboardPageShell>
   );
 }

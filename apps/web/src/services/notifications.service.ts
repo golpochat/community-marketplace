@@ -56,21 +56,27 @@ export const notificationsService = {
     return this.listBuyer(page, limit, unreadOnly);
   },
 
-  async getPreferences() {
-    const response = await apiClient<NotificationPreferences>(
-      WEB_API_ROUTES.buyer.notificationPreferences,
-    );
+  async getPreferences(role: 'BUYER' | 'SELLER' = 'BUYER') {
+    const path =
+      role === 'SELLER'
+        ? WEB_API_ROUTES.seller.notificationPreferences
+        : WEB_API_ROUTES.buyer.notificationPreferences;
+    const response = await apiClient<NotificationPreferences>(path);
     return response.data;
   },
 
-  async updatePreferences(preferences: Partial<NotificationPreferences>) {
-    const response = await apiClient<NotificationPreferences>(
-      WEB_API_ROUTES.buyer.notificationPreferences,
-      {
-        method: 'PATCH',
-        body: JSON.stringify(preferences),
-      },
-    );
+  async updatePreferences(
+    preferences: Partial<NotificationPreferences>,
+    role: 'BUYER' | 'SELLER' = 'BUYER',
+  ) {
+    const path =
+      role === 'SELLER'
+        ? WEB_API_ROUTES.seller.notificationPreferences
+        : WEB_API_ROUTES.buyer.notificationPreferences;
+    const response = await apiClient<NotificationPreferences>(path, {
+      method: 'PATCH',
+      body: JSON.stringify(preferences),
+    });
     return response.data;
   },
 

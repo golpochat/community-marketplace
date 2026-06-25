@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
+import { verificationDocumentUploadRequestSchema } from '@community-marketplace/validation';
 
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -21,6 +22,16 @@ export class SellerProfileController {
   @Patch()
   updateProfile(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateProfileDto) {
     return this.usersService.updateProfile(user.id, user.role, user.id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.SUBMIT_VERIFICATION)
+  @Post('verification/upload-url')
+  createVerificationUploadUrl(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: unknown,
+  ) {
+    const parsed = verificationDocumentUploadRequestSchema.parse(body);
+    return this.usersService.createVerificationDocumentUploadUrl(user.id, parsed);
   }
 
   @RequirePermissions(PERMISSIONS.SUBMIT_VERIFICATION)

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@community-marketplace/ui';
 
 import { authService } from '@/services/auth.service';
+import { formatIrishPhoneHint, normalizeIrishPhoneToE164 } from '@/lib/phone';
 
 type Step = 'phone' | 'otp' | 'profile';
 
@@ -13,6 +14,7 @@ export function RegisterForm() {
   const router = useRouter();
   const [step, setStep] = useState<Step>('phone');
   const [phone, setPhone] = useState('');
+  const [normalizedPhone, setNormalizedPhone] = useState('');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,9 +26,15 @@ export function RegisterForm() {
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    const e164 = normalizeIrishPhoneToE164(phone);
+    if (!e164) {
+      setError('Enter a valid Irish mobile number (e.g. 087 100 0002 or +353 87 100 0002).');
+      return;
+    }
     setLoading(true);
     try {
-      await authService.sendOtp(phone);
+      await authService.sendOtp(e164);
+      setNormalizedPhone(e164);
       setStep('otp');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send OTP');
@@ -40,7 +48,7 @@ export function RegisterForm() {
     setError(null);
     setLoading(true);
     try {
-      const result = await authService.verifyOtp(phone, code);
+      const result = await authService.verifyOtp(normalizedPhone, code);
       setPhoneVerificationToken(result.phoneVerificationToken);
       setStep('profile');
     } catch (err) {
@@ -76,17 +84,21 @@ export function RegisterForm() {
         {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>}
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-            Phone number (E.164)
+            Irish mobile number
           </label>
           <input
             id="phone"
             type="tel"
             required
-            placeholder="+14155552671"
+            autoComplete="tel"
+            placeholder="087 100 0002 or +353 87 100 0002"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
+          <p className="mt-1 text-xs text-gray-500">
+            Use a valid Irish number with or without the +353 country code.
+          </p>
         </div>
         <Button type="submit" disabled={loading} className="w-full">
           {loading ? 'Sending code...' : 'Send verification code'}
@@ -99,7 +111,10 @@ export function RegisterForm() {
     return (
       <form onSubmit={handleVerifyOtp} className="mt-6 space-y-4">
         {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>}
-        <p className="text-sm text-gray-600">Enter the 6-digit code sent to {phone}</p>
+        <p className="text-sm text-gray-600">
+          Enter the 6-digit code sent to{' '}
+          {normalizedPhone ? formatIrishPhoneHint(normalizedPhone) : phone}
+        </p>
         <div>
           <label htmlFor="code" className="block text-sm font-medium text-gray-700">
             Verification code

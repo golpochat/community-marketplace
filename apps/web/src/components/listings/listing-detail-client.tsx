@@ -15,14 +15,18 @@ import { DescriptionSection } from '@/components/listings/description-section';
 import { SimilarListings } from '@/components/listings/similar-listings';
 import { Skeleton } from '@/components/shared/skeleton';
 import { listingsService } from '@/services/listings.service';
+import { buyerService } from '@/services/marketplace.service';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ListingDetailClientProps {
   id: string;
 }
 
 export function ListingDetailClient({ id }: ListingDetailClientProps) {
+  const { isAuthenticated, user } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
   const [similar, setSimilar] = useState<ListingSummary[]>([]);
+  const [initialSaved, setInitialSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFoundState, setNotFoundState] = useState(false);
 
@@ -38,10 +42,16 @@ export function ListingDetailClient({ id }: ListingDetailClientProps) {
       setListing(data);
       const similarListings = await listingsService.getSimilar(id);
       setSimilar(similarListings);
+
+      if (isAuthenticated && user?.role === 'BUYER') {
+        const saved = await buyerService.isFavorite(id);
+        setInitialSaved(saved);
+      }
+
       setLoading(false);
     }
     void load();
-  }, [id]);
+  }, [id, isAuthenticated, user?.role]);
 
   if (notFoundState) notFound();
 
@@ -70,7 +80,7 @@ export function ListingDetailClient({ id }: ListingDetailClientProps) {
           <DescriptionSection listing={listing} />
           <div className="mt-6 flex flex-wrap gap-3">
             <ChatButton listingId={listing.id} sellerId={listing.sellerId} />
-            <SaveButton listingId={listing.id} />
+            <SaveButton listingId={listing.id} initialSaved={initialSaved} />
             <ReportButton listingId={listing.id} />
           </div>
           <SimilarListings listings={similar} />

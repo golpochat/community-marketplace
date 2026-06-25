@@ -1,10 +1,14 @@
 import type {
   AdminDashboardStats,
   Listing,
+  ModerationAction,
+  ModerationActionType,
   ModerationReport,
+  ModerationReportDetail,
   Payment,
   PlatformSettings,
   RbacRole,
+  SuspensionDuration,
   UserProfile,
   UserVerification,
 } from '@community-marketplace/types';
@@ -157,9 +161,109 @@ export const adminService = {
   },
 
   async getRoleMatrix(role: AdminApiRole): Promise<Record<RbacRole, string[]>> {
-    const path = role === 'SUPER_ADMIN' ? '/roles/matrix' : '/rbac/roles';
-    const response = await apiClient<Record<RbacRole, string[]>>(adminApiPath(role, path));
-    return response.data ?? ({} as Record<RbacRole, string[]>);
+    if (role === 'SUPER_ADMIN') {
+      const response = await apiClient<Record<RbacRole, string[]>>(
+        adminApiPath(role, '/roles/matrix'),
+      );
+      return response.data ?? ({} as Record<RbacRole, string[]>);
+    }
+
+    const rolesResponse = await apiClient<Array<{ id: string; code: RbacRole }>>(
+      adminApiPath(role, '/rbac/roles'),
+    );
+    const roles = Array.isArray(rolesResponse.data) ? rolesResponse.data : [];
+    const matrix = {} as Record<RbacRole, string[]>;
+
+    await Promise.all(
+      roles.map(async (rbacRole) => {
+        const permsResponse = await apiClient<Array<{ code: string } | string>>(
+          adminApiPath(role, `/rbac/roles/${rbacRole.id}/permissions`),
+        );
+        const permissions = Array.isArray(permsResponse.data) ? permsResponse.data : [];
+        matrix[rbacRole.code] = permissions.map((permission) =>
+          typeof permission === 'string' ? permission : permission.code,
+        );
+      }),
+    );
+
+    return matrix;
+  },
+
+  async approveVerification(role: AdminApiRole, verificationId: string, reason?: string) {
+    const response = await apiClient<UserVerification>(
+      adminApiPath(role, `/users/verifications/${verificationId}/approve`),
+      {
+        method: 'POST',
+        body: JSON.stringify(reason ? { reason } : {}),
+      },
+    );
+    return response.data;
+  },
+
+  async rejectVerification(role: AdminApiRole, verificationId: string, reason?: string) {
+    const response = await apiClient<UserVerification>(
+      adminApiPath(role, `/users/verifications/${verificationId}/reject`),
+      {
+        method: 'POST',
+        body: JSON.stringify(reason ? { reason } : {}),
+      },
+    );
+    return response.data;
+  },
+
+  async getModerationReport(role: AdminApiRole, reportId: string) {
+    const response = await apiClient<ModerationReportDetail>(
+      adminApiPath(role, `/moderation/reports/${reportId}`),
+    );
+    return response.data;
+  },
+
+  async takeModerationAction(
+    role: AdminApiRole,
+    reportId: string,
+    input: {
+      actionType: ModerationActionType;
+      suspensionDuration?: SuspensionDuration;
+      notes?: string;
+      warnMessage?: string;
+      autoHideListing?: boolean;
+    },
+  ) {
+    const response = await apiClient<ModerationAction>(
+      adminApiPath(role, `/moderation/reports/${reportId}/actions`),
+      {
+        method: 'POST',
+        body: JSON.stringify(input),
+      },
+    );
+    return response.data;
+  },
+
+  async suspendUser(role: AdminApiRole, userId: string, reason?: string) {
+    const response = await apiClient<UserProfile>(adminApiPath(role, '/users/suspend'), {
+      method: 'POST',
+      body: JSON.stringify({ userId, ...(reason ? { reason } : {}) }),
+    });
+    return response.data;
+  },
+
+  async banUser(
+    role: AdminApiRole,
+    userId: string,
+    type: 'temporary' | 'permanent',
+    reason?: string,
+    expiresAt?: string,
+  ) {
+    const response = await apiClient<UserProfile>(adminApiPath(role, '/users/ban'), {
+      method: 'POST',
+      body: JSON.stringify({
+        userId,
+        type,
+        ...(reason ? { reason } : {}),
+        ...(expiresAt ? { expiresAt } : {}),
+      }),
+    });
+    return response.data;
   },
 
   async getPlatformSettings(): Promise<PlatformSettings | null> {
@@ -169,6 +273,14 @@ export const adminService = {
     } catch {
       return null;
     }
+  },
+
+  async updatePlatformSettings(settings: Partial<PlatformSettings>): Promise<PlatformSettings> {
+    const response = await apiClient<PlatformSettings>(adminApiPath('SUPER_ADMIN', '/settings'), {
+      method: 'PATCH',
+      body: JSON.stringify(settings),
+    });
+    return response.data ?? (settings as PlatformSettings);
   },
 
   async getSearchHealth(role: AdminApiRole): Promise<Record<string, unknown> | null> {

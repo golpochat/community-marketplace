@@ -91,6 +91,7 @@ export {
   communicationPreferencesSchema,
   updateUserSettingsSchema,
   avatarUploadRequestSchema,
+  verificationDocumentUploadRequestSchema,
   confirmAvatarSchema,
   adminUserListQuerySchema,
   suspendUserSchema,

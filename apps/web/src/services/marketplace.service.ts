@@ -1,6 +1,8 @@
 import type {
   Listing,
+  ListingImage,
   ListingSummary,
+  ListingUploadUrlResponse,
   PaginatedResult,
   UserProfile,
   UserVerification,
@@ -40,6 +42,75 @@ export const sellerService = {
     });
   },
 
+  updateListing(id: string, body: Record<string, unknown>) {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  },
+
+  deleteListing(id: string) {
+    return apiClient<{ deleted: boolean }>(`${WEB_API_ROUTES.seller.listings}/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  archiveListing(id: string) {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/archive`, {
+      method: 'POST',
+    });
+  },
+
+  markListingSold(id: string) {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/sold`, {
+      method: 'POST',
+    });
+  },
+
+  async requestListingImageUploadUrl(
+    listingId: string,
+    file: Pick<File, 'type' | 'name' | 'size'>,
+  ): Promise<ListingUploadUrlResponse> {
+    const response = await apiClient<ListingUploadUrlResponse>(
+      `${WEB_API_ROUTES.seller.listings}/${listingId}/images/upload-url`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          contentType: file.type,
+          fileName: file.name,
+          fileSizeBytes: file.size,
+        }),
+      },
+    );
+    return response.data;
+  },
+
+  async uploadListingImage(listingId: string, file: File): Promise<ListingImage[]> {
+    const upload = await this.requestListingImageUploadUrl(listingId, file);
+    await fetch(upload.uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': file.type },
+    });
+    const response = await apiClient<ListingImage[]>(
+      `${WEB_API_ROUTES.seller.listings}/${listingId}/images/confirm`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ keys: [upload.key] }),
+      },
+    );
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
+  async uploadListingImages(listingId: string, files: File[]): Promise<ListingImage[]> {
+    const results: ListingImage[] = [];
+    for (const file of files) {
+      const images = await this.uploadListingImage(listingId, file);
+      results.push(...images);
+    }
+    return results;
+  },
+
   getEarnings: () => apiClient(WEB_API_ROUTES.seller.earnings),
 
   async getProfile(): Promise<UserProfile> {
@@ -56,6 +127,30 @@ export const sellerService = {
   },
 
   getVerification: () => apiClient<UserVerification | null>(`${WEB_API_ROUTES.seller.profile}/verification`),
+
+  async requestVerificationDocumentUploadUrl(file: Pick<File, 'type' | 'name'>) {
+    const response = await apiClient<ListingUploadUrlResponse>(
+      `${WEB_API_ROUTES.seller.profile}/verification/upload-url`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          contentType: file.type,
+          fileName: file.name,
+        }),
+      },
+    );
+    return response.data;
+  },
+
+  async uploadVerificationDocument(file: File): Promise<string> {
+    const upload = await this.requestVerificationDocumentUploadUrl(file);
+    await fetch(upload.uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': file.type },
+    });
+    return upload.publicUrl;
+  },
 
   submitVerification(body: Record<string, unknown>) {
     return apiClient<UserVerification>(`${WEB_API_ROUTES.seller.profile}/verification`, {
@@ -105,5 +200,21 @@ export const buyerService = {
       body: JSON.stringify(body),
     });
     return response.data;
+  },
+
+  reportListing(listingId: string, body: { reason: string; description?: string }) {
+    return apiClient(WEB_API_ROUTES.buyer.listingReport(listingId), {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  async isFavorite(listingId: string): Promise<boolean> {
+    try {
+      const favorites = await this.getFavorites(1, 100);
+      return favorites.data.some((item) => item.id === listingId);
+    } catch {
+      return false;
+    }
   },
 };

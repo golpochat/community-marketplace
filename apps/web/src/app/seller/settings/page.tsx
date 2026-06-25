@@ -10,6 +10,7 @@ export default function Page() {
       description="Manage your store profile and preferences."
       loadProfile={() => sellerService.getProfile()}
       saveProfile={(body) => sellerService.updateProfile(body)}
+      notificationRole="SELLER"
     />
   );
 }

@@ -15,16 +15,12 @@ export function resolveClientRefreshToken(): string | null {
   return getStoredRefreshToken();
 }
 
-/** Refresh session; returns new access token or null. */
-export async function refreshClientSession(): Promise<string | null> {
-  const refreshToken = resolveClientRefreshToken();
-  if (!refreshToken) return null;
-
+async function requestSessionRefresh(body: Record<string, unknown>): Promise<string | null> {
   const response = await fetch(`${API_BASE_URL}${WEB_API_ROUTES.public.auth.refresh}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ refreshToken }),
+    body: JSON.stringify(body),
     cache: 'no-store',
   });
 
@@ -40,4 +36,16 @@ export async function refreshClientSession(): Promise<string | null> {
 
   useAuthStore.getState().updateSessionTokens(accessToken, newRefresh);
   return accessToken;
+}
+
+/** Refresh session; returns new access token or null. */
+export async function refreshClientSession(): Promise<string | null> {
+  const refreshToken = resolveClientRefreshToken();
+  if (refreshToken) {
+    const fromStorage = await requestSessionRefresh({ refreshToken });
+    if (fromStorage) return fromStorage;
+  }
+
+  // Stale localStorage token can block the API from using the httpOnly cookie.
+  return requestSessionRefresh({});
 }

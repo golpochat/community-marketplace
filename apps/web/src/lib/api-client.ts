@@ -4,7 +4,14 @@ import { useAuthStore } from '@/store/auth.store';
 
 import { API_BASE_URL } from './constants';
 import { unwrapApiResponse } from './normalize-api-response';
+import { isDashboardPath } from './route-guards';
 import { refreshClientSession, resolveClientAccessToken } from './web-session';
+
+function redirectToLoginAfterSessionLoss(): void {
+  if (typeof window === 'undefined') return;
+  if (!isDashboardPath(window.location.pathname)) return;
+  window.location.href = '/auth/login';
+}
 
 type RequestOptions = RequestInit & {
   params?: Record<string, string>;
@@ -83,6 +90,7 @@ export async function apiClient<T>(
       response = await doFetch(token);
     } else {
       useAuthStore.getState().clearUser();
+      redirectToLoginAfterSessionLoss();
     }
   }
 
