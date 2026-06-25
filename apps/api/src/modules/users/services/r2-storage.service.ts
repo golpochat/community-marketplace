@@ -5,6 +5,8 @@ import { createHash, randomUUID } from 'node:crypto';
 
 import type { AvatarUploadUrlResponse } from '@community-marketplace/types';
 
+import { buildDevUploadUrl, isR2Configured } from '../../../libs/asset-url.lib';
+
 export type R2AssetCategory =
   | 'user-avatars'
   | 'listing-images'
@@ -32,7 +34,7 @@ export class R2StorageService {
   private client: S3Client | null = null;
 
   isConfigured(): boolean {
-    return Boolean(this.accountId && this.accessKeyId && this.secretAccessKey && this.endpoint);
+    return isR2Configured();
   }
 
   private getClient(): S3Client {
@@ -61,6 +63,17 @@ export class R2StorageService {
     return `${prefix}/${ownerId}/${randomUUID()}.${ext}`;
   }
 
+  devUploadUrl(key: string): string {
+    return buildDevUploadUrl(key);
+  }
+
+  buildPublicUrl(key: string): string {
+    if (!this.isConfigured()) {
+      return this.devUploadUrl(key);
+    }
+    return `${this.publicBaseUrl.replace(/\/$/, '')}/${key}`;
+  }
+
   async createSignedUploadUrl(input: {
     category: R2AssetCategory;
     ownerId: string;
@@ -69,17 +82,18 @@ export class R2StorageService {
     expiresInSeconds?: number;
   }): Promise<AvatarUploadUrlResponse> {
     const key = this.buildKey(input.category, input.ownerId, input.fileName, input.contentType);
-    const publicUrl = `${this.publicBaseUrl.replace(/\/$/, '')}/${key}`;
     const expiresInSeconds = input.expiresInSeconds ?? 900;
 
     if (!this.isConfigured()) {
       return {
-        uploadUrl: `${process.env.WEB_APP_URL ?? 'http://localhost:3000'}/api/dev-upload?key=${encodeURIComponent(key)}`,
-        publicUrl,
+        uploadUrl: this.devUploadUrl(key),
+        publicUrl: this.buildPublicUrl(key),
         key,
         expiresInSeconds,
       };
     }
+
+    const publicUrl = `${this.publicBaseUrl.replace(/\/$/, '')}/${key}`;
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -133,7 +147,7 @@ export class R2StorageService {
 
   async createSignedDownloadUrl(key: string, expiresInSeconds = 300): Promise<string> {
     if (!this.isConfigured()) {
-      return `${this.publicBaseUrl.replace(/\/$/, '')}/${key}`;
+      return this.buildPublicUrl(key);
     }
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return getSignedUrl(this.getClient(), command, { expiresIn: expiresInSeconds });

@@ -12,8 +12,11 @@ import { ChatButton } from '@/components/listings/chat-button';
 import { SaveButton } from '@/components/listings/save-button';
 import { ReportButton } from '@/components/listings/report-button';
 import { DescriptionSection } from '@/components/listings/description-section';
+import { ShareListingButton } from '@/components/listings/ShareListingButton';
+import { ListingDeliveryDisplay } from '@/components/listings/listing-delivery-display';
 import { SimilarListings } from '@/components/listings/similar-listings';
 import { Skeleton } from '@/components/shared/skeleton';
+import { getListingUnavailableMessage } from '@/lib/listing-availability';
 import { listingsService } from '@/services/listings.service';
 import { buyerService } from '@/services/marketplace.service';
 import { useAuth } from '@/hooks/use-auth';
@@ -66,6 +69,25 @@ export function ListingDetailClient({ id }: ListingDetailClientProps) {
   }
 
   const sellerSlug = listing.sellerId === 'seller-1' ? 'dublin-cycles' : undefined;
+  const sellerDisplayName =
+    listing.seller?.displayName?.trim() ||
+    (sellerSlug ? 'Dublin Cycles & More' : undefined);
+  const unavailableMessage = getListingUnavailableMessage(listing.status);
+
+  if (unavailableMessage) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-8">
+        <Link href="/listings" className="text-sm text-primary hover:text-primary/90">
+          ← Back to listings
+        </Link>
+        <div className="mt-12 rounded-xl border border-gray-200 bg-gray-50 px-6 py-12 text-center">
+          <h1 className="text-xl font-semibold text-gray-900">{listing.title}</h1>
+          <p className="mt-4 text-gray-600">{unavailableMessage}</p>
+        </div>
+        <SimilarListings listings={similar} />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -75,22 +97,30 @@ export function ListingDetailClient({ id }: ListingDetailClientProps) {
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
         <div>
-          <Gallery images={listing.images} title={listing.title} />
+          <Gallery
+            images={listing.images}
+            title={listing.title}
+            originalPrice={listing.originalPrice}
+            salePrice={listing.salePrice}
+            discountPercent={listing.discountPercent}
+          />
           <h1 className="mt-6 text-2xl font-bold text-gray-900 sm:text-3xl">{listing.title}</h1>
           <DescriptionSection listing={listing} />
+          <ListingDeliveryDisplay options={listing.deliveryOptions} />
           <div className="mt-6 flex flex-wrap gap-3">
             <ChatButton listingId={listing.id} sellerId={listing.sellerId} />
             <SaveButton listingId={listing.id} initialSaved={initialSaved} />
+            <ShareListingButton listingId={listing.id} title={listing.title} />
             <ReportButton listingId={listing.id} />
           </div>
           <SimilarListings listings={similar} />
         </div>
         <aside>
           <SellerCard
-            sellerId={listing.sellerId}
-            sellerName={sellerSlug ? 'Dublin Cycles & More' : 'Community Seller'}
+            seller={listing.seller}
+            sellerName={sellerDisplayName}
             sellerSlug={sellerSlug}
-            verified={!!sellerSlug}
+            verified={!!sellerSlug || listing.seller?.verified}
             location={listing.location.label}
           />
         </aside>

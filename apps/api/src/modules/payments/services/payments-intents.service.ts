@@ -20,6 +20,7 @@ import {
   mapPayment,
 } from '../mappers/payment.mapper';
 import { PaymentsAuditService } from './payments-audit.service';
+import { PaymentCompletionService } from './payment-completion.service';
 import { PaymentsFraudService } from './payments-fraud.service';
 import { StripeConnectService } from './stripe-connect.service';
 
@@ -30,6 +31,7 @@ export class PaymentsIntentsService {
     private readonly stripeConnect: StripeConnectService,
     private readonly fraud: PaymentsFraudService,
     private readonly audit: PaymentsAuditService,
+    private readonly completion: PaymentCompletionService,
     private readonly eventBus: EventBusService,
   ) {}
 
@@ -132,6 +134,15 @@ export class PaymentsIntentsService {
               ? 'failed'
               : 'pending';
 
+      if (status === 'succeeded') {
+        await this.audit.record('payment_confirmed', buyerId, row.id, {
+          stripeStatus: intent.status,
+        });
+        await this.completion.finalizeSuccessfulPayment(row.id, intent.id);
+        const finalized = await this.prisma.payment.findUnique({ where: { id: row.id } });
+        return mapPayment(finalized!);
+      }
+
       const updated = await this.prisma.payment.update({
         where: { id: row.id },
         data: { status },
@@ -141,30 +152,12 @@ export class PaymentsIntentsService {
         stripeStatus: intent.status,
       });
 
-      if (status === 'succeeded') {
-        this.eventBus.publish({
-          type: 'payment.succeeded',
-          payload: { paymentId: row.id, listingId: row.listingId },
-          timestamp: new Date(),
-        });
-      }
-
       return mapPayment(updated);
     }
 
-    const updated = await this.prisma.payment.update({
-      where: { id: row.id },
-      data: { status: 'succeeded' },
-    });
-
     await this.audit.record('payment_confirmed', buyerId, row.id);
-
-    this.eventBus.publish({
-      type: 'payment.succeeded',
-      payload: { paymentId: row.id, listingId: row.listingId },
-      timestamp: new Date(),
-    });
-
-    return mapPayment(updated);
+    await this.completion.finalizeSuccessfulPayment(row.id);
+    const finalized = await this.prisma.payment.findUnique({ where: { id: row.id } });
+    return mapPayment(finalized!);
   }
 }

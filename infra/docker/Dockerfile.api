@@ -22,22 +22,25 @@ RUN pnpm --filter "./packages/*" build \
  && cd apps/api && pnpm exec prisma generate \
  && pnpm --filter @community-marketplace/api build
 
+FROM base AS deploy
+COPY --from=builder /app .
+RUN pnpm --filter @community-marketplace/api deploy --prod /prod/api
+
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV API_PUBLIC_URL=http://localhost:4000
 RUN apk add --no-cache wget \
  && addgroup -S cm && adduser -S cm -G cm
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
-COPY --from=builder /app/apps/api/dist ./apps/api/dist
-COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
-COPY --from=builder /app/apps/api/generated ./apps/api/generated
-COPY --from=builder /app/apps/api/prisma ./apps/api/prisma
-COPY --from=builder /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deploy /prod/api ./
+
+RUN mkdir -p /app/.data/uploads \
+ && chown -R cm:cm /app/.data
 
 USER cm
-WORKDIR /app/apps/api
+
+VOLUME ["/app/.data/uploads"]
 
 EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \

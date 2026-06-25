@@ -1,7 +1,8 @@
 # Development Credentials
 
 > **Local development only.** Change all passwords and secrets before staging or production.  
-> Values below match seed scripts and `apps/api/.env.example` unless you have overridden them in `.env`.
+> Values below match seed scripts and `apps/api/.env.example` unless you have overridden them in `.env`.  
+> **Problems starting the stack?** See [Troubleshooting](./troubleshooting.md).
 
 ---
 
@@ -263,6 +264,48 @@ Stripe, SendGrid, FCM, OpenAI, and R2 keys are **empty** in `.env.example` until
 | `EADDRINUSE` on port `4000` | Docker `api` is already running. Use **Mode A** (`pnpm dev:web` only) or stop the container: `docker compose -f infra/docker/docker-compose.dev.yml stop api` |
 | `EADDRINUSE` on port `3000` | Stop Docker `web` or another Next.js process: `docker compose -f infra/docker/docker-compose.dev.yml stop web` |
 | API cannot reach Redis | Set `REDIS_URL=redis://localhost:6380` in `apps/api/.env` when using the Docker dev stack |
+
+---
+
+## Stripe (test mode — Ireland / EUR)
+
+Payments use **Stripe Connect Express** for sellers and **PaymentIntents** for buyers. Configure keys in local `.env` files (never commit them).
+
+| File | Variable |
+|------|----------|
+| `apps/api/.env` | `STRIPE_SECRET_KEY=sk_test_...` |
+| `apps/api/.env` | `STRIPE_WEBHOOK_SECRET=whsec_...` (from Stripe CLI, below) |
+| `apps/web/.env` | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...` |
+
+### One-time: enable Connect on your Stripe account
+
+API keys alone are not enough. The **platform** Stripe account must enroll in Connect before seller onboarding works.
+
+1. Open [Stripe Dashboard → Connect (Test mode)](https://dashboard.stripe.com/test/connect).
+2. Complete the short Connect setup wizard (Express accounts, marketplace / platform).
+3. Restart the API, then try **Seller → Earnings → Connect with Stripe** again.
+
+If you see *"You can only create new accounts if you've signed up for Connect"*, this step was skipped.
+
+### End-to-end payment test flow
+
+1. **Seller** — sign in as `seller@community.market`, open **Seller → Earnings**, click **Connect with Stripe**, complete Express onboarding (test business details are fine in test mode).
+2. **Seller** — create an **active** listing (admin approval may be required depending on seed data).
+3. **Buyer** — sign in as `buyer@community.market`, open **Buyer → Purchases**, select the listing, pay with test card `4242 4242 4242 4242` (any future expiry, any CVC).
+4. Confirm the listing moves to **sold** and payment status is **succeeded**.
+
+### Local webhooks (recommended)
+
+Stripe webhooks keep payment status and listing state in sync if the buyer closes the tab before confirm runs.
+
+```bash
+# Install Stripe CLI: https://stripe.com/docs/stripe-cli
+pnpm stripe:listen
+```
+
+Copy the `whsec_...` signing secret from the CLI output into `apps/api/.env` as `STRIPE_WEBHOOK_SECRET`, then restart the API.
+
+Webhook endpoint: `POST http://localhost:4000/api/payments/webhooks/stripe`
 
 ---
 

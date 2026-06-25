@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   },
   description: 'Buy and sell within your community in Ireland',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/icons/icon.svg',
+    apple: '/icons/icon.svg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -31,6 +35,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang={PLATFORM_LOCALE}>
       <body className={`${inter.variable} font-sans`}>
+        {process.env.NODE_ENV === 'development' ? (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(() => {
+                if (!('serviceWorker' in navigator)) return;
+                navigator.serviceWorker.getRegistrations().then((regs) => {
+                  regs.forEach((r) => r.unregister());
+                });
+                if ('caches' in window) {
+                  caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+                }
+              })();`,
+            }}
+          />
+        ) : null}
         <ServiceWorkerCleanup />
         {children}
       </body>

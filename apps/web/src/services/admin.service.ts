@@ -1,6 +1,7 @@
 import type {
   AdminDashboardStats,
   Listing,
+  ListingReviewContext,
   ModerationAction,
   ModerationActionType,
   ModerationReport,
@@ -95,6 +96,85 @@ export const adminService = {
       },
     );
     return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
+  },
+
+  async approveListing(role: AdminApiRole, listingId: string): Promise<Listing> {
+    const response = await apiClient<Listing>(
+      `${adminApiPath(role, '/listings')}/${listingId}/approve`,
+      { method: 'POST' },
+    );
+    return response.data;
+  },
+
+  async rejectListing(role: AdminApiRole, listingId: string, reason: string): Promise<Listing> {
+    const response = await apiClient<Listing>(
+      `${adminApiPath(role, '/listings')}/${listingId}/reject`,
+      { method: 'POST', body: JSON.stringify({ reason }) },
+    );
+    return response.data;
+  },
+
+  async removeListing(role: AdminApiRole, listingId: string, reason?: string): Promise<Listing> {
+    const response = await apiClient<Listing>(
+      `${adminApiPath(role, '/listings')}/${listingId}/remove`,
+      { method: 'POST', body: JSON.stringify({ reason }) },
+    );
+    return response.data;
+  },
+
+  async restoreListing(
+    role: AdminApiRole,
+    listingId: string,
+    targetStatus: 'expired' | 'draft' = 'expired',
+  ): Promise<Listing> {
+    const response = await apiClient<Listing>(
+      `${adminApiPath(role, '/listings')}/${listingId}/restore`,
+      { method: 'POST', body: JSON.stringify({ targetStatus }) },
+    );
+    return response.data;
+  },
+
+  async getListingStatusHistory(role: AdminApiRole, listingId: string) {
+    const response = await apiClient(
+      `${adminApiPath(role, '/listings')}/${listingId}/status-history`,
+    );
+    return response.data;
+  },
+
+  async getListing(role: AdminApiRole, listingId: string): Promise<Listing> {
+    const response = await apiClient<Listing>(`${adminApiPath(role, '/listings')}/${listingId}`);
+    return response.data;
+  },
+
+  async getListingReview(role: AdminApiRole, listingId: string): Promise<ListingReviewContext> {
+    const response = await apiClient<ListingReviewContext>(
+      `${adminApiPath(role, '/listings')}/${listingId}/review`,
+    );
+    return response.data;
+  },
+
+  async sendListingReviewMessage(
+    role: AdminApiRole,
+    listingId: string,
+    content: string,
+  ): Promise<ListingReviewContext> {
+    const response = await apiClient<ListingReviewContext>(
+      `${adminApiPath(role, '/listings')}/${listingId}/review/messages`,
+      { method: 'POST', body: JSON.stringify({ content }) },
+    );
+    return response.data;
+  },
+
+  async requestListingChanges(
+    role: AdminApiRole,
+    listingId: string,
+    content: string,
+  ): Promise<ListingReviewContext> {
+    const response = await apiClient<ListingReviewContext>(
+      `${adminApiPath(role, '/listings')}/${listingId}/request-changes`,
+      { method: 'POST', body: JSON.stringify({ content }) },
+    );
+    return response.data;
   },
 
   async listPayments(role: AdminApiRole, params: ListParams = {}): Promise<PaginatedResult<Payment>> {

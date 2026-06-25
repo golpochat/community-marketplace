@@ -23,6 +23,8 @@ import {
 } from '../mappers/listing.mapper';
 import { ListingAuditService } from './listing-audit.service';
 import { ListingVisibilityService } from './listing-visibility.service';
+import { ListingDeliveryService } from './listing-delivery.service';
+import { computeListingPricing } from '../lib/listing-pricing.lib';
 import { CategoriesService } from './categories.service';
 
 @Injectable()
@@ -33,6 +35,7 @@ export class ListingsCrudService {
     private readonly categoriesService: CategoriesService,
     private readonly audit: ListingAuditService,
     private readonly visibility: ListingVisibilityService,
+    private readonly delivery: ListingDeliveryService,
     private readonly eventBus: EventBusService,
   ) {}
 
@@ -108,16 +111,26 @@ export class ListingsCrudService {
     const parsed = createListingSchema.parse(input);
     await this.categoriesService.findById(parsed.categoryId);
 
+    const pricingInput = {
+      originalPrice: parsed.originalPrice,
+      salePrice: parsed.salePrice ?? parsed.price,
+      price: parsed.price,
+    };
+    const computed = computeListingPricing(pricingInput);
+
     const row = await this.prisma.listing.create({
       data: {
         sellerId,
         categoryId: parsed.categoryId,
         title: parsed.title,
         description: parsed.description,
-        price: parsed.price,
+        price: computed.price,
+        originalPrice: computed.originalPrice ?? null,
+        salePrice: computed.salePrice ?? computed.price,
+        discountPercent: computed.discountPercent ?? null,
         currency: parsed.currency,
         condition: parsed.condition,
-        status: parsed.status ?? 'active',
+        status: 'draft',
         locationLabel: parsed.location.label,
         latitude: parsed.location.latitude,
         longitude: parsed.location.longitude,
@@ -135,6 +148,11 @@ export class ListingsCrudService {
       timestamp: new Date(),
     });
 
+    if (parsed.deliverySelections?.length) {
+      await this.delivery.saveForDraftListing(row.id, parsed.deliverySelections);
+      return this.findById(row.id);
+    }
+
     return mapListing(row);
   }
 
@@ -146,9 +164,54 @@ export class ListingsCrudService {
   ): Promise<Listing> {
     const parsed = updateListingSchema.parse(input);
     const existing = await this.getOwnedOrAdmin(listingId, actorId, actorRole);
+    const isAdmin = actorRole === 'ADMIN' || actorRole === 'SUPER_ADMIN';
+
+    if (!isAdmin && parsed.status !== undefined && parsed.status !== existing.status) {
+      throw new ForbiddenException('Only administrators can change listing publication status');
+    }
 
     if (parsed.categoryId) {
       await this.categoriesService.findById(parsed.categoryId);
+    }
+
+    if (parsed.deliverySelections !== undefined) {
+      if (existing.status === 'active') {
+        throw new BadRequestException(
+          'Use POST /seller/listings/:id/delivery/update to change delivery on active listings',
+        );
+      }
+    }
+
+    const pricingFieldsTouched =
+      parsed.price !== undefined ||
+      parsed.originalPrice !== undefined ||
+      parsed.salePrice !== undefined;
+
+    if (pricingFieldsTouched && existing.status === 'active') {
+      throw new BadRequestException(
+        'Use POST /seller/listings/:id/pricing/update to change prices on active listings',
+      );
+    }
+
+    let pricingData: {
+      price?: number;
+      originalPrice?: number | null;
+      salePrice?: number | null;
+      discountPercent?: number | null;
+    } = {};
+
+    if (pricingFieldsTouched && existing.status !== 'active') {
+      const computed = computeListingPricing({
+        originalPrice: parsed.originalPrice ?? undefined,
+        salePrice: parsed.salePrice ?? parsed.price,
+        price: parsed.price ?? Number(existing.price),
+      });
+      pricingData = {
+        price: computed.price,
+        originalPrice: computed.originalPrice ?? null,
+        salePrice: computed.salePrice ?? computed.price,
+        discountPercent: computed.discountPercent ?? null,
+      };
     }
 
     const row = await this.prisma.listing.update({
@@ -158,7 +221,14 @@ export class ListingsCrudService {
         ...(parsed.description !== undefined
           ? { description: parsed.description }
           : {}),
-        ...(parsed.price !== undefined ? { price: parsed.price } : {}),
+        ...(pricingData.price !== undefined ? { price: pricingData.price } : {}),
+        ...(pricingData.originalPrice !== undefined
+          ? { originalPrice: pricingData.originalPrice }
+          : {}),
+        ...(pricingData.salePrice !== undefined ? { salePrice: pricingData.salePrice } : {}),
+        ...(pricingData.discountPercent !== undefined
+          ? { discountPercent: pricingData.discountPercent }
+          : {}),
         ...(parsed.currency !== undefined ? { currency: parsed.currency } : {}),
         ...(parsed.categoryId !== undefined
           ? { categoryId: parsed.categoryId }
@@ -182,6 +252,11 @@ export class ListingsCrudService {
       payload: { listingId },
       timestamp: new Date(),
     });
+
+    if (parsed.deliverySelections !== undefined) {
+      await this.delivery.saveForDraftListing(listingId, parsed.deliverySelections);
+      return this.findById(listingId);
+    }
 
     return mapListing(row);
   }
@@ -250,6 +325,59 @@ export class ListingsCrudService {
     input: unknown,
   ): Promise<Listing> {
     return this.update(listingId, adminId, 'ADMIN', input);
+  }
+
+  async duplicate(listingId: string, sellerId: string): Promise<Listing> {
+    const source = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      include: {
+        ...listingInclude,
+        deliveryOptions: { include: { deliveryOption: true } },
+      },
+    });
+    if (!source) throw new NotFoundException(`Listing ${listingId} not found`);
+    if (source.sellerId !== sellerId) {
+      throw new ForbiddenException('You can only duplicate your own listings');
+    }
+
+    const row = await this.prisma.listing.create({
+      data: {
+        sellerId,
+        categoryId: source.categoryId,
+        title: `${source.title} (copy)`,
+        description: source.description,
+        price: source.price,
+        originalPrice: source.originalPrice,
+        salePrice: source.salePrice,
+        discountPercent: source.discountPercent,
+        currency: source.currency,
+        condition: source.condition,
+        status: 'draft',
+        packageType: source.packageType,
+        isPaid: false,
+        locationLabel: source.locationLabel,
+        latitude: source.latitude,
+        longitude: source.longitude,
+      },
+      include: listingInclude,
+    });
+
+    if (source.images.length > 0) {
+      await this.prisma.listingImage.createMany({
+        data: source.images.map((img, index) => ({
+          listingId: row.id,
+          url: img.url,
+          sortOrder: index,
+        })),
+      });
+    }
+
+    await this.audit.record(row.id, 'listing_created', sellerId, {
+      toStatus: 'draft',
+      metadata: { duplicatedFrom: listingId },
+    });
+
+    return this.findById(row.id);
   }
 
   private async getOwnedOrAdmin(

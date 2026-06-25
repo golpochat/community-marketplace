@@ -69,8 +69,27 @@ export class UpdateListingDto {
   price?: number;
 
   @IsOptional()
-  @IsEnum(['draft', 'active', 'sold', 'archived'])
-  status?: 'draft' | 'active' | 'sold' | 'archived';
+  @IsEnum([
+    'draft',
+    'pending_review',
+    'active',
+    'paused',
+    'expired',
+    'sold',
+    'ended',
+    'removed',
+    'rejected',
+  ])
+  status?:
+    | 'draft'
+    | 'pending_review'
+    | 'active'
+    | 'paused'
+    | 'expired'
+    | 'sold'
+    | 'ended'
+    | 'removed'
+    | 'rejected';
 
   @IsOptional()
   @IsString()

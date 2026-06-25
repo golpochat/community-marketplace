@@ -8,6 +8,15 @@ import { ChatLayout } from '@/components/layout/chat-layout';
 import { useChatSocket } from '@/hooks/use-chat-socket';
 import { chatService } from '@/services/chat.service';
 
+function dedupeMessages(messages: ChatMessage[]): ChatMessage[] {
+  const seen = new Set<string>();
+  return messages.filter((message) => {
+    if (seen.has(message.id)) return false;
+    seen.add(message.id);
+    return true;
+  });
+}
+
 interface ChatPageClientProps {
   currentUserId: string;
   accessToken?: string;
@@ -61,6 +70,7 @@ export function ChatPageClient({
         const existing = await chatService.getThreadByListing(listingId!);
         if (existing?.id) {
           setActiveThreadId(existing.id);
+          await loadInbox();
           return;
         }
 
@@ -89,7 +99,9 @@ export function ChatPageClient({
   useEffect(() => {
     if (!activeThreadId) return;
     void chatService.getMessages(activeThreadId).then((res) => {
-      setMessages(Array.isArray(res.data) ? res.data : []);
+      setMessages(
+        Array.isArray(res.data) ? dedupeMessages(res.data) : [],
+      );
       void chatService.markRead(activeThreadId);
     });
   }, [activeThreadId]);
@@ -99,7 +111,10 @@ export function ChatPageClient({
       void loadInbox();
       return;
     }
-    setMessages((prev) => [...prev, message]);
+    setMessages((prev) =>
+      prev.some((m) => m.id === message.id) ? prev : [...prev, message],
+    );
+    void loadInbox();
     void chatService.markRead(message.threadId, [message.id]);
   }, [loadInbox]);
 
@@ -121,7 +136,7 @@ export function ChatPageClient({
     [currentUserId],
   );
 
-  const { sendMessage, sendTyping } = useChatSocket({
+  const { sendTyping } = useChatSocket({
     threadId: activeThreadId,
     token: accessToken,
     onMessage: handleMessage,
@@ -131,9 +146,15 @@ export function ChatPageClient({
 
   const handleSend = async (content: string) => {
     if (!activeThreadId) return;
-    sendMessage({ threadId: activeThreadId, content, messageType: 'text' });
-    const sent = await chatService.sendMessage(activeThreadId, content);
-    setMessages((prev) => [...prev.filter((m) => m.id !== sent.id), sent]);
+    try {
+      const sent = await chatService.sendMessage(activeThreadId, content);
+      setMessages((prev) =>
+        prev.some((m) => m.id === sent.id) ? prev : [...prev, sent],
+      );
+      void loadInbox();
+    } catch (err) {
+      setThreadError(err instanceof Error ? err.message : 'Failed to send message');
+    }
   };
 
   const handleTypingInput = () => {

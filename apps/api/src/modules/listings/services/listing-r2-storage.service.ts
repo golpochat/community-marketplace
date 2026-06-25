@@ -55,8 +55,7 @@ export class ListingR2StorageService {
   }
 
   buildPublicUrl(key: string): string {
-    const base = process.env.R2_PUBLIC_URL ?? 'https://assets.community.marketplace';
-    return `${base.replace(/\/$/, '')}/${key}`;
+    return this.r2.buildPublicUrl(key);
   }
 
   buildOptimizedUrl(publicUrl: string): string {

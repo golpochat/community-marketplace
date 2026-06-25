@@ -4,17 +4,14 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { ChatAttachmentUploadResponse } from '@community-marketplace/types';
 import { chatAttachmentUploadSchema } from '@community-marketplace/validation';
 
+import { R2StorageService } from '../../users/services/r2-storage.service';
+
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
 @Injectable()
 export class ChatR2StorageService {
-  private readonly accountId = process.env.R2_ACCOUNT_ID;
-  private readonly accessKeyId = process.env.R2_ACCESS_KEY_ID;
-  private readonly secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-  private readonly bucket = process.env.R2_BUCKET ?? 'community-marketplace';
-  private readonly publicBaseUrl =
-    process.env.R2_PUBLIC_URL ?? 'https://assets.community.marketplace';
+  constructor(private readonly r2: R2StorageService) {}
 
   createAttachmentUploadUrl(
     threadId: string,
@@ -35,19 +32,21 @@ export class ChatR2StorageService {
       parsed.contentType.split('/')[1] ??
       'jpg';
     const key = `chat/${threadId}/${userId}/${randomUUID()}.${ext}`;
-    const publicUrl = `${this.publicBaseUrl.replace(/\/$/, '')}/${key}`;
     const expiresInSeconds = 900;
 
-    if (!this.isConfigured()) {
+    if (!this.r2.isConfigured()) {
       return {
-        uploadUrl: `${process.env.WEB_APP_URL ?? 'http://localhost:3000'}/api/dev-upload?key=${encodeURIComponent(key)}`,
-        publicUrl,
+        uploadUrl: this.r2.devUploadUrl(key),
+        publicUrl: this.r2.buildPublicUrl(key),
         key,
         expiresInSeconds,
       };
     }
 
-    const uploadUrl = `https://${this.accountId}.r2.cloudflarestorage.com/${this.bucket}/${key}?X-Amz-Expires=${expiresInSeconds}`;
+    const publicUrl = this.r2.buildPublicUrl(key);
+    const accountId = process.env.R2_ACCOUNT_ID;
+    const bucket = process.env.R2_BUCKET ?? 'community-marketplace';
+    const uploadUrl = `https://${accountId}.r2.cloudflarestorage.com/${bucket}/${key}?X-Amz-Expires=${expiresInSeconds}`;
 
     return { uploadUrl, publicUrl, key, expiresInSeconds };
   }
@@ -58,9 +57,5 @@ export class ChatR2StorageService {
 
   hashUploadKey(key: string): string {
     return createHash('sha256').update(key).digest('hex');
-  }
-
-  private isConfigured(): boolean {
-    return Boolean(this.accountId && this.accessKeyId && this.secretAccessKey);
   }
 }

@@ -2,13 +2,16 @@ import Link from 'next/link';
 
 import { APP_NAME, PLATFORM_COUNTRY_NAME } from '@community-marketplace/config';
 
+import { Logo } from '@/components/brand/logo';
+
 export function Footer() {
   return (
     <footer className="border-t border-gray-200 bg-white">
       <div className="mx-auto max-w-6xl px-4 py-10">
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
           <div>
-            <p className="font-semibold text-gray-900">{APP_NAME}</p>
+            <Logo showText={false} size="sm" className="pointer-events-none" />
+            <p className="mt-3 font-semibold text-gray-900">{APP_NAME}</p>
             <p className="mt-2 text-sm text-gray-500">
               Your local marketplace for {PLATFORM_COUNTRY_NAME}.
             </p>

@@ -11,6 +11,16 @@ import { paymentsService } from '@/services/payments.service';
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
+async function waitForPaymentSuccess(paymentId: string, attempts = 6): Promise<boolean> {
+  for (let i = 0; i < attempts; i += 1) {
+    const payment = await paymentsService.getBuyerPayment(paymentId);
+    if (payment?.status === 'succeeded') return true;
+    if (payment?.status === 'failed') return false;
+    await new Promise((resolve) => setTimeout(resolve, 800));
+  }
+  return false;
+}
+
 function isDevClientSecret(clientSecret: string): boolean {
   return clientSecret.includes('_dev_') || !clientSecret.startsWith('pi_');
 }
@@ -46,6 +56,10 @@ function StripeCheckoutForm({ paymentId, onSuccess }: StripeCheckoutFormProps) {
 
     try {
       await paymentsService.confirmPayment(paymentId);
+      const settled = await waitForPaymentSuccess(paymentId);
+      if (!settled) {
+        setError('Payment is processing. Check purchase history in a few seconds.');
+      }
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to confirm payment');

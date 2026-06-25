@@ -4,6 +4,7 @@ Step-by-step procedures for deployments and incidents.
 
 | Runbook | Description |
 |---------|-------------|
+| [Troubleshooting](../troubleshooting.md) | Local dev: ports, API, DB, Prisma, Docker |
 | [Deploy](./deploy.md) | Deploy to dev, staging, production |
 | [Rollback](./rollback.md) | Revert a bad deployment |
 | [Restore backup](./restore-backup.md) | Disaster recovery |

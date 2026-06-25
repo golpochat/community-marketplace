@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { DatabaseModule } from '../../database/database.module';
 import { EventsModule } from '../../events/events.module';
+import { ListingsModule } from '../listings/listings.module';
 import { LibsModule } from '../../libs/libs.module';
 import { PaymentsWebhooksController } from './payments-webhooks.controller';
 import { PaymentsService } from './payments.service';
@@ -12,13 +13,14 @@ import { PaymentsDisputesService } from './services/payments-disputes.service';
 import { PaymentsFraudService } from './services/payments-fraud.service';
 import { PaymentsIntentsService } from './services/payments-intents.service';
 import { PaymentsLedgerService } from './services/payments-ledger.service';
+import { PaymentCompletionService } from './services/payment-completion.service';
 import { PaymentsPayoutsService } from './services/payments-payouts.service';
 import { PaymentsRefundsService } from './services/payments-refunds.service';
 import { PaymentsWebhooksService } from './services/payments-webhooks.service';
 import { StripeConnectService } from './services/stripe-connect.service';
 
 @Module({
-  imports: [DatabaseModule, EventsModule, LibsModule],
+  imports: [DatabaseModule, EventsModule, LibsModule, ListingsModule],
   controllers: [PaymentsWebhooksController],
   providers: [
     PaymentsService,
@@ -31,6 +33,7 @@ import { StripeConnectService } from './services/stripe-connect.service';
     PaymentsRefundsService,
     PaymentsDisputesService,
     PaymentsPayoutsService,
+    PaymentCompletionService,
     PaymentsWebhooksService,
     StripeConnectService,
   ],

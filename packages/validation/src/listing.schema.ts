@@ -6,10 +6,23 @@ import { isoDateSchema, paginationSchema, uuidSchema } from './common.schema';
 
 export const listingStatusSchema = z.enum([
   'draft',
+  'pending_review',
   'active',
+  'paused',
+  'expired',
   'sold',
-  'archived',
-  'banned',
+  'ended',
+  'removed',
+  'rejected',
+]);
+
+export const listingPackageTypeSchema = z.enum([
+  'FREE',
+  'PAID_7D',
+  'PAID_30D',
+  'PAID_60D',
+  'PAID_90D',
+  'PREMIUM_UNTIL_SOLD',
 ]);
 
 export const listingConditionSchema = z.enum([
@@ -74,6 +87,9 @@ export const listingSchema = z.object({
   viewCount: z.number().int().min(0),
   favoriteCount: z.number().int().min(0),
   moderationNotes: z.string().max(2000).optional(),
+  originalPrice: z.number().min(0).optional(),
+  salePrice: z.number().min(0).optional(),
+  discountPercent: z.number().int().min(0).max(100).optional(),
   bannedAt: isoDateSchema.optional(),
   createdAt: isoDateSchema,
   updatedAt: isoDateSchema,
@@ -83,6 +99,9 @@ export const listingSummarySchema = z.object({
   id: uuidSchema,
   title: z.string().min(3).max(200),
   price: z.number().min(0),
+  originalPrice: z.number().min(0).optional(),
+  salePrice: z.number().min(0).optional(),
+  discountPercent: z.number().int().min(0).max(100).optional(),
   currency: z.string().length(3).toUpperCase(),
   location: listingLocationSchema,
   status: listingStatusSchema,
@@ -98,11 +117,20 @@ export const createListingSchema = z.object({
   title: z.string().min(3).max(200),
   description: z.string().min(10).max(5000),
   price: z.number().min(0).max(1_000_000),
+  originalPrice: z.number().min(0.01).max(1_000_000).optional().nullable(),
+  salePrice: z.number().min(0).max(1_000_000).optional().nullable(),
   currency: z.string().length(3).toUpperCase().default(DEFAULT_CURRENCY),
   categoryId: uuidSchema,
   condition: listingConditionSchema,
   location: listingLocationSchema,
-  status: z.enum(['draft', 'active']).optional().default('active'),
+  deliverySelections: z.array(
+    z.object({
+      deliveryOptionId: uuidSchema,
+      customLabel: z.string().min(1).max(120).optional(),
+      customPrice: z.number().min(0).max(10_000).optional(),
+    }),
+  ).min(1).max(20).optional(),
+  status: z.enum(['draft', 'active']).optional().default('draft'),
 });
 
 export const updateListingSchema = createListingSchema
@@ -158,6 +186,28 @@ export const reorderListingImagesSchema = z.object({
 export const reportListingSchema = z.object({
   reason: z.string().min(3).max(120),
   description: z.string().max(2000).optional(),
+});
+
+export const listingReviewMessageSchema = z.object({
+  content: z.string().min(1).max(2000),
+});
+
+export const requestListingChangesSchema = listingReviewMessageSchema;
+
+export const renewListingSchema = z.object({
+  packageType: listingPackageTypeSchema,
+});
+
+export const rejectListingSchema = z.object({
+  reason: z.string().min(3).max(2000),
+});
+
+export const removeListingSchema = z.object({
+  reason: z.string().min(3).max(2000).optional(),
+});
+
+export const restoreListingSchema = z.object({
+  targetStatus: z.enum(['expired', 'draft']).optional().default('expired'),
 });
 
 export const listingModerationActionSchema = z.object({

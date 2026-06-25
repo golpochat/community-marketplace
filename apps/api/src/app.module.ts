@@ -14,6 +14,7 @@ import { LibsModule } from './libs/libs.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BuyerModule } from './modules/buyer/buyer.module';
+import { DevUploadModule } from './modules/dev-upload/dev-upload.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { HealthModule } from './modules/health/health.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
@@ -21,6 +22,7 @@ import { ListingsModule } from './modules/listings/listings.module';
 import { ModerationModule } from './modules/moderation/moderation.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { ShareModule } from './modules/share/share.module';
 import { SearchModule } from './modules/search/search.module';
 import { SellerModule } from './modules/seller/seller.module';
 import { SuperAdminModule } from './modules/super-admin/super-admin.module';
@@ -50,6 +52,8 @@ import { UtilsModule } from './utils/utils.module';
     SuperAdminModule,
     SellerModule,
     BuyerModule,
+    DevUploadModule,
+    ShareModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },

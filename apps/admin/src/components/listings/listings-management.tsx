@@ -29,23 +29,23 @@ export function ListingsManagement({ listings: initial }: Props) {
 
   const filtered = listings.filter((l) => !statusFilter || l.status === statusFilter);
 
-  async function banListing(id: string) {
+  async function removeListing(id: string) {
     try {
-      await adminService.banListing(id, { moderationNotes: 'Banned by admin' });
-      setListings((prev) => prev.map((l) => (l.id === id ? { ...l, status: 'banned' } : l)));
-      toast({ title: 'Listing banned', variant: 'success' });
+      await adminService.removeListing(id, { reason: 'Removed by admin' });
+      setListings((prev) => prev.map((l) => (l.id === id ? { ...l, status: 'removed' } : l)));
+      toast({ title: 'Listing removed', variant: 'success' });
     } catch {
-      toast({ title: 'Ban failed', variant: 'error' });
+      toast({ title: 'Remove failed', variant: 'error' });
     }
   }
 
-  async function unbanListing(id: string) {
+  async function restoreListing(id: string) {
     try {
-      await adminService.unbanListing(id);
-      setListings((prev) => prev.map((l) => (l.id === id ? { ...l, status: 'active' } : l)));
-      toast({ title: 'Listing unbanned', variant: 'success' });
+      await adminService.restoreListing(id);
+      setListings((prev) => prev.map((l) => (l.id === id ? { ...l, status: 'expired' } : l)));
+      toast({ title: 'Listing restored', variant: 'success' });
     } catch {
-      toast({ title: 'Unban failed', variant: 'error' });
+      toast({ title: 'Restore failed', variant: 'error' });
     }
   }
 
@@ -55,8 +55,13 @@ export function ListingsManagement({ listings: initial }: Props) {
         <option value="">All statuses</option>
         <option value="active">Active</option>
         <option value="draft">Draft</option>
+        <option value="pending_review">Pending review</option>
+        <option value="paused">Paused</option>
+        <option value="expired">Expired</option>
         <option value="sold">Sold</option>
-        <option value="banned">Banned</option>
+        <option value="ended">Ended</option>
+        <option value="removed">Removed</option>
+        <option value="rejected">Rejected</option>
       </Select>
       <div className="rounded-xl border">
         <Table>
@@ -76,19 +81,19 @@ export function ListingsManagement({ listings: initial }: Props) {
                 <TableCell>{formatCurrency(listing.price)}</TableCell>
                 <TableCell>{listing.locationLabel ?? listing.location ?? '—'}</TableCell>
                 <TableCell>
-                  <Badge variant={listing.status === 'banned' ? 'destructive' : 'secondary'}>
+                  <Badge variant={listing.status === 'removed' ? 'destructive' : 'secondary'}>
                     {listing.status}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <PermissionGate permission={PERMISSIONS.BAN_LISTING}>
-                    {listing.status === 'banned' ? (
-                      <Button size="sm" variant="outline" onClick={() => void unbanListing(listing.id)}>
-                        Unban
+                    {listing.status === 'removed' ? (
+                      <Button size="sm" variant="outline" onClick={() => void restoreListing(listing.id)}>
+                        Restore
                       </Button>
                     ) : (
-                      <Button size="sm" variant="outline" onClick={() => void banListing(listing.id)}>
-                        Ban
+                      <Button size="sm" variant="outline" onClick={() => void removeListing(listing.id)}>
+                        Remove
                       </Button>
                     )}
                   </PermissionGate>

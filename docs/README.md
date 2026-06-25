@@ -10,6 +10,7 @@
 | Audience | Start here |
 |----------|------------|
 | **New developer** | [Developer Quickstart](./onboarding/quickstart.md) |
+| **Something broken locally** | [Troubleshooting](./troubleshooting.md) |
 | **API consumer** | [API Reference](./api/README.md) |
 | **Operator / SRE** | [Infrastructure](./infrastructure/README.md) · [Runbooks](./runbooks/README.md) |
 | **Admin user** | [Admin Guide](./admin/README.md) |
@@ -31,6 +32,7 @@ docs/
 ├── admin/                    ← Admin panel operator guides
 ├── security/                 ← RBAC, auth, hardening, checklist
 ├── runbooks/                 ← Operational procedures
+├── troubleshooting.md        ← Local dev symptom → fix guide
 ├── onboarding/               ← Developer setup & workflows
 ├── product/                  ← Requirements & roadmap
 └── db/                       ← Schema, ERD, migrations

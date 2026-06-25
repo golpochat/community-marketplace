@@ -31,10 +31,28 @@ export class StripeConnectService {
     return `${process.env.WEB_APP_URL ?? 'http://localhost:3000'}/seller/earnings`;
   }
 
+  private mapStripeError(error: unknown): never {
+    if (error instanceof Stripe.errors.StripeError) {
+      const connectSignupHint =
+        error.message.includes('signed up for Connect') ||
+        error.code === 'account_invalid'
+          ? ' Enable Connect at https://dashboard.stripe.com/test/connect (use Test mode), then try again.'
+          : '';
+      throw new BadRequestException(`${error.message}${connectSignupHint}`);
+    }
+    throw error;
+  }
+
   async createConnectAccount(
     userId: string,
     dto: ConnectOnboardInput,
   ): Promise<StripeConnectAccount> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, displayName: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
     const existing = await this.prisma.stripeConnectAccount.findUnique({
       where: { userId },
     });
@@ -47,23 +65,32 @@ export class StripeConnectService {
     let onboardingUrl: string | undefined;
 
     if (this.stripe) {
-      const stripeAccount = await this.stripe.accounts.create({
-        type: 'express',
-        country: dto.country ?? PLATFORM_COUNTRY_CODE,
-        capabilities: {
-          card_payments: { requested: true },
-          transfers: { requested: true },
-        },
-      });
-      stripeAccountId = stripeAccount.id;
+      try {
+        const stripeAccount = await this.stripe.accounts.create({
+          type: 'express',
+          country: dto.country ?? PLATFORM_COUNTRY_CODE,
+          email: user.email,
+          business_profile: user.displayName
+            ? { name: user.displayName }
+            : undefined,
+          capabilities: {
+            card_payments: { requested: true },
+            transfers: { requested: true },
+          },
+          metadata: { userId },
+        });
+        stripeAccountId = stripeAccount.id;
 
-      const link = await this.stripe.accountLinks.create({
-        account: stripeAccountId,
-        refresh_url: dto.refreshUrl ?? this.defaultReturnUrl(),
-        return_url: dto.returnUrl ?? this.defaultReturnUrl(),
-        type: 'account_onboarding',
-      });
-      onboardingUrl = link.url;
+        const link = await this.stripe.accountLinks.create({
+          account: stripeAccountId,
+          refresh_url: dto.refreshUrl ?? this.defaultReturnUrl(),
+          return_url: dto.returnUrl ?? this.defaultReturnUrl(),
+          type: 'account_onboarding',
+        });
+        onboardingUrl = link.url;
+      } catch (error) {
+        this.mapStripeError(error);
+      }
     } else {
       stripeAccountId = `acct_dev_${userId}`;
       onboardingUrl = `https://connect.stripe.com/setup/dev/${userId}`;
@@ -98,13 +125,17 @@ export class StripeConnectService {
 
     let onboardingUrl: string | undefined;
     if (this.stripe) {
-      const link = await this.stripe.accountLinks.create({
-        account: row.stripeAccountId,
-        refresh_url: dto.refreshUrl ?? this.defaultReturnUrl(),
-        return_url: dto.returnUrl ?? this.defaultReturnUrl(),
-        type: 'account_onboarding',
-      });
-      onboardingUrl = link.url;
+      try {
+        const link = await this.stripe.accountLinks.create({
+          account: row.stripeAccountId,
+          refresh_url: dto.refreshUrl ?? this.defaultReturnUrl(),
+          return_url: dto.returnUrl ?? this.defaultReturnUrl(),
+          type: 'account_onboarding',
+        });
+        onboardingUrl = link.url;
+      } catch (error) {
+        this.mapStripeError(error);
+      }
     } else {
       onboardingUrl = `https://connect.stripe.com/setup/dev/${userId}`;
     }

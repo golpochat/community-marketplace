@@ -1,6 +1,7 @@
 import type {
   Listing,
   ListingImage,
+  ListingReviewContext,
   ListingSummary,
   ListingUploadUrlResponse,
   PaginatedResult,
@@ -67,6 +68,52 @@ export const sellerService = {
     });
   },
 
+  submitForReview(id: string) {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/submit`, { method: 'POST' });
+  },
+
+  publishListing(id: string) {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/publish`, { method: 'POST' });
+  },
+
+  cancelReview(id: string) {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/cancel-review`, {
+      method: 'POST',
+    });
+  },
+
+  pauseListing(id: string) {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/pause`, { method: 'POST' });
+  },
+
+  resumeListing(id: string) {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/resume`, { method: 'POST' });
+  },
+
+  endListing(id: string) {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/end`, { method: 'POST' });
+  },
+
+  renewListing(id: string, packageType = 'FREE') {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/renew`, {
+      method: 'POST',
+      body: JSON.stringify({ packageType }),
+    });
+  },
+
+  upgradePackage(id: string, packageType: string) {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/upgrade-package`, {
+      method: 'POST',
+      body: JSON.stringify({ packageType }),
+    });
+  },
+
+  duplicateListing(id: string) {
+    return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/duplicate`, {
+      method: 'POST',
+    });
+  },
+
   async requestListingImageUploadUrl(
     listingId: string,
     file: Pick<File, 'type' | 'name' | 'size'>,
@@ -87,11 +134,14 @@ export const sellerService = {
 
   async uploadListingImage(listingId: string, file: File): Promise<ListingImage[]> {
     const upload = await this.requestListingImageUploadUrl(listingId, file);
-    await fetch(upload.uploadUrl, {
+    const putResponse = await fetch(upload.uploadUrl, {
       method: 'PUT',
       body: file,
       headers: { 'Content-Type': file.type },
     });
+    if (!putResponse.ok) {
+      throw new Error(`Image upload failed (${putResponse.status}). Is the API running on port 4000?`);
+    }
     const response = await apiClient<ListingImage[]>(
       `${WEB_API_ROUTES.seller.listings}/${listingId}/images/confirm`,
       {
@@ -109,6 +159,30 @@ export const sellerService = {
       results.push(...images);
     }
     return results;
+  },
+
+  async removeListingImage(listingId: string, imageId: string): Promise<void> {
+    await apiClient(`${WEB_API_ROUTES.seller.listings}/${listingId}/images/${imageId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async reorderListingImages(
+    listingId: string,
+    images: ListingImage[],
+  ): Promise<ListingImage[]> {
+    const imageOrders = images.map((image, index) => ({
+      imageId: image.id,
+      order: index,
+    }));
+    const response = await apiClient<ListingImage[]>(
+      `${WEB_API_ROUTES.seller.listings}/${listingId}/images/order`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ imageOrders }),
+      },
+    );
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   getEarnings: () => apiClient(WEB_API_ROUTES.seller.earnings),
@@ -157,6 +231,21 @@ export const sellerService = {
       method: 'POST',
       body: JSON.stringify(body),
     });
+  },
+
+  async getListingReview(listingId: string): Promise<ListingReviewContext> {
+    const response = await apiClient<ListingReviewContext>(
+      `${WEB_API_ROUTES.seller.listings}/${listingId}/review`,
+    );
+    return response.data;
+  },
+
+  async sendListingReviewMessage(listingId: string, content: string): Promise<ListingReviewContext> {
+    const response = await apiClient<ListingReviewContext>(
+      `${WEB_API_ROUTES.seller.listings}/${listingId}/review/messages`,
+      { method: 'POST', body: JSON.stringify({ content }) },
+    );
+    return response.data;
   },
 };
 

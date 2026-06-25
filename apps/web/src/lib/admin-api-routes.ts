@@ -13,6 +13,11 @@ const SUPER_ADMIN_ADMIN_NAMESPACE_PATHS = new Set([
   '/users/ban',
 ]);
 
+/** Review endpoints live under super-admin but allow ADMIN role on the API. */
+function usesSuperAdminReviewNamespace(path: string): boolean {
+  return path.startsWith('/delivery-reviews') || path.startsWith('/price-reviews');
+}
+
 function superAdminUsesAdminNamespace(path: string): boolean {
   return (
     SUPER_ADMIN_ADMIN_NAMESPACE_PATHS.has(path) ||
@@ -21,6 +26,10 @@ function superAdminUsesAdminNamespace(path: string): boolean {
 }
 
 export function adminApiPath(role: AdminApiRole, path: string): string {
+  if (usesSuperAdminReviewNamespace(path)) {
+    return `${API_NAMESPACES.SUPER_ADMIN}${path}`;
+  }
+
   if (role === 'SUPER_ADMIN' && superAdminUsesAdminNamespace(path)) {
     return `${API_NAMESPACES.ADMIN}${path}`;
   }

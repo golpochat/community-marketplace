@@ -112,10 +112,29 @@ enum UserStatus {
 
 enum ListingStatus {
   draft
+  pending_review
   active
+  paused
+  expired
   sold
-  archived
-  banned
+  ended
+  removed
+  rejected
+}
+
+enum ListingPackageType {
+  FREE
+  PAID_7D
+  PAID_30D
+  PAID_60D
+  PAID_90D
+  PREMIUM_UNTIL_SOLD
+}
+
+enum ListingStatusActorType {
+  SELLER
+  ADMIN
+  SYSTEM
 }
 
 enum ListingCondition {
@@ -124,6 +143,38 @@ enum ListingCondition {
   good
   fair
   poor
+}
+
+enum DeliveryZone {
+  COLLECTION
+  LOCAL
+  NATIONAL
+  CUSTOM
+}
+
+enum DeliveryChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PriceChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum SharePlatform {
+  WHATSAPP
+  FACEBOOK
+  INSTAGRAM
+  MESSENGER
+  X
+  TELEGRAM
+  EMAIL
+  COPY_LINK
+  QR
+  NATIVE
 }
 
 enum PaymentStatus {
@@ -208,6 +259,19 @@ enum NotificationType {
   payment_sent
   payment_refunded
   listing_approved
+  listing_rejected
+  listing_expiring_soon
+  listing_expired
+  listing_removed
+  listing_renewed
+  listing_changes_requested
+  listing_review_reply
+  delivery_change_approved
+  delivery_change_rejected
+  delivery_review_pending
+  price_change_approved
+  price_change_rejected
+  price_review_pending
   verification_approved
   verification_rejected
   admin_warning
@@ -343,6 +407,12 @@ model User {
   moderationAppeals          ModerationAppeal[] @relation("ModerationAppealUser")
   moderationAppealsReviewed  ModerationAppeal[] @relation("ModerationAppealAdmin")
   moderationAuditLogs        ModerationAuditLog[] @relation("ModerationAuditActor")
+  listingReviewMessages      ListingReviewMessage[] @relation("ListingReviewSender")
+  deliveryChangeLogsAsSeller DeliveryChangeLog[]    @relation("DeliveryChangeSeller")
+  deliveryChangeLogsReviewed DeliveryChangeLog[]    @relation("DeliveryChangeReviewer")
+  priceChangeLogsAsSeller    PriceChangeLog[]       @relation("PriceChangeSeller")
+  priceChangeLogsReviewed    PriceChangeLog[]       @relation("PriceChangeReviewer")
+  listingSharesAsSeller      ListingShare[]         @relation("ListingShareSeller")
 
   @@index([primaryRoleId])
   @@index([status])
@@ -537,9 +607,19 @@ model Listing {
   title           String
   description     String
   price           Decimal          @db.Decimal(12, 2)
+  originalPrice   Decimal?         @map("original_price") @db.Decimal(12, 2)
+  salePrice       Decimal?         @map("sale_price") @db.Decimal(12, 2)
+  discountPercent Int?             @map("discount_percent")
   currency        String           @default("USD") @db.Char(3)
   condition       ListingCondition
   status          ListingStatus    @default(draft)
+  isPaid          Boolean          @default(false) @map("is_paid")
+  packageType     ListingPackageType @default(FREE) @map("package_type")
+  activatedAt     DateTime?        @map("activated_at")
+  expiresAt       DateTime?        @map("expires_at")
+  endedAt         DateTime?        @map("ended_at")
+  rejectionReason String?          @map("rejection_reason")
+  removalReason   String?          @map("removal_reason")
   locationLabel   String           @map("location_label")
   latitude        Decimal          @db.Decimal(10, 7)
   longitude       Decimal          @db.Decimal(10, 7)
@@ -562,8 +642,16 @@ model Listing {
   auditLogs ListingAuditLog[]
   chatThreads ChatThread[]
   moderationReports ModerationReport[]
+  reviewMessages ListingReviewMessage[]
+  deliveryOptions ListingDeliveryOption[]
+  deliveryChangeLogs DeliveryChangeLog[]
+  priceChangeLogs    PriceChangeLog[]
+  shortLinks         ShortLink[]
+  shares             ListingShare[]
+  statusChangeLogs   ListingStatusChangeLog[]
 
   @@index([status, createdAt(sort: Desc)])
+  @@index([status, expiresAt])
   @@index([sellerId])
   @@index([categoryId])
   @@index([latitude, longitude])
@@ -579,6 +667,22 @@ model ListingImage {
 
   @@index([listingId, sortOrder])
   @@map("listing_images")
+}
+
+model ListingStatusChangeLog {
+  id            String                 @id @default(uuid())
+  listingId     String                 @map("listing_id")
+  fromStatus    ListingStatus?         @map("from_status")
+  toStatus      ListingStatus          @map("to_status")
+  changedByType ListingStatusActorType @map("changed_by_type")
+  changedById   String?                @map("changed_by_id")
+  reason        String?
+  createdAt     DateTime               @default(now()) @map("created_at")
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, createdAt(sort: Desc)])
+  @@map("listing_status_change_logs")
 }
 
 model ListingFavorite {
@@ -633,6 +737,125 @@ model ListingAuditLog {
 
   @@index([listingId, createdAt(sort: Desc)])
   @@map("listing_audit_logs")
+}
+
+model ListingReviewMessage {
+  id        String   @id @default(uuid())
+  listingId String   @map("listing_id")
+  senderId  String   @map("sender_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  sender  User    @relation("ListingReviewSender", fields: [senderId], references: [id])
+
+  @@index([listingId, createdAt(sort: Asc)])
+  @@map("listing_review_messages")
+}
+
+model DeliveryOption {
+  id           String       @id @default(uuid())
+  label        String
+  description  String
+  zone         DeliveryZone
+  defaultPrice Decimal?     @map("default_price") @db.Decimal(12, 2)
+  isActive     Boolean      @default(true) @map("is_active")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  listingOptions ListingDeliveryOption[]
+
+  @@map("delivery_options")
+}
+
+model ListingDeliveryOption {
+  id               String   @id @default(uuid())
+  listingId        String   @map("listing_id")
+  deliveryOptionId String   @map("delivery_option_id")
+  customLabel      String?  @map("custom_label")
+  customPrice      Decimal? @map("custom_price") @db.Decimal(12, 2)
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  listing        Listing        @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  deliveryOption DeliveryOption @relation(fields: [deliveryOptionId], references: [id])
+
+  @@index([listingId])
+  @@map("listing_delivery_options")
+}
+
+model DeliveryChangeLog {
+  id             String               @id @default(uuid())
+  listingId      String               @map("listing_id")
+  sellerId       String               @map("seller_id")
+  changes        Json
+  requiresReview Boolean              @map("requires_review")
+  status         DeliveryChangeStatus @default(PENDING)
+  reviewNotes    String?              @map("review_notes")
+  reviewedById   String?              @map("reviewed_by_id")
+  createdAt      DateTime             @default(now()) @map("created_at")
+  reviewedAt     DateTime?            @map("reviewed_at")
+
+  listing    Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  seller     User    @relation("DeliveryChangeSeller", fields: [sellerId], references: [id])
+  reviewedBy User?   @relation("DeliveryChangeReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([listingId])
+  @@map("delivery_change_logs")
+}
+
+model PriceChangeLog {
+  id               String             @id @default(uuid())
+  listingId        String             @map("listing_id")
+  sellerId         String             @map("seller_id")
+  oldOriginalPrice Decimal?           @map("old_original_price") @db.Decimal(12, 2)
+  oldSalePrice     Decimal?           @map("old_sale_price") @db.Decimal(12, 2)
+  newOriginalPrice Decimal?           @map("new_original_price") @db.Decimal(12, 2)
+  newSalePrice     Decimal?           @map("new_sale_price") @db.Decimal(12, 2)
+  discountPercent  Int?               @map("discount_percent")
+  requiresReview   Boolean            @map("requires_review")
+  status           PriceChangeStatus  @default(PENDING)
+  reviewNotes      String?            @map("review_notes")
+  reviewedById     String?            @map("reviewed_by_id")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  reviewedAt       DateTime?          @map("reviewed_at")
+
+  listing    Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  seller     User    @relation("PriceChangeSeller", fields: [sellerId], references: [id])
+  reviewedBy User?   @relation("PriceChangeReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([listingId])
+  @@map("price_change_logs")
+}
+
+model ShortLink {
+  id         String   @id @default(uuid())
+  listingId  String   @map("listing_id")
+  shortCode  String   @unique @map("short_code")
+  clickCount Int      @default(0) @map("click_count")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId])
+  @@map("short_links")
+}
+
+model ListingShare {
+  id        String        @id @default(uuid())
+  listingId String        @map("listing_id")
+  sellerId  String        @map("seller_id")
+  platform  SharePlatform
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  seller  User    @relation("ListingShareSeller", fields: [sellerId], references: [id])
+
+  @@index([listingId, createdAt(sort: Desc)])
+  @@index([sellerId, createdAt(sort: Desc)])
+  @@index([platform])
+  @@map("listing_shares")
 }
 
 model Payment {

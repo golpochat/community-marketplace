@@ -4,6 +4,7 @@ import Link from 'next/link';
 
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
+import { SellerConnectBanner } from '@/components/seller/seller-connect-banner';
 import { SellerDashboardCards } from '@/components/seller/seller-dashboard-cards';
 import { useSellerDashboardStats } from '@/hooks/use-seller-dashboard-stats';
 import { useUserProfile } from '@/hooks/use-user-profile';
@@ -28,6 +29,7 @@ export default function SellerDashboardPage() {
         <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading profile…</p>
       )}
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      <SellerConnectBanner className="mb-6" />
       <SellerDashboardCards stats={stats} loading={statsLoading} />
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <DashboardCard title="Listing performance">

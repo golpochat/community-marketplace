@@ -77,9 +77,20 @@ export class NotificationPreferencesService {
     }
 
     if (
-      ['listing_sold', 'listing_created', 'listing_approved', 'payment_received', 'payment_refunded'].includes(
-        type,
-      ) &&
+      [
+        'listing_sold',
+        'listing_created',
+        'listing_approved',
+        'listing_rejected',
+        'listing_expiring_soon',
+        'listing_expired',
+        'listing_removed',
+        'listing_renewed',
+        'listing_changes_requested',
+        'listing_review_reply',
+        'payment_received',
+        'payment_refunded',
+      ].includes(type) &&
       prefs.listingUpdates === false
     ) {
       return false;

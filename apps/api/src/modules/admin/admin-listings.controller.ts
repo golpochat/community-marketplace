@@ -50,6 +50,32 @@ export class AdminListingsController {
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
+  @Get(':id/review')
+  getReview(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.listingsService.getReviewContext(id, user.id, user.role);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
+  @Post(':id/review/messages')
+  addReviewMessage(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.listingsService.addReviewMessage(id, user.id, user.role, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_LISTING)
+  @Post(':id/request-changes')
+  requestChanges(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.listingsService.requestListingChanges(id, user.id, user.role, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.listingsService.findById(id);
@@ -63,6 +89,42 @@ export class AdminListingsController {
     @Body() body: unknown,
   ) {
     return this.listingsService.adminOverride(id, user.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_LISTING)
+  @Post(':id/reject')
+  reject(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.listingsService.rejectListing(id, user.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.BAN_LISTING)
+  @Post(':id/remove')
+  remove(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.listingsService.removeListing(id, user.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.BAN_LISTING)
+  @Post(':id/restore')
+  restore(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.listingsService.restoreListing(id, user.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
+  @Get(':id/status-history')
+  statusHistory(@Param('id') id: string) {
+    return this.listingsService.getStatusHistory(id);
   }
 
   @RequirePermissions(PERMISSIONS.BAN_LISTING)
@@ -79,6 +141,12 @@ export class AdminListingsController {
   @Post(':id/unban')
   unban(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.listingsService.unban(id, user.id);
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_LISTING)
+  @Post(':id/approve')
+  approve(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.listingsService.approve(id, user.id);
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_REPORTS)

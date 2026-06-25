@@ -1,10 +1,16 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  AlertTriangle,
+  Archive,
+  Ban,
   BarChart3,
   Bell,
+  Check,
+  CircleCheck,
   Compass,
   CreditCard,
   Crown,
+  Eye,
   Flag,
   Folder,
   Hammer,
@@ -15,6 +21,7 @@ import {
   Medal,
   MessageCircle,
   Package,
+  Pencil,
   Plus,
   Radio,
   Scale,
@@ -24,9 +31,12 @@ import {
   Shield,
   ShoppingCart,
   Tag,
+  Trash2,
   UserCog,
+  UserMinus,
   Users,
   Wallet,
+  X,
 } from 'lucide-react';
 
 export const DASHBOARD_ICONS = {
@@ -57,6 +67,16 @@ export const DASHBOARD_ICONS = {
   medal: Medal,
   heart: Heart,
   package: Package,
+  pencil: Pencil,
+  check: Check,
+  x: X,
+  eye: Eye,
+  archive: Archive,
+  trash: Trash2,
+  ban: Ban,
+  'user-minus': UserMinus,
+  'alert-triangle': AlertTriangle,
+  'circle-check': CircleCheck,
 } as const satisfies Record<string, LucideIcon>;
 
 export type DashboardIconName = keyof typeof DASHBOARD_ICONS;

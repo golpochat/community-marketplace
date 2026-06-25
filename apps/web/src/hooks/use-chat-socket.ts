@@ -23,7 +23,10 @@ export function useChatSocket({
   onReadReceipt,
 }: UseChatSocketOptions) {
   const socketRef = useRef<Socket | null>(null);
+  const threadIdRef = useRef(threadId);
   const [connected, setConnected] = useState(false);
+
+  threadIdRef.current = threadId;
 
   const onMessageRef = useRef(onMessage);
   const onTypingRef = useRef(onTyping);
@@ -39,7 +42,7 @@ export function useChatSocket({
     const wsBase = API_BASE_URL.replace(/\/api\/?$/, '');
     const socket = io(`${wsBase}/chat`, {
       auth: { token },
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
@@ -47,7 +50,17 @@ export function useChatSocket({
 
     socketRef.current = socket;
 
-    socket.on('connect', () => setConnected(true));
+    const joinActiveThread = () => {
+      const activeThreadId = threadIdRef.current;
+      if (activeThreadId) {
+        socket.emit('join_thread', { threadId: activeThreadId });
+      }
+    };
+
+    socket.on('connect', () => {
+      setConnected(true);
+      joinActiveThread();
+    });
     socket.on('disconnect', () => setConnected(false));
     socket.on('message', (payload: { message: ChatMessage }) => {
       onMessageRef.current?.(payload.message);

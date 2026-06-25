@@ -5,12 +5,46 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ListingImage } from '@community-marketplace/types';
 import { cn } from '@community-marketplace/ui';
 
+import { SaleBadgeOverlay } from '@/components/listings/sale-badge-overlay';
+import { resolveListingImageSrc } from '@/lib/listing-image-url';
+
 interface GalleryProps {
   images: ListingImage[];
   title: string;
+  originalPrice?: number;
+  salePrice?: number;
+  discountPercent?: number;
 }
 
-export function Gallery({ images, title }: GalleryProps) {
+function GalleryImage({ src, alt, className }: { src: string; alt: string; className?: string }) {
+  const [resolvedSrc, setResolvedSrc] = useState(() => resolveListingImageSrc(src));
+
+  useEffect(() => {
+    setResolvedSrc(resolveListingImageSrc(src));
+  }, [src]);
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={resolvedSrc}
+      alt={alt}
+      className={className}
+      onError={() => {
+        if (resolvedSrc.includes('_retry=')) return;
+        const separator = resolvedSrc.includes('?') ? '&' : '?';
+        setResolvedSrc(`${resolvedSrc}${separator}_retry=${Date.now()}`);
+      }}
+    />
+  );
+}
+
+export function Gallery({
+  images,
+  title,
+  originalPrice,
+  salePrice,
+  discountPercent,
+}: GalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
 
@@ -61,8 +95,13 @@ export function Gallery({ images, title }: GalleryProps) {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={active.url} alt={title} className="h-full w-full object-cover" />
+        <GalleryImage src={active.url} alt={title} className="h-full w-full object-cover" />
+        <SaleBadgeOverlay
+          originalPrice={originalPrice}
+          salePrice={salePrice}
+          discountPercent={discountPercent}
+          size="lg"
+        />
         {slides.length > 1 && (
           <>
             <button
@@ -99,8 +138,7 @@ export function Gallery({ images, title }: GalleryProps) {
                 idx === activeIndex ? 'border-primary' : 'border-transparent',
               )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt="" className="h-full w-full object-cover" />
+              <GalleryImage src={img.url} alt="" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>

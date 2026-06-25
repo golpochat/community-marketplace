@@ -10,4 +10,5 @@ Documentation for the Community Marketplace web app (`apps/web`).
 | [Buyer flow](./buyer-flow.md) | Buyer dashboard routes & interactions |
 | [Seller flow](./seller-flow.md) | Seller dashboard routes & listing creation |
 | [Public pages](./public-pages.md) | Unauthenticated marketplace pages |
+| [Brand & theme](./brand-theme.md) | Colors, logo, favicon, typography tokens |
 | [Routing map](./routing-map.md) | Full route reference |

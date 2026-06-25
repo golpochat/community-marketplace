@@ -1,4 +1,25 @@
-export type ListingStatus = 'draft' | 'active' | 'sold' | 'archived' | 'banned';
+export type ListingStatus =
+  | 'draft'
+  | 'pending_review'
+  | 'active'
+  | 'paused'
+  | 'expired'
+  | 'sold'
+  | 'ended'
+  | 'removed'
+  | 'rejected';
+
+export type ListingPackageType =
+  | 'FREE'
+  | 'PAID_7D'
+  | 'PAID_30D'
+  | 'PAID_60D'
+  | 'PAID_90D'
+  | 'PREMIUM_UNTIL_SOLD';
+
+import type { RbacRole } from './rbac';
+import type { ListingDeliverySelection, ListingDeliveryState } from './delivery';
+import type { ListingPricingState } from './pricing';
 
 export type ListingCondition = 'new' | 'like_new' | 'good' | 'fair' | 'poor';
 
@@ -19,6 +40,9 @@ export type ListingAuditEventType =
   | 'listing_updated'
   | 'listing_deleted'
   | 'status_changed'
+  | 'listing_approved'
+  | 'listing_renewed'
+  | 'listing_changes_requested'
   | 'listing_banned'
   | 'listing_unbanned'
   | 'image_added'
@@ -42,6 +66,29 @@ export interface ListingImage {
   order: number;
 }
 
+export interface ListingReviewMessage {
+  id: string;
+  listingId: string;
+  senderId: string;
+  senderName?: string;
+  senderRole: RbacRole;
+  content: string;
+  createdAt: string;
+}
+
+export interface ListingSellerSummary {
+  id: string;
+  displayName?: string;
+  email: string;
+  verified?: boolean;
+  memberSince?: string;
+}
+
+export interface ListingReviewContext {
+  listing: Listing;
+  messages: ListingReviewMessage[];
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -57,16 +104,30 @@ export interface Category {
 export interface Listing {
   id: string;
   sellerId: string;
+  seller?: ListingSellerSummary;
   title: string;
   description: string;
   price: number;
+  originalPrice?: number;
+  salePrice?: number;
+  discountPercent?: number;
   currency: string;
   categoryId: string;
   category?: Category;
   condition: ListingCondition;
   status: ListingStatus;
+  isPaid: boolean;
+  packageType: ListingPackageType;
+  activatedAt?: string;
+  expiresAt?: string;
+  endedAt?: string;
+  rejectionReason?: string;
+  removalReason?: string;
   location: ListingLocation;
   images: ListingImage[];
+  deliveryOptions?: ListingDeliverySelection[];
+  delivery?: ListingDeliveryState;
+  pricing?: ListingPricingState;
   viewCount: number;
   favoriteCount: number;
   moderationNotes?: string;
@@ -79,6 +140,9 @@ export interface ListingSummary {
   id: string;
   title: string;
   price: number;
+  originalPrice?: number;
+  salePrice?: number;
+  discountPercent?: number;
   currency: string;
   location: ListingLocation;
   status: ListingStatus;

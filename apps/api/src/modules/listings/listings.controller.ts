@@ -30,6 +30,12 @@ export class ListingsController {
   }
 
   @Public()
+  @Get('delivery-options')
+  listDeliveryOptions() {
+    return this.listingsService.listDeliveryOptions();
+  }
+
+  @Public()
   @Get('categories')
   findCategories() {
     return this.listingsService.findCategories();

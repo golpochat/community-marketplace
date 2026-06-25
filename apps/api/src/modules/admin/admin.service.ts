@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import type { AdminDashboardStats, PlatformSettings } from '@community-marketplace/types';
+import type { AdminDashboardStats, ListingReviewContext, PlatformSettings, RbacRole } from '@community-marketplace/types';
 
 import { PrismaService } from '../../database/prisma.service';
 import { EventBusService } from '../../events/event-bus.service';
@@ -106,6 +106,48 @@ export class AdminService {
 
   getListings(page = 1, limit = 20) {
     return this.listingsService.adminList({ page, limit });
+  }
+
+  approveListing(listingId: string, adminId: string) {
+    return this.listingsService.approve(listingId, adminId);
+  }
+
+  rejectListing(listingId: string, adminId: string, body: unknown) {
+    return this.listingsService.rejectListing(listingId, adminId, body);
+  }
+
+  removeListing(listingId: string, adminId: string, body: unknown) {
+    return this.listingsService.removeListing(listingId, adminId, body);
+  }
+
+  restoreListing(listingId: string, adminId: string, body: unknown) {
+    return this.listingsService.restoreListing(listingId, adminId, body);
+  }
+
+  getListingStatusHistory(listingId: string) {
+    return this.listingsService.getStatusHistory(listingId);
+  }
+
+  getListingReview(listingId: string, actorId: string, role: RbacRole): Promise<ListingReviewContext> {
+    return this.listingsService.getReviewContext(listingId, actorId, role);
+  }
+
+  addListingReviewMessage(
+    listingId: string,
+    actorId: string,
+    role: RbacRole,
+    body: unknown,
+  ): Promise<ListingReviewContext> {
+    return this.listingsService.addReviewMessage(listingId, actorId, role, body);
+  }
+
+  requestListingChanges(
+    listingId: string,
+    adminId: string,
+    role: RbacRole,
+    body: unknown,
+  ): Promise<ListingReviewContext> {
+    return this.listingsService.requestListingChanges(listingId, adminId, role, body);
   }
 
   getModerationReports(query?: unknown) {

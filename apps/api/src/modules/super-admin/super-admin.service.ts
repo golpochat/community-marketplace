@@ -41,6 +41,48 @@ export class SuperAdminService {
     return this.adminService.getListings(page, limit);
   }
 
+  approveListing(listingId: string, adminId: string) {
+    return this.adminService.approveListing(listingId, adminId);
+  }
+
+  rejectListing(listingId: string, adminId: string, body: unknown) {
+    return this.adminService.rejectListing(listingId, adminId, body);
+  }
+
+  removeListing(listingId: string, adminId: string, body: unknown) {
+    return this.adminService.removeListing(listingId, adminId, body);
+  }
+
+  restoreListing(listingId: string, adminId: string, body: unknown) {
+    return this.adminService.restoreListing(listingId, adminId, body);
+  }
+
+  getListingStatusHistory(listingId: string) {
+    return this.adminService.getListingStatusHistory(listingId);
+  }
+
+  getListingReview(listingId: string, actorId: string, role: RbacRole) {
+    return this.adminService.getListingReview(listingId, actorId, role);
+  }
+
+  addListingReviewMessage(
+    listingId: string,
+    actorId: string,
+    role: RbacRole,
+    body: unknown,
+  ) {
+    return this.adminService.addListingReviewMessage(listingId, actorId, role, body);
+  }
+
+  requestListingChanges(
+    listingId: string,
+    adminId: string,
+    role: RbacRole,
+    body: unknown,
+  ) {
+    return this.adminService.requestListingChanges(listingId, adminId, role, body);
+  }
+
   getModerationReports() {
     return this.adminService.getModerationReports();
   }

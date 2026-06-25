@@ -4,23 +4,53 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import type { Listing, UserVerification } from '@community-marketplace/types';
+import type { Listing, ListingDeliverySelection, ListingReviewContext, UserVerification } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
-import { Card } from '@community-marketplace/ui-dashboard';
+import {
+  Card,
+  formatExpiredAgo,
+  formatExpiresIn,
+  ListingStatusBadge,
+  TruncatedText,
+} from '@community-marketplace/ui-dashboard';
 
 import { DashboardPageShell, DataTable } from '@/components/dashboard/async-resource';
+import { ListingPriceDisplay } from '@/components/listings/listing-price-display';
+import {
+  DEFAULT_RENEW_PACKAGE,
+  ListingSellerActions,
+  type SellerListingAction,
+} from '@/components/seller/listing-seller-actions';
+import { ListingPackageDialog } from '@/components/seller/listing-package-dialog';
+import { ListingReviewThread } from '@/components/dashboard/listing-review-thread';
+import { SellerConnectBanner } from '@/components/seller/seller-connect-banner';
 import { ListingForm, type ListingFormData } from '@/components/seller/listing-form';
+import { selectionsFromDeliveryState } from '@/components/seller/delivery-options-section';
+import { useAuth } from '@/hooks/use-auth';
+import { deliveryService } from '@/services/delivery.service';
+import { formPricingFromFields, pricingService } from '@/services/pricing.service';
 import { sellerService } from '@/services/marketplace.service';
 import { listingsService } from '@/services/listings.service';
 
-function buildListingPayload(data: ListingFormData, categories: Array<{ id: string; name: string }>) {  const categoryId = data.categoryId || categories[0]?.id;
+function buildListingCreatePayload(
+  data: ListingFormData,
+  categories: Array<{ id: string; name: string }>,
+  deliverySelections: ListingDeliverySelection[],
+) {
+  const categoryId = data.categoryId || categories[0]?.id;
   if (!categoryId) {
-    throw new Error('No categories available. Try again after the API is running.');
+    throw new Error(
+      'No categories are available. Run `pnpm seed:dev-users` from the repo root, then refresh this page.',
+    );
   }
+  const salePrice = Number(data.salePrice);
+  const originalPrice = data.originalPrice.trim() ? Number(data.originalPrice) : undefined;
   return {
     title: data.title.trim(),
     description: data.description.trim(),
-    price: Number(data.price),
+    price: salePrice,
+    salePrice,
+    originalPrice: originalPrice ?? null,
     currency: 'EUR',
     categoryId,
     condition: data.condition,
@@ -29,40 +59,142 @@ function buildListingPayload(data: ListingFormData, categories: Array<{ id: stri
       latitude: 53.3498,
       longitude: -6.2603,
     },
-    status: 'active' as const,
+    deliverySelections: deliverySelections.map((s) => ({
+      deliveryOptionId: s.deliveryOptionId,
+      customLabel: s.customLabel,
+      customPrice: s.customPrice,
+    })),
+    status: 'draft' as const,
   };
 }
+
+function buildListingUpdatePayload(
+  data: ListingFormData,
+  categories: Array<{ id: string; name: string }>,
+  deliverySelections: ListingDeliverySelection[],
+  includeDelivery: boolean,
+  includePricing: boolean,
+) {
+  const payload = buildListingCreatePayload(data, categories, deliverySelections);
+  const { status: _status, ...rest } = payload;
+  const result: Record<string, unknown> = { ...rest };
+  if (!includeDelivery) {
+    delete result.deliverySelections;
+  }
+  if (!includePricing) {
+    delete result.price;
+    delete result.salePrice;
+    delete result.originalPrice;
+  }
+  return result;
+}
+
+const STATUS_FILTER_OPTIONS = [
+  { value: '', label: 'All' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'pending_review', label: 'Pending review' },
+  { value: 'active', label: 'Live' },
+  { value: 'paused', label: 'Paused' },
+  { value: 'expired', label: 'Expired' },
+  { value: 'sold', label: 'Sold' },
+  { value: 'ended', label: 'Ended' },
+  { value: 'rejected', label: 'Rejected' },
+  { value: 'removed', label: 'Removed' },
+] as const;
 
 export function SellerListingsPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [packageDialog, setPackageDialog] = useState<{
+    listingId: string;
+    mode: 'renew' | 'upgrade';
+  } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await sellerService.getListings();
+      const result = await sellerService.getListings(1, 100, statusFilter || undefined);
       setListings(result.data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load listings');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [statusFilter]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  async function runAction(listingId: string, action: 'sold' | 'archive' | 'delete') {
+  async function runAction(listingId: string, action: SellerListingAction) {
     setActionId(listingId);
     setError(null);
     try {
-      if (action === 'sold') await sellerService.markListingSold(listingId);
-      if (action === 'archive') await sellerService.archiveListing(listingId);
-      if (action === 'delete') await sellerService.deleteListing(listingId);
+      switch (action) {
+        case 'submit':
+          await sellerService.submitForReview(listingId);
+          break;
+        case 'publish':
+          await sellerService.publishListing(listingId);
+          break;
+        case 'cancel-review':
+          await sellerService.cancelReview(listingId);
+          break;
+        case 'pause':
+          await sellerService.pauseListing(listingId);
+          break;
+        case 'resume':
+          await sellerService.resumeListing(listingId);
+          break;
+        case 'sold':
+          await sellerService.markListingSold(listingId);
+          break;
+        case 'end':
+          await sellerService.endListing(listingId);
+          break;
+        case 'renew':
+        case 'upgrade':
+          setActionId(null);
+          setPackageDialog({ listingId, mode: action });
+          return;
+        case 'duplicate': {
+          const dup = await sellerService.duplicateListing(listingId);
+          if (dup.data?.id) {
+            window.location.href = `/seller/listings/${dup.data.id}/edit`;
+            return;
+          }
+          break;
+        }
+        case 'delete':
+          await sellerService.deleteListing(listingId);
+          break;
+        default:
+          break;
+      }
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Action failed');
+    } finally {
+      setActionId(null);
+    }
+  }
+
+  async function handlePackageConfirm(packageType: typeof DEFAULT_RENEW_PACKAGE) {
+    if (!packageDialog) return;
+    const { listingId, mode } = packageDialog;
+    setPackageDialog(null);
+    setActionId(listingId);
+    setError(null);
+    try {
+      if (mode === 'renew') {
+        await sellerService.renewListing(listingId, packageType);
+      } else {
+        await sellerService.upgradePackage(listingId, packageType);
+      }
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Action failed');
@@ -82,7 +214,19 @@ export function SellerListingsPage() {
       emptyDescription="Create your first listing to start selling."
     >
       <Card>
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+            aria-label="Filter by status"
+          >
+            {STATUS_FILTER_OPTIONS.map((option) => (
+              <option key={option.value || 'all'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           <Link
             href="/seller/listings/create"
             className="inline-flex rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
@@ -104,49 +248,46 @@ export function SellerListingsPage() {
             <tbody className="divide-y divide-gray-100">
               {listings.map((listing) => (
                 <tr key={listing.id}>
-                  <td className="px-3 py-2 font-medium text-gray-900">{listing.title}</td>
-                  <td className="px-3 py-2 text-gray-700">
-                    {formatCurrency(listing.price, listing.currency)}
+                  <td className="max-w-xs px-3 py-2 font-medium text-gray-900">
+                    <TruncatedText text={listing.title} />
                   </td>
-                  <td className="px-3 py-2 capitalize text-gray-700">{listing.status}</td>
+                  <td className="px-3 py-2 text-gray-700">
+                    <ListingPriceDisplay
+                      price={listing.price}
+                      originalPrice={listing.originalPrice}
+                      salePrice={listing.salePrice}
+                      discountPercent={listing.discountPercent}
+                      currency={listing.currency}
+                      size="sm"
+                    />
+                  </td>
+                  <td className="px-3 py-2">
+                    <ListingStatusBadge status={listing.status} />
+                    {(listing.status === 'active' || listing.status === 'paused') &&
+                      listing.expiresAt && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          {formatExpiresIn(listing.expiresAt)}
+                        </p>
+                      )}
+                    {listing.status === 'expired' && listing.expiresAt && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        {formatExpiredAgo(listing.expiresAt)}
+                      </p>
+                    )}
+                    {listing.status === 'removed' && listing.removalReason && (
+                      <p className="mt-1 text-xs text-red-600">{listing.removalReason}</p>
+                    )}
+                    {listing.status === 'rejected' && listing.rejectionReason && (
+                      <p className="mt-1 text-xs text-red-600">{listing.rejectionReason}</p>
+                    )}
+                  </td>
                   <td className="px-3 py-2 text-gray-700">{listing.viewCount}</td>
                   <td className="px-3 py-2">
-                    <div className="flex flex-wrap gap-2">
-                      <Link
-                        href={`/seller/listings/${listing.id}/edit`}
-                        className="text-xs font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
-                      >
-                        Edit
-                      </Link>
-                      {listing.status === 'active' && (
-                        <button
-                          type="button"
-                          disabled={actionId === listing.id}
-                          onClick={() => void runAction(listing.id, 'sold')}
-                          className="text-xs font-medium text-gray-700 hover:text-gray-900"
-                        >
-                          Mark sold
-                        </button>
-                      )}
-                      {listing.status !== 'archived' && listing.status !== 'sold' && (
-                        <button
-                          type="button"
-                          disabled={actionId === listing.id}
-                          onClick={() => void runAction(listing.id, 'archive')}
-                          className="text-xs font-medium text-gray-700 hover:text-gray-900"
-                        >
-                          Archive
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        disabled={actionId === listing.id}
-                        onClick={() => void runAction(listing.id, 'delete')}
-                        className="text-xs font-medium text-red-600 hover:text-red-700"
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    <ListingSellerActions
+                      listing={listing}
+                      actionId={actionId}
+                      onAction={(id, action) => void runAction(id, action)}
+                    />
                   </td>
                 </tr>
               ))}
@@ -154,6 +295,14 @@ export function SellerListingsPage() {
           </table>
         </div>
       </Card>
+      <ListingPackageDialog
+        open={packageDialog != null}
+        title={packageDialog?.mode === 'upgrade' ? 'Upgrade listing package' : 'Renew listing'}
+        confirmLabel={packageDialog?.mode === 'upgrade' ? 'Upgrade' : 'Renew'}
+        defaultPackage={DEFAULT_RENEW_PACKAGE}
+        onClose={() => setPackageDialog(null)}
+        onConfirm={(packageType) => void handlePackageConfirm(packageType)}
+      />
     </DashboardPageShell>
   );
 }
@@ -172,7 +321,7 @@ export function SellerSalesPage() {
         if (cancelled) return;
         setRows(
           result.data.map((listing) => [
-            listing.title,
+            <TruncatedText key={listing.id} text={listing.title} />,
             formatCurrency(listing.price, listing.currency),
             new Date(listing.updatedAt).toLocaleDateString(),
           ]),
@@ -345,28 +494,59 @@ export function SellerVerificationPage() {
 export function SellerCreateListingPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void listingsService.getCategories().then((cats) => {
-      setCategories(cats.map((c) => ({ id: c.id, name: c.name })));
-    });
+    let cancelled = false;
+    setCategoriesLoading(true);
+    setCategoriesError(null);
+    void listingsService
+      .getCategories()
+      .then((cats) => {
+        if (cancelled) return;
+        if (cats.length === 0) {
+          setCategoriesError(
+            'No categories are configured. Run `pnpm seed:dev-users` from the repo root, then refresh this page.',
+          );
+          setCategories([]);
+          return;
+        }
+        setCategories(cats.map((c) => ({ id: c.id, name: c.name })));
+      })
+      .catch((err: Error) => {
+        if (!cancelled) {
+          setCategoriesError(err.message || 'Failed to load categories from the API.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setCategoriesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleSubmit(data: ListingFormData) {
     setSubmitting(true);
     setError(null);
+    setSuccess(null);
     try {
-      const payload = buildListingPayload(data, categories);
+      const catalog = await deliveryService.getCatalog();
+      const deliverySelections = selectionsFromDeliveryState(catalog, data.delivery);
+      const payload = buildListingCreatePayload(data, categories, deliverySelections);
       const response = await sellerService.createListing(payload);
       const listingId = response.data?.id;
       if (listingId && data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
       }
-      router.push('/seller/listings');
+      setSuccess('Draft saved. An admin will review it before it goes live on the marketplace.');
+      window.setTimeout(() => router.push('/seller/listings'), 1200);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create listing');
+      setError(err instanceof Error ? err.message : 'Failed to save listing draft');
     } finally {
       setSubmitting(false);
     }
@@ -374,10 +554,21 @@ export function SellerCreateListingPage() {
 
   return (
     <DashboardPageShell title="Create Listing" description="Add a new item to your store.">
+      <SellerConnectBanner className="mb-4" />
+      {categoriesLoading && (
+        <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading categories…</p>
+      )}
+      {categoriesError && <p className="mb-4 text-sm text-red-600">{categoriesError}</p>}
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
-      {submitting && <p className="mb-4 text-sm text-gray-700">Publishing listing…</p>}
+      {success && <p className="mb-4 text-sm text-green-700">{success}</p>}
+      {submitting && <p className="mb-4 text-sm text-gray-700">Saving draft…</p>}
       <Card>
-        <ListingForm categories={categories} onSubmit={(data) => void handleSubmit(data)} />
+        <ListingForm
+          categories={categories}
+          disabled={categoriesLoading || !!categoriesError || categories.length === 0}
+          submitLabel="Save draft"
+          onSubmit={(data) => void handleSubmit(data)}
+        />
       </Card>
     </DashboardPageShell>
   );
@@ -385,11 +576,25 @@ export function SellerCreateListingPage() {
 
 export function SellerEditListingPage({ listingId }: { listingId: string }) {
   const router = useRouter();
+  const { user } = useAuth();
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
   const [initialData, setInitialData] = useState<Partial<ListingFormData> | null>(null);
+  const [listingStatus, setListingStatus] = useState<string | null>(null);
+  const [moderationNotes, setModerationNotes] = useState<string | undefined>();
+  const [review, setReview] = useState<ListingReviewContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [deliverySelections, setDeliverySelections] = useState<ListingDeliverySelection[]>([]);
+  const [deliveryReviewStatus, setDeliveryReviewStatus] = useState<'none' | 'pending-review' | 'rejected'>('none');
+  const [priceReviewStatus, setPriceReviewStatus] = useState<'none' | 'pending-review' | 'rejected'>('none');
+  const [deliveryReviewNotes, setDeliveryReviewNotes] = useState<string | undefined>();
+  const [priceReviewNotes, setPriceReviewNotes] = useState<string | undefined>();
+  const [deliveryMessage, setDeliveryMessage] = useState<string | null>(null);
+  const [pricingMessage, setPricingMessage] = useState<string | null>(null);
+  const [existingImages, setExistingImages] = useState<Listing['images']>([]);
+  const [removingImageId, setRemovingImageId] = useState<string | null>(null);
+  const [reorderingImages, setReorderingImages] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -405,15 +610,57 @@ export function SellerEditListingPage({ listingId }: { listingId: string }) {
           setError('Listing not found.');
           return;
         }
+        setListingStatus(listing.status);
+        setModerationNotes(listing.moderationNotes);
+        setExistingImages(listing.images ?? []);
+        setDeliverySelections(listing.deliveryOptions ?? []);
+
+        let pricingFields = formPricingFromFields({
+          price: listing.price,
+          salePrice: listing.salePrice,
+          originalPrice: listing.originalPrice,
+        });
+
+        try {
+          const [deliveryState, pricingState] = await Promise.all([
+            deliveryService.getSellerState(listingId),
+            pricingService.getSellerState(listingId),
+          ]);
+          const formDelivery =
+            deliveryState.pendingDeliveryOptions?.length
+              ? deliveryState.pendingDeliveryOptions
+              : deliveryState.deliveryOptions;
+          setDeliverySelections(formDelivery);
+          setDeliveryReviewStatus(deliveryState.deliveryReviewStatus ?? 'none');
+          setDeliveryReviewNotes(deliveryState.reviewNotes);
+          pricingFields = formPricingFromFields(
+            pricingState.pendingPricing ?? pricingState.pricing,
+          );
+          setPriceReviewStatus(pricingState.priceReviewStatus ?? 'none');
+          setPriceReviewNotes(pricingState.reviewNotes);
+        } catch {
+          setDeliveryReviewStatus('none');
+          setPriceReviewStatus('none');
+        }
+
         setInitialData({
           title: listing.title,
           description: listing.description,
-          price: String(listing.price),
+          salePrice: pricingFields.salePrice,
+          originalPrice: pricingFields.originalPrice,
           condition: listing.condition,
           categoryId: listing.categoryId,
           location: listing.location.label,
           images: [],
         });
+        if (listing.status === 'draft' || listing.status === 'pending_review' || listing.status === 'rejected') {
+          try {
+            const reviewData = await sellerService.getListingReview(listingId);
+            setReview(reviewData);
+          } catch {
+            setReview(null);
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load listing');
       } finally {
@@ -423,11 +670,53 @@ export function SellerEditListingPage({ listingId }: { listingId: string }) {
     void load();
   }, [listingId]);
 
+  async function handleReviewReply(content: string) {
+    const data = await sellerService.sendListingReviewMessage(listingId, content);
+    setReview(data);
+    setModerationNotes(data.listing.moderationNotes);
+  }
+
+  async function handleReorderExistingImages(images: Listing['images']) {
+    setReorderingImages(true);
+    setError(null);
+    try {
+      const reordered = await sellerService.reorderListingImages(listingId, images);
+      setExistingImages(reordered);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reorder photos');
+    } finally {
+      setReorderingImages(false);
+    }
+  }
+
+  async function handleRemoveExistingImage(imageId: string) {
+    setRemovingImageId(imageId);
+    setError(null);
+    try {
+      await sellerService.removeListingImage(listingId, imageId);
+      setExistingImages((prev) => prev.filter((image) => image.id !== imageId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove photo');
+    } finally {
+      setRemovingImageId(null);
+    }
+  }
+
   async function handleSubmit(data: ListingFormData) {
     setSubmitting(true);
     setError(null);
     try {
-      const payload = buildListingPayload(data, categories);
+      const catalog = await deliveryService.getCatalog();
+      const selections = selectionsFromDeliveryState(catalog, data.delivery);
+      const includeDelivery = listingStatus !== 'active' && listingStatus !== 'paused';
+      const includePricing = listingStatus !== 'active' && listingStatus !== 'paused';
+      const payload = buildListingUpdatePayload(
+        data,
+        categories,
+        selections,
+        includeDelivery,
+        includePricing,
+      );
       await sellerService.updateListing(listingId, payload);
       if (data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
@@ -443,13 +732,76 @@ export function SellerEditListingPage({ listingId }: { listingId: string }) {
   return (
     <DashboardPageShell title="Edit Listing" description="Update your listing details." loading={loading} error={error}>
       {submitting && <p className="mb-4 text-sm text-gray-700">Saving changes…</p>}
+      {deliveryMessage && (
+        <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
+          {deliveryMessage}
+        </p>
+      )}
+      {pricingMessage && (
+        <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
+          {pricingMessage}
+        </p>
+      )}
+      {listingStatus &&
+        (listingStatus === 'draft' ||
+          listingStatus === 'pending_review' ||
+          listingStatus === 'rejected') &&
+        (moderationNotes || (review?.messages.length ?? 0) > 0) && (
+        <Card className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900">Admin review feedback</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            {listingStatus === 'pending_review'
+              ? 'Your listing is awaiting admin review. Reply below if you need to clarify anything.'
+              : listingStatus === 'rejected'
+                ? 'Your listing was rejected. Address the feedback below, edit your listing, then resubmit.'
+                : 'Your listing is pending approval. Reply below if you need to clarify anything after making edits.'}
+          </p>
+          {moderationNotes && (
+            <div className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <p className="font-medium">Latest request</p>
+              <p className="mt-1 whitespace-pre-wrap">{moderationNotes}</p>
+            </div>
+          )}
+          <div className="mt-4">
+            <ListingReviewThread
+              messages={review?.messages ?? []}
+              currentUserId={user?.id}
+              onSend={handleReviewReply}
+              sendLabel="Reply to admin"
+              placeholder="Explain what you changed or ask a question…"
+            />
+          </div>
+        </Card>
+      )}
       {initialData && (
         <Card>
           <ListingForm
             categories={categories}
             initialData={initialData}
+            initialDeliverySelections={deliverySelections}
+            existingImages={existingImages}
+            listingId={listingId}
+            listingStatus={listingStatus ?? undefined}
+            deliveryReviewStatus={deliveryReviewStatus}
+            priceReviewStatus={priceReviewStatus}
+            deliveryReviewNotes={deliveryReviewNotes}
+            priceReviewNotes={priceReviewNotes}
             submitLabel="Save changes"
             onSubmit={(data) => void handleSubmit(data)}
+            onDeliveryUpdated={({ message }) => {
+              setDeliveryMessage(message);
+              setDeliveryReviewStatus(
+                message.includes('pending') ? 'pending-review' : 'none',
+              );
+            }}
+            onPricingUpdated={({ message, status }) => {
+              setPricingMessage(message);
+              if (status === 'pending-review') setPriceReviewStatus('pending-review');
+            }}
+            onRemoveExistingImage={(imageId) => void handleRemoveExistingImage(imageId)}
+            onReorderExistingImages={(images) => void handleReorderExistingImages(images)}
+            removingExistingImageId={removingImageId}
+            reorderingImages={reorderingImages}
           />
         </Card>
       )}

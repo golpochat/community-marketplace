@@ -24,7 +24,18 @@ export class NotificationEventsListener implements OnModuleInit {
     );
     this.eventBus.subscribe('payment.disputed', (e) => void this.onPaymentDisputed(e.payload));
     this.eventBus.subscribe('listing.created', (e) => void this.onListingCreated(e.payload));
-    this.eventBus.subscribe('listing.updated', (e) => void this.onListingSold(e.payload));
+    this.eventBus.subscribe('listing.approved', (e) => void this.onListingApproved(e.payload));
+    this.eventBus.subscribe('listing.changes_requested', (e) =>
+      void this.onListingChangesRequested(e.payload),
+    );
+    this.eventBus.subscribe('listing.review_reply', (e) => void this.onListingReviewReply(e.payload));
+    this.eventBus.subscribe('listing.updated', (e) => void this.onListingUpdated(e.payload));
+    this.eventBus.subscribe('listing.sold', (e) => void this.onListingSold(e.payload));
+    this.eventBus.subscribe('listing.rejected', (e) => void this.onListingRejected(e.payload));
+    this.eventBus.subscribe('listing.expired', (e) => void this.onListingExpired(e.payload));
+    this.eventBus.subscribe('listing.expiring_soon', (e) => void this.onListingExpiringSoon(e.payload));
+    this.eventBus.subscribe('listing.removed', (e) => void this.onListingRemoved(e.payload));
+    this.eventBus.subscribe('listing.renewed', (e) => void this.onListingRenewed(e.payload));
     this.eventBus.subscribe('user.verification_approved', (e) =>
       void this.onVerificationApproved(e.payload),
     );
@@ -184,9 +195,9 @@ export class NotificationEventsListener implements OnModuleInit {
     const listingId = payload.listingId as string;
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
-      select: { title: true, sellerId: true },
+      select: { title: true, sellerId: true, status: true },
     });
-    if (!listing) return;
+    if (!listing || listing.status !== 'active') return;
 
     const followers = await this.prisma.listingFavorite.findMany({
       where: { listingId },
@@ -207,20 +218,184 @@ export class NotificationEventsListener implements OnModuleInit {
     }
   }
 
-  private async onListingSold(payload: Record<string, unknown>) {
+  private async onListingApproved(payload: Record<string, unknown>) {
     const listingId = payload.listingId as string;
+    const sellerId = payload.sellerId as string;
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
-      select: { title: true, sellerId: true, status: true },
+      select: { title: true },
     });
-    if (!listing || listing.status !== 'sold') return;
+    if (!listing) return;
 
     await this.dispatcher.dispatch({
-      userId: listing.sellerId,
+      userId: sellerId,
+      type: 'listing_approved',
+      templateKey: 'listing_approved',
+      variables: { listing_title: listing.title },
+      actionUrl: `/listings/${listingId}`,
+      channels: ['in_app', 'push'],
+    });
+  }
+
+  private async onListingChangesRequested(payload: Record<string, unknown>) {
+    const listingId = payload.listingId as string;
+    const sellerId = payload.sellerId as string;
+    const message = (payload.message as string) ?? 'Please review the admin feedback.';
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true },
+    });
+    if (!listing || !sellerId) return;
+
+    await this.dispatcher.dispatch({
+      userId: sellerId,
+      type: 'listing_changes_requested',
+      templateKey: 'listing_changes_requested',
+      variables: { listing_title: listing.title, message },
+      actionUrl: `/seller/listings/${listingId}/edit`,
+      channels: ['in_app', 'push', 'email'],
+    });
+  }
+
+  private async onListingReviewReply(payload: Record<string, unknown>) {
+    const listingId = payload.listingId as string;
+    const adminId = payload.adminId as string;
+    const message = (payload.message as string) ?? 'The seller replied to your review feedback.';
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true },
+    });
+    if (!listing || !adminId) return;
+
+    await this.dispatcher.dispatch({
+      userId: adminId,
+      type: 'listing_review_reply',
+      templateKey: 'listing_review_reply',
+      variables: { listing_title: listing.title, message },
+      actionUrl: `/admin/listings`,
+      channels: ['in_app', 'push'],
+    });
+  }
+
+  private async onListingUpdated(_payload: Record<string, unknown>) {
+    // Non-status listing updates — no notification by default
+  }
+
+  private async onListingSold(payload: Record<string, unknown>) {
+    const listingId = payload.listingId as string;
+    const sellerId = payload.sellerId as string;
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true },
+    });
+    if (!listing || !sellerId) return;
+
+    await this.dispatcher.dispatch({
+      userId: sellerId,
       type: 'listing_sold',
       templateKey: 'listing_sold',
       variables: { listing_title: listing.title },
-      channels: ['in_app', 'push'],
+      channels: ['in_app', 'push', 'email'],
+    });
+  }
+
+  private async onListingRejected(payload: Record<string, unknown>) {
+    const listingId = payload.listingId as string;
+    const sellerId = payload.sellerId as string;
+    const reason = (payload.reason as string) ?? 'Please review and resubmit.';
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true },
+    });
+    if (!listing || !sellerId) return;
+
+    await this.dispatcher.dispatch({
+      userId: sellerId,
+      type: 'listing_rejected',
+      templateKey: 'listing_rejected',
+      variables: { listing_title: listing.title, reason },
+      actionUrl: `/seller/listings/${listingId}/edit`,
+      channels: ['in_app', 'push', 'email'],
+    });
+  }
+
+  private async onListingExpired(payload: Record<string, unknown>) {
+    const listingId = payload.listingId as string;
+    const sellerId = payload.sellerId as string;
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true },
+    });
+    if (!listing || !sellerId) return;
+
+    await this.dispatcher.dispatch({
+      userId: sellerId,
+      type: 'listing_expired',
+      templateKey: 'listing_expired',
+      variables: { listing_title: listing.title },
+      actionUrl: `/seller/listings/${listingId}/edit`,
+      channels: ['in_app', 'push', 'email'],
+    });
+  }
+
+  private async onListingExpiringSoon(payload: Record<string, unknown>) {
+    const listingId = payload.listingId as string;
+    const sellerId = payload.sellerId as string;
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true, expiresAt: true },
+    });
+    if (!listing || !sellerId) return;
+
+    await this.dispatcher.dispatch({
+      userId: sellerId,
+      type: 'listing_expiring_soon',
+      templateKey: 'listing_expiring_soon',
+      variables: {
+        listing_title: listing.title,
+        expires_at: listing.expiresAt?.toISOString() ?? '',
+      },
+      actionUrl: `/seller/listings/${listingId}/edit`,
+      channels: ['in_app', 'email'],
+    });
+  }
+
+  private async onListingRemoved(payload: Record<string, unknown>) {
+    const listingId = payload.listingId as string;
+    const sellerId = payload.sellerId as string;
+    const reason = (payload.reason as string) ?? 'Removed by an administrator.';
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true },
+    });
+    if (!listing || !sellerId) return;
+
+    await this.dispatcher.dispatch({
+      userId: sellerId,
+      type: 'listing_removed',
+      templateKey: 'listing_removed',
+      variables: { listing_title: listing.title, reason },
+      actionUrl: `/seller/listings`,
+      channels: ['in_app', 'push', 'email'],
+    });
+  }
+
+  private async onListingRenewed(payload: Record<string, unknown>) {
+    const listingId = payload.listingId as string;
+    const sellerId = payload.sellerId as string;
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true },
+    });
+    if (!listing || !sellerId) return;
+
+    await this.dispatcher.dispatch({
+      userId: sellerId,
+      type: 'listing_renewed',
+      templateKey: 'listing_renewed',
+      variables: { listing_title: listing.title },
+      actionUrl: `/listings/${listingId}`,
+      channels: ['in_app', 'email'],
     });
   }
 

@@ -34,9 +34,8 @@ Thumbs.db
 coverage/
 .nyc_output/
 
-# Turbo / cache
-.turbo/
-.cache/
+# Local dev uploads (no R2)
+apps/api/.data/
 
 # Prisma client (generated into apps/api)
 apps/api/generated/

@@ -105,9 +105,7 @@ export class ChatGateway
     if (!user) return { error: 'Unauthorized' };
 
     const parsed = sendChatMessageSchema.parse(body);
-    const message = await this.messages.send(user.sub, user.role, parsed);
-    this.realtime.emitMessage(parsed.threadId, message);
-    return message;
+    return this.messages.send(user.sub, user.role, parsed);
   }
 
   @SubscribeMessage('typing')

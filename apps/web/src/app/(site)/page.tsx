@@ -10,7 +10,7 @@ export const metadata = { title: 'Home' };
 export default async function HomePage() {
   const [categories, featured] = await Promise.all([
     listingsService.getCategories(),
-    listingsService.getAll(1, 6),
+    listingsService.search({ page: 1, limit: 6, sort: 'newest' }),
   ]);
 
   return (

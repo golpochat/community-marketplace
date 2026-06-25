@@ -7,16 +7,18 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { SearchModule } from '../search/search.module';
 import { UsersModule } from '../users/users.module';
+import { ShareModule } from '../share/share.module';
 import { SellerChatController } from './seller-chat.controller';
 import { SellerEarningsController } from './seller-earnings.controller';
 import { SellerListingsController } from './seller-listings.controller';
 import { SellerNotificationsController } from './seller-notifications.controller';
 import { SellerProfileController } from './seller-profile.controller';
 import { SellerReportsController } from './seller-reports.controller';
+import { SellerShareAnalyticsController } from './seller-share-analytics.controller';
 import { SellerSearchController } from './seller-search.controller';
 
 @Module({
-  imports: [ListingsModule, PaymentsModule, UsersModule, ChatModule, NotificationsModule, SearchModule, ModerationModule],
+  imports: [ListingsModule, PaymentsModule, UsersModule, ChatModule, NotificationsModule, SearchModule, ModerationModule, ShareModule],
   controllers: [
     SellerListingsController,
     SellerEarningsController,
@@ -25,6 +27,7 @@ import { SellerSearchController } from './seller-search.controller';
     SellerProfileController,
     SellerChatController,
     SellerReportsController,
+    SellerShareAnalyticsController,
   ],
 })
 export class SellerModule {}

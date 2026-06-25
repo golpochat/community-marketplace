@@ -5,6 +5,7 @@ import { EventsModule } from '../../events/events.module';
 import { LibsModule } from '../../libs/libs.module';
 import { UtilsModule } from '../../utils/utils.module';
 import { AuthModule } from '../auth/auth.module';
+import { UsersModule } from '../users/users.module';
 import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
@@ -20,7 +21,7 @@ import { ChatSystemMessagesService } from './services/chat-system-messages.servi
 import { ChatThreadsService } from './services/chat-threads.service';
 
 @Module({
-  imports: [DatabaseModule, EventsModule, LibsModule, UtilsModule, AuthModule],
+  imports: [DatabaseModule, EventsModule, LibsModule, UtilsModule, AuthModule, UsersModule],
   controllers: [ChatController],
   providers: [
     ChatService,

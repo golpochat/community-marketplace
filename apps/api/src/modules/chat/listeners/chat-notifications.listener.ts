@@ -51,8 +51,12 @@ export class ChatNotificationsListener implements OnModuleInit {
   }
 
   private async onThreadCreated(payload: Record<string, unknown>) {
+    const buyerId = payload.buyerId as string;
     const sellerId = payload.sellerId as string;
     const threadId = payload.threadId as string;
+
+    await this.inbox.invalidateInbox(buyerId);
+    await this.inbox.invalidateInbox(sellerId);
 
     if (!(await this.shouldNotify(sellerId, 'messageAlerts'))) return;
 
@@ -63,8 +67,6 @@ export class ChatNotificationsListener implements OnModuleInit {
       body: 'A buyer started a conversation about your listing',
       actionUrl: `/chat?thread=${threadId}`,
     });
-
-    await this.inbox.invalidateInbox(sellerId);
   }
 
   private async onMessagesRead(payload: Record<string, unknown>) {

@@ -33,6 +33,11 @@ export const paymentsService = {
     });
   },
 
+  async getBuyerPayment(paymentId: string) {
+    const response = await apiClient<Payment>(`${WEB_API_ROUTES.buyer.payments}/${paymentId}`);
+    return response.data;
+  },
+
   async requestRefund(paymentId: string, reason?: string) {
     const response = await apiClient(WEB_API_ROUTES.buyer.paymentsRefunds, {
       method: 'POST',

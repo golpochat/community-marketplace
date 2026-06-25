@@ -1,7 +1,8 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import Redis from 'ioredis';
+import type Redis from 'ioredis';
 
 import { LoggerLib } from '../libs/logger.lib';
+import { createRedisClient } from './redis-connection.lib';
 
 @Injectable()
 export class RedisCacheService implements OnModuleInit, OnModuleDestroy {
@@ -18,12 +19,21 @@ export class RedisCacheService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    try {
-      this.client = new Redis(redisUrl);
-      this.logger.log('RedisCacheService', 'Connected to Redis');
-    } catch {
-      this.logger.log('RedisCacheService', 'Redis unavailable — using in-memory cache');
+    const client = await createRedisClient(redisUrl);
+    if (!client) {
+      this.logger.log(
+        'RedisCacheService',
+        `Redis unavailable at ${redisUrl} — using in-memory cache`,
+      );
+      return;
     }
+
+    client.on('error', (error: Error) => {
+      this.logger.error('RedisCacheService', `Redis error: ${error.message}`);
+    });
+
+    this.client = client;
+    this.logger.log('RedisCacheService', 'Connected to Redis');
   }
 
   async onModuleDestroy() {

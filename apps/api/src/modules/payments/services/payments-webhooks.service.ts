@@ -4,8 +4,8 @@ import type Stripe from 'stripe';
 import { EventBusService } from '../../../events/event-bus.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { PaymentsAuditService } from './payments-audit.service';
+import { PaymentCompletionService } from './payment-completion.service';
 import { PaymentsDisputesService } from './payments-disputes.service';
-import { PaymentsLedgerService } from './payments-ledger.service';
 import { PaymentsPayoutsService } from './payments-payouts.service';
 import { StripeConnectService } from './stripe-connect.service';
 
@@ -16,7 +16,7 @@ export class PaymentsWebhooksService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly stripeConnect: StripeConnectService,
-    private readonly ledger: PaymentsLedgerService,
+    private readonly completion: PaymentCompletionService,
     private readonly disputes: PaymentsDisputesService,
     private readonly payouts: PaymentsPayoutsService,
     private readonly audit: PaymentsAuditService,
@@ -68,38 +68,7 @@ export class PaymentsWebhooksService {
     });
     if (!payment) return;
 
-    await this.prisma.payment.update({
-      where: { id: payment.id },
-      data: { status: 'succeeded' },
-    });
-
-    const netAmount = Number(payment.amount) - Number(payment.platformFee ?? 0);
-    await this.ledger.record(
-      payment.sellerId,
-      'credit',
-      netAmount,
-      payment.currency,
-      { paymentId: payment.id, referenceId: intent.id },
-    );
-    await this.ledger.record(
-      payment.buyerId,
-      'debit',
-      Number(payment.amount),
-      payment.currency,
-      { paymentId: payment.id, referenceId: intent.id },
-    );
-
-    await this.prisma.listing.update({
-      where: { id: payment.listingId },
-      data: { status: 'sold' },
-    });
-
-    await this.audit.record('payment_succeeded', undefined, payment.id);
-    this.eventBus.publish({
-      type: 'payment.succeeded',
-      payload: { paymentId: payment.id, listingId: payment.listingId },
-      timestamp: new Date(),
-    });
+    await this.completion.finalizeSuccessfulPayment(payment.id, intent.id);
   }
 
   private async onPaymentFailed(intent: Stripe.PaymentIntent) {

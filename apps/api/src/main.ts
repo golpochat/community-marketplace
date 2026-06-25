@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
+import { raw } from 'express';
 
 import { getCorsOrigins } from '@community-marketplace/config';
 
@@ -15,6 +16,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
   app.use(cookieParser());
+  app.use('/api/dev-upload', raw({ type: '*/*', limit: '10mb' }));
   app.enableCors({
     origin: getCorsOrigins(app.get(ConfigService).get<string>('app.corsOrigin', '')),
     credentials: true,

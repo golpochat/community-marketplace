@@ -19,6 +19,16 @@ interface PayableListing {
 
 const HISTORY_PAGE_SIZE = 10;
 
+function formatPaymentError(message: string): string {
+  if (message.includes('Stripe Connect') || message.includes('not ready to receive')) {
+    return 'The seller has not finished Stripe payout setup yet. Ask them to complete Connect under Seller → Earnings.';
+  }
+  if (message.includes('not available for purchase')) {
+    return 'This listing is no longer available for purchase.';
+  }
+  return message;
+}
+
 export default function BuyerPurchasesPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
@@ -85,7 +95,7 @@ export default function BuyerPurchasesPage() {
       const result = await paymentsService.createPaymentIntent(selectedListingId);
       setIntent(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create payment');
+      setError(formatPaymentError(err instanceof Error ? err.message : 'Failed to create payment'));
     } finally {
       setActionLoading(false);
     }

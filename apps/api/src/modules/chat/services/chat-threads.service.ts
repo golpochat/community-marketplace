@@ -28,7 +28,7 @@ export class ChatThreadsService {
       where: { id: parsed.listingId },
       select: { id: true, sellerId: true, status: true },
     });
-    if (!listing || listing.status === 'banned') {
+    if (!listing || listing.status !== 'active') {
       throw new NotFoundException('Listing not found');
     }
     if (listing.sellerId !== parsed.sellerId) {

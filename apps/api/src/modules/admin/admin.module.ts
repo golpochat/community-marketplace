@@ -17,6 +17,8 @@ import { AdminNotificationsController } from './admin-notifications.controller';
 import { AdminPaymentsController } from './admin-payments.controller';
 import { AdminSearchController } from './admin-search.controller';
 import { AdminController } from './admin.controller';
+import { AdminDeliveryReviewsController } from './admin-delivery-reviews.controller';
+import { AdminPriceReviewsController } from './admin-price-reviews.controller';
 import { AdminService } from './admin.service';
 import { AdminRbacController } from './rbac/admin-rbac.controller';
 import { RbacManagementService } from './rbac/rbac-management.service';
@@ -44,6 +46,8 @@ import { RbacScopePolicy } from './rbac/rbac-scope.policy';
     AdminSearchController,
     AdminNotificationsController,
     AdminRbacController,
+    AdminDeliveryReviewsController,
+    AdminPriceReviewsController,
   ],
   providers: [AdminService, RbacManagementService, RbacScopePolicy],
   exports: [AdminService, RbacManagementService],

@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 
 import type { Listing, RbacRole } from '@community-marketplace/types';
+import {
+  rejectListingSchema,
+  removeListingSchema,
+  restoreListingSchema,
+} from '@community-marketplace/validation';
 
 import { CategoriesService } from './services/categories.service';
 import { ListingAnalyticsService } from './services/listing-analytics.service';
@@ -8,9 +13,13 @@ import { ListingFavoritesService } from './services/listing-favorites.service';
 import { ListingFeedsService } from './services/listing-feeds.service';
 import { ListingImagesService } from './services/listing-images.service';
 import { ListingLifecycleService } from './services/listing-lifecycle.service';
+import { ListingReviewService } from './services/listing-review.service';
 import { ListingReportsService } from './services/listing-reports.service';
 import { ListingSearchService } from './services/listing-search.service';
 import { ListingsCrudService } from './services/listings-crud.service';
+import { ListingDeliveryService } from './services/listing-delivery.service';
+import { ListingPricingService } from './services/listing-pricing.service';
+import { DeliveryOptionsService } from './services/delivery-options.service';
 
 /** Facade for listing domain operations. */
 @Injectable()
@@ -24,7 +33,11 @@ export class ListingsService {
     private readonly feeds: ListingFeedsService,
     private readonly favorites: ListingFavoritesService,
     private readonly reports: ListingReportsService,
+    private readonly review: ListingReviewService,
     private readonly analytics: ListingAnalyticsService,
+    private readonly delivery: ListingDeliveryService,
+    private readonly pricing: ListingPricingService,
+    private readonly deliveryOptions: DeliveryOptionsService,
   ) {}
 
   findAll(page?: number, limit?: number) {
@@ -62,6 +75,10 @@ export class ListingsService {
     return this.lifecycle.markSold(listingId, actorId, actorRole);
   }
 
+  markSoldFromPayment(listingId: string) {
+    return this.lifecycle.markSoldFromPayment(listingId);
+  }
+
   archive(listingId: string, actorId: string, actorRole: RbacRole) {
     return this.lifecycle.archive(listingId, actorId, actorRole);
   }
@@ -76,6 +93,77 @@ export class ListingsService {
 
   unban(listingId: string, adminId: string) {
     return this.lifecycle.unban(listingId, adminId);
+  }
+
+  approve(listingId: string, adminId: string) {
+    return this.lifecycle.approve(listingId, adminId);
+  }
+
+  rejectListing(listingId: string, adminId: string, input: unknown) {
+    const parsed = rejectListingSchema.parse(input);
+    return this.lifecycle.rejectListing(listingId, adminId, parsed.reason);
+  }
+
+  submitForReview(listingId: string, sellerId: string) {
+    return this.lifecycle.submitForReview(listingId, sellerId);
+  }
+
+  cancelReview(listingId: string, sellerId: string) {
+    return this.lifecycle.cancelReview(listingId, sellerId);
+  }
+
+  publishWithoutReview(listingId: string, sellerId: string) {
+    return this.lifecycle.publishWithoutReview(listingId, sellerId);
+  }
+
+  pauseListing(listingId: string, sellerId: string) {
+    return this.lifecycle.pauseListing(listingId, sellerId);
+  }
+
+  resumeListing(listingId: string, sellerId: string) {
+    return this.lifecycle.resumeListing(listingId, sellerId);
+  }
+
+  endListing(listingId: string, sellerId: string) {
+    return this.lifecycle.endListing(listingId, sellerId);
+  }
+
+  removeListing(listingId: string, adminId: string, input: unknown) {
+    const parsed = removeListingSchema.parse(input ?? {});
+    return this.lifecycle.removeListing(listingId, adminId, parsed.reason);
+  }
+
+  restoreListing(listingId: string, adminId: string, input: unknown) {
+    const parsed = restoreListingSchema.parse(input ?? {});
+    return this.lifecycle.restoreListing(listingId, adminId, parsed.targetStatus);
+  }
+
+  renewListing(listingId: string, sellerId: string, input: unknown) {
+    return this.lifecycle.renewListing(listingId, sellerId, input);
+  }
+
+  upgradePackage(listingId: string, sellerId: string, input: unknown) {
+    return this.lifecycle.upgradePackage(listingId, sellerId, input);
+  }
+
+  duplicateListing(listingId: string, sellerId: string) {
+    return this.crud.duplicate(listingId, sellerId);
+  }
+
+  getStatusHistory(listingId: string) {
+    return this.lifecycle.getStatusHistory(listingId);
+  }
+
+  getReviewContext(listingId: string, actorId: string, role: RbacRole) {
+    return this.review.getReviewContext(listingId, actorId, role);
+  }
+
+  addReviewMessage(listingId: string, senderId: string, role: RbacRole, input: unknown) {
+    return this.review.addMessage(listingId, senderId, role, input);
+  }
+
+  requestListingChanges(listingId: string, adminId: string, role: RbacRole, input: unknown) {
+    return this.review.requestChanges(listingId, adminId, role, input);
   }
 
   searchListings(input: unknown) {
@@ -156,5 +244,57 @@ export class ListingsService {
 
   getSellerAnalyticsSummary(sellerId: string) {
     return this.analytics.getSellerSummary(sellerId);
+  }
+
+  listDeliveryOptions() {
+    return this.deliveryOptions.listActive();
+  }
+
+  getDeliveryPreview(listingId: string, sellerId: string, role: RbacRole, input: unknown) {
+    return this.delivery.buildPreview(listingId, sellerId, role, input);
+  }
+
+  updateDelivery(listingId: string, sellerId: string, role: RbacRole, input: unknown) {
+    return this.delivery.updateDelivery(listingId, sellerId, role, input);
+  }
+
+  getSellerDeliveryState(listingId: string, sellerId: string, role: RbacRole) {
+    return this.delivery.getSellerDeliveryState(listingId, sellerId, role);
+  }
+
+  listPendingDeliveryReviews(page?: number, limit?: number) {
+    return this.delivery.listPendingReviews(page, limit);
+  }
+
+  approveDeliveryChange(changeLogId: string, adminId: string, reviewNotes?: string) {
+    return this.delivery.approveChange(changeLogId, adminId, reviewNotes);
+  }
+
+  rejectDeliveryChange(changeLogId: string, adminId: string, reviewNotes?: string) {
+    return this.delivery.rejectChange(changeLogId, adminId, reviewNotes);
+  }
+
+  getPricingPreview(listingId: string, sellerId: string, role: RbacRole, input: unknown) {
+    return this.pricing.buildPreview(listingId, sellerId, role, input);
+  }
+
+  updatePricing(listingId: string, sellerId: string, role: RbacRole, input: unknown) {
+    return this.pricing.updatePricing(listingId, sellerId, role, input);
+  }
+
+  getSellerPricingState(listingId: string, sellerId: string, role: RbacRole) {
+    return this.pricing.getSellerPricingState(listingId, sellerId, role);
+  }
+
+  listPendingPriceReviews(page?: number, limit?: number) {
+    return this.pricing.listPendingReviews(page, limit);
+  }
+
+  approvePriceChange(changeLogId: string, adminId: string, reviewNotes?: string) {
+    return this.pricing.approveChange(changeLogId, adminId, reviewNotes);
+  }
+
+  rejectPriceChange(changeLogId: string, adminId: string, reviewNotes?: string) {
+    return this.pricing.rejectChange(changeLogId, adminId, reviewNotes);
   }
 }

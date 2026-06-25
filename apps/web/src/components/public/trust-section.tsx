@@ -9,7 +9,7 @@ export function TrustSection() {
   return (
     <section className="border-t border-gray-200 bg-white py-12">
       <div className="mx-auto max-w-6xl px-4">
-        <h2 className="text-center text-xl font-semibold text-gray-900">Why trust us</h2>
+        <h2 className="text-center text-h2 text-gray-900">Why trust us</h2>
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {TRUST_ITEMS.map((item) => (
             <div key={item.title} className="rounded-xl border border-gray-100 p-6 text-center">

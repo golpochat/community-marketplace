@@ -20,6 +20,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "seed:rbac": "pnpm --filter @community-marketplace/api run seed:rbac",
     "seed:dev-users": "pnpm --filter @community-marketplace/api run seed:dev-users",
+    "stripe:listen": "stripe listen --forward-to localhost:4000/api/payments/webhooks/stripe",
     "docs:index": "node scripts/generate-docs-index.mjs"
   },
   "devDependencies": {

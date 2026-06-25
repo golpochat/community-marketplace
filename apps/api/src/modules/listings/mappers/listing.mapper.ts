@@ -7,9 +7,19 @@ import type {
   ListingSummary,
 } from '@community-marketplace/types';
 
+import { resolveAssetPublicUrl } from '../../../libs/asset-url.lib';
+import {
+  listingDeliveryInclude,
+  mapListingDeliverySelection,
+} from './delivery.mapper';
+
 export const listingInclude = {
   category: true,
   images: { orderBy: { sortOrder: 'asc' as const } },
+  deliveryOptions: {
+    include: listingDeliveryInclude,
+    orderBy: { createdAt: 'asc' as const },
+  },
   seller: {
     include: {
       primaryRole: true,
@@ -55,18 +65,27 @@ export function mapListingImage(row: {
   return {
     id: row.id,
     listingId: row.listingId,
-    url: row.url,
+    url: resolveAssetPublicUrl(row.url),
     order: row.sortOrder,
   };
 }
 
 export function mapListing(row: ListingWithRelations): Listing {
+  const deliveryOptions =
+    row.deliveryOptions?.length > 0
+      ? row.deliveryOptions.map(mapListingDeliverySelection)
+      : undefined;
+
   return {
     id: row.id,
     sellerId: row.sellerId,
     title: row.title,
     description: row.description,
     price: Number(row.price),
+    originalPrice:
+      row.originalPrice != null ? Number(row.originalPrice) : undefined,
+    salePrice: row.salePrice != null ? Number(row.salePrice) : undefined,
+    discountPercent: row.discountPercent ?? undefined,
     currency: row.currency,
     categoryId: row.categoryId,
     category: mapCategory(row.category),
@@ -78,12 +97,34 @@ export function mapListing(row: ListingWithRelations): Listing {
       longitude: Number(row.longitude),
     },
     images: row.images.map(mapListingImage),
+    deliveryOptions,
     viewCount: row.viewCount,
     favoriteCount: row.favoriteCount,
     moderationNotes: row.moderationNotes ?? undefined,
     bannedAt: row.bannedAt?.toISOString(),
+    isPaid: row.isPaid,
+    packageType: row.packageType,
+    activatedAt: row.activatedAt?.toISOString(),
+    expiresAt: row.expiresAt?.toISOString(),
+    endedAt: row.endedAt?.toISOString(),
+    rejectionReason: row.rejectionReason ?? undefined,
+    removalReason: row.removalReason ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    seller: mapListingSeller(row.seller),
+  };
+}
+
+function mapListingSeller(
+  seller: ListingWithRelations['seller'],
+): Listing['seller'] {
+  if (!seller) return undefined;
+  return {
+    id: seller.id,
+    displayName: seller.displayName ?? undefined,
+    email: seller.email,
+    verified: seller.verifications.length > 0,
+    memberSince: seller.createdAt.toISOString(),
   };
 }
 
@@ -95,6 +136,10 @@ export function mapListingSummary(
     id: row.id,
     title: row.title,
     price: Number(row.price),
+    originalPrice:
+      row.originalPrice != null ? Number(row.originalPrice) : undefined,
+    salePrice: row.salePrice != null ? Number(row.salePrice) : undefined,
+    discountPercent: row.discountPercent ?? undefined,
     currency: row.currency,
     location: {
       label: row.locationLabel,
@@ -104,7 +149,7 @@ export function mapListingSummary(
     status: row.status,
     condition: row.condition,
     categoryId: row.categoryId,
-    imageUrl: row.images[0]?.url,
+    imageUrl: row.images[0] ? resolveAssetPublicUrl(row.images[0].url) : undefined,
     distanceKm,
     favoriteCount: row.favoriteCount,
     createdAt: row.createdAt.toISOString(),
@@ -146,7 +191,7 @@ export function toMeiliDocument(row: ListingWithRelations, embedding?: number[])
       lat: Number(row.latitude),
       lng: Number(row.longitude),
     },
-    imageUrl: row.images[0]?.url,
+    imageUrl: row.images[0] ? resolveAssetPublicUrl(row.images[0].url) : undefined,
     favoriteCount: row.favoriteCount,
     viewCount: row.viewCount,
     createdAt: row.createdAt.getTime(),

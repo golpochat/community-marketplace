@@ -2,44 +2,22 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ModerationReport, PlatformSettings, UserProfile, UserVerification } from '@community-marketplace/types';
+import type { ListingStatus, ModerationReport, PlatformSettings, UserProfile, UserVerification } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
-import { Card } from '@community-marketplace/ui-dashboard';
+import {
+  Card,
+  IconActionButton,
+  IconActionGroup,
+  ListingStatusBadge,
+  TruncatedText,
+} from '@community-marketplace/ui-dashboard';
 
 import { DashboardPageShell, DataTable, KeyValueList } from '@/components/dashboard/async-resource';
 import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
+import { AdminListingReviewDialog } from '@/components/dashboard/admin-listing-review-dialog';
+import { AdminListingStatusHistoryDialog } from '@/components/dashboard/admin-listing-status-history-dialog';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { adminService, type AdminServiceRole } from '@/services/admin.service';
-
-function AdminRowButton({
-  label,
-  onClick,
-  disabled,
-  variant = 'primary',
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-  variant?: 'primary' | 'danger' | 'secondary';
-}) {
-  const classes =
-    variant === 'danger'
-      ? 'border-red-200 text-red-700 hover:bg-red-50'
-      : variant === 'secondary'
-        ? 'border-gray-200 text-gray-700 hover:bg-gray-50'
-        : 'border-transparent bg-[hsl(var(--dashboard-accent))] text-white hover:opacity-90';
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`rounded-md border px-2 py-1 text-xs font-medium disabled:opacity-50 ${classes}`}
-    >
-      {label}
-    </button>
-  );
-}
 
 function moderationReportTarget(report: {
   listingId?: string;
@@ -109,18 +87,21 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
       user.role,
       user.status,
       <div key={user.id} className="flex flex-wrap gap-2">
-        <AdminRowButton
-          label={isActing ? 'Working…' : 'Suspend'}
-          onClick={() => void handleSuspend(user)}
-          disabled={isProtectedRole || isActing || user.status === 'suspended'}
-          variant="secondary"
-        />
-        <AdminRowButton
-          label="Ban"
-          onClick={() => void handleBan(user)}
-          disabled={isProtectedRole || isActing}
-          variant="danger"
-        />
+        <IconActionGroup>
+          <IconActionButton
+            icon="user-minus"
+            label={isActing ? 'Working…' : 'Suspend user'}
+            disabled={isProtectedRole || isActing || user.status === 'suspended'}
+            onClick={() => void handleSuspend(user)}
+          />
+          <IconActionButton
+            icon="ban"
+            label="Ban user"
+            variant="danger"
+            disabled={isProtectedRole || isActing}
+            onClick={() => void handleBan(user)}
+          />
+        </IconActionGroup>
       </div>,
     ];
   });
@@ -148,33 +129,186 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
+  const [actingListingId, setActingListingId] = useState<string | null>(null);
+  const [reviewListingId, setReviewListingId] = useState<string | null>(null);
+  const [historyListing, setHistoryListing] = useState<{ id: string; title: string } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<ListingStatus | ''>('');
+
   const fetchListings = useCallback(
-    (page: number, limit: number) => adminService.listListings(role, { page, limit }),
-    [role],
+    (page: number, limit: number) =>
+      adminService.listListings(role, {
+        page,
+        limit,
+        ...(statusFilter ? { status: statusFilter } : {}),
+      }),
+    [role, statusFilter],
   );
 
-  const { page, setPage, data, meta, loading, error, totalPages } = usePaginatedQuery({
+  const { page, setPage, data, meta, loading, error, totalPages, reload } = usePaginatedQuery({
     fetcher: fetchListings,
   });
 
-  const rows = data.map((listing) => [
-    listing.title,
-    formatCurrency(listing.price, listing.currency),
-    listing.status,
-    new Date(listing.createdAt).toLocaleDateString(),
-  ]);
+  async function handleApprove(listingId: string) {
+    setActingListingId(listingId);
+    try {
+      await adminService.approveListing(role, listingId);
+      await reload();
+      if (reviewListingId === listingId) setReviewListingId(null);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to approve listing');
+    } finally {
+      setActingListingId(null);
+    }
+  }
+
+  const rows = data.map((listing) => {
+    const isActing = actingListingId === listing.id;
+
+    return [
+      <TruncatedText key={`title-${listing.id}`} text={listing.title} />,
+      formatCurrency(listing.price, listing.currency),
+      <ListingStatusBadge key={`status-${listing.id}`} status={listing.status} />,
+      new Date(listing.createdAt).toLocaleDateString(),
+      listing.status === 'pending_review' || listing.status === 'draft' ? (
+        <IconActionGroup key={`actions-${listing.id}`}>
+          <IconActionButton
+            icon="eye"
+            label="Review listing"
+            onClick={() => setReviewListingId(listing.id)}
+          />
+          <IconActionButton
+            icon="check"
+            label={isActing ? 'Approving…' : 'Approve listing'}
+            variant="accent"
+            disabled={isActing}
+            onClick={() => void handleApprove(listing.id)}
+          />
+          {listing.status === 'pending_review' ? (
+            <IconActionButton
+              icon="x"
+              label="Reject listing"
+              variant="danger"
+              disabled={isActing}
+              onClick={() => {
+                const reason = window.prompt('Rejection reason for the seller:');
+                if (!reason?.trim()) return;
+                void adminService
+                  .rejectListing(role, listing.id, reason.trim())
+                  .then(() => reload())
+                  .catch((err: Error) => window.alert(err.message));
+              }}
+            />
+          ) : null}
+          <IconActionButton
+            icon="scroll"
+            label="Status history"
+            onClick={() => setHistoryListing({ id: listing.id, title: listing.title })}
+          />
+        </IconActionGroup>
+      ) : listing.status === 'active' || listing.status === 'paused' || listing.status === 'expired' ? (
+        <IconActionGroup key={`actions-${listing.id}`}>
+          <IconActionButton
+            icon="trash"
+            label="Remove listing"
+            variant="danger"
+            disabled={isActing}
+            onClick={() => {
+              const reason = window.prompt('Removal reason (policy violation, fraud, etc.):');
+              if (reason === null) return;
+              void adminService
+                .removeListing(role, listing.id, reason.trim() || undefined)
+                .then(() => reload())
+                .catch((err: Error) => window.alert(err.message));
+            }}
+          />
+          <IconActionButton
+            icon="eye"
+            label="Status history"
+            onClick={() => setHistoryListing({ id: listing.id, title: listing.title })}
+          />
+        </IconActionGroup>
+      ) : listing.status === 'removed' ? (
+        <IconActionGroup key={`actions-${listing.id}`}>
+          <IconActionButton
+            icon="check"
+            label="Restore listing"
+            variant="accent"
+            disabled={isActing}
+            onClick={() => {
+              const target =
+                window.prompt('Restore to expired or draft?', 'expired')?.trim() ?? 'expired';
+              const targetStatus = target === 'draft' ? 'draft' : 'expired';
+              void adminService
+                .restoreListing(role, listing.id, targetStatus)
+                .then(() => reload())
+                .catch((err: Error) => window.alert(err.message));
+            }}
+          />
+          <IconActionButton
+            icon="eye"
+            label="Status history"
+            onClick={() => setHistoryListing({ id: listing.id, title: listing.title })}
+          />
+        </IconActionGroup>
+      ) : (
+        <IconActionGroup key={`actions-${listing.id}`}>
+          <IconActionButton
+            icon="eye"
+            label="Status history"
+            onClick={() => setHistoryListing({ id: listing.id, title: listing.title })}
+          />
+        </IconActionGroup>
+      ),
+    ];
+  });
 
   return (
     <DashboardPageShell
       title="Listings"
-      description="Review and manage marketplace listings."
+      description="Review draft and pending listings, then approve them for publication."
       loading={loading}
       error={error}
       empty={!loading && !error && rows.length === 0}
       emptyTitle="No listings found"
     >
+      <AdminListingReviewDialog
+        open={reviewListingId != null}
+        listingId={reviewListingId}
+        role={role}
+        onClose={() => setReviewListingId(null)}
+        onApproved={() => void reload()}
+      />
+      <AdminListingStatusHistoryDialog
+        open={historyListing != null}
+        listingId={historyListing?.id ?? null}
+        listingTitle={historyListing?.title}
+        role={role}
+        onClose={() => setHistoryListing(null)}
+      />
       <Card>
-        <DataTable columns={['Title', 'Price', 'Status', 'Created']} rows={rows} />
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value as ListingStatus | '');
+              setPage(1);
+            }}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+            aria-label="Filter listings by status"
+          >
+            <option value="">All statuses</option>
+            <option value="draft">Draft</option>
+            <option value="pending_review">Pending review</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="expired">Expired</option>
+            <option value="sold">Sold</option>
+            <option value="ended">Ended</option>
+            <option value="removed">Removed</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <DataTable columns={['Title', 'Price', 'Status', 'Created', 'Actions']} rows={rows} />
         <AdminTableFooter
           page={page}
           totalPages={totalPages}
@@ -278,26 +412,30 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
       report.status,
       moderationReportTarget(report),
       <div key={report.id} className="flex flex-wrap gap-2">
-        <AdminRowButton
-          label={isActing ? 'Working…' : 'Warn'}
-          onClick={() => void handleAction(report, 'warn')}
-          disabled={!canAct || isActing}
-          variant="secondary"
-        />
-        {report.listingId && (
-          <AdminRowButton
-            label="Remove listing"
-            onClick={() => void handleAction(report, 'delete_listing')}
+        <IconActionGroup>
+          <IconActionButton
+            icon="alert-triangle"
+            label={isActing ? 'Working…' : 'Warn user'}
             disabled={!canAct || isActing}
-            variant="danger"
+            onClick={() => void handleAction(report, 'warn')}
           />
-        )}
-        <AdminRowButton
-          label="Suspend user"
-          onClick={() => void handleAction(report, 'suspend')}
-          disabled={!canAct || isActing}
-          variant="danger"
-        />
+          {report.listingId && (
+            <IconActionButton
+              icon="trash"
+              label="Remove listing"
+              variant="danger"
+              disabled={!canAct || isActing}
+              onClick={() => void handleAction(report, 'delete_listing')}
+            />
+          )}
+          <IconActionButton
+            icon="user-minus"
+            label="Suspend user"
+            variant="danger"
+            disabled={!canAct || isActing}
+            onClick={() => void handleAction(report, 'suspend')}
+          />
+        </IconActionGroup>
       </div>,
     ];
   });
@@ -426,17 +564,22 @@ export function AdminVerificationsPage({ role }: { role: AdminServiceRole }) {
       item.badgeGranted ? 'Yes' : 'No',
       new Date(item.createdAt).toLocaleDateString(),
       <div key={item.id} className="flex flex-wrap gap-2">
-        <AdminRowButton
-          label={isActing ? 'Working…' : 'Approve'}
-          onClick={() => void handleApprove(item)}
-          disabled={isActing}
-        />
-        <AdminRowButton
-          label="Reject"
-          onClick={() => void handleReject(item)}
-          disabled={isActing}
-          variant="danger"
-        />
+        <IconActionGroup>
+          <IconActionButton
+            icon="check"
+            label={isActing ? 'Working…' : 'Approve verification'}
+            variant="accent"
+            disabled={isActing}
+            onClick={() => void handleApprove(item)}
+          />
+          <IconActionButton
+            icon="x"
+            label="Reject verification"
+            variant="danger"
+            disabled={isActing}
+            onClick={() => void handleReject(item)}
+          />
+        </IconActionGroup>
       </div>,
     ];
   });

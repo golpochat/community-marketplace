@@ -14,12 +14,15 @@ export function FeaturedListings({ listings }: FeaturedListingsProps) {
   if (items.length === 0) return null;
 
   return (
-    <section className="bg-gray-50 py-12">
+    <section className="bg-[hsl(var(--brand-neutral))] py-12">
       <div className="mx-auto max-w-6xl px-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Featured listings</h2>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-h2 text-gray-900">Featured listings</h2>
+            <p className="mt-1 text-small text-gray-600">Recently added items from your community</p>
+          </div>
           <Link href="/listings">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="shrink-0">
               View all →
             </Button>
           </Link>

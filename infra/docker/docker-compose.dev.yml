@@ -13,6 +13,7 @@ x-api-env: &api-env
   CORS_ORIGIN: http://localhost:3000,http://localhost:3001,http://web.localhost,http://admin.localhost
   JWT_SECRET: dev-jwt-secret-change-in-production
   WEB_APP_URL: http://localhost:3000
+  API_PUBLIC_URL: http://localhost:4000
   BULLMQ_MODE: producer
 
 services:
@@ -77,6 +78,8 @@ services:
       <<: *api-env
     ports:
       - "4000:4000"
+    volumes:
+      - api_uploads:/app/.data/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -156,6 +159,7 @@ volumes:
   postgres_data:
   redis_data:
   meili_data:
+  api_uploads:
 
 networks:
   cm-network:

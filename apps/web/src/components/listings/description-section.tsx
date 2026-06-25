@@ -1,6 +1,7 @@
 import { Badge } from '@community-marketplace/ui';
 import type { Listing, ListingCondition } from '@community-marketplace/types';
-import { formatCurrency } from '@community-marketplace/utils';
+
+import { ListingPriceDisplay } from '@/components/listings/listing-price-display';
 
 interface DescriptionSectionProps {
   listing: Listing;
@@ -19,9 +20,14 @@ export function DescriptionSection({ listing }: DescriptionSectionProps) {
         </Badge>
         <span className="text-sm text-gray-500">{listing.location.label}</span>
       </div>
-      <p className="text-3xl font-bold text-primary">
-        {formatCurrency(listing.price, listing.currency)}
-      </p>
+      <ListingPriceDisplay
+        price={listing.price}
+        originalPrice={listing.originalPrice}
+        salePrice={listing.salePrice}
+        discountPercent={listing.discountPercent}
+        currency={listing.currency}
+        size="detail"
+      />
       <div className="prose prose-sm max-w-none text-gray-700">
         <h2 className="text-lg font-semibold text-gray-900">Description</h2>
         <p className="whitespace-pre-wrap">{listing.description}</p>

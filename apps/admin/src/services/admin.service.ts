@@ -193,4 +193,13 @@ export const adminService = {
 
   unbanListing: (id: string) =>
     adminApiClient(ADMIN_API_ROUTES.admin.listingUnban(id), { method: 'POST' }),
+
+  removeListing: (id: string, body?: unknown) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.listingBan(id), {
+      method: 'POST',
+      body: JSON.stringify(body ?? {}),
+    }),
+
+  restoreListing: (id: string) =>
+    adminApiClient(ADMIN_API_ROUTES.admin.listingUnban(id), { method: 'POST' }),
 };

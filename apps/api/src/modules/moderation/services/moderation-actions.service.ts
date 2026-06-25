@@ -175,7 +175,7 @@ export class ModerationActionsService {
         if (report.listingId) {
           await this.prisma.listing.update({
             where: { id: report.listingId },
-            data: { status: 'archived', moderationHiddenAt: null },
+            data: { status: 'removed', moderationHiddenAt: null },
           });
         }
         break;

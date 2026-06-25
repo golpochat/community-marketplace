@@ -5,7 +5,17 @@ export const RBAC_ROLES = ['SUPER_ADMIN', 'ADMIN', 'SELLER', 'BUYER'] as const;
 export const USER_ROLES = RBAC_ROLES;
 export const USER_STATUSES = ['active', 'inactive', 'suspended'] as const;
 
-export const LISTING_STATUSES = ['draft', 'active', 'sold', 'archived', 'banned'] as const;
+export const LISTING_STATUSES = [
+  'draft',
+  'pending_review',
+  'active',
+  'paused',
+  'expired',
+  'sold',
+  'ended',
+  'removed',
+  'rejected',
+] as const;
 export const LISTING_CONDITIONS = ['new', 'like_new', 'good', 'fair', 'poor'] as const;
 
 export const PAYMENT_STATUSES = ['pending', 'processing', 'succeeded', 'failed', 'refunded', 'disputed'] as const;
@@ -21,6 +31,13 @@ export const NOTIFICATION_TYPES = [
   'payment_sent',
   'payment_refunded',
   'listing_approved',
+  'listing_rejected',
+  'listing_expiring_soon',
+  'listing_expired',
+  'listing_removed',
+  'listing_renewed',
+  'listing_changes_requested',
+  'listing_review_reply',
   'verification_approved',
   'verification_rejected',
   'admin_warning',

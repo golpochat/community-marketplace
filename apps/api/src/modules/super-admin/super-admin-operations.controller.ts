@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
 
@@ -63,6 +63,74 @@ export class SuperAdminOperationsController {
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20,
     );
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_LISTING)
+  @Post('listings/:id/approve')
+  approveListing(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.superAdminService.approveListing(id, user.id);
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_LISTING)
+  @Post('listings/:id/reject')
+  rejectListing(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.superAdminService.rejectListing(id, user.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.BAN_LISTING)
+  @Post('listings/:id/remove')
+  removeListing(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.superAdminService.removeListing(id, user.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.BAN_LISTING)
+  @Post('listings/:id/restore')
+  restoreListing(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.superAdminService.restoreListing(id, user.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
+  @Get('listings/:id/status-history')
+  getListingStatusHistory(@Param('id') id: string) {
+    return this.superAdminService.getListingStatusHistory(id);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
+  @Get('listings/:id/review')
+  getListingReview(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.superAdminService.getListingReview(id, user.id, user.role);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
+  @Post('listings/:id/review/messages')
+  addListingReviewMessage(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.superAdminService.addListingReviewMessage(id, user.id, user.role, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_LISTING)
+  @Post('listings/:id/request-changes')
+  requestListingChanges(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.superAdminService.requestListingChanges(id, user.id, user.role, body);
   }
 
   @RequirePermissions(PERMISSIONS.VIEW_REPORTS)

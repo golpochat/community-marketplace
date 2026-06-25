@@ -21,10 +21,10 @@ export class ListingAnalyticsService {
   }
 
   async getSellerSummary(sellerId: string) {
-    const [active, sold, archived, views, favorites] = await Promise.all([
+    const [active, sold, ended, views, favorites] = await Promise.all([
       this.prisma.listing.count({ where: { sellerId, status: 'active' } }),
       this.prisma.listing.count({ where: { sellerId, status: 'sold' } }),
-      this.prisma.listing.count({ where: { sellerId, status: 'archived' } }),
+      this.prisma.listing.count({ where: { sellerId, status: 'ended' } }),
       this.prisma.listing.aggregate({
         where: { sellerId },
         _sum: { viewCount: true },
@@ -38,7 +38,7 @@ export class ListingAnalyticsService {
     return {
       activeCount: active,
       soldCount: sold,
-      archivedCount: archived,
+      archivedCount: ended,
       totalViews: views._sum.viewCount ?? 0,
       totalFavorites: favorites._sum.favoriteCount ?? 0,
     };

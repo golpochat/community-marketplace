@@ -7,11 +7,13 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 
 import { runDevUsersSeed } from '../src/database/seeds/dev-users.seed';
+import { runDevCategoriesSeed } from '../src/database/seeds/dev-categories.seed';
 
 async function main() {
   const prisma = new PrismaClient();
   try {
     await runDevUsersSeed(prisma);
+    await runDevCategoriesSeed(prisma);
   } finally {
     await prisma.$disconnect();
   }
