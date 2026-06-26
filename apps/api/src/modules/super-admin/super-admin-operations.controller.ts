@@ -43,6 +43,7 @@ export class SuperAdminOperationsController {
   @RequirePermissions(PERMISSIONS.VIEW_USERS)
   @Get('users')
   getUsers(
+    @CurrentUser() user: AuthenticatedUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('role') role?: string,
@@ -53,6 +54,7 @@ export class SuperAdminOperationsController {
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20,
       { role, status, search },
+      user.role,
     );
   }
 

@@ -107,6 +107,10 @@ export class ListingsService {
     return this.lifecycle.approve(listingId, adminId);
   }
 
+  investigateListing(listingId: string, adminId: string, reason?: string) {
+    return this.lifecycle.investigateListing(listingId, adminId, reason);
+  }
+
   rejectListing(listingId: string, adminId: string, input: unknown) {
     const parsed = rejectListingSchema.parse(input);
     return this.lifecycle.rejectListing(listingId, adminId, parsed.reason);

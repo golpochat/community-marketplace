@@ -7,7 +7,10 @@ export type ListingStatus =
   | "sold"
   | "ended"
   | "removed"
-  | "rejected";
+  | "rejected"
+  | "flagged"
+  | "under_investigation"
+  | "suspended_seller";
 
 export type ListingPackageType =
   | "FREE"

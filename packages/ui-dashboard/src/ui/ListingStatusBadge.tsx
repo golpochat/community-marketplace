@@ -50,6 +50,21 @@ const STATUS_CONFIG: Record<
     dotClass: 'bg-red-400',
     textClass: 'text-red-700',
   },
+  flagged: {
+    label: 'Flagged',
+    dotClass: 'bg-orange-500',
+    textClass: 'text-orange-800',
+  },
+  under_investigation: {
+    label: 'Under investigation',
+    dotClass: 'bg-purple-500',
+    textClass: 'text-purple-800',
+  },
+  suspended_seller: {
+    label: 'Seller suspended',
+    dotClass: 'bg-red-600',
+    textClass: 'text-red-800',
+  },
 };
 
 export interface ListingStatusBadgeProps {

@@ -64,4 +64,48 @@ export const chatService = {
       body: JSON.stringify({ threadId, messageIds }),
     });
   },
+
+  async reportMessage(messageId: string, reason: string) {
+    const response = await apiClient(WEB_API_ROUTES.messages.report, {
+      method: 'POST',
+      body: JSON.stringify({ messageId, reason }),
+    });
+    return response.data;
+  },
+
+  async blockConversation(conversationId: string) {
+    const response = await apiClient(WEB_API_ROUTES.messages.block, {
+      method: 'POST',
+      body: JSON.stringify({ conversationId }),
+    });
+    return response.data;
+  },
+
+  async getAttachmentUploadUrl(
+    threadId: string,
+    file: File,
+  ) {
+    const response = await apiClient<{
+      uploadUrl: string;
+      publicUrl: string;
+    }>(`${WEB_API_ROUTES.chat.threads}/${threadId}/attachments/upload-url`, {
+      method: 'POST',
+      body: JSON.stringify({
+        contentType: file.type,
+        fileName: file.name,
+        fileSizeBytes: file.size,
+      }),
+    });
+    return response.data;
+  },
+
+  async uploadAttachment(threadId: string, file: File): Promise<string> {
+    const { uploadUrl, publicUrl } = await this.getAttachmentUploadUrl(threadId, file);
+    await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': file.type },
+    });
+    return publicUrl;
+  },
 };

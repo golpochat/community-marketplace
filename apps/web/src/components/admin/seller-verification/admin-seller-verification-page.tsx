@@ -17,6 +17,8 @@ import {
 
 import { AdminToastStack, useAdminToast } from '@/components/admin/seller-verification/admin-toast';
 import { ConfirmDialog } from '@/components/admin/seller-verification/confirm-dialog';
+import { ForceReverifyModal } from '@/components/admin/seller-verification/force-reverify-modal';
+import { ReactivateSellerModal } from '@/components/admin/seller-verification/reactivate-seller-modal';
 import { RejectVerificationModal } from '@/components/admin/seller-verification/reject-verification-modal';
 import { SellerStatusBadge } from '@/components/admin/seller-verification/seller-status-badge';
 import { SetListingLimitModal } from '@/components/admin/seller-verification/set-listing-limit-modal';
@@ -29,6 +31,8 @@ import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { usePermissions } from '@/hooks/use-permissions';
 import {
   canManageSellerLimits,
+  canReactivateSeller,
+  canForceReverifySeller,
   canReviewSellerVerification,
   canSuspendSeller,
   canViewSellerDocuments,
@@ -66,6 +70,8 @@ export function AdminSellerVerificationPage({
   const [rejectSellerName, setRejectSellerName] = useState('');
 
   const [suspendDetail, setSuspendDetail] = useState<AdminSellerVerificationDetail | null>(null);
+  const [reactivateDetail, setReactivateDetail] = useState<AdminSellerVerificationDetail | null>(null);
+  const [forceReverifyDetail, setForceReverifyDetail] = useState<AdminSellerVerificationDetail | null>(null);
   const [limitDetail, setLimitDetail] = useState<AdminSellerVerificationDetail | null>(null);
   const [historyUserId, setHistoryUserId] = useState<string | null>(null);
   const [historySellerName, setHistorySellerName] = useState<string | undefined>();
@@ -75,6 +81,8 @@ export function AdminSellerVerificationPage({
   const canReview = canReviewSellerVerification(userRole, permissions);
   const canViewDocs = canViewSellerDocuments(userRole, permissions);
   const canSuspend = canSuspendSeller(userRole, permissions);
+  const canReactivate = canReactivateSeller(userRole, permissions);
+  const canForceReverify = canForceReverifySeller(userRole, permissions);
   const canManageLimits = canManageSellerLimits(userRole, permissions);
 
   const fetchRows = useCallback(
@@ -94,20 +102,17 @@ export function AdminSellerVerificationPage({
     usePaginatedQuery({ fetcher: fetchRows, limit: pageSize });
 
   async function handleReverify(item: AdminSellerVerificationRow) {
-    setActing(true);
-    try {
-      await adminSellerVerificationService.requestReverification(
-        role,
-        item.userId,
-        'Admin requested re-verification',
-      );
-      push('Re-verification requested.', 'success');
-      await reload();
-    } catch (err) {
-      push(err instanceof Error ? err.message : 'Failed to request re-verification', 'error');
-    } finally {
-      setActing(false);
-    }
+    setForceReverifyDetail({
+      userId: item.userId,
+      email: item.email,
+      sellerName: item.sellerName,
+      sellerStatus: item.sellerStatus,
+      unverifiedListingCount: item.unverifiedListingCount,
+      sellerLimit: item.sellerLimit,
+      totalListings: item.totalListings,
+      joinedAt: item.joinedAt,
+      previousAttempts: [],
+    });
   }
 
   const handleReverifyStable = useCallback(
@@ -147,7 +152,10 @@ export function AdminSellerVerificationPage({
                 setReviewSellerName(item.sellerName);
               }}
             />
-            {canReview && item.requestId && item.requestStatus === 'pending' ? (
+            {canReview &&
+            item.requestId &&
+            item.requestStatus === 'pending' &&
+            item.sellerStatus !== 'verified' ? (
               <>
                 <IconActionButton
                   icon="check"
@@ -166,10 +174,10 @@ export function AdminSellerVerificationPage({
                 />
               </>
             ) : null}
-            {canReview && activeView === 'rejected' ? (
+            {canForceReverify && activeView === 'rejected' ? (
               <IconActionButton
                 icon="pencil"
-                label="Request re-verification"
+                label="Force re-verification"
                 onClick={() => void handleReverifyStable(item)}
               />
             ) : null}
@@ -230,6 +238,46 @@ export function AdminSellerVerificationPage({
       await reload();
     } catch (err) {
       push(err instanceof Error ? err.message : 'Failed to suspend seller', 'error');
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleReactivate(payload: { reason: string }) {
+    if (!reactivateDetail) return;
+    setActing(true);
+    try {
+      await adminSellerVerificationService.reactivateSeller(role, {
+        userId: reactivateDetail.userId,
+        reason: payload.reason,
+      });
+      push('Seller reactivated.', 'success');
+      setReactivateDetail(null);
+      setReviewRequestId(undefined);
+      setReviewUserId(undefined);
+      await reload();
+    } catch (err) {
+      push(err instanceof Error ? err.message : 'Failed to reactivate seller', 'error');
+    } finally {
+      setActing(false);
+    }
+  }
+
+  async function handleForceReverify(payload: { reason: string }) {
+    if (!forceReverifyDetail) return;
+    setActing(true);
+    try {
+      await adminSellerVerificationService.forceReverify(role, {
+        userId: forceReverifyDetail.userId,
+        reason: payload.reason,
+      });
+      push('Re-verification required.', 'success');
+      setForceReverifyDetail(null);
+      setReviewRequestId(undefined);
+      setReviewUserId(undefined);
+      await reload();
+    } catch (err) {
+      push(err instanceof Error ? err.message : 'Failed to force re-verification', 'error');
     } finally {
       setActing(false);
     }
@@ -355,6 +403,8 @@ export function AdminSellerVerificationPage({
         canViewDocuments={canViewDocs}
         canReview={canReview}
         canSuspend={canSuspend}
+        canReactivate={canReactivate}
+        canForceReverify={canForceReverify}
         canManageLimits={canManageLimits}
         onClose={() => {
           setReviewRequestId(undefined);
@@ -366,6 +416,8 @@ export function AdminSellerVerificationPage({
           setRejectSellerName(reviewSellerName ?? 'Seller');
         }}
         onSuspend={(detail) => setSuspendDetail(detail)}
+        onReactivate={(detail) => setReactivateDetail(detail)}
+        onForceReverify={(detail) => setForceReverifyDetail(detail)}
         onSetLimit={(detail) => setLimitDetail(detail)}
         onViewHistory={(userId, sellerName) => {
           setHistoryUserId(userId);
@@ -397,6 +449,22 @@ export function AdminSellerVerificationPage({
         loading={acting}
         onSubmit={(payload) => void handleSuspend(payload)}
         onClose={() => setSuspendDetail(null)}
+      />
+
+      <ReactivateSellerModal
+        open={reactivateDetail != null}
+        sellerName={reactivateDetail?.sellerName ?? reactivateDetail?.email ?? 'Seller'}
+        loading={acting}
+        onSubmit={(payload) => void handleReactivate(payload)}
+        onClose={() => setReactivateDetail(null)}
+      />
+
+      <ForceReverifyModal
+        open={forceReverifyDetail != null}
+        sellerName={forceReverifyDetail?.sellerName ?? forceReverifyDetail?.email ?? 'Seller'}
+        loading={acting}
+        onSubmit={(payload) => void handleForceReverify(payload)}
+        onClose={() => setForceReverifyDetail(null)}
       />
 
       <SetListingLimitModal

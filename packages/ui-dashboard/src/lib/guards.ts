@@ -39,7 +39,7 @@ export function isDashboardRouteAllowed(role: RbacRole | null, pathname: string)
   if (!required) return false;
 
   if (required === 'SUPER_ADMIN') return role === 'SUPER_ADMIN';
-  if (required === 'ADMIN') return role === 'ADMIN' || role === 'SUPER_ADMIN';
+  if (required === 'ADMIN') return role === 'ADMIN';
 
   return role === required;
 }

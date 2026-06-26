@@ -12,10 +12,14 @@ import {
 } from '@community-marketplace/types';
 
 import { PrismaService } from '../../../database/prisma.service';
+import { SellerStatusHistoryService } from './seller-status-history.service';
 
 @Injectable()
 export class SellerListingGateService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly statusHistory: SellerStatusHistoryService,
+  ) {}
 
   async assertCanCreateListing(sellerId: string): Promise<void> {
     const result = await this.checkCanCreateListing(sellerId);
@@ -143,21 +147,22 @@ export class SellerListingGateService {
   ) {
     if (oldStatus === newStatus) return;
 
-    await this.prisma.$transaction([
-      this.prisma.user.update({
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
         where: { id: userId },
         data: { sellerStatus: newStatus },
-      }),
-      this.prisma.sellerStatusHistory.create({
-        data: {
+      });
+      await this.statusHistory.logChange(
+        {
           userId,
           oldStatus,
           newStatus,
           changedBy,
           reason,
         },
-      }),
-    ]);
+        tx,
+      );
+    });
   }
 
   private getSellerFields(sellerId: string) {
@@ -196,12 +201,13 @@ export class SellerVerificationStatusService {
     const phoneVerified = user.phoneVerified || Boolean(user.phoneVerifiedAt);
     const emailVerified = user.emailVerified || Boolean(user.emailVerifiedAt);
     const pendingRequest = user.sellerVerificationRequests[0] ?? null;
+    const verificationSubmitted = Boolean(user.verificationRequestedAt);
 
     const currentStage = this.resolveStage({
       phoneVerified,
       emailVerified,
       sellerStatus: user.sellerStatus,
-      hasPendingRequest: Boolean(pendingRequest),
+      verificationSubmitted,
       idVerified: user.idVerified,
     });
 
@@ -225,9 +231,7 @@ export class SellerVerificationStatusService {
       verificationRequestedAt: user.verificationRequestedAt?.toISOString(),
       verificationCompletedAt: user.verificationCompletedAt?.toISOString(),
       verificationRejectedReason: user.verificationRejectedReason ?? undefined,
-      pendingRequest: pendingRequest
-        ? this.mapRequest(pendingRequest)
-        : null,
+      pendingRequest: pendingRequest ? this.mapRequest(pendingRequest) : null,
     };
   }
 
@@ -235,13 +239,11 @@ export class SellerVerificationStatusService {
     phoneVerified: boolean;
     emailVerified: boolean;
     sellerStatus: SellerStatus;
-    hasPendingRequest: boolean;
+    verificationSubmitted: boolean;
     idVerified: boolean;
   }) {
     if (input.sellerStatus === 'verified' || input.idVerified) return 'complete' as const;
-    if (input.hasPendingRequest || input.sellerStatus === 'under_review') {
-      return 'review' as const;
-    }
+    if (input.verificationSubmitted) return 'review' as const;
     if (!input.phoneVerified) return 'phone' as const;
     if (!input.emailVerified) return 'email' as const;
     return 'identity' as const;

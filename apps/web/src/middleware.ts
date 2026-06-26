@@ -3,6 +3,7 @@ import {
   getRoleFromRequest,
   isDashboardPath,
   resolveDashboardRedirect,
+  resolveSuperAdminAdminNamespaceRedirect,
 } from '@/lib/route-guards';
 import { getDashboardRouteByRole } from '@community-marketplace/ui-dashboard';
 import { NextResponse } from 'next/server';
@@ -11,6 +12,11 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const role = getRoleFromRequest(request.headers.get('cookie'));
+
+  const superAdminNamespaceRedirect = resolveSuperAdminAdminNamespaceRedirect(pathname, role);
+  if (superAdminNamespaceRedirect) {
+    return NextResponse.redirect(new URL(superAdminNamespaceRedirect, request.url));
+  }
 
   const redirectTarget = resolveDashboardRedirect(pathname, role);
   if (redirectTarget) {

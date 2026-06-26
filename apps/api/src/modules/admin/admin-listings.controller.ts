@@ -9,11 +9,26 @@ import {
 } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
+import {
+  adminListingIdSchema,
+  investigateListingSchema,
+  rejectListingSchema,
+} from '@community-marketplace/validation';
+import { z } from 'zod';
 
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { ListingsService } from '../listings/listings.service';
+
+const adminRejectListingBodySchema = rejectListingSchema.extend({
+  listingId: adminListingIdSchema.shape.listingId,
+});
+
+const adminRemoveListingBodySchema = z.object({
+  listingId: adminListingIdSchema.shape.listingId,
+  reason: z.string().min(3).max(2000),
+});
 
 @RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin/listings')
@@ -38,6 +53,86 @@ export class AdminListingsController {
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
     });
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
+  @Get('pending')
+  listPending(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.listingsService.adminList({
+      status: 'pending_review',
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
+  @Get('flagged')
+  listFlagged(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.listingsService.adminList({
+      status: 'flagged',
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
+  @Get('rejected')
+  listRejected(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.listingsService.adminList({
+      status: 'rejected',
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)
+  @Get('removed')
+  listRemoved(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.listingsService.adminList({
+      status: 'removed',
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+    });
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_LISTING)
+  @Post('approve')
+  approveListing(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: unknown,
+  ) {
+    const { listingId } = adminListingIdSchema.parse(body);
+    return this.listingsService.approve(listingId, user.id);
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_LISTING)
+  @Post('reject')
+  rejectListingBulk(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: unknown,
+  ) {
+    const parsed = adminRejectListingBodySchema.parse(body);
+    return this.listingsService.rejectListing(parsed.listingId, user.id, { reason: parsed.reason });
+  }
+
+  @RequirePermissions(PERMISSIONS.BAN_LISTING)
+  @Post('remove')
+  removeListingBulk(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: unknown,
+  ) {
+    const parsed = adminRemoveListingBodySchema.parse(body);
+    return this.listingsService.removeListing(parsed.listingId, user.id, { reason: parsed.reason });
+  }
+
+  @RequirePermissions(PERMISSIONS.APPROVE_LISTING)
+  @Post('investigate')
+  investigateListing(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: unknown,
+  ) {
+    const parsed = investigateListingSchema.parse(body);
+    return this.listingsService.investigateListing(parsed.listingId, user.id, parsed.reason);
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_LISTINGS)

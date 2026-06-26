@@ -7,6 +7,7 @@ import type { RbacRole } from '@community-marketplace/types';
 
 import { getSidebarItemsByRole } from '../lib/routes';
 import type { SidebarNavItem } from './sidebar-config';
+import { isSidebarLinkItem } from './sidebar-config';
 import { useSidebar } from '../lib/sidebar-context';
 import { getThemeByRole } from '../theme/theme-tokens';
 import { SidebarDisabledItem, SidebarNavGroup } from './SidebarNavGroup';
@@ -59,6 +60,22 @@ export function Sidebar({
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {navItems.map((item) => {
+          if (item.sectionHeader) {
+            if (isCollapsed) return null;
+            return (
+              <p
+                key={item.id}
+                className="px-3 pb-1 pt-4 text-xs font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))] first:pt-2"
+              >
+                {item.label}
+              </p>
+            );
+          }
+
+          if (!isSidebarLinkItem(item)) {
+            return null;
+          }
+
           if (item.disabled) {
             return <SidebarDisabledItem key={item.id} item={item} collapsed={isCollapsed} />;
           }

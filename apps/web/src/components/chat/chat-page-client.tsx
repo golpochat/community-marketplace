@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { BuyerTrustProfile, ChatInboxItem, ChatMessage } from '@community-marketplace/types';
 
+import { BlockConversationModal } from '@/components/chat/block-conversation-modal';
+import { ReportMessageModal } from '@/components/chat/report-message-modal';
 import { ChatLayout } from '@/components/layout/chat-layout';
 import { BuyerTrustBadges } from '@/components/trust/buyer-trust-badges';
 import { useChatSocket } from '@/hooks/use-chat-socket';
@@ -40,6 +42,10 @@ export function ChatPageClient({
   const [typingLabel, setTypingLabel] = useState<string>();
   const [threadError, setThreadError] = useState<string | null>(null);
   const [buyerTrust, setBuyerTrust] = useState<BuyerTrustProfile | null>(null);
+  const [reportMessageId, setReportMessageId] = useState<string | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [blockModalOpen, setBlockModalOpen] = useState(false);
+  const [blockLoading, setBlockLoading] = useState(false);
   const activeThreadIdRef = useRef(activeThreadId);
   const autoThreadHandled = useRef(false);
 
@@ -171,16 +177,48 @@ export function ChatPageClient({
     onReadReceipt: handleReadReceipt,
   });
 
-  const handleSend = async (content: string) => {
+  const handleSend = async (content: string, attachmentUrl?: string) => {
     if (!activeThreadId) return;
     try {
-      const sent = await chatService.sendMessage(activeThreadId, content);
+      const sent = await chatService.sendMessage(
+        activeThreadId,
+        content,
+        attachmentUrl ? 'image' : 'text',
+        attachmentUrl,
+      );
       setMessages((prev) =>
         prev.some((m) => m.id === sent.id) ? prev : [...prev, sent],
       );
       void loadInbox();
     } catch (err) {
       setThreadError(err instanceof Error ? err.message : 'Failed to send message');
+    }
+  };
+
+  const handleReportSubmit = async (reason: string) => {
+    if (!reportMessageId) return;
+    setReportLoading(true);
+    try {
+      await chatService.reportMessage(reportMessageId, reason);
+      setReportMessageId(null);
+    } catch (err) {
+      setThreadError(err instanceof Error ? err.message : 'Failed to report message');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const handleBlockConfirm = async () => {
+    if (!activeThreadId) return;
+    setBlockLoading(true);
+    try {
+      await chatService.blockConversation(activeThreadId);
+      setBlockModalOpen(false);
+      await loadInbox();
+    } catch (err) {
+      setThreadError(err instanceof Error ? err.message : 'Failed to block conversation');
+    } finally {
+      setBlockLoading(false);
     }
   };
 
@@ -215,6 +253,7 @@ export function ChatPageClient({
       <ChatLayout
       inbox={inbox}
       activeThreadId={activeThreadId}
+      activeInboxItem={activeInboxItem}
       messages={messages}
       currentUserId={currentUserId}
       typingLabel={typingLabel}
@@ -222,7 +261,22 @@ export function ChatPageClient({
       onSelectThread={setActiveThreadId}
       onSend={handleSend}
       onTyping={handleTypingInput}
+      onReportMessage={setReportMessageId}
+      onBlockConversation={() => setBlockModalOpen(true)}
     />
+      <ReportMessageModal
+        open={reportMessageId != null}
+        loading={reportLoading}
+        onSubmit={handleReportSubmit}
+        onClose={() => setReportMessageId(null)}
+      />
+      <BlockConversationModal
+        open={blockModalOpen}
+        participantName={activeInboxItem?.participant.displayName}
+        loading={blockLoading}
+        onConfirm={handleBlockConfirm}
+        onClose={() => setBlockModalOpen(false)}
+      />
     </>
   );
 }

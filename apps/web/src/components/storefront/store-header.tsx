@@ -1,40 +1,94 @@
+'use client';
+
 import type { SellerStorefront } from '@community-marketplace/types';
+import { MapPin, MessageCircle } from 'lucide-react';
 
 import { StoreBanner } from '@/components/storefront/store-banner';
+import { StoreContactButton } from '@/components/storefront/store-contact-button';
 import { StoreLogo } from '@/components/storefront/store-logo';
-import { SellerTrustBadges } from '@/components/trust/seller-trust-badges';
+import { StoreStatsStrip } from '@/components/storefront/store-stats-strip';
+import { StoreVerificationLabel } from '@/components/storefront/store-verification-label';
 import { SellerRatingDisplay } from '@/components/trust/seller-rating-display';
 
 interface StoreHeaderProps {
   store: SellerStorefront;
+  listingCount: number;
 }
 
-export function StoreHeader({ store }: StoreHeaderProps) {
+export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
+  const joinedLabel = store.memberSince
+    ? new Date(store.memberSince).toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+      })
+    : null;
+
   return (
-    <div className="relative">
+    <header className="border-b border-gray-200 bg-white">
       <StoreBanner bannerUrl={store.bannerUrl} name={store.name} />
+
       <div className="mx-auto max-w-6xl px-4">
-        <div className="-mt-12 flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
-          <StoreLogo logoUrl={store.logoUrl} name={store.name} />
-          <div className="space-y-2 pb-4">
-            <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{store.name}</h1>
-            {store.tagline && <p className="text-gray-600">{store.tagline}</p>}
-            {store.location && <p className="text-sm text-gray-500">{store.location}</p>}
-            <SellerRatingDisplay
-              averageRating={store.analytics.averageRating}
-              reviewCount={store.analytics.reviewCount}
-              size="md"
-            />
-            <SellerTrustBadges
-              verified={store.verified}
-              memberSince={store.memberSince}
-              soldCount={store.analytics.totalSales}
-              averageRating={store.analytics.averageRating}
-              reviewCount={store.analytics.reviewCount}
-            />
+        <div className="relative -mt-14 sm:-mt-16 md:-mt-[4.5rem]">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+              <StoreLogo logoUrl={store.logoUrl} name={store.name} />
+              <div className="min-w-0 space-y-2 pb-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+                    {store.name}
+                  </h1>
+                  <StoreVerificationLabel
+                    sellerStatus={store.sellerStatus}
+                    verified={store.verified}
+                  />
+                </div>
+                {store.tagline ? (
+                  <p className="text-sm text-gray-600 sm:text-base">{store.tagline}</p>
+                ) : null}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                  {joinedLabel ? <span>Joined {joinedLabel}</span> : null}
+                  {store.location ? (
+                    <span className="inline-flex items-center gap-1 text-gray-600">
+                      <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
+                      {store.location}
+                    </span>
+                  ) : null}
+                </div>
+                <SellerRatingDisplay
+                  averageRating={store.analytics.averageRating}
+                  reviewCount={store.analytics.reviewCount}
+                  size="md"
+                />
+              </div>
+            </div>
+
+            <div className="hidden shrink-0 pb-1 lg:block">
+              <StoreContactButton
+                sellerId={store.sellerId}
+                listingId={store.contactListingId}
+                className="min-w-[11rem]"
+              />
+            </div>
           </div>
         </div>
+
+        <div className="py-6 md:py-8">
+          <StoreStatsStrip
+            listingCount={listingCount}
+            analytics={store.analytics}
+            memberSince={store.memberSince}
+          />
+        </div>
       </div>
-    </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 p-3 shadow-lg backdrop-blur-sm lg:hidden">
+        <StoreContactButton
+          sellerId={store.sellerId}
+          listingId={store.contactListingId}
+          icon={<MessageCircle className="h-4 w-4" aria-hidden />}
+          label="Message seller"
+        />
+      </div>
+    </header>
   );
 }

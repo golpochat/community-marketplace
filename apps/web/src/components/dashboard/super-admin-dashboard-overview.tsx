@@ -46,7 +46,7 @@ export function SuperAdminDashboardOverview({ stats }: SuperAdminDashboardOvervi
           Governance
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="RBAC Roles" value={String(stats.roles)} />
+          <StatCard label="Platform roles" value={String(stats.roles)} />
           <StatCard label="Permissions" value={String(stats.permissions)} />
           <StatCard label="Pending Verifications" value={String(stats.pendingVerifications)} />
           <StatCard label="Active Bans" value={String(stats.activeBans)} />
@@ -75,9 +75,9 @@ export function SuperAdminDashboardOverview({ stats }: SuperAdminDashboardOvervi
           href="/super-admin/rbac"
           className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-main-bg))] p-4 transition-colors hover:bg-[hsl(var(--dashboard-sidebar-active)/0.3)]"
         >
-          <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">RBAC matrix</p>
+          <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">Roles & permissions</p>
           <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-            Manage roles and permission assignments.
+            Manage who can access each part of the platform.
           </p>
         </Link>
         <Link

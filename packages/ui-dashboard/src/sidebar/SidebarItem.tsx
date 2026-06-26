@@ -4,12 +4,12 @@ import Link from 'next/link';
 
 import { cn } from '@community-marketplace/ui';
 
-import type { SidebarNavItem } from './sidebar-config';
+import type { SidebarLinkItem } from './sidebar-config';
 import { Icon } from '../ui/Icon';
 import { Tooltip } from '../ui/Tooltip';
 
 export interface SidebarItemProps {
-  item: SidebarNavItem;
+  item: SidebarLinkItem;
   isActive: boolean;
   collapsed?: boolean;
   onNavigate?: () => void;

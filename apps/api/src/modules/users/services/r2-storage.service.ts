@@ -11,12 +11,14 @@ export type R2AssetCategory =
   | 'user-avatars'
   | 'listing-images'
   | 'verification-documents'
+  | 'dispute-evidence'
   | 'system-assets';
 
 const CATEGORY_PREFIX: Record<R2AssetCategory, string> = {
   'user-avatars': 'user-avatars',
   'listing-images': 'listing-images',
   'verification-documents': 'verification-documents',
+  'dispute-evidence': 'dispute-evidence',
   'system-assets': 'system-assets',
 };
 
@@ -129,6 +131,23 @@ export class R2StorageService {
       contentType,
       fileName,
     });
+  }
+
+  async createDisputeEvidenceUploadUrl(
+    userId: string,
+    contentType: string,
+    fileName?: string,
+  ): Promise<AvatarUploadUrlResponse> {
+    return this.createSignedUploadUrl({
+      category: 'dispute-evidence',
+      ownerId: userId,
+      contentType,
+      fileName,
+    });
+  }
+
+  verifyDisputeEvidenceKey(key: string, userId: string): boolean {
+    return this.verifyKeyCategory(key, 'dispute-evidence', userId);
   }
 
   verifyKeyBelongsToUser(key: string, userId: string): boolean {

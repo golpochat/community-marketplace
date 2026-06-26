@@ -417,7 +417,14 @@ export class AuthService {
 
     });
 
-
+    this.eventBus.publish({
+      type: 'user.activated',
+      payload: {
+        userId: result.userId,
+        deviceFingerprint: context.deviceFingerprint,
+      },
+      timestamp: new Date(),
+    });
 
     return {
 

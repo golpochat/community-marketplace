@@ -5,6 +5,7 @@ export { formatListingConditionLabel, LISTING_CONDITION_LABELS } from './listing
 export { isFreeListingPrice } from './listing-price';
 export { buildDeliverySummaryLabel } from './delivery';
 export { formatLocationLabel } from './location';
+export { parseStoreAddress, type ParsedStoreAddress } from './store-address';
 export {
   extractPrimaryAreaName,
   normalizeAreaSlug,

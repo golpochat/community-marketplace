@@ -23,6 +23,9 @@ export interface ChatThread {
   sellerId: string;
   listingId: string;
   lastMessageAt?: string;
+  lastMessagePreview?: string;
+  isBlocked: boolean;
+  blockedBy?: string;
   archivedByBuyer: boolean;
   archivedBySeller: boolean;
   createdAt: string;
@@ -80,6 +83,25 @@ export interface ChatMessageFlag {
   resolvedAt?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AdminMessageFlagItem extends ChatMessageFlag {
+  messageContent: string;
+  messageCreatedAt: string;
+  threadId: string;
+  listingTitle: string;
+  sellerId: string;
+  sellerDisplayName?: string;
+  buyerId: string;
+  buyerDisplayName?: string;
+  reporterDisplayName?: string;
+}
+
+export interface ChatConversationDetail {
+  thread: ChatThread;
+  messages: ChatMessage[];
+  listing: ChatListingPreview;
+  participant: ChatParticipantPreview;
 }
 
 export interface ChatBan {

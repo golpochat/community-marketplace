@@ -10,6 +10,7 @@ import { VerificationProgressBar } from '@/components/seller/verification';
 import { sellerVerificationService } from '@/services/seller-verification.service';
 
 import { SellerProfileStatusBadge } from './seller-profile-status-badge';
+import { SellerStatusHistoryPanel } from './seller-status-history-panel';
 
 const STEPS = [
   { id: 1, label: 'Phone' },
@@ -20,10 +21,10 @@ const STEPS = [
 
 function activeStepIndex(status: SellerVerificationStatus | null): number {
   if (!status) return 0;
-  if (status.sellerStatus === 'verified' || status.sellerStatus === 'under_review') return 4;
+  if (status.sellerStatus === 'verified' || status.verificationRequestedAt) return 4;
   if (!status.phoneVerified) return 0;
-  if (!status.idVerified && !status.pendingRequest) return 1;
-  if (!status.pendingRequest) return 2;
+  if (!status.idVerified && !status.pendingRequest?.idDocumentPath) return 1;
+  if (!status.pendingRequest?.selfiePath) return 2;
   return 3;
 }
 
@@ -94,8 +95,7 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
   const canSubmitDocs =
     status &&
     status.sellerStatus !== 'verified' &&
-    status.sellerStatus !== 'under_review' &&
-    !status.pendingRequest &&
+    !status.verificationRequestedAt &&
     status.phoneVerified &&
     status.emailVerified;
 
@@ -107,7 +107,7 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
     setSubmitting(true);
     setError(null);
     try {
-      await sellerVerificationService.start({
+      await sellerVerificationService.phone({
         action: 'send_otp',
         phone: phone.trim(),
       });
@@ -124,7 +124,7 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
     setSubmitting(true);
     setError(null);
     try {
-      await sellerVerificationService.start({
+      await sellerVerificationService.phone({
         action: 'verify_otp',
         phone: phone.trim(),
         code: otpCode.trim(),
@@ -151,7 +151,7 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
         sellerVerificationService.uploadDocument(files.idDocument, 'id'),
         sellerVerificationService.uploadDocument(files.selfie, 'selfie'),
         files.addressProof
-          ? sellerVerificationService.uploadDocument(files.addressProof, 'id')
+          ? sellerVerificationService.uploadDocument(files.addressProof, 'address')
           : Promise.resolve(undefined),
       ]);
 
@@ -381,6 +381,8 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
           </>
         )}
       </Card>
+
+      <SellerStatusHistoryPanel />
     </div>
   );
 }

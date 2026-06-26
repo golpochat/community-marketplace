@@ -18,6 +18,7 @@ import { SellerShareAnalyticsController } from './seller-share-analytics.control
 import { SellerSearchController } from './seller-search.controller';
 import { SellerBuyerReviewsController } from './seller-buyer-reviews.controller';
 import { SellerBuyerReviewsService } from './seller-buyer-reviews.service';
+import { SellerStatusHistoryController } from './seller-status-history.controller';
 import { SellerVerificationController } from './seller-verification.controller';
 import { SellerVerificationModule } from './seller-verification.module';
 
@@ -43,6 +44,7 @@ import { SellerVerificationModule } from './seller-verification.module';
     SellerReportsController,
     SellerShareAnalyticsController,
     SellerBuyerReviewsController,
+    SellerStatusHistoryController,
     SellerVerificationController,
   ],
   providers: [SellerBuyerReviewsService],

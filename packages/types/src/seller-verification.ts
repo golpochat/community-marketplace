@@ -12,6 +12,24 @@ export type SellerVerificationStage =
   | 'review'
   | 'complete';
 
+export type SellerVerificationNextStep =
+  | 'phone'
+  | 'email'
+  | 'id_document'
+  | 'selfie'
+  | 'address'
+  | 'submit'
+  | 'review'
+  | 'complete';
+
+export interface SellerVerificationStartResponse {
+  requestId: string;
+  nextRequiredStep: SellerVerificationNextStep;
+  sellerStatus: SellerStatus;
+  phoneVerified: boolean;
+  emailVerified: boolean;
+}
+
 export interface SellerVerificationRequest {
   id: string;
   userId: string;
@@ -33,6 +51,7 @@ export interface SellerStatusHistoryEntry {
   oldStatus: SellerStatus;
   newStatus: SellerStatus;
   changedBy?: string;
+  changedByName?: string;
   reason?: string;
   createdAt: string;
 }
@@ -101,5 +120,8 @@ export const SELLER_VERIFICATION_MESSAGES = {
   UNDER_REVIEW: 'Your verification is under review.',
   APPROVED: 'Your verification was approved.',
   REJECTED_PREFIX: 'Your verification was rejected:',
+  SUSPENDED: 'Your seller account has been suspended.',
+  REACTIVATED: 'Your seller account has been reactivated.',
+  FORCE_REVERIFY: 'Your account requires re-verification.',
   MAX_UNVERIFIED: 'You have reached the maximum number of unverified listings.',
 } as const;

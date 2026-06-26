@@ -11,11 +11,14 @@ interface ChatLayoutProps {
   activeThreadId?: string;
   messages: ChatMessage[];
   currentUserId: string;
+  activeInboxItem?: ChatInboxItem;
   typingLabel?: string;
   threadHeader?: React.ReactNode;
   onSelectThread: (threadId: string | undefined) => void;
-  onSend: (content: string) => void;
+  onSend: (content: string, attachmentUrl?: string) => void;
   onTyping?: () => void;
+  onReportMessage?: (messageId: string) => void;
+  onBlockConversation?: () => void;
 }
 
 export function ChatLayout({
@@ -23,11 +26,14 @@ export function ChatLayout({
   activeThreadId,
   messages,
   currentUserId,
+  activeInboxItem,
   typingLabel,
   threadHeader,
   onSelectThread,
   onSend,
   onTyping,
+  onReportMessage,
+  onBlockConversation,
 }: ChatLayoutProps) {
   const showInbox = !activeThreadId;
   const showThread = Boolean(activeThreadId);
@@ -61,8 +67,13 @@ export function ChatLayout({
             threadId={activeThreadId!}
             currentUserId={currentUserId}
             messages={messages}
+            listing={activeInboxItem?.listing}
+            participant={activeInboxItem?.participant}
+            isBlocked={activeInboxItem?.thread.isBlocked}
             onSend={onSend}
             onTyping={onTyping}
+            onReportMessage={onReportMessage}
+            onBlockConversation={onBlockConversation}
             typingLabel={typingLabel}
             header={threadHeader}
           />

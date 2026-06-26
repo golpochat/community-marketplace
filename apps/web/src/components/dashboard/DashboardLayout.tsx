@@ -13,6 +13,13 @@ import { useUserProfile } from '@/hooks/use-user-profile';
 import { filterSidebarItems } from '@/lib/admin-sidebar';
 import { authService } from '@/services/auth.service';
 
+const PROFILE_HREF: Record<RbacRole, string> = {
+  SUPER_ADMIN: '/super-admin/profile',
+  ADMIN: '/admin/profile',
+  SELLER: '/seller/profile',
+  BUYER: '/buyer/profile',
+};
+
 const SETTINGS_HREF: Record<RbacRole, string> = {
   SUPER_ADMIN: '/super-admin/settings',
   ADMIN: '/admin/settings',
@@ -67,8 +74,8 @@ export default function DashboardLayout({ role, theme, children }: WebDashboardL
         email: user?.email,
         avatarUrl: user?.avatarUrl,
       }}
-      profileHref={SETTINGS_HREF[role]}
-      settingsHref={SETTINGS_HREF[role]}
+      profileHref={PROFILE_HREF[role]}
+      settingsHref={role === 'SUPER_ADMIN' ? SETTINGS_HREF[role] : undefined}
       onLogout={handleLogout}
       topbarActions={
         <NotificationBell href={NOTIFICATIONS_HREF[role]} role={role} />

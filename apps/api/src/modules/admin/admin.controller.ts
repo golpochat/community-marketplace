@@ -32,6 +32,7 @@ export class AdminController {
   @RequirePermissions(PERMISSIONS.VIEW_USERS)
   @Get('users')
   getUsers(
+    @CurrentUser() user: AuthenticatedUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('role') role?: string,
@@ -46,6 +47,7 @@ export class AdminController {
         ...(status ? { status } : {}),
         ...(search ? { search } : {}),
       },
+      user.role,
     );
   }
 

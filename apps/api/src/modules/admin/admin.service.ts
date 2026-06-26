@@ -100,8 +100,13 @@ export class AdminService {
     return merged;
   }
 
-  getUsers(page = 1, limit = 20, query: Record<string, string | undefined> = {}) {
-    return this.usersService.listUsers({ page, limit, ...query });
+  getUsers(
+    page = 1,
+    limit = 20,
+    query: Record<string, string | undefined> = {},
+    actorRole: RbacRole = 'ADMIN',
+  ) {
+    return this.usersService.listUsers({ page, limit, ...query }, actorRole);
   }
 
   getListings(page = 1, limit = 20) {

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { ListingSummary, Payment, PaymentIntentResponse, PendingReviewItem } from '@community-marketplace/types';
@@ -239,14 +240,22 @@ export default function BuyerPurchasesPage() {
                     {payment.status}
                   </span>
                   {payment.status === 'succeeded' && (
-                    <button
-                      type="button"
-                      onClick={() => void handleRefund(payment)}
-                      disabled={refundingId === payment.id}
-                      className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      {refundingId === payment.id ? 'Requesting…' : 'Request refund'}
-                    </button>
+                    <>
+                      <Link
+                        href={`/buyer/disputes/create?listingId=${payment.listingId}&paymentId=${payment.id}`}
+                        className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100"
+                      >
+                        Open dispute
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => void handleRefund(payment)}
+                        disabled={refundingId === payment.id}
+                        className="rounded-md border border-gray-200 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                      >
+                        {refundingId === payment.id ? 'Requesting…' : 'Request refund'}
+                      </button>
+                    </>
                   )}
                 </div>
               </li>

@@ -648,8 +648,8 @@ export function AdminVerificationsPage({ role }: { role: AdminServiceRole }) {
 
   return (
     <DashboardPageShell
-      title="Verifications"
-      description="Review seller identity verification requests."
+      title="Account Verifications"
+      description="Review pending user account and badge verification requests."
       loading={loading}
       error={error}
       empty={!loading && !error && rows.length === 0}
@@ -762,89 +762,8 @@ export function AdminNotificationsPage({ role }: { role: AdminServiceRole }) {
   );
 }
 
-export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
-  const [health, setHealth] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void adminService
-      .getSearchHealth(role)
-      .then((data) => {
-        if (!cancelled) setHealth(data);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [role]);
-
-  return (
-    <DashboardPageShell
-      title={role === 'ADMIN' ? 'Search Tools' : 'Search'}
-      description="Meilisearch health and index status."
-      loading={loading}
-      error={error}
-      empty={!loading && !error && !health}
-      emptyTitle="Search health unavailable"
-    >
-      <Card title="Search health">
-        <pre className="overflow-auto rounded-lg bg-gray-50 p-4 text-xs text-gray-900">
-          {JSON.stringify(health, null, 2)}
-        </pre>
-      </Card>
-    </DashboardPageShell>
-  );
-}
-
-export function AdminAnalyticsPage({ role }: { role: AdminServiceRole }) {
-  const [analytics, setAnalytics] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void adminService
-      .getModerationAnalytics(role)
-      .then((data) => {
-        if (!cancelled) setAnalytics(data);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [role]);
-
-  return (
-    <DashboardPageShell
-      title="Analytics"
-      description="Platform moderation and operational insights."
-      loading={loading}
-      error={error}
-      empty={!loading && !error && !analytics}
-      emptyTitle="Analytics unavailable"
-    >
-      <Card title="Moderation analytics">
-        <pre className="overflow-auto rounded-lg bg-gray-50 p-4 text-xs text-gray-900">
-          {JSON.stringify(analytics, null, 2)}
-        </pre>
-      </Card>
-    </DashboardPageShell>
-  );
-}
+export { AdminSearchPage } from '@/components/admin/search/admin-search-health-page';
+export { AdminAnalyticsPage } from '@/components/admin/analytics/admin-moderation-analytics-page';
 
 export function SuperAdminAdminsPage() {
   const [rows, setRows] = useState<Array<Array<React.ReactNode>>>([]);
@@ -892,8 +811,8 @@ export function SuperAdminAdminsPage() {
 export function AdminRbacPage({ role }: { role: AdminServiceRole }) {
   return (
     <DashboardPageShell
-      title="RBAC"
-      description="Create custom roles, assign permissions, and manage access policies."
+      title="Roles & Permissions"
+      description="Define who can do what — create roles and assign permissions across the platform."
     >
       <AdminRbacManager role={role} />
     </DashboardPageShell>

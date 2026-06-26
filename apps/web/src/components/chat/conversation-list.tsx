@@ -2,10 +2,16 @@
 
 import type { ChatInboxItem } from '@community-marketplace/types';
 
+import { ChatVerificationBadge } from '@/components/chat/chat-verification-badge';
+
 interface ConversationListProps {
   items: ChatInboxItem[];
   activeThreadId?: string;
   onSelect: (threadId: string) => void;
+}
+
+function previewText(item: ChatInboxItem): string | undefined {
+  return item.lastMessage?.content ?? item.thread.lastMessagePreview;
 }
 
 export function ConversationList({
@@ -21,37 +27,46 @@ export function ConversationList({
 
   return (
     <ul className="divide-y divide-gray-200">
-      {items.map((item) => (
-        <li key={item.thread.id}>
-          <button
-            type="button"
-            onClick={() => onSelect(item.thread.id)}
-            className={`w-full px-4 py-3 text-left hover:bg-gray-50 ${
-              activeThreadId === item.thread.id ? 'bg-brand-50' : ''
-            }`}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <p className="text-sm font-medium text-gray-900">
-                  {item.participant.displayName ?? 'User'}
-                  {item.participant.verificationBadge ? ' ✓' : ''}
-                </p>
-                <p className="text-xs text-gray-500">{item.listing.title}</p>
-                {item.lastMessage && (
-                  <p className="mt-1 truncate text-xs text-gray-600">
-                    {item.lastMessage.content}
-                  </p>
+      {items.map((item) => {
+        const preview = previewText(item);
+        return (
+          <li key={item.thread.id}>
+            <button
+              type="button"
+              onClick={() => onSelect(item.thread.id)}
+              className={`w-full px-4 py-3 text-left hover:bg-gray-50 ${
+                activeThreadId === item.thread.id ? 'bg-brand-50' : ''
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <p className="text-sm font-medium text-gray-900">
+                      {item.participant.displayName ?? 'User'}
+                    </p>
+                    <ChatVerificationBadge
+                      verified={item.participant.verificationBadge}
+                      role={item.participant.role}
+                    />
+                  </div>
+                  <p className="truncate text-xs text-gray-500">{item.listing.title}</p>
+                  {preview && (
+                    <p className="mt-1 truncate text-xs text-gray-600">{preview}</p>
+                  )}
+                  {item.thread.isBlocked && (
+                    <p className="mt-0.5 text-xs text-red-600">Blocked</p>
+                  )}
+                </div>
+                {item.unreadCount > 0 && (
+                  <span className="shrink-0 rounded-full bg-brand-600 px-2 py-0.5 text-xs text-white">
+                    {item.unreadCount}
+                  </span>
                 )}
               </div>
-              {item.unreadCount > 0 && (
-                <span className="rounded-full bg-brand-600 px-2 py-0.5 text-xs text-white">
-                  {item.unreadCount}
-                </span>
-              )}
-            </div>
-          </button>
-        </li>
-      ))}
+            </button>
+          </li>
+        );
+      })}
     </ul>
   );
 }

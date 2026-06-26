@@ -5,6 +5,7 @@ import { EventsModule } from '../../events/events.module';
 import { JobsModule } from '../../jobs/jobs.module';
 import { LibsModule } from '../../libs/libs.module';
 import { DevUploadModule } from '../dev-upload/dev-upload.module';
+import { ModerationModule } from '../moderation/moderation.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { SearchModule } from '../search/search.module';
 import { SellerVerificationModule } from '../seller/seller-verification.module';
@@ -29,16 +30,20 @@ import { ListingReportsService } from './services/listing-reports.service';
 import { ListingSearchService } from './services/listing-search.service';
 import { ListingVisibilityService } from './services/listing-visibility.service';
 import { SellerTrustService } from './services/seller-trust.service';
+import { StoresService } from './services/stores.service';
 import { GeocodingService } from './services/geocoding.service';
 import { NearbyAreasService } from './services/nearby-areas.service';
 import { ListingsCrudService } from './services/listings-crud.service';
 import { ListingsController } from './listings.controller';
+import { StoresController } from './stores.controller';
 import { ListingsService } from './listings.service';
+import { ListingAutoModerationService } from './services/listing-auto-moderation.service';
+import { ListingAutoModerationListener } from './listeners/listing-auto-moderation.listener';
 import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
 
 @Module({
-  imports: [DatabaseModule, UtilsModule, EventsModule, LibsModule, JobsModule, SearchModule, UsersModule, NotificationsModule, DevUploadModule, SellerVerificationModule],
-  controllers: [ListingsController],
+  imports: [DatabaseModule, UtilsModule, EventsModule, LibsModule, JobsModule, SearchModule, UsersModule, NotificationsModule, DevUploadModule, SellerVerificationModule, ModerationModule],
+  controllers: [ListingsController, StoresController],
   providers: [
     ListingsService,
     ListingsCrudService,
@@ -51,6 +56,7 @@ import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
     ListingExpiryJobService,
     ListingSearchService,
     SellerTrustService,
+    StoresService,
     GeocodingService,
     NearbyAreasService,
     ListingFeedsService,
@@ -63,6 +69,8 @@ import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
     DeliveryOptionsService,
     ListingDeliveryService,
     ListingPricingService,
+    ListingAutoModerationService,
+    ListingAutoModerationListener,
     ListingOgCacheListener,
   ],
   exports: [

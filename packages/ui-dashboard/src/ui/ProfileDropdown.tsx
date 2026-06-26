@@ -15,7 +15,7 @@ export interface ProfileDropdownUser {
 export interface ProfileDropdownProps {
   user: ProfileDropdownUser;
   profileHref: string;
-  settingsHref: string;
+  settingsHref?: string;
   onLogout: () => void | Promise<void>;
 }
 
@@ -89,15 +89,17 @@ export function ProfileDropdown({ user, profileHref, settingsHref, onLogout }: P
               <User className="h-4 w-4" />
               Profile
             </Link>
-            <Link
-              href={settingsHref}
-              role="menuitem"
-              className="flex items-center gap-2 px-4 py-2 text-sm text-[hsl(var(--dashboard-topbar-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.3)]"
-              onClick={() => setOpen(false)}
-            >
-              <Settings className="h-4 w-4" />
-              Settings
-            </Link>
+            {settingsHref ? (
+              <Link
+                href={settingsHref}
+                role="menuitem"
+                className="flex items-center gap-2 px-4 py-2 text-sm text-[hsl(var(--dashboard-topbar-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.3)]"
+                onClick={() => setOpen(false)}
+              >
+                <Settings className="h-4 w-4" />
+                Settings
+              </Link>
+            ) : null}
             <button
               type="button"
               role="menuitem"

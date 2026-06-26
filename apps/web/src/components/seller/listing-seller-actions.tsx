@@ -197,6 +197,19 @@ export function ListingSellerActions({
         />,
       );
       break;
+    case 'flagged':
+    case 'under_investigation':
+      actions.push(
+        <IconActionButton
+          key="view"
+          icon="eye"
+          label="View listing"
+          href={`/seller/listings/${listing.id}/edit`}
+        />,
+      );
+      break;
+    case 'suspended_seller':
+      break;
     case 'removed':
       break;
     default:

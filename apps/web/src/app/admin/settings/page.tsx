@@ -1,13 +1,5 @@
-'use client';
-
-import { ProfileSettingsForm } from '@/components/dashboard/profile-settings-form';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return (
-    <ProfileSettingsForm
-      title="Settings"
-      description="Configure your admin profile and preferences."
-      includeNotificationPreferences={false}
-    />
-  );
+  redirect('/admin/profile?tab=preferences');
 }

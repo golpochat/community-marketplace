@@ -27,14 +27,18 @@ import {
 import { listingInclude, mapListing } from '../mappers/listing.mapper';
 import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 import { ListingAuditService } from './listing-audit.service';
+import { ListingAutoModerationService } from './listing-auto-moderation.service';
 
 type PrismaListingStatus = ListingStatus;
 
 const ALLOWED_TRANSITIONS: Record<ListingStatus, ListingStatus[]> = {
-  draft: ['pending_review', 'active'],
-  pending_review: ['active', 'rejected', 'draft'],
-  active: ['paused', 'sold', 'ended', 'removed', 'expired'],
-  paused: ['active', 'sold', 'ended', 'removed', 'expired'],
+  draft: ['pending_review', 'active', 'flagged'],
+  pending_review: ['active', 'rejected', 'draft', 'flagged', 'under_investigation'],
+  flagged: ['active', 'rejected', 'removed', 'pending_review', 'under_investigation'],
+  under_investigation: ['active', 'rejected', 'removed', 'flagged', 'pending_review'],
+  suspended_seller: ['draft', 'removed', 'active'],
+  active: ['paused', 'sold', 'ended', 'removed', 'expired', 'flagged', 'under_investigation', 'suspended_seller'],
+  paused: ['active', 'sold', 'ended', 'removed', 'expired', 'flagged', 'under_investigation', 'suspended_seller'],
   expired: ['active'],
   sold: [],
   ended: [],
@@ -49,6 +53,7 @@ export class ListingLifecycleService {
     private readonly audit: ListingAuditService,
     private readonly eventBus: EventBusService,
     private readonly sellerListingGate: SellerListingGateService,
+    private readonly autoModeration: ListingAutoModerationService,
   ) {}
 
   submitForReview(listingId: string, sellerId: string): Promise<Listing> {
@@ -84,14 +89,44 @@ export class ListingLifecycleService {
       toStatus: 'rejected',
       changedByType: 'ADMIN',
       reason,
-      extraData: { rejectionReason: reason.trim() },
+      extraData: {
+        rejectionReason: reason.trim(),
+        moderationHiddenAt: new Date(),
+      },
       eventType: 'listing.rejected',
       eventPayload: { reason },
     });
   }
 
+  investigateListing(listingId: string, adminId: string, reason?: string): Promise<Listing> {
+    return this.transition({
+      listingId,
+      actorId: adminId,
+      actorRole: 'ADMIN',
+      toStatus: 'under_investigation',
+      changedByType: 'ADMIN',
+      reason,
+      extraData: {
+        moderationNotes: reason?.trim() ?? 'Marked for investigation',
+        moderationHiddenAt: new Date(),
+      },
+      eventType: 'listing.under_investigation',
+      eventPayload: { reason },
+    });
+  }
+
   publishWithoutReview(listingId: string, sellerId: string): Promise<Listing> {
-    return this.activateListing(listingId, sellerId, 'SELLER', 'draft');
+    return this.autoModeration
+      .evaluateBeforePublish(listingId, sellerId)
+      .then(() => this.activateListing(listingId, sellerId, 'SELLER', 'draft'))
+      .catch((err: Error) => {
+        if (err.message === 'LISTING_QUEUED_FOR_REVIEW') {
+          throw new BadRequestException(
+            'This listing requires admin review before it can go live.',
+          );
+        }
+        throw err;
+      });
   }
 
   pauseListing(listingId: string, sellerId: string): Promise<Listing> {
@@ -411,9 +446,15 @@ export class ListingLifecycleService {
     if (!listing) throw new NotFoundException(`Listing ${listingId} not found`);
 
     const fromStatus = listing.status as ListingStatus;
-    if (fromStatus !== 'pending_review' && fromStatus !== 'draft') {
+    const approvable: ListingStatus[] = [
+      'pending_review',
+      'draft',
+      'flagged',
+      'under_investigation',
+    ];
+    if (!approvable.includes(fromStatus)) {
       throw new BadRequestException(
-        `Listing must be in draft or pending_review to approve (current: ${fromStatus})`,
+        `Listing must be pending review, flagged, or under investigation to approve (current: ${fromStatus})`,
       );
     }
 
@@ -430,6 +471,8 @@ export class ListingLifecycleService {
           expiresAt,
           isPaid: isPaidPackage(packageType),
           rejectionReason: null,
+          moderationHiddenAt: null,
+          moderationNotes: null,
         },
         include: listingInclude,
       });

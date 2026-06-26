@@ -24,15 +24,27 @@ export class SellerVerificationController {
   }
 
   @RequirePermissions(PERMISSIONS.SUBMIT_VERIFICATION)
+  @Post('phone')
+  verifyPhone(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.verificationService.verifyPhone(user.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.SUBMIT_VERIFICATION)
   @Post('upload-id')
   uploadId(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
-    return this.verificationService.createIdUploadUrl(user.id, body);
+    return this.verificationService.uploadIdDocument(user.id, body);
   }
 
   @RequirePermissions(PERMISSIONS.SUBMIT_VERIFICATION)
   @Post('upload-selfie')
   uploadSelfie(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
-    return this.verificationService.createSelfieUploadUrl(user.id, body);
+    return this.verificationService.uploadSelfie(user.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.SUBMIT_VERIFICATION)
+  @Post('upload-address')
+  uploadAddress(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.verificationService.uploadAddressDocument(user.id, body);
   }
 
   @RequirePermissions(PERMISSIONS.SUBMIT_VERIFICATION)

@@ -15,14 +15,18 @@ export class AdminUsersController {
 
   @RequirePermissions(PERMISSIONS.VIEW_USERS)
   @Get()
-  listUsers(@Query() query: Record<string, string>) {
-    return this.usersService.listUsers(query);
+  listUsers(@CurrentUser() actor: AuthenticatedUser, @Query() query: Record<string, string>) {
+    return this.usersService.listUsers(query, actor.role);
   }
 
   @RequirePermissions(PERMISSIONS.VIEW_USERS)
   @Get('search')
-  searchUsers(@Query('q') q: string, @Query() query: Record<string, string>) {
-    return this.usersService.listUsers({ ...query, search: q });
+  searchUsers(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Query('q') q: string,
+    @Query() query: Record<string, string>,
+  ) {
+    return this.usersService.listUsers({ ...query, search: q }, actor.role);
   }
 
   @RequirePermissions(PERMISSIONS.VIEW_USERS)
@@ -45,8 +49,8 @@ export class AdminUsersController {
 
   @RequirePermissions(PERMISSIONS.VIEW_USERS)
   @Get(':id')
-  getUser(@Param('id') id: string) {
-    return this.usersService.getUserDetails(id);
+  getUser(@CurrentUser() actor: AuthenticatedUser, @Param('id') id: string) {
+    return this.usersService.getUserDetails(id, actor.role);
   }
 
   @RequirePermissions(PERMISSIONS.SUSPEND_USER)

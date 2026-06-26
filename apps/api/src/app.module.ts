@@ -23,6 +23,8 @@ import { ModerationModule } from './modules/moderation/moderation.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ShareModule } from './modules/share/share.module';
+import { DisputesModule } from './modules/disputes/disputes.module';
+import { FraudModule } from './modules/fraud/fraud.module';
 import { SearchModule } from './modules/search/search.module';
 import { SellerModule } from './modules/seller/seller.module';
 import { SuperAdminModule } from './modules/super-admin/super-admin.module';
@@ -54,6 +56,8 @@ import { UtilsModule } from './utils/utils.module';
     BuyerModule,
     DevUploadModule,
     ShareModule,
+    DisputesModule,
+    FraudModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },

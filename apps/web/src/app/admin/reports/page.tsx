@@ -1,7 +1,5 @@
-'use client';
-
-import { AdminReportsPage } from '@/components/dashboard/admin-resource-pages';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return <AdminReportsPage role="ADMIN" />;
+  redirect('/admin/moderation');
 }

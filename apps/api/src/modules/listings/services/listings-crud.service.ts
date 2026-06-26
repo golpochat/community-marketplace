@@ -27,6 +27,7 @@ import { ListingVisibilityService } from "./listing-visibility.service";
 import { ListingDeliveryService } from "./listing-delivery.service";
 import { SellerTrustService } from "./seller-trust.service";
 import { SellerListingGateService } from "../../seller/services/seller-listing-gate.service";
+import { ListingAutoModerationService } from "./listing-auto-moderation.service";
 import { computeListingPricing } from "../lib/listing-pricing.lib";
 import { CategoriesService } from "./categories.service";
 import {
@@ -52,6 +53,7 @@ export class ListingsCrudService {
     private readonly eventBus: EventBusService,
     private readonly sellerTrust: SellerTrustService,
     private readonly sellerListingGate: SellerListingGateService,
+    private readonly autoModeration: ListingAutoModerationService,
   ) {}
 
   async findPublic(page = 1, limit = 20) {
@@ -246,6 +248,16 @@ export class ListingsCrudService {
         timestamp: new Date(),
       });
     }
+
+    void this.autoModeration.evaluateOnCreate({
+      listingId: row.id,
+      sellerId,
+      title: parsed.title,
+      description: parsed.description,
+      price: computed.price,
+      fraudRequiresReview: fraud.requiresReview,
+      fraudReasons: fraud.reasons,
+    });
 
     if (parsed.deliverySelections?.length) {
       await this.delivery.saveForDraftListing(

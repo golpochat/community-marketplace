@@ -16,7 +16,7 @@ export interface TopbarProps {
   role: RbacRole;
   user: ProfileDropdownUser;
   profileHref: string;
-  settingsHref: string;
+  settingsHref?: string;
   onLogout: () => void | Promise<void>;
   title?: string;
   actions?: ReactNode;

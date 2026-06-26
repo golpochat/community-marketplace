@@ -20,7 +20,7 @@ export interface DashboardLayoutProps {
   children: React.ReactNode;
   user: ProfileDropdownUser;
   profileHref: string;
-  settingsHref: string;
+  settingsHref?: string;
   onLogout: () => void | Promise<void>;
   brand?: string;
   brandAbbr?: string;

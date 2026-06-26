@@ -1,7 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
-import type { RbacRole } from '@community-marketplace/types';
+import type { ChatConversationDetail, RbacRole } from '@community-marketplace/types';
+import { sendMessageApiSchema } from '@community-marketplace/validation';
 
+import {
+  mapChatMessage,
+  mapChatThread,
+  mapInboxItem,
+  threadInclude,
+} from './mappers/chat.mapper';
 import { ChatInboxService } from './services/chat-inbox.service';
 import { ChatMessagesService } from './services/chat-messages.service';
 import { ChatModerationService } from './services/chat-moderation.service';
@@ -30,8 +37,43 @@ export class ChatService {
     return this.threads.getById(threadId, userId, role);
   }
 
+  async getConversationDetail(
+    threadId: string,
+    userId: string,
+    role: RbacRole,
+  ): Promise<ChatConversationDetail> {
+    await this.threads.getById(threadId, userId, role);
+    const thread = await this.threads.getThreadWithRelations(threadId);
+    if (!thread) {
+      throw new NotFoundException(`Thread ${threadId} not found`);
+    }
+
+    const messagesResult = await this.messages.list(threadId, userId, role, {
+      page: 1,
+      limit: 100,
+    });
+
+    return {
+      thread: mapChatThread(thread),
+      messages: messagesResult.data,
+      listing: {
+        id: thread.listing.id,
+        title: thread.listing.title,
+        price: Number(thread.listing.price),
+        currency: thread.listing.currency,
+        imageUrl: thread.listing.images[0]?.url,
+        status: thread.listing.status,
+      },
+      participant: mapInboxItem(thread, undefined, 0, userId).participant,
+    };
+  }
+
   listInbox(userId: string, role: RbacRole, input: unknown) {
     return this.inbox.listInbox(userId, role, input);
+  }
+
+  blockConversation(threadId: string, userId: string, role: RbacRole) {
+    return this.threads.block(threadId, userId, role);
   }
 
   archiveThread(threadId: string, userId: string, role: RbacRole) {
@@ -48,6 +90,20 @@ export class ChatService {
 
   sendMessage(senderId: string, role: RbacRole, input: unknown) {
     return this.messages.send(senderId, role, input);
+  }
+
+  sendMessageViaApi(senderId: string, role: RbacRole, input: unknown) {
+    const parsed = sendMessageApiSchema.parse(input);
+    return this.messages.send(senderId, role, {
+      threadId: parsed.conversationId,
+      content: parsed.messageText,
+      messageType: parsed.messageType,
+      attachmentUrl: parsed.attachmentUrl,
+    });
+  }
+
+  reportMessage(reporterId: string, role: RbacRole, input: unknown) {
+    return this.moderation.reportMessage(reporterId, role, input);
   }
 
   editMessage(messageId: string, userId: string, role: RbacRole, input: unknown) {
@@ -79,6 +135,14 @@ export class ChatService {
 
   adminSearchMessages(input: unknown) {
     return this.moderation.searchMessages(input);
+  }
+
+  adminListMessageFlags(input: unknown) {
+    return this.moderation.listMessageFlags(input);
+  }
+
+  adminResolveMessageFlag(flagId: string, adminId: string, input: unknown) {
+    return this.moderation.resolveMessageFlag(flagId, adminId, input);
   }
 
   adminFlagMessage(reporterId: string, messageId: string, input: unknown) {

@@ -94,7 +94,7 @@ export function StatusHistoryModal({
                         <SellerStatusBadge status={row.newStatus} />
                       </td>
                       <td className="px-3 py-3 text-slate-700">
-                        {row.changedBy ? row.changedBy.slice(0, 8) : 'System'}
+                        {row.changedByName ?? (row.changedBy ? row.changedBy.slice(0, 8) : 'System')}
                       </td>
                       <td className="px-3 py-3 text-slate-700">{row.reason ?? '—'}</td>
                       <td className="px-3 py-3 text-slate-700">{formatDateTime(row.createdAt)}</td>

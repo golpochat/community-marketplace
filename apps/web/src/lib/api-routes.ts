@@ -36,6 +36,7 @@ export const WEB_API_ROUTES = {
     notificationsUnreadCount: `${API_NAMESPACES.SELLER}/notifications/unread-count`,
     profile: `${API_NAMESPACES.SELLER}/profile`,
     verification: `${API_NAMESPACES.SELLER}/verification`,
+    statusHistory: `${API_NAMESPACES.SELLER}/status-history`,
     reviews: `${API_NAMESPACES.SELLER}/reviews`,
     reviewsPending: `${API_NAMESPACES.SELLER}/reviews/pending`,
     chat: `${API_NAMESPACES.SELLER}/chat`,
@@ -45,6 +46,20 @@ export const WEB_API_ROUTES = {
     threads: '/chat/threads',
     messages: '/chat/messages',
     markRead: '/chat/messages/read',
+  },
+  messages: {
+    send: '/messages/send',
+    list: '/messages/list',
+    conversation: (id: string) => `/messages/conversation/${id}`,
+    report: '/messages/report',
+    block: '/messages/block',
+  },
+  disputes: {
+    create: '/disputes/create',
+    uploadEvidence: '/disputes/upload-evidence',
+    respond: '/disputes/respond',
+    mine: '/disputes/mine',
+    detail: (id: string) => `/disputes/${id}`,
   },
   public: {
     listings: '/listings',

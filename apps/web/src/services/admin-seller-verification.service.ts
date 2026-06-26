@@ -110,13 +110,22 @@ export const adminSellerVerificationService = {
   requestReverification(
     role: AdminServiceRole,
     userId: string,
-    reason?: string,
+    reason: string,
   ) {
-    return adminPath(role, '/seller/reverify').then((path) =>
+    return adminPath(role, '/seller/force-reverify').then((path) =>
       apiClient(path, {
         method: 'POST',
         body: JSON.stringify({ userId, reason }),
       }),
+    );
+  },
+
+  forceReverify(
+    role: AdminServiceRole,
+    body: { userId: string; reason: string },
+  ) {
+    return adminPath(role, '/seller/force-reverify').then((path) =>
+      apiClient(path, { method: 'POST', body: JSON.stringify(body) }),
     );
   },
 
@@ -128,9 +137,18 @@ export const adminSellerVerificationService = {
   ): Promise<PaginatedResult<SellerStatusHistoryEntry>> {
     const response = await apiClient<
       SellerStatusHistoryEntry[] | PaginatedResult<SellerStatusHistoryEntry>
-    >(await adminPath(role, '/seller/status-history'), {
-      params: { userId, page: String(page), limit: String(limit) },
+    >(await adminPath(role, `/seller/status-history/${userId}`), {
+      params: { page: String(page), limit: String(limit) },
     });
     return normalizePaginated(response, { page, limit });
+  },
+
+  reactivateSeller(
+    role: AdminServiceRole,
+    body: { userId: string; reason: string },
+  ) {
+    return adminPath(role, '/seller/reactivate').then((path) =>
+      apiClient(path, { method: 'POST', body: JSON.stringify(body) }),
+    );
   },
 };

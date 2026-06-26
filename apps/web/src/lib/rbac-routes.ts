@@ -41,7 +41,7 @@ export function getWebDashboardPathForRole(role: RbacRole): string {
 export function isWebDashboardRouteAllowed(role: RbacRole | null, pathname: string): boolean {
   if (!role) return false;
   if (pathname.startsWith('/super-admin')) return role === 'SUPER_ADMIN';
-  if (pathname.startsWith('/admin')) return role === 'ADMIN' || role === 'SUPER_ADMIN';
+  if (pathname.startsWith('/admin')) return role === 'ADMIN';
   if (pathname.startsWith('/seller')) return role === 'SELLER';
   if (pathname.startsWith('/buyer')) return role === 'BUYER';
   return false;

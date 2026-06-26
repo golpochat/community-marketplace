@@ -4,7 +4,7 @@
  */
 import 'dotenv/config';
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma';
 
 import { runDevUsersSeed } from '../src/database/seeds/dev-users.seed';
 import { runDevCategoriesSeed } from '../src/database/seeds/dev-categories.seed';

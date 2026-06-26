@@ -38,12 +38,23 @@ export class NotificationEventsListener implements OnModuleInit {
     this.eventBus.subscribe('listing.expired', (e) => void this.onListingExpired(e.payload));
     this.eventBus.subscribe('listing.expiring_soon', (e) => void this.onListingExpiringSoon(e.payload));
     this.eventBus.subscribe('listing.removed', (e) => void this.onListingRemoved(e.payload));
+    this.eventBus.subscribe('listing.moderation_queued', (e) =>
+      void this.onListingModerationQueued(e.payload),
+    );
+    this.eventBus.subscribe('listing.under_investigation', (e) =>
+      void this.onListingUnderInvestigation(e.payload),
+    );
     this.eventBus.subscribe('listing.renewed', (e) => void this.onListingRenewed(e.payload));
     this.eventBus.subscribe('user.verification_approved', (e) =>
       void this.onVerificationApproved(e.payload),
     );
     this.eventBus.subscribe('user.verification_rejected', (e) =>
       void this.onVerificationRejected(e.payload),
+    );
+    this.eventBus.subscribe('seller.suspended', (e) => void this.onSellerSuspended(e.payload));
+    this.eventBus.subscribe('seller.reactivated', (e) => void this.onSellerReactivated(e.payload));
+    this.eventBus.subscribe('seller.force_reverify', (e) =>
+      void this.onSellerForceReverify(e.payload),
     );
     this.eventBus.subscribe('seller.warned', (e) => void this.onSellerWarned(e.payload));
     this.eventBus.subscribe('admin.action', (e) => void this.onAdminAction(e.payload));
@@ -337,6 +348,46 @@ export class NotificationEventsListener implements OnModuleInit {
     });
   }
 
+  private async onListingModerationQueued(payload: Record<string, unknown>) {
+    const listingId = payload.listingId as string;
+    const sellerId = payload.sellerId as string;
+    const reason = (payload.reason as string) ?? 'Your listing requires admin review.';
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true },
+    });
+    if (!listing || !sellerId) return;
+
+    await this.dispatcher.dispatch({
+      userId: sellerId,
+      type: 'listing_changes_requested',
+      templateKey: 'listing_changes_requested',
+      variables: { listing_title: listing.title, reason },
+      actionUrl: `/seller/listings/${listingId}/edit`,
+      channels: ['in_app', 'push', 'email'],
+    });
+  }
+
+  private async onListingUnderInvestigation(payload: Record<string, unknown>) {
+    const listingId = payload.listingId as string;
+    const sellerId = payload.sellerId as string;
+    const reason = (payload.reason as string) ?? 'Your listing is under investigation.';
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true },
+    });
+    if (!listing || !sellerId) return;
+
+    await this.dispatcher.dispatch({
+      userId: sellerId,
+      type: 'admin_warning',
+      templateKey: 'admin_warning',
+      variables: { listing_title: listing.title, reason },
+      actionUrl: `/seller/listings/${listingId}/edit`,
+      channels: ['in_app', 'email'],
+    });
+  }
+
   private async onListingExpired(payload: Record<string, unknown>) {
     const listingId = payload.listingId as string;
     const sellerId = payload.sellerId as string;
@@ -437,6 +488,58 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'verification_rejected',
       templateKey: 'verification_rejected',
       variables: { reason },
+      channels: ['in_app', 'email'],
+    });
+  }
+
+  private async onSellerSuspended(payload: Record<string, unknown>) {
+    const userId = payload.userId as string;
+    const reason = (payload.reason as string) ?? 'Policy violation';
+    const duration = payload.duration as string | undefined;
+    if (!userId) return;
+    await this.dispatcher.dispatch({
+      userId,
+      type: 'admin_warning',
+      templateKey: 'seller_suspended',
+      variables: {
+        reason,
+        duration: duration ?? 'unspecified',
+        message: (payload.message as string) ?? `Your seller account has been suspended. ${reason}`,
+      },
+      actionUrl: '/seller/profile?tab=verification',
+      channels: ['in_app', 'email'],
+    });
+  }
+
+  private async onSellerReactivated(payload: Record<string, unknown>) {
+    const userId = payload.userId as string;
+    if (!userId) return;
+    await this.dispatcher.dispatch({
+      userId,
+      type: 'admin_warning',
+      templateKey: 'seller_reactivated',
+      variables: {
+        message: (payload.message as string) ?? 'Your seller account has been reactivated.',
+        reason: (payload.reason as string) ?? '',
+      },
+      actionUrl: '/seller/dashboard',
+      channels: ['in_app', 'email'],
+    });
+  }
+
+  private async onSellerForceReverify(payload: Record<string, unknown>) {
+    const userId = payload.userId as string;
+    if (!userId) return;
+    await this.dispatcher.dispatch({
+      userId,
+      type: 'seller_verification_nudge',
+      templateKey: 'seller_force_reverify',
+      variables: {
+        message:
+          (payload.message as string) ?? 'Your account requires re-verification.',
+        reason: (payload.reason as string) ?? '',
+      },
+      actionUrl: '/seller/profile?tab=verification',
       channels: ['in_app', 'email'],
     });
   }

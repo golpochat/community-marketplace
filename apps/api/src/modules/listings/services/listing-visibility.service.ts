@@ -28,7 +28,10 @@ export class ListingVisibilityService {
     return {
       status: 'active' as const,
       moderationHiddenAt: null,
-      seller: { status: 'active' as const },
+      seller: {
+        status: 'active' as const,
+        sellerStatus: { not: 'suspended' as const },
+      },
       ...extra,
     };
   }

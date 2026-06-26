@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '../../../generated/prisma';
 
 import { DEV_CATEGORY_SEED } from '../dev-categories.seed.data';
 import { assertRbacSeedAllowed } from './seed-environment';

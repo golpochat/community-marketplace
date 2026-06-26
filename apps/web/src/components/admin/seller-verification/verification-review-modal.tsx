@@ -20,11 +20,15 @@ interface VerificationReviewModalProps {
   canViewDocuments: boolean;
   canReview: boolean;
   canSuspend: boolean;
+  canReactivate: boolean;
+  canForceReverify: boolean;
   canManageLimits: boolean;
   onClose: () => void;
   onApprove: (requestId: string) => void;
   onReject: (requestId: string) => void;
   onSuspend: (detail: AdminSellerVerificationDetail) => void;
+  onReactivate: (detail: AdminSellerVerificationDetail) => void;
+  onForceReverify: (detail: AdminSellerVerificationDetail) => void;
   onSetLimit: (detail: AdminSellerVerificationDetail) => void;
   onViewHistory: (userId: string, sellerName?: string) => void;
 }
@@ -37,11 +41,15 @@ export function VerificationReviewModal({
   canViewDocuments,
   canReview,
   canSuspend,
+  canReactivate,
+  canForceReverify,
   canManageLimits,
   onClose,
   onApprove,
   onReject,
   onSuspend,
+  onReactivate,
+  onForceReverify,
   onSetLimit,
   onViewHistory,
 }: VerificationReviewModalProps) {
@@ -86,6 +94,12 @@ export function VerificationReviewModal({
 
   const sellerLabel = detail?.sellerName ?? detail?.email ?? 'Seller';
   const pendingRequestId = detail?.requestId;
+  const isAlreadyVerified = detail?.sellerStatus === 'verified';
+  const canDecide =
+    canReview &&
+    !!pendingRequestId &&
+    detail?.requestStatus === 'pending' &&
+    !isAlreadyVerified;
 
   return (
     <div
@@ -97,7 +111,11 @@ export function VerificationReviewModal({
       <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-xl">
         <div className="border-b border-slate-200 px-6 py-4">
           <h2 id="verification-review-title" className="text-lg font-semibold text-slate-900">
-            Verification Request – {sellerLabel}
+            {isAlreadyVerified
+              ? `Verified seller – ${sellerLabel}`
+              : canDecide
+                ? `Verification request – ${sellerLabel}`
+                : `Seller verification – ${sellerLabel}`}
           </h2>
         </div>
 
@@ -116,6 +134,12 @@ export function VerificationReviewModal({
 
           {!loading && !error && detail ? (
             <div className="space-y-6">
+              {isAlreadyVerified ? (
+                <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                  This seller is already verified. Use the actions below to suspend, force
+                  re-verification, or view history — no approval decision is needed.
+                </p>
+              ) : null}
               <section>
                 <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
                   Seller information
@@ -226,13 +250,31 @@ export function VerificationReviewModal({
                 Status history
               </button>
             ) : null}
-            {detail && canSuspend ? (
+            {detail && canSuspend && detail.sellerStatus !== 'suspended' ? (
               <button
                 type="button"
                 onClick={() => onSuspend(detail)}
                 className="rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-800 hover:bg-rose-50"
               >
                 Suspend seller
+              </button>
+            ) : null}
+            {detail && canReactivate && detail.sellerStatus === 'suspended' ? (
+              <button
+                type="button"
+                onClick={() => onReactivate(detail)}
+                className="rounded-lg border border-emerald-300 px-3 py-2 text-sm font-medium text-emerald-800 hover:bg-emerald-50"
+              >
+                Reactivate seller
+              </button>
+            ) : null}
+            {detail && canForceReverify && detail.sellerStatus !== 'suspended' ? (
+              <button
+                type="button"
+                onClick={() => onForceReverify(detail)}
+                className="rounded-lg border border-amber-300 px-3 py-2 text-sm font-medium text-amber-900 hover:bg-amber-50"
+              >
+                Force re-verification
               </button>
             ) : null}
             {detail && canManageLimits ? (
@@ -253,18 +295,18 @@ export function VerificationReviewModal({
             >
               Close
             </button>
-            {canReview && pendingRequestId && detail?.requestStatus === 'pending' ? (
+            {canDecide ? (
               <>
                 <button
                   type="button"
-                  onClick={() => onReject(pendingRequestId)}
+                  onClick={() => onReject(pendingRequestId!)}
                   className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
                 >
                   Reject verification
                 </button>
                 <button
                   type="button"
-                  onClick={() => onApprove(pendingRequestId)}
+                  onClick={() => onApprove(pendingRequestId!)}
                   className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
                 >
                   Approve verification

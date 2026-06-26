@@ -33,8 +33,13 @@ export class SuperAdminService {
     return this.adminService.getStats();
   }
 
-  getUsers(page = 1, limit = 20, query: Record<string, string | undefined> = {}) {
-    return this.adminService.getUsers(page, limit, query);
+  getUsers(
+    page = 1,
+    limit = 20,
+    query: Record<string, string | undefined> = {},
+    actorRole: RbacRole = 'SUPER_ADMIN',
+  ) {
+    return this.adminService.getUsers(page, limit, query, actorRole);
   }
 
   getListings(page = 1, limit = 20) {

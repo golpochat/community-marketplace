@@ -16,6 +16,7 @@ import { EventBusService } from '../../../events/event-bus.service';
 import { mapListingImage } from '../mappers/listing.mapper';
 import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 import { ListingAuditService } from './listing-audit.service';
+import { ListingAutoModerationService } from './listing-auto-moderation.service';
 import { ListingImageProcessorService } from './listing-image-processor.service';
 import { ListingR2StorageService } from './listing-r2-storage.service';
 
@@ -28,6 +29,7 @@ export class ListingImagesService {
     private readonly audit: ListingAuditService,
     private readonly eventBus: EventBusService,
     private readonly sellerListingGate: SellerListingGateService,
+    private readonly autoModeration: ListingAutoModerationService,
   ) {}
 
   async findByListingId(listingId: string): Promise<ListingImage[]> {
@@ -111,6 +113,19 @@ export class ListingImagesService {
       payload: { listingId },
       timestamp: new Date(),
     });
+
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true, description: true },
+    });
+    if (listing) {
+      const prohibited = ['weapon', 'drug', 'counterfeit', 'fake-id'];
+      const haystack = `${listing.title} ${listing.description} ${parsed.keys.join(' ')}`.toLowerCase();
+      const hit = prohibited.find((term) => haystack.includes(term));
+      if (hit) {
+        void this.autoModeration.onProhibitedContent(listingId, hit);
+      }
+    }
 
     return created.map(mapListingImage);
   }

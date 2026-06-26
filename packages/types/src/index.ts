@@ -112,6 +112,8 @@ export type {
 export type {
   SellerStatus,
   SellerVerificationStage,
+  SellerVerificationNextStep,
+  SellerVerificationStartResponse,
   SellerVerificationRequest,
   SellerStatusHistoryEntry,
   SellerVerificationStatus,
@@ -165,6 +167,8 @@ export type {
   ChatInboxItem,
   ChatAttachmentUploadResponse,
   ChatMessageFlag,
+  AdminMessageFlagItem,
+  ChatConversationDetail,
   ChatBan,
   WsChatMessageEvent,
   WsTypingEvent,
@@ -245,7 +249,45 @@ export type {
   StoreReview,
   StorePolicy,
   StoreAnalytics,
+  StorefrontListing,
   SellerStorefront,
+  StoreWeekday,
+  StoreDayHours,
+  StoreOpeningHours,
+  StoreContactInfo,
 } from './storefront';
 export type { PaginationMeta, ApiResponse, ApiError, PaginatedResult } from './api';
 export type { AdminDashboardStats, PlatformSettings, AdminMeResponse } from './admin';
+export type {
+  MarketplaceDisputeStatus,
+  DisputeEvidenceUploaderRole,
+  DisputeReason,
+  DisputePartySummary,
+  DisputeListingSummary,
+  DisputeEvidence,
+  DisputeMessage,
+  DisputeTimelineEventType,
+  DisputeTimelineEvent,
+  MarketplaceDispute,
+  DisputeUploadUrlResponse,
+} from './dispute';
+export {
+  DISPUTE_REASONS,
+  DISPUTE_REASON_LABELS,
+  MARKETPLACE_DISPUTE_STATUSES,
+  DISPUTE_STATUS_LABELS,
+} from './dispute';
+export type {
+  FraudSignalType,
+  FraudRiskLevel,
+  FraudSignal,
+  FraudRiskBreakdownItem,
+  HighRiskUserSummary,
+  HighRiskListingSummary,
+} from './fraud';
+export {
+  FRAUD_SIGNAL_TYPES,
+  FRAUD_SIGNAL_WEIGHTS,
+  FRAUD_SIGNAL_LABELS,
+  fraudRiskLevel,
+} from './fraud';

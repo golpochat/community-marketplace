@@ -65,10 +65,9 @@ export function ListingDetailClient({ id }: ListingDetailClientProps) {
     );
   }
 
-  const sellerSlug = listing.sellerId === 'seller-1' ? 'dublin-cycles' : undefined;
+  const sellerSlug = listing.sellerId;
   const sellerDisplayName =
-    listing.seller?.displayName?.trim() ||
-    (sellerSlug ? 'Dublin Cycles & More' : undefined);
+    listing.seller?.displayName?.trim() || 'Seller';
   const unavailableMessage = getListingUnavailableMessage(listing.status);
 
   if (unavailableMessage) {

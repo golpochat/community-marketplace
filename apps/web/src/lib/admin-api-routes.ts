@@ -18,7 +18,10 @@ const SUPER_ADMIN_ADMIN_NAMESPACE_PATHS = new Set([
   '/seller/suspend',
   '/seller/limit',
   '/seller/status-history',
+  '/seller/reactivate',
   '/seller/reverify',
+  '/disputes',
+  '/fraud',
 ]);
 
 /** Review endpoints live under super-admin but allow ADMIN role on the API. */
@@ -31,7 +34,12 @@ function superAdminUsesAdminNamespace(path: string): boolean {
     SUPER_ADMIN_ADMIN_NAMESPACE_PATHS.has(path) ||
     path.startsWith('/users/verifications/') ||
     path.startsWith('/seller-verification') ||
-    path.startsWith('/seller/')
+    path.startsWith('/seller/') ||
+    path.startsWith('/listings') ||
+    path.startsWith('/chat') ||
+    path.startsWith('/moderation') ||
+    path.startsWith('/disputes') ||
+    path.startsWith('/fraud')
   );
 }
 

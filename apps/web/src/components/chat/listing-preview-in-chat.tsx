@@ -11,10 +11,20 @@ export function ListingPreviewInChat({ preview }: ListingPreviewInChatProps) {
   return (
     <Link
       href={`/listings/${preview.id}`}
-      className="mb-2 block rounded-lg border border-white/20 bg-black/10 p-2 hover:bg-black/20"
+      className="flex gap-3 rounded-lg border border-gray-200 bg-gray-50 p-2 hover:bg-gray-100"
     >
-      <p className="text-xs font-medium">{preview.title}</p>
-      <p className="text-xs opacity-80">{formatCurrency(preview.price, preview.currency)}</p>
+      {preview.imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={preview.imageUrl}
+          alt=""
+          className="h-12 w-12 shrink-0 rounded object-cover"
+        />
+      )}
+      <div className="min-w-0">
+        <p className="truncate text-xs font-medium text-gray-900">{preview.title}</p>
+        <p className="text-xs text-gray-600">{formatCurrency(preview.price, preview.currency)}</p>
+      </div>
     </Link>
   );
 }

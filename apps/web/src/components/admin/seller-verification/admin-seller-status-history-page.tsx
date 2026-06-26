@@ -96,6 +96,7 @@ export function AdminSellerStatusHistoryPage({ role }: { role: AdminServiceRole 
                 <tr className="border-b border-slate-200 text-slate-500">
                   <th className="px-3 py-2 font-medium">Old status</th>
                   <th className="px-3 py-2 font-medium">New status</th>
+                  <th className="px-3 py-2 font-medium">Changed by</th>
                   <th className="px-3 py-2 font-medium">Reason</th>
                   <th className="px-3 py-2 font-medium">Changed at</th>
                 </tr>
@@ -108,6 +109,9 @@ export function AdminSellerStatusHistoryPage({ role }: { role: AdminServiceRole 
                     </td>
                     <td className="px-3 py-2">
                       <SellerStatusBadge status={row.newStatus} />
+                    </td>
+                    <td className="px-3 py-2 text-slate-700">
+                      {row.changedByName ?? (row.changedBy ? row.changedBy.slice(0, 8) : 'System')}
                     </td>
                     <td className="px-3 py-2 text-slate-700">{row.reason ?? '—'}</td>
                     <td className="px-3 py-2 text-slate-600">{formatDateTime(row.createdAt)}</td>

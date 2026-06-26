@@ -28,6 +28,6 @@ import { ModerationSuspensionJobService } from './services/moderation-suspension
     ModerationAnalyticsService,
     ModerationSuspensionJobService,
   ],
-  exports: [ModerationService],
+  exports: [ModerationService, ModerationContentCheckService],
 })
 export class ModerationModule {}

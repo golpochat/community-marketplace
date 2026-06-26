@@ -172,8 +172,10 @@ export class ModerationReportsService {
       type: 'moderation.report_created',
       payload: {
         reportId: row.id,
+        listingId: data.listingId,
         targetType: data.listingId ? 'listing' : data.messageId ? 'message' : 'user',
         autoFlagged: checkResult.autoFlag,
+        reasons: checkResult.reasons,
       },
       timestamp: new Date(),
     });

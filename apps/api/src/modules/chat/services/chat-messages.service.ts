@@ -17,6 +17,13 @@ import { PrismaService } from '../../../database/prisma.service';
 import { EventBusService } from '../../../events/event-bus.service';
 import { mapChatMessage } from '../mappers/chat.mapper';
 import { ChatAccessService } from './chat-access.service';
+import { ChatInboxService } from './chat-inbox.service';
+
+function messagePreview(content: string): string {
+  const trimmed = content.trim();
+  if (trimmed.length <= 120) return trimmed;
+  return `${trimmed.slice(0, 117)}...`;
+}
 
 @Injectable()
 export class ChatMessagesService {
@@ -24,6 +31,7 @@ export class ChatMessagesService {
     private readonly prisma: PrismaService,
     private readonly access: ChatAccessService,
     private readonly eventBus: EventBusService,
+    private readonly inbox: ChatInboxService,
   ) {}
 
   async list(threadId: string, userId: string, role: RbacRole, input: unknown) {
@@ -80,7 +88,10 @@ export class ChatMessagesService {
 
       await tx.chatThread.update({
         where: { id: parsed.threadId },
-        data: { lastMessageAt: message.createdAt },
+        data: {
+          lastMessageAt: message.createdAt,
+          lastMessagePreview: messagePreview(parsed.content),
+        },
       });
 
       return message;
@@ -88,6 +99,9 @@ export class ChatMessagesService {
 
     const recipientId =
       thread.buyerId === senderId ? thread.sellerId : thread.buyerId;
+
+    await this.inbox.invalidateInbox(thread.buyerId);
+    await this.inbox.invalidateInbox(thread.sellerId);
 
     this.eventBus.publish({
       type: 'chat.message_sent',
@@ -116,7 +130,10 @@ export class ChatMessagesService {
       });
       await tx.chatThread.update({
         where: { id: threadId },
-        data: { lastMessageAt: message.createdAt },
+        data: {
+          lastMessageAt: message.createdAt,
+          lastMessagePreview: messagePreview(content),
+        },
       });
       return message;
     });

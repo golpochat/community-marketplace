@@ -3,18 +3,28 @@ import type {
   AdminNotificationLogEntry,
   Listing,
   ListingReviewContext,
+  MarketplaceDispute,
   ModerationAction,
   ModerationActionType,
+  ModerationAnalytics,
   ModerationReport,
   ModerationReportDetail,
   Payment,
   PlatformSettings,
   RbacRole,
   RbacRoleTemplateId,
+  ReindexJobStatus,
+  SearchIndexMeta,
+  SearchIndexName,
   SuspensionDuration,
   UserProfile,
   UserVerification,
 } from '@community-marketplace/types';
+
+export interface SearchHealthResponse {
+  healthy: boolean;
+  indexes: SearchIndexMeta[];
+}
 import type { PaginatedResult } from '@community-marketplace/types';
 
 import { apiClient } from '@/lib/api-client';
@@ -137,6 +147,65 @@ export const adminService = {
       `${adminApiPath(role, '/listings')}/${listingId}/restore`,
       { method: 'POST', body: JSON.stringify({ targetStatus }) },
     );
+    return response.data;
+  },
+
+  async listListingModerationQueue(
+    role: AdminApiRole,
+    queue: 'pending' | 'flagged' | 'rejected' | 'removed',
+    params: { page?: number; limit?: number } = {},
+  ): Promise<PaginatedResult<Listing>> {
+    const path = `${adminApiPath(role, '/listings')}/${queue}`;
+    const response = await apiClient<Listing[] | PaginatedResult<Listing>>(path, {
+      params: {
+        page: String(params.page ?? 1),
+        limit: String(params.limit ?? 20),
+      },
+    });
+    return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
+  },
+
+  async approveListingModeration(role: AdminApiRole, listingId: string): Promise<Listing> {
+    const response = await apiClient<Listing>(adminApiPath(role, '/listings/approve'), {
+      method: 'POST',
+      body: JSON.stringify({ listingId }),
+    });
+    return response.data;
+  },
+
+  async rejectListingModeration(
+    role: AdminApiRole,
+    listingId: string,
+    reason: string,
+  ): Promise<Listing> {
+    const response = await apiClient<Listing>(adminApiPath(role, '/listings/reject'), {
+      method: 'POST',
+      body: JSON.stringify({ listingId, reason }),
+    });
+    return response.data;
+  },
+
+  async removeListingModeration(
+    role: AdminApiRole,
+    listingId: string,
+    reason: string,
+  ): Promise<Listing> {
+    const response = await apiClient<Listing>(adminApiPath(role, '/listings/remove'), {
+      method: 'POST',
+      body: JSON.stringify({ listingId, reason }),
+    });
+    return response.data;
+  },
+
+  async investigateListing(
+    role: AdminApiRole,
+    listingId: string,
+    reason?: string,
+  ): Promise<Listing> {
+    const response = await apiClient<Listing>(adminApiPath(role, '/listings/investigate'), {
+      method: 'POST',
+      body: JSON.stringify({ listingId, ...(reason ? { reason } : {}) }),
+    });
     return response.data;
   },
 
@@ -432,19 +501,48 @@ export const adminService = {
     return response.data ?? (settings as PlatformSettings);
   },
 
-  async getSearchHealth(role: AdminApiRole): Promise<Record<string, unknown> | null> {
+  async getSearchHealth(role: AdminApiRole): Promise<SearchHealthResponse | null> {
     try {
-      const response = await apiClient<Record<string, unknown>>(adminApiPath(role, '/search/health'));
+      const response = await apiClient<SearchHealthResponse>(adminApiPath(role, '/search/health'));
       return response.data ?? null;
     } catch {
       return null;
     }
   },
 
-  async getModerationAnalytics(role: AdminApiRole): Promise<Record<string, unknown> | null> {
+  async triggerSearchReindex(role: AdminApiRole, type: SearchIndexName): Promise<ReindexJobStatus> {
+    const response = await apiClient<ReindexJobStatus>(adminApiPath(role, '/search/reindex'), {
+      method: 'POST',
+      body: JSON.stringify({ type }),
+    });
+    if (!response.data) {
+      throw new Error('Reindex request failed');
+    }
+    return response.data;
+  },
+
+  async getSearchReindexStatus(
+    role: AdminApiRole,
+    type: SearchIndexName,
+  ): Promise<ReindexJobStatus | null> {
     try {
-      const response = await apiClient<Record<string, unknown>>(
+      const response = await apiClient<ReindexJobStatus>(
+        adminApiPath(role, `/search/reindex/${type}/status`),
+      );
+      return response.data ?? null;
+    } catch {
+      return null;
+    }
+  },
+
+  async getModerationAnalytics(
+    role: AdminApiRole,
+    days = 30,
+  ): Promise<ModerationAnalytics | null> {
+    try {
+      const response = await apiClient<ModerationAnalytics>(
         adminApiPath(role, '/moderation/analytics'),
+        { params: { days: String(days) } },
       );
       return response.data ?? null;
     } catch {
@@ -466,6 +564,74 @@ export const adminService = {
       },
     );
     return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
+  },
+
+  async listDisputes(
+    role: AdminApiRole,
+    params: { page?: number; limit?: number; status?: string } = {},
+  ): Promise<PaginatedResult<MarketplaceDispute>> {
+    const response = await apiClient<MarketplaceDispute[] | PaginatedResult<MarketplaceDispute>>(
+      adminApiPath(role, '/disputes'),
+      {
+        params: {
+          page: String(params.page ?? 1),
+          limit: String(params.limit ?? 20),
+          ...(params.status ? { status: params.status } : {}),
+        },
+      },
+    );
+    return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
+  },
+
+  async getDispute(role: AdminApiRole, disputeId: string): Promise<MarketplaceDispute> {
+    const response = await apiClient<MarketplaceDispute>(
+      adminApiPath(role, `/disputes/${disputeId}`),
+    );
+    return response.data;
+  },
+
+  async requestDisputeEvidence(
+    role: AdminApiRole,
+    disputeId: string,
+    notes?: string,
+  ): Promise<MarketplaceDispute> {
+    const response = await apiClient<MarketplaceDispute>(
+      adminApiPath(role, `/disputes/${disputeId}/request-evidence`),
+      {
+        method: 'POST',
+        body: JSON.stringify(notes ? { notes } : {}),
+      },
+    );
+    return response.data;
+  },
+
+  async markDisputeUnderReview(
+    role: AdminApiRole,
+    disputeId: string,
+  ): Promise<MarketplaceDispute> {
+    const response = await apiClient<MarketplaceDispute>(
+      adminApiPath(role, `/disputes/${disputeId}/under-review`),
+      { method: 'POST', body: JSON.stringify({}) },
+    );
+    return response.data;
+  },
+
+  async resolveDispute(
+    role: AdminApiRole,
+    disputeId: string,
+    input: {
+      outcome: 'resolved_buyer_favored' | 'resolved_seller_favored' | 'closed';
+      resolutionNotes: string;
+    },
+  ): Promise<MarketplaceDispute> {
+    const response = await apiClient<MarketplaceDispute>(
+      adminApiPath(role, `/disputes/${disputeId}/resolve`),
+      {
+        method: 'POST',
+        body: JSON.stringify(input),
+      },
+    );
+    return response.data;
   },
 };
 

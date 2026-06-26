@@ -68,6 +68,9 @@ export function mapChatThread(row: {
   sellerId: string;
   listingId: string;
   lastMessageAt: Date | null;
+  lastMessagePreview: string | null;
+  isBlocked: boolean;
+  blockedBy: string | null;
   archivedByBuyer: boolean;
   archivedBySeller: boolean;
   createdAt: Date;
@@ -79,6 +82,9 @@ export function mapChatThread(row: {
     sellerId: row.sellerId,
     listingId: row.listingId,
     lastMessageAt: row.lastMessageAt?.toISOString(),
+    lastMessagePreview: row.lastMessagePreview ?? undefined,
+    isBlocked: row.isBlocked,
+    blockedBy: row.blockedBy ?? undefined,
     archivedByBuyer: row.archivedByBuyer,
     archivedBySeller: row.archivedBySeller,
     createdAt: row.createdAt.toISOString(),

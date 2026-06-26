@@ -111,6 +111,9 @@ enum ListingStatus {
   ended
   removed
   rejected
+  flagged
+  under_investigation
+  suspended_seller
 }
 
 enum ListingPackageType {
@@ -203,6 +206,32 @@ enum DisputeStatus {
   won
   lost
   closed
+}
+
+enum MarketplaceDisputeStatus {
+  open
+  awaiting_evidence
+  under_review
+  resolved_buyer_favored
+  resolved_seller_favored
+  closed
+}
+
+enum DisputeEvidenceUploaderRole {
+  buyer
+  seller
+  admin
+}
+
+enum FraudSignalType {
+  high_risk_keywords
+  repeated_listing_duplication
+  rapid_listing_creation
+  mismatched_location
+  multiple_accounts_same_device
+  flagged_messages
+  buyer_reports
+  suspicious_pricing
 }
 
 enum PaymentMethod {
@@ -398,6 +427,7 @@ model User {
   listingAuditLogs           ListingAuditLog[]  @relation("ListingAuditActor")
   buyerChatThreads           ChatThread[]       @relation("ChatBuyer")
   sellerChatThreads          ChatThread[]       @relation("ChatSeller")
+  blockedChatThreads         ChatThread[]       @relation("ChatThreadBlocker")
   chatMessages               ChatMessage[]      @relation("ChatMessageSender")
   chatBans                   ChatBan[]          @relation("ChatBannedUser")
   issuedChatBans             ChatBan[]          @relation("ChatBanIssuer")
@@ -418,6 +448,11 @@ model User {
   moderationAppealsReviewed  ModerationAppeal[] @relation("ModerationAppealAdmin")
   moderationAuditLogs        ModerationAuditLog[] @relation("ModerationAuditActor")
   listingReviewMessages      ListingReviewMessage[] @relation("ListingReviewSender")
+  buyerDisputes              MarketplaceDispute[] @relation("DisputeBuyer")
+  sellerDisputes             MarketplaceDispute[] @relation("DisputeSeller")
+  resolvedDisputes           MarketplaceDispute[] @relation("DisputeResolver")
+  disputeEvidenceUploads     DisputeEvidence[]    @relation("DisputeEvidenceUploader")
+  disputeMessages            DisputeMessage[]     @relation("DisputeMessageSender")
   deliveryChangeLogsAsSeller DeliveryChangeLog[]    @relation("DeliveryChangeSeller")
   deliveryChangeLogsReviewed DeliveryChangeLog[]    @relation("DeliveryChangeReviewer")
   priceChangeLogsAsSeller    PriceChangeLog[]       @relation("PriceChangeSeller")
@@ -430,6 +465,7 @@ model User {
   sellerVerificationRequests SellerVerificationRequest[]
   sellerStatusHistory        SellerStatusHistory[]  @relation("SellerStatusHistoryUser")
   sellerStatusChanges        SellerStatusHistory[]  @relation("SellerStatusHistoryActor")
+  fraudSignals               FraudSignal[]
 
   @@index([primaryRoleId])
   @@index([status])
@@ -723,6 +759,8 @@ model Listing {
   statusChangeLogs   ListingStatusChangeLog[]
   sellerReviews      SellerReview[]
   buyerReviews       BuyerReview[]
+  marketplaceDisputes MarketplaceDispute[]
+  fraudSignals        FraudSignal[]
 
   @@index([status, createdAt(sort: Desc)])
   @@index([status, expiresAt])
@@ -730,6 +768,27 @@ model Listing {
   @@index([categoryId])
   @@index([latitude, longitude])
   @@map("listings")
+}
+
+model FraudSignal {
+  id          String          @id @default(uuid())
+  userId      String          @map("user_id")
+  listingId   String?         @map("listing_id")
+  signalType  FraudSignalType @map("signal_type")
+  signalValue String          @map("signal_value")
+  riskScore   Int             @map("risk_score")
+  dismissedAt DateTime?       @map("dismissed_at")
+  escalatedAt DateTime?       @map("escalated_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([listingId, createdAt(sort: Desc)])
+  @@index([signalType, createdAt(sort: Desc)])
+  @@index([dismissedAt])
+  @@map("fraud_signals")
 }
 
 model SellerReview {
@@ -991,6 +1050,7 @@ model Payment {
   listing  Listing          @relation(fields: [listingId], references: [id])
   refunds  PaymentRefund[]
   disputes PaymentDispute[]
+  marketplaceDisputes MarketplaceDispute[]
   ledger   LedgerEntry[]    @relation("PaymentLedger")
 
   @@index([buyerId, createdAt(sort: Desc)])
@@ -1085,6 +1145,66 @@ model PaymentDispute {
 
   @@index([paymentId])
   @@map("payment_disputes")
+}
+
+model MarketplaceDispute {
+  id              String                   @id @default(uuid())
+  buyerId         String                   @map("buyer_id")
+  sellerId        String                   @map("seller_id")
+  listingId       String                   @map("listing_id")
+  paymentId       String?                  @map("payment_id")
+  reason          String
+  description     String
+  disputeStatus   MarketplaceDisputeStatus @default(open) @map("dispute_status")
+  resolutionNotes String?                  @map("resolution_notes")
+  resolvedById    String?                  @map("resolved_by_id")
+  resolvedAt      DateTime?                @map("resolved_at")
+  createdAt       DateTime                 @default(now()) @map("created_at")
+  updatedAt       DateTime                 @updatedAt @map("updated_at")
+
+  buyer    User              @relation("DisputeBuyer", fields: [buyerId], references: [id])
+  seller   User              @relation("DisputeSeller", fields: [sellerId], references: [id])
+  listing  Listing           @relation(fields: [listingId], references: [id])
+  payment  Payment?          @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  resolvedBy User?           @relation("DisputeResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  evidence DisputeEvidence[]
+  messages DisputeMessage[]
+
+  @@index([buyerId, createdAt(sort: Desc)])
+  @@index([sellerId, createdAt(sort: Desc)])
+  @@index([listingId])
+  @@index([disputeStatus, createdAt(sort: Desc)])
+  @@map("disputes")
+}
+
+model DisputeEvidence {
+  id           String                      @id @default(uuid())
+  disputeId    String                      @map("dispute_id")
+  uploadedById String                      @map("uploaded_by")
+  uploaderRole DisputeEvidenceUploaderRole @map("uploaded_by_role")
+  filePath     String                      @map("file_path")
+  description  String?
+  createdAt    DateTime                    @default(now()) @map("created_at")
+
+  dispute    MarketplaceDispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  uploadedBy User               @relation("DisputeEvidenceUploader", fields: [uploadedById], references: [id])
+
+  @@index([disputeId, createdAt(sort: Desc)])
+  @@map("dispute_evidence")
+}
+
+model DisputeMessage {
+  id          String   @id @default(uuid())
+  disputeId   String   @map("dispute_id")
+  senderId    String   @map("sender_id")
+  messageText String   @map("message_text")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  dispute MarketplaceDispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  sender  User               @relation("DisputeMessageSender", fields: [senderId], references: [id])
+
+  @@index([disputeId, createdAt(sort: Asc)])
+  @@map("dispute_messages")
 }
 
 model PaymentAuditLog {
@@ -1216,18 +1336,22 @@ model SearchAnalyticsEvent {
 // ══════════════════════════════════════════════════════════════════════════════
 
 model ChatThread {
-  id               String    @id @default(uuid())
-  buyerId          String    @map("buyer_id")
-  sellerId         String    @map("seller_id")
-  listingId        String    @map("listing_id")
-  lastMessageAt    DateTime? @map("last_message_at")
-  archivedByBuyer  Boolean   @default(false) @map("archived_by_buyer")
-  archivedBySeller Boolean   @default(false) @map("archived_by_seller")
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
+  id                  String    @id @default(uuid())
+  buyerId             String    @map("buyer_id")
+  sellerId            String    @map("seller_id")
+  listingId           String    @map("listing_id")
+  lastMessageAt       DateTime? @map("last_message_at")
+  lastMessagePreview  String?   @map("last_message_preview")
+  isBlocked           Boolean   @default(false) @map("is_blocked")
+  blockedBy           String?   @map("blocked_by")
+  archivedByBuyer     Boolean   @default(false) @map("archived_by_buyer")
+  archivedBySeller    Boolean   @default(false) @map("archived_by_seller")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
   buyer    User          @relation("ChatBuyer", fields: [buyerId], references: [id])
   seller   User          @relation("ChatSeller", fields: [sellerId], references: [id])
+  blocker  User?         @relation("ChatThreadBlocker", fields: [blockedBy], references: [id], onDelete: SetNull)
   listing  Listing       @relation(fields: [listingId], references: [id])
   messages ChatMessage[]
 

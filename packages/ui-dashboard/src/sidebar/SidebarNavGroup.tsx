@@ -5,13 +5,13 @@ import { usePathname } from 'next/navigation';
 
 import { cn } from '@community-marketplace/ui';
 
-import type { SidebarNavItem } from './sidebar-config';
+import type { SidebarLinkItem } from './sidebar-config';
 import { Icon } from '../ui/Icon';
 import { Tooltip } from '../ui/Tooltip';
 import { SidebarItem } from './SidebarItem';
 
 export interface SidebarNavGroupProps {
-  item: SidebarNavItem;
+  item: SidebarLinkItem;
   collapsed?: boolean;
   onNavigate?: () => void;
 }
@@ -76,7 +76,7 @@ export function SidebarDisabledItem({
   item,
   collapsed = false,
 }: {
-  item: SidebarNavItem;
+  item: SidebarLinkItem;
   collapsed?: boolean;
 }) {
   const reason = item.disabledReason ?? 'You do not have permission to access this module.';

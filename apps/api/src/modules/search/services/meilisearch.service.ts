@@ -50,11 +50,23 @@ export class MeilisearchService implements OnModuleInit, OnModuleDestroy {
     if (!this.client) return { healthy: false, indexes: this.getIndexes() };
     try {
       await this.client.health();
-      for (const meta of this.indexMeta.values()) {
-        meta.isHealthy = true;
+      for (const name of this.indexMeta.keys()) {
+        const meta = this.indexMeta.get(name);
+        if (!meta) continue;
+        try {
+          const stats = await this.client.index(name).getStats();
+          meta.documentCount = stats.numberOfDocuments;
+          meta.isHealthy = true;
+          meta.updatedAt = new Date().toISOString();
+        } catch {
+          meta.isHealthy = false;
+        }
       }
       return { healthy: true, indexes: this.getIndexes() };
     } catch {
+      for (const meta of this.indexMeta.values()) {
+        meta.isHealthy = false;
+      }
       return { healthy: false, indexes: this.getIndexes() };
     }
   }

@@ -15,10 +15,26 @@ export const LEGACY_DASHBOARD_REDIRECTS: Record<string, string> = {
   '/buyer/dashboard/chat': '/buyer/chat',
   '/buyer/payments': '/buyer/purchases',
   '/super-admin/audit-logs': '/super-admin/audit-log',
+  '/admin/reports': '/admin/moderation',
+  '/admin/settings': '/admin/profile?tab=preferences',
+  '/buyer/settings': '/buyer/profile?tab=preferences',
+  '/seller/settings': '/seller/profile?tab=settings',
 };
 
 export function isDashboardPath(pathname: string): boolean {
   return DASHBOARD_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+/** Map `/admin/*` to the super-admin namespace so privileged users stay on `/super-admin/*`. */
+export function resolveSuperAdminAdminNamespaceRedirect(
+  pathname: string,
+  role: RbacRole | null,
+): string | null {
+  if (role !== 'SUPER_ADMIN') return null;
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    return `/super-admin${pathname.slice('/admin'.length)}`;
+  }
+  return null;
 }
 
 export function resolveDashboardRedirect(pathname: string, role: RbacRole | null): string | null {

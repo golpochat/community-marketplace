@@ -17,6 +17,7 @@ export function filterSidebarItems(
 
   return items
     .filter((item) => {
+      if (item.sectionHeader) return true;
       if (!item.permission) return true;
       return hasPermission(permissions, role, item.permission);
     })
@@ -52,6 +53,20 @@ export function canSuspendSeller(
   permissions: PermissionCode[],
 ): boolean {
   return hasPermission(permissions, role, PERMISSIONS.SUSPEND_SELLER);
+}
+
+export function canReactivateSeller(
+  role: RbacRole | null | undefined,
+  permissions: PermissionCode[],
+): boolean {
+  return hasPermission(permissions, role, PERMISSIONS.REACTIVATE_SELLER);
+}
+
+export function canForceReverifySeller(
+  role: RbacRole | null | undefined,
+  permissions: PermissionCode[],
+): boolean {
+  return hasPermission(permissions, role, PERMISSIONS.FORCE_REVERIFY_SELLER);
 }
 
 export function canManageSellerLimits(

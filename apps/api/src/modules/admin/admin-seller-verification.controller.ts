@@ -6,6 +6,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 import { SellerVerificationService } from '../seller/services/seller-verification.service';
+import { SellerStatusHistoryService } from '../seller/services/seller-status-history.service';
 
 @RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin/seller-verification')
@@ -49,6 +50,12 @@ export class AdminSellerVerificationController {
     return this.verificationService.getSellerDetail(userId);
   }
 
+  @RequirePermissions(PERMISSIONS.VIEW_SELLER_DOCUMENTS)
+  @Get(':id')
+  getById(@Param('id') id: string) {
+    return this.verificationService.getRequestDetail(id);
+  }
+
   @RequirePermissions(PERMISSIONS.REVIEW_SELLER_VERIFICATION)
   @Post('approve')
   approve(@CurrentUser() actor: AuthenticatedUser, @Body() body: unknown) {
@@ -65,7 +72,10 @@ export class AdminSellerVerificationController {
 @RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin/seller')
 export class AdminSellerManagementController {
-  constructor(private readonly verificationService: SellerVerificationService) {}
+  constructor(
+    private readonly verificationService: SellerVerificationService,
+    private readonly statusHistoryService: SellerStatusHistoryService,
+  ) {}
 
   @RequirePermissions(PERMISSIONS.SUSPEND_SELLER)
   @Post('suspend')
@@ -79,26 +89,38 @@ export class AdminSellerManagementController {
     return this.verificationService.setSellerLimit(actor.id, body);
   }
 
-  @RequirePermissions(PERMISSIONS.VIEW_SELLER_DOCUMENTS)
-  @Get('status-history')
+  @RequirePermissions(PERMISSIONS.REVIEW_SELLER_VERIFICATION)
+  @Get('status-history/:userId')
   statusHistory(
-    @Query('userId') userId: string,
+    @Param('userId') userId: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    return this.verificationService.getStatusHistory(
+    return this.statusHistoryService.getHistory(
       userId,
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 50,
     );
   }
 
-  @RequirePermissions(PERMISSIONS.REVIEW_SELLER_VERIFICATION)
+  @RequirePermissions(PERMISSIONS.REACTIVATE_SELLER)
+  @Post('reactivate')
+  reactivate(@CurrentUser() actor: AuthenticatedUser, @Body() body: unknown) {
+    return this.verificationService.reactivateSeller(actor.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.FORCE_REVERIFY_SELLER)
+  @Post('force-reverify')
+  forceReverify(@CurrentUser() actor: AuthenticatedUser, @Body() body: unknown) {
+    return this.verificationService.forceReverifySeller(actor.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.FORCE_REVERIFY_SELLER)
   @Post('reverify')
   requestReverification(
     @CurrentUser() actor: AuthenticatedUser,
     @Body() body: unknown,
   ) {
-    return this.verificationService.requestReverification(actor.id, body);
+    return this.verificationService.forceReverifySeller(actor.id, body);
   }
 }

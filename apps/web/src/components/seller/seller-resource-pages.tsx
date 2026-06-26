@@ -148,6 +148,8 @@ const STATUS_FILTER_OPTIONS = [
   { value: "", label: "All" },
   { value: "draft", label: "Draft" },
   { value: "pending_review", label: "Pending review" },
+  { value: "flagged", label: "Flagged" },
+  { value: "under_investigation", label: "Under investigation" },
   { value: "active", label: "Live" },
   { value: "paused", label: "Paused" },
   { value: "expired", label: "Expired" },
@@ -155,6 +157,7 @@ const STATUS_FILTER_OPTIONS = [
   { value: "ended", label: "Ended" },
   { value: "rejected", label: "Rejected" },
   { value: "removed", label: "Removed" },
+  { value: "suspended_seller", label: "Seller suspended" },
 ] as const;
 
 function SellerListingThumb({ listing }: { listing: Listing }) {
@@ -375,6 +378,19 @@ export function SellerListingsPage() {
                           {listing.rejectionReason}
                         </p>
                       )}
+                    {(listing.status === "flagged" ||
+                      listing.status === "under_investigation" ||
+                      listing.status === "pending_review") &&
+                      listing.moderationNotes && (
+                        <p className="mt-1 text-xs text-amber-700">
+                          {listing.moderationNotes}
+                        </p>
+                      )}
+                    {listing.status === "suspended_seller" && (
+                      <p className="mt-1 text-xs text-red-600">
+                        Unavailable while your seller account is suspended.
+                      </p>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-xs text-gray-500">
                     <p>
@@ -563,7 +579,7 @@ export function SellerVerificationPage() {
     setSubmitting(true);
     setError(null);
     try {
-      await sellerVerificationService.start({
+      await sellerVerificationService.phone({
         action: "send_otp",
         phone: phone.trim(),
       });
@@ -580,7 +596,7 @@ export function SellerVerificationPage() {
     setSubmitting(true);
     setError(null);
     try {
-      await sellerVerificationService.start({
+      await sellerVerificationService.phone({
         action: "verify_otp",
         phone: phone.trim(),
         code: otpCode.trim(),
@@ -607,7 +623,7 @@ export function SellerVerificationPage() {
         sellerVerificationService.uploadDocument(files.idDocument, "id"),
         sellerVerificationService.uploadDocument(files.selfie, "selfie"),
         files.addressProof
-          ? sellerVerificationService.uploadDocument(files.addressProof, "id")
+          ? sellerVerificationService.uploadDocument(files.addressProof, "address")
           : Promise.resolve(undefined),
       ]);
 
@@ -632,8 +648,7 @@ export function SellerVerificationPage() {
   const canSubmitDocs =
     status &&
     status.sellerStatus !== "verified" &&
-    status.sellerStatus !== "under_review" &&
-    !status.pendingRequest &&
+    !status.verificationRequestedAt &&
     status.phoneVerified &&
     status.emailVerified;
 
@@ -1253,15 +1268,19 @@ export function SellerEditListingPage({ listingId }: { listingId: string }) {
       {listingStatus &&
         (listingStatus === "draft" ||
           listingStatus === "pending_review" ||
-          listingStatus === "rejected") &&
+          listingStatus === "rejected" ||
+          listingStatus === "flagged" ||
+          listingStatus === "under_investigation") &&
         (moderationNotes || (review?.messages.length ?? 0) > 0) && (
           <Card className="mb-6">
             <h2 className="text-lg font-semibold text-gray-900">
               Admin review feedback
             </h2>
             <p className="mt-1 text-sm text-gray-600">
-              {listingStatus === "pending_review"
+              {listingStatus === "pending_review" || listingStatus === "flagged"
                 ? "Your listing is awaiting admin review. Reply below if you need to clarify anything."
+                : listingStatus === "under_investigation"
+                  ? "Your listing is under investigation. An admin will follow up shortly."
                 : listingStatus === "rejected"
                   ? "Your listing was rejected. Address the feedback below, edit your listing, then resubmit."
                   : "Your listing is pending approval. Reply below if you need to clarify anything after making edits."}

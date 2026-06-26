@@ -1,26 +1,30 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { Prisma, SellerStatus, VerificationStatus } from '@prisma/client';
+import type { Prisma, SellerStatus, SellerVerificationRequest, VerificationStatus } from '@prisma/client';
 
 import {
   SELLER_VERIFICATION_MESSAGES,
-  type SellerStatusHistoryEntry,
-  type SellerVerificationRequest,
+  type SellerVerificationNextStep,
+  type SellerVerificationRequest as SellerVerificationRequestDto,
+  type SellerVerificationStartResponse,
   type SellerVerificationStatus,
   type AdminSellerVerificationRow,
   type AdminSellerVerificationDetail,
 } from '@community-marketplace/types';
 import {
   sellerLimitSchema,
-  sellerReverificationSchema,
+  sellerReactivateSchema,
+  sellerForceReverifySchema,
   sellerSuspendSchema,
   sellerVerificationReviewSchema,
   sellerVerificationStartSchema,
+  sellerVerificationPhoneSchema,
   sellerVerificationFlowSubmitSchema,
-  sellerVerificationUploadSchema,
+  sellerVerificationDocumentSchema,
   adminSellerVerificationListSchema,
 } from '@community-marketplace/validation';
 
@@ -33,6 +37,9 @@ import {
   SellerListingGateService,
   SellerVerificationStatusService,
 } from './seller-listing-gate.service';
+import { SellerStatusHistoryService } from './seller-status-history.service';
+
+type DraftRequest = SellerVerificationRequest;
 
 @Injectable()
 export class SellerVerificationService {
@@ -44,18 +51,42 @@ export class SellerVerificationService {
     private readonly eventBus: EventBusService,
     private readonly listingGate: SellerListingGateService,
     private readonly statusService: SellerVerificationStatusService,
+    private readonly statusHistory: SellerStatusHistoryService,
   ) {}
 
   getStatus(userId: string): Promise<SellerVerificationStatus> {
     return this.statusService.getStatus(userId);
   }
 
-  async start(userId: string, input: unknown) {
+  async start(userId: string, input: unknown = {}) {
     const parsed = sellerVerificationStartSchema.parse(input);
 
-    if (parsed.action === 'check') {
-      return this.statusService.getStatus(userId);
+    if (typeof parsed === 'object' && parsed !== null && 'action' in parsed) {
+      if (parsed.action === 'check') {
+        return this.statusService.getStatus(userId);
+      }
+      return this.verifyPhone(userId, parsed);
     }
+
+    const status = await this.statusService.getStatus(userId);
+    this.assertCanBeginVerification(status);
+
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { sellerStatus: true, verificationRequestedAt: true },
+    });
+
+    if (user.verificationRequestedAt) {
+      throw new BadRequestException('A verification request is already pending review');
+    }
+
+    const request = await this.getOrCreateDraftRequest(userId, user.sellerStatus);
+
+    return this.buildStartResponse(request, status);
+  }
+
+  async verifyPhone(userId: string, input: unknown) {
+    const parsed = sellerVerificationPhoneSchema.parse(input);
 
     if (parsed.action === 'send_otp') {
       await this.otpService.sendOtp({
@@ -65,7 +96,7 @@ export class SellerVerificationService {
       });
       return {
         message: 'OTP sent to your phone',
-        nextStage: 'phone' as const,
+        nextRequiredStep: 'phone' as const,
       };
     }
 
@@ -90,28 +121,32 @@ export class SellerVerificationService {
       },
     });
 
-    return this.statusService.getStatus(userId);
+    const draft = await this.getOrCreateDraftRequest(userId);
+    await this.prisma.sellerVerificationRequest.update({
+      where: { id: draft.id },
+      data: { phoneNumber: parsed.phone },
+    });
+
+    const status = await this.statusService.getStatus(userId);
+    return {
+      ...this.buildStartResponse(draft, status),
+      message: 'Phone verified successfully',
+    };
   }
 
-  createIdUploadUrl(userId: string, input: unknown) {
-    const parsed = sellerVerificationUploadSchema.parse(input);
-    return this.storage.createVerificationDocumentUploadUrl(
-      userId,
-      parsed.contentType,
-      parsed.fileName,
-    );
+  uploadIdDocument(userId: string, input: unknown) {
+    return this.handleDocumentUpload(userId, input, 'idDocumentPath');
   }
 
-  createSelfieUploadUrl(userId: string, input: unknown) {
-    const parsed = sellerVerificationUploadSchema.parse(input);
-    return this.storage.createVerificationDocumentUploadUrl(
-      userId,
-      parsed.contentType,
-      parsed.fileName,
-    );
+  uploadSelfie(userId: string, input: unknown) {
+    return this.handleDocumentUpload(userId, input, 'selfiePath');
   }
 
-  async submit(userId: string, input: unknown): Promise<SellerVerificationRequest> {
+  uploadAddressDocument(userId: string, input: unknown) {
+    return this.handleDocumentUpload(userId, input, 'addressDocumentPath');
+  }
+
+  async submit(userId: string, input: unknown): Promise<SellerVerificationRequestDto> {
     const parsed = sellerVerificationFlowSubmitSchema.parse(input);
     const status = await this.statusService.getStatus(userId);
 
@@ -121,23 +156,34 @@ export class SellerVerificationService {
     if (!status.emailVerified) {
       throw new BadRequestException('Email verification is required before submitting documents');
     }
-    if (status.pendingRequest) {
-      throw new BadRequestException('A verification request is already pending review');
-    }
     if (status.sellerStatus === 'verified') {
       throw new BadRequestException('You are already a verified seller');
     }
+    if (status.verificationRequestedAt) {
+      throw new BadRequestException('A verification request is already pending review');
+    }
 
     const profile = await this.prisma.userProfile.findUnique({ where: { userId } });
+    const draft = await this.getOrCreateDraftRequest(userId);
 
+    const idDocumentPath = parsed.idDocumentPath ?? draft.idDocumentPath ?? undefined;
+    const selfiePath = parsed.selfiePath ?? draft.selfiePath ?? undefined;
+    const addressDocumentPath =
+      parsed.addressDocumentPath ?? draft.addressDocumentPath ?? undefined;
+
+    if (!idDocumentPath || !selfiePath) {
+      throw new BadRequestException('ID document and selfie are required before submission');
+    }
+
+    const now = new Date();
     const request = await this.prisma.$transaction(async (tx) => {
-      const created = await tx.sellerVerificationRequest.create({
+      const updated = await tx.sellerVerificationRequest.update({
+        where: { id: draft.id },
         data: {
-          userId,
-          phoneNumber: parsed.phoneNumber ?? profile?.phone ?? undefined,
-          idDocumentPath: parsed.idDocumentPath,
-          selfiePath: parsed.selfiePath,
-          addressDocumentPath: parsed.addressDocumentPath,
+          phoneNumber: parsed.phoneNumber ?? profile?.phone ?? draft.phoneNumber ?? undefined,
+          idDocumentPath,
+          selfiePath,
+          addressDocumentPath,
           status: 'pending',
         },
       });
@@ -150,22 +196,25 @@ export class SellerVerificationService {
       await tx.user.update({
         where: { id: userId },
         data: {
-          verificationRequestedAt: new Date(),
+          verificationRequestedAt: now,
           sellerStatus: 'under_review',
         },
       });
 
-      await tx.sellerStatusHistory.create({
-        data: {
-          userId,
-          oldStatus: user.sellerStatus,
-          newStatus: 'under_review',
-          changedBy: userId,
-          reason: 'Verification documents submitted',
-        },
-      });
+      if (user.sellerStatus !== 'under_review') {
+        await this.statusHistory.logChange(
+          {
+            userId,
+            oldStatus: user.sellerStatus,
+            newStatus: 'under_review',
+            changedBy: userId,
+            reason: 'Verification documents submitted',
+          },
+          tx,
+        );
+      }
 
-      return created;
+      return updated;
     });
 
     await this.audit.record('verification_submitted', userId, userId, {
@@ -175,7 +224,7 @@ export class SellerVerificationService {
     this.eventBus.publish({
       type: 'user.verification_requested',
       payload: { userId, verificationId: request.id },
-      timestamp: new Date(),
+      timestamp: now,
     });
 
     return this.statusService.mapRequest(request);
@@ -264,6 +313,12 @@ export class SellerVerificationService {
       user: {
         primaryRole: { code: 'SELLER' },
         ...searchFilter,
+        ...(view === 'pending'
+          ? {
+              verificationRequestedAt: { not: null },
+              sellerStatus: { notIn: ['verified'] },
+            }
+          : {}),
       },
       ...dateFilter,
     };
@@ -344,7 +399,12 @@ export class SellerVerificationService {
       throw new NotFoundException('Seller not found');
     }
 
-    const latest = user.sellerVerificationRequests[0];
+    const latest =
+      user.sellerStatus === 'verified'
+        ? (user.sellerVerificationRequests.find((r) => r.status === 'approved') ??
+          user.sellerVerificationRequests[0])
+        : (user.sellerVerificationRequests.find((r) => r.status === 'pending') ??
+          user.sellerVerificationRequests[0]);
     const base = this.mapAdminRowFromUser(user, latest);
 
     return {
@@ -438,16 +498,17 @@ export class SellerVerificationService {
     });
 
     const now = new Date();
-    const [updated] = await this.prisma.$transaction([
-      this.prisma.sellerVerificationRequest.update({
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedRequest = await tx.sellerVerificationRequest.update({
         where: { id: parsed.requestId },
         data: {
           status: 'approved',
           reviewedById: reviewerId,
           reviewedAt: now,
         },
-      }),
-      this.prisma.user.update({
+      });
+
+      await tx.user.update({
         where: { id: request.userId },
         data: {
           sellerStatus: 'verified',
@@ -455,17 +516,35 @@ export class SellerVerificationService {
           verificationCompletedAt: now,
           verificationRejectedReason: null,
         },
-      }),
-      this.prisma.sellerStatusHistory.create({
+      });
+
+      await tx.sellerVerificationRequest.updateMany({
+        where: {
+          userId: request.userId,
+          status: 'pending',
+          id: { not: parsed.requestId },
+        },
         data: {
+          status: 'rejected',
+          reviewedById: reviewerId,
+          reviewedAt: now,
+          rejectionReason: 'Superseded by approved verification',
+        },
+      });
+
+      await this.statusHistory.logChange(
+        {
           userId: request.userId,
           oldStatus: user.sellerStatus,
           newStatus: 'verified',
           changedBy: reviewerId,
-          reason: 'Verification approved',
+          reason: parsed.reason ?? 'Verification approved',
         },
-      }),
-    ]);
+        tx,
+      );
+
+      return updatedRequest;
+    });
 
     await this.audit.record('verification_approved', reviewerId, request.userId, {
       verificationId: parsed.requestId,
@@ -496,8 +575,8 @@ export class SellerVerificationService {
     });
 
     const now = new Date();
-    const [updated] = await this.prisma.$transaction([
-      this.prisma.sellerVerificationRequest.update({
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedRequest = await tx.sellerVerificationRequest.update({
         where: { id: parsed.requestId },
         data: {
           status: 'rejected',
@@ -505,25 +584,31 @@ export class SellerVerificationService {
           reviewedAt: now,
           rejectionReason: parsed.reason,
         },
-      }),
-      this.prisma.user.update({
+      });
+
+      await tx.user.update({
         where: { id: request.userId },
         data: {
           sellerStatus: 'unverified',
           idVerified: false,
+          verificationRequestedAt: null,
           verificationRejectedReason: parsed.reason,
         },
-      }),
-      this.prisma.sellerStatusHistory.create({
-        data: {
+      });
+
+      await this.statusHistory.logChange(
+        {
           userId: request.userId,
           oldStatus: user.sellerStatus,
           newStatus: 'unverified',
           changedBy: reviewerId,
           reason: parsed.reason,
         },
-      }),
-    ]);
+        tx,
+      );
+
+      return updatedRequest;
+    });
 
     await this.audit.record('verification_rejected', reviewerId, request.userId, {
       verificationId: parsed.requestId,
@@ -553,6 +638,10 @@ export class SellerVerificationService {
       select: { sellerStatus: true },
     });
 
+    if (user.sellerStatus === 'suspended') {
+      throw new BadRequestException('Seller is already suspended');
+    }
+
     const durationLabel =
       parsed.duration === '7_days'
         ? '7 days'
@@ -571,19 +660,30 @@ export class SellerVerificationService {
       user.sellerStatus,
       'suspended',
       actorId,
-      reason || 'Seller suspended',
+      reason,
     );
 
-    if (reason) {
-      await this.prisma.user.update({
-        where: { id: parsed.userId },
-        data: { verificationRejectedReason: reason },
-      });
-    }
+    await this.prisma.user.update({
+      where: { id: parsed.userId },
+      data: { verificationRejectedReason: reason },
+    });
 
     await this.audit.record('user_suspended', actorId, parsed.userId, {
       reason: parsed.reason,
+      duration: parsed.duration,
       scope: 'seller',
+    });
+
+    const now = new Date();
+    this.eventBus.publish({
+      type: 'seller.suspended',
+      payload: {
+        userId: parsed.userId,
+        reason: parsed.reason,
+        duration: parsed.duration,
+        message: `${SELLER_VERIFICATION_MESSAGES.SUSPENDED} ${parsed.reason}`,
+      },
+      timestamp: now,
     });
 
     return { userId: parsed.userId, sellerStatus: 'suspended' as const };
@@ -606,16 +706,14 @@ export class SellerVerificationService {
       select: { id: true, sellerLimit: true, unverifiedListingCount: true, sellerStatus: true },
     });
 
-    await this.prisma.sellerStatusHistory.create({
-      data: {
-        userId: parsed.userId,
-        oldStatus: before.sellerStatus,
-        newStatus: before.sellerStatus,
-        changedBy: actorId,
-        reason:
-          parsed.reason ??
-          `Listing limit changed from ${before.sellerLimit} to ${parsed.sellerLimit}`,
-      },
+    await this.statusHistory.logChange({
+      userId: parsed.userId,
+      oldStatus: before.sellerStatus,
+      newStatus: before.sellerStatus,
+      changedBy: actorId,
+      reason:
+        parsed.reason ??
+        `Listing limit changed from ${before.sellerLimit} to ${parsed.sellerLimit}`,
     });
 
     if (
@@ -638,58 +736,293 @@ export class SellerVerificationService {
     return user;
   }
 
-  async requestReverification(actorId: string, input: unknown) {
-    const parsed = sellerReverificationSchema.parse(input);
+  async forceReverifySeller(actorId: string, input: unknown) {
+    const parsed = sellerForceReverifySchema.parse(input);
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: parsed.userId },
-      select: { sellerStatus: true },
+      include: { profile: { select: { phone: true } } },
     });
 
-    await this.prisma.user.update({
-      where: { id: parsed.userId },
-      data: {
-        idVerified: false,
-        verificationCompletedAt: null,
+    if (user.sellerStatus === 'suspended') {
+      throw new BadRequestException('Cannot force re-verification on a suspended seller');
+    }
+
+    const reason = parsed.reason;
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: parsed.userId },
+        data: {
+          idVerified: false,
+          verificationCompletedAt: null,
+          verificationRequestedAt: null,
+        },
+      });
+
+      await tx.sellerVerificationRequest.create({
+        data: {
+          userId: parsed.userId,
+          phoneNumber: user.profile?.phone ?? undefined,
+          status: 'pending',
+        },
+      });
+
+      if (user.sellerStatus !== 'verification_required') {
+        await tx.user.update({
+          where: { id: parsed.userId },
+          data: { sellerStatus: 'verification_required' },
+        });
+        await this.statusHistory.logChange(
+          {
+            userId: parsed.userId,
+            oldStatus: user.sellerStatus,
+            newStatus: 'verification_required',
+            changedBy: actorId,
+            reason,
+          },
+          tx,
+        );
+      } else {
+        await this.statusHistory.logChange(
+          {
+            userId: parsed.userId,
+            oldStatus: 'verification_required',
+            newStatus: 'verification_required',
+            changedBy: actorId,
+            reason,
+          },
+          tx,
+        );
+      }
+    });
+
+    await this.audit.record('profile_update', actorId, parsed.userId, {
+      action: 'seller_force_reverify',
+      reason,
+    });
+
+    const now = new Date();
+    this.eventBus.publish({
+      type: 'seller.force_reverify',
+      payload: {
+        userId: parsed.userId,
+        reason,
+        message: SELLER_VERIFICATION_MESSAGES.FORCE_REVERIFY,
       },
+      timestamp: now,
     });
-
-    await this.listingGate.transitionStatus(
-      parsed.userId,
-      user.sellerStatus,
-      'verification_required',
-      actorId,
-      parsed.reason ?? 'Re-verification requested',
-    );
 
     return { userId: parsed.userId, sellerStatus: 'verification_required' as const };
   }
 
-  async getStatusHistory(userId: string, page = 1, limit = 50) {
-    const skip = (page - 1) * limit;
-    const [rows, total] = await Promise.all([
-      this.prisma.sellerStatusHistory.findMany({
-        where: { userId },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-      }),
-      this.prisma.sellerStatusHistory.count({ where: { userId } }),
-    ]);
+  async requestReverification(actorId: string, input: unknown) {
+    return this.forceReverifySeller(actorId, input);
+  }
 
-    const data: SellerStatusHistoryEntry[] = rows.map((row) => ({
-      id: row.id,
-      userId: row.userId,
-      oldStatus: row.oldStatus,
-      newStatus: row.newStatus,
-      changedBy: row.changedBy ?? undefined,
-      reason: row.reason ?? undefined,
-      createdAt: row.createdAt.toISOString(),
-    }));
+  async reactivateSeller(actorId: string, input: unknown) {
+    const parsed = sellerReactivateSchema.parse(input);
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: parsed.userId },
+      select: { sellerStatus: true, idVerified: true },
+    });
+
+    if (user.sellerStatus !== 'suspended') {
+      throw new BadRequestException('Only suspended sellers can be reactivated');
+    }
+
+    const newStatus = await this.resolvePreSuspensionStatus(parsed.userId, user.idVerified);
+
+    await this.listingGate.transitionStatus(
+      parsed.userId,
+      user.sellerStatus,
+      newStatus,
+      actorId,
+      parsed.reason,
+    );
+
+    await this.prisma.user.update({
+      where: { id: parsed.userId },
+      data: { verificationRejectedReason: null },
+    });
+
+    await this.audit.record('profile_update', actorId, parsed.userId, {
+      action: 'seller_reactivated',
+      reason: parsed.reason,
+    });
+
+    const now = new Date();
+    this.eventBus.publish({
+      type: 'seller.reactivated',
+      payload: {
+        userId: parsed.userId,
+        reason: parsed.reason,
+        sellerStatus: newStatus,
+        message: SELLER_VERIFICATION_MESSAGES.REACTIVATED,
+      },
+      timestamp: now,
+    });
+
+    return { userId: parsed.userId, sellerStatus: newStatus };
+  }
+
+  private async resolvePreSuspensionStatus(
+    userId: string,
+    idVerified: boolean,
+  ): Promise<SellerStatus> {
+    const suspensionEntry = await this.prisma.sellerStatusHistory.findFirst({
+      where: { userId, newStatus: 'suspended' },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!suspensionEntry) {
+      return idVerified ? 'verified' : 'unverified';
+    }
+
+    return suspensionEntry.oldStatus === 'verified' ? 'verified' : 'unverified';
+  }
+
+  private async handleDocumentUpload(
+    userId: string,
+    input: unknown,
+    field: 'idDocumentPath' | 'selfiePath' | 'addressDocumentPath',
+  ) {
+    const parsed = sellerVerificationDocumentSchema.parse(input);
+
+    if ('filePath' in parsed) {
+      const draft = await this.getOrCreateDraftRequest(userId);
+      const updated = await this.prisma.sellerVerificationRequest.update({
+        where: { id: draft.id },
+        data: { [field]: parsed.filePath },
+      });
+
+      return {
+        stored: true,
+        filePath: parsed.filePath,
+        requestId: updated.id,
+        nextRequiredStep: this.resolveNextStep(
+          await this.statusService.getStatus(userId),
+          updated,
+        ),
+      };
+    }
+
+    const upload = await this.storage.createVerificationDocumentUploadUrl(
+      userId,
+      parsed.contentType,
+      parsed.fileName,
+    );
+
+    const stepByField = {
+      idDocumentPath: 'id_document',
+      selfiePath: 'selfie',
+      addressDocumentPath: 'address',
+    } as const;
 
     return {
-      data,
-      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      ...upload,
+      nextRequiredStep: stepByField[field],
     };
+  }
+
+  private async getOrCreateDraftRequest(
+    userId: string,
+    currentSellerStatus?: SellerStatus,
+  ): Promise<DraftRequest> {
+    const user =
+      currentSellerStatus !== undefined
+        ? { sellerStatus: currentSellerStatus }
+        : await this.prisma.user.findUniqueOrThrow({
+            where: { id: userId },
+            select: { sellerStatus: true },
+          });
+
+    if (user.sellerStatus === 'verified') {
+      throw new BadRequestException('You are already a verified seller');
+    }
+
+    const existing = await this.findDraftRequest(userId);
+    if (existing) return existing;
+
+    return this.prisma.$transaction(async (tx) => {
+      const created = await tx.sellerVerificationRequest.create({
+        data: {
+          userId,
+          status: 'pending',
+        },
+      });
+
+      if (user.sellerStatus !== 'under_review') {
+        await tx.user.update({
+          where: { id: userId },
+          data: { sellerStatus: 'under_review' },
+        });
+        await this.statusHistory.logChange(
+          {
+            userId,
+            oldStatus: user.sellerStatus,
+            newStatus: 'under_review',
+            changedBy: userId,
+            reason: 'Seller verification started',
+          },
+          tx,
+        );
+      }
+
+      return created;
+    });
+  }
+
+  private findDraftRequest(userId: string): Promise<DraftRequest | null> {
+    return this.prisma.sellerVerificationRequest.findFirst({
+      where: {
+        userId,
+        status: 'pending',
+        user: { verificationRequestedAt: null },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  private buildStartResponse(
+    request: DraftRequest,
+    status: SellerVerificationStatus,
+  ): SellerVerificationStartResponse {
+    return {
+      requestId: request.id,
+      nextRequiredStep: this.resolveNextStep(status, request),
+      sellerStatus: status.sellerStatus,
+      phoneVerified: status.phoneVerified,
+      emailVerified: status.emailVerified,
+    };
+  }
+
+  private resolveNextStep(
+    status: SellerVerificationStatus,
+    request?: Pick<
+      DraftRequest,
+      'idDocumentPath' | 'selfiePath' | 'addressDocumentPath'
+    > | null,
+  ): SellerVerificationNextStep {
+    if (status.sellerStatus === 'verified' || status.idVerified) return 'complete';
+    if (status.verificationRequestedAt) return 'review';
+    if (!status.phoneVerified) return 'phone';
+    if (!status.emailVerified) return 'email';
+    if (!request?.idDocumentPath) return 'id_document';
+    if (!request?.selfiePath) return 'selfie';
+    if (!request?.addressDocumentPath) return 'address';
+    return 'submit';
+  }
+
+  private assertCanBeginVerification(status: SellerVerificationStatus) {
+    if (status.sellerStatus === 'verified') {
+      throw new BadRequestException('You are already a verified seller');
+    }
+    if (status.sellerStatus === 'suspended') {
+      throw new ForbiddenException('Your seller account is suspended');
+    }
+    if (status.verificationRequestedAt) {
+      throw new BadRequestException('A verification request is already pending review');
+    }
   }
 
   private async findRequestOrThrow(requestId: string) {

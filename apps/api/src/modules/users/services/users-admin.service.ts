@@ -14,6 +14,8 @@ import { PrismaService } from '../../../database/prisma.service';
 import { mapUser, mapUserProfile, userProfileInclude } from '../mappers/user.mapper';
 import { UserAuditService } from './user-audit.service';
 
+const MARKETPLACE_USER_ROLES = ['BUYER', 'SELLER'] as const satisfies readonly RbacRole[];
+
 @Injectable()
 export class UsersAdminService {
   constructor(
@@ -22,7 +24,7 @@ export class UsersAdminService {
     private readonly authorization: AuthorizationService,
   ) {}
 
-  async listUsers(query: unknown) {
+  async listUsers(query: unknown, actorRole: RbacRole) {
     const parsed = adminUserListQuerySchema.parse(query ?? {});
     const page = parsed.page ?? 1;
     const limit = parsed.limit ?? 20;
@@ -30,7 +32,7 @@ export class UsersAdminService {
 
     const where: Prisma.UserWhereInput = {
       ...(parsed.status ? { status: parsed.status } : {}),
-      ...(parsed.role ? { primaryRole: { code: parsed.role } } : {}),
+      ...this.buildRoleScope(actorRole, parsed.role),
       ...(parsed.search
         ? {
             OR: [
@@ -66,7 +68,9 @@ export class UsersAdminService {
     };
   }
 
-  async getUserDetails(userId: string) {
+  async getUserDetails(userId: string, actorRole: RbacRole) {
+    await this.assertCanViewUser(actorRole, userId);
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
@@ -185,6 +189,42 @@ export class UsersAdminService {
 
     await this.audit.record('role_changed', actorId, userId, { role });
     return mapUser(updated);
+  }
+
+  private buildRoleScope(
+    actorRole: RbacRole,
+    requestedRole?: RbacRole,
+  ): Pick<Prisma.UserWhereInput, 'primaryRole'> {
+    if (actorRole === 'SUPER_ADMIN') {
+      return requestedRole ? { primaryRole: { code: requestedRole } } : {};
+    }
+
+    const scopedRole =
+      requestedRole &&
+      (MARKETPLACE_USER_ROLES as readonly RbacRole[]).includes(requestedRole)
+        ? requestedRole
+        : undefined;
+
+    return {
+      primaryRole: scopedRole
+        ? { code: scopedRole }
+        : { code: { in: [...MARKETPLACE_USER_ROLES] } },
+    };
+  }
+
+  private async assertCanViewUser(actorRole: RbacRole, targetUserId: string) {
+    if (actorRole === 'SUPER_ADMIN') return;
+
+    const target = await this.prisma.user.findUnique({
+      where: { id: targetUserId },
+      include: { primaryRole: true },
+    });
+    if (!target) throw new NotFoundException('User not found');
+
+    const targetRole = target.primaryRole.code as RbacRole;
+    if (targetRole === 'SUPER_ADMIN' || targetRole === 'ADMIN') {
+      throw new NotFoundException('User not found');
+    }
   }
 
   private async assertCanManageUser(actorId: string, actorRole: RbacRole, targetUserId: string) {

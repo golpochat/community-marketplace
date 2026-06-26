@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '../../../generated/prisma';
 
 import { DEV_BOOTSTRAP_USERS } from '../dev-users.seed.data';
 import { hashPassword } from './password-hash';
@@ -71,6 +71,108 @@ export async function runDevUsersSeed(prisma: PrismaClient): Promise<DevUsersSee
         },
         update: {
           phone: entry.phone,
+        },
+      });
+    }
+
+    if (entry.role === 'SELLER') {
+      const userId = existing?.id ?? entry.id;
+      await prisma.userProfile.upsert({
+        where: { userId },
+        create: {
+          userId,
+          phone: entry.phone,
+          location: 'Dublin, Ireland',
+          address: '14 Grafton Street, Dublin 2',
+          businessName: entry.displayName,
+          isBusinessAccount: true,
+          bio: 'Quality pre-owned vehicles and household items from a trusted Dublin seller.',
+        },
+        update: {
+          phone: entry.phone,
+          location: 'Dublin, Ireland',
+          address: '14 Grafton Street, Dublin 2',
+          businessName: entry.displayName,
+          isBusinessAccount: true,
+          bio: 'Quality pre-owned vehicles and household items from a trusted Dublin seller.',
+        },
+      });
+
+      await prisma.userSettings.upsert({
+        where: { userId },
+        create: {
+          userId,
+          notificationPreferences: {
+            email: true,
+            push: true,
+            inApp: true,
+            sms: false,
+            marketing: false,
+            listingUpdates: true,
+            messageAlerts: true,
+          },
+          privacySettings: {
+            showEmail: true,
+            showPhone: true,
+            showLocation: true,
+            profileVisibility: 'public',
+          },
+          communicationPreferences: {
+            preferredChannel: 'email',
+            language: 'en',
+            timezone: 'Europe/Dublin',
+            storeSlug: 'demo-seller',
+            storePolicies: {
+              returns: 'Returns accepted within 14 days for eligible items.',
+              shipping: 'Collection in Dublin or nationwide delivery by arrangement.',
+              responseTime: 'Typically responds within 4 minutes',
+            },
+            storeHours: {
+              timezone: 'Europe/Dublin',
+              note: 'Closed on public holidays.',
+              schedule: {
+                monday: { open: '09:00', close: '18:00' },
+                tuesday: { open: '09:00', close: '18:00' },
+                wednesday: { open: '09:00', close: '18:00' },
+                thursday: { open: '09:00', close: '18:00' },
+                friday: { open: '09:00', close: '18:00' },
+                saturday: { open: '10:00', close: '16:00' },
+                sunday: { closed: true },
+              },
+            },
+          },
+        },
+        update: {
+          privacySettings: {
+            showEmail: true,
+            showPhone: true,
+            showLocation: true,
+            profileVisibility: 'public',
+          },
+          communicationPreferences: {
+            preferredChannel: 'email',
+            language: 'en',
+            timezone: 'Europe/Dublin',
+            storeSlug: 'demo-seller',
+            storePolicies: {
+              returns: 'Returns accepted within 14 days for eligible items.',
+              shipping: 'Collection in Dublin or nationwide delivery by arrangement.',
+              responseTime: 'Typically responds within 4 minutes',
+            },
+            storeHours: {
+              timezone: 'Europe/Dublin',
+              note: 'Closed on public holidays.',
+              schedule: {
+                monday: { open: '09:00', close: '18:00' },
+                tuesday: { open: '09:00', close: '18:00' },
+                wednesday: { open: '09:00', close: '18:00' },
+                thursday: { open: '09:00', close: '18:00' },
+                friday: { open: '09:00', close: '18:00' },
+                saturday: { open: '10:00', close: '16:00' },
+                sunday: { closed: true },
+              },
+            },
+          },
         },
       });
     }

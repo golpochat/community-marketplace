@@ -83,6 +83,9 @@ export const listingStatusSchema = z.enum([
   "ended",
   "removed",
   "rejected",
+  "flagged",
+  "under_investigation",
+  "suspended_seller",
 ]);
 
 export const listingPackageTypeSchema = z.enum([
@@ -306,6 +309,15 @@ export const rejectListingSchema = z.object({
 });
 
 export const removeListingSchema = z.object({
+  reason: z.string().min(3).max(2000).optional(),
+});
+
+export const adminListingIdSchema = z.object({
+  listingId: uuidSchema,
+});
+
+export const investigateListingSchema = z.object({
+  listingId: uuidSchema,
   reason: z.string().min(3).max(2000).optional(),
 });
 

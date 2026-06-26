@@ -11,6 +11,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { EventBusService } from '../../../events/event-bus.service';
 import { mapChatThread, threadInclude } from '../mappers/chat.mapper';
 import { ChatAccessService } from './chat-access.service';
+import { ChatInboxService } from './chat-inbox.service';
 
 @Injectable()
 export class ChatThreadsService {
@@ -18,11 +19,32 @@ export class ChatThreadsService {
     private readonly prisma: PrismaService,
     private readonly access: ChatAccessService,
     private readonly eventBus: EventBusService,
+    private readonly inbox: ChatInboxService,
   ) {}
 
-  async create(buyerId: string, role: RbacRole, input: unknown): Promise<ChatThread> {
-    await this.access.assertCanSendMessage(buyerId, role);
+  async create(userId: string, role: RbacRole, input: unknown): Promise<ChatThread> {
     const parsed = createChatThreadSchema.parse(input);
+
+    let buyerId: string;
+    let sellerId: string;
+
+    if (role === 'BUYER') {
+      if (!parsed.sellerId) {
+        throw new BadRequestException('sellerId is required for buyers');
+      }
+      buyerId = userId;
+      sellerId = parsed.sellerId;
+    } else if (role === 'SELLER') {
+      if (!parsed.buyerId) {
+        throw new BadRequestException('buyerId is required for sellers');
+      }
+      sellerId = userId;
+      buyerId = parsed.buyerId;
+    } else {
+      throw new BadRequestException('Only buyers and sellers can create conversations');
+    }
+
+    await this.access.assertCanInitiateConversation(userId, role, buyerId, sellerId);
 
     const listing = await this.prisma.listing.findUnique({
       where: { id: parsed.listingId },
@@ -31,18 +53,15 @@ export class ChatThreadsService {
     if (!listing || listing.status !== 'active') {
       throw new NotFoundException('Listing not found');
     }
-    if (listing.sellerId !== parsed.sellerId) {
+    if (listing.sellerId !== sellerId) {
       throw new BadRequestException('Seller does not own this listing');
-    }
-    if (buyerId === parsed.sellerId) {
-      throw new BadRequestException('Cannot start a thread with yourself');
     }
 
     const existing = await this.prisma.chatThread.findUnique({
       where: {
         buyerId_sellerId_listingId: {
           buyerId,
-          sellerId: parsed.sellerId,
+          sellerId,
           listingId: parsed.listingId,
         },
       },
@@ -52,14 +71,14 @@ export class ChatThreadsService {
     const row = await this.prisma.chatThread.create({
       data: {
         buyerId,
-        sellerId: parsed.sellerId,
+        sellerId,
         listingId: parsed.listingId,
       },
     });
 
     this.eventBus.publish({
       type: 'chat.thread_created',
-      payload: { threadId: row.id, buyerId, sellerId: parsed.sellerId },
+      payload: { threadId: row.id, buyerId, sellerId },
       timestamp: new Date(),
     });
 
@@ -92,6 +111,20 @@ export class ChatThreadsService {
       where: { id: threadId },
     });
     if (!row) throw new NotFoundException(`Thread ${threadId} not found`);
+    return mapChatThread(row);
+  }
+
+  async block(threadId: string, userId: string, role: RbacRole): Promise<ChatThread> {
+    const thread = await this.access.assertCanAccessThread(threadId, userId, role);
+
+    const row = await this.prisma.chatThread.update({
+      where: { id: thread.id },
+      data: { isBlocked: true, blockedBy: userId },
+    });
+
+    await this.inbox.invalidateInbox(thread.buyerId);
+    await this.inbox.invalidateInbox(thread.sellerId);
+
     return mapChatThread(row);
   }
 

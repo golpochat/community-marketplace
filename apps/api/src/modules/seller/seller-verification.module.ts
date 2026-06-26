@@ -8,16 +8,19 @@ import {
   SellerListingGateService,
   SellerVerificationStatusService,
 } from './services/seller-listing-gate.service';
+import { SellerStatusHistoryService } from './services/seller-status-history.service';
 import { SellerVerificationService } from './services/seller-verification.service';
 
 @Module({
   imports: [DatabaseModule, EventsModule, AuthModule, UsersModule],
   providers: [
+    SellerStatusHistoryService,
     SellerListingGateService,
     SellerVerificationStatusService,
     SellerVerificationService,
   ],
   exports: [
+    SellerStatusHistoryService,
     SellerListingGateService,
     SellerVerificationStatusService,
     SellerVerificationService,

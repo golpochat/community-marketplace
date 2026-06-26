@@ -30,7 +30,7 @@ export class UsersService {
 
   findAll(page = 1, limit = 20) {
     const { page: p, limit: l } = paginationSchema.parse({ page, limit });
-    return this.adminService.listUsers({ page: p, limit: l });
+    return this.adminService.listUsers({ page: p, limit: l }, 'SUPER_ADMIN');
   }
 
   async findById(id: string): Promise<User | null> {
@@ -102,12 +102,12 @@ export class UsersService {
   }
 
   // Admin delegation
-  listUsers(query: unknown) {
-    return this.adminService.listUsers(query);
+  listUsers(query: unknown, actorRole: RbacRole) {
+    return this.adminService.listUsers(query, actorRole);
   }
 
-  getUserDetails(userId: string) {
-    return this.adminService.getUserDetails(userId);
+  getUserDetails(userId: string, actorRole: RbacRole) {
+    return this.adminService.getUserDetails(userId, actorRole);
   }
 
   suspendUser(actorId: string, actorRole: RbacRole, dto: unknown) {

@@ -25,16 +25,24 @@ export const chatThreadSchema = z.object({
   sellerId: uuidSchema,
   listingId: uuidSchema,
   lastMessageAt: isoDateSchema.optional(),
+  lastMessagePreview: z.string().max(500).optional(),
+  isBlocked: z.boolean(),
+  blockedBy: uuidSchema.optional(),
   archivedByBuyer: z.boolean(),
   archivedBySeller: z.boolean(),
   createdAt: isoDateSchema,
   updatedAt: isoDateSchema,
 });
 
-export const createChatThreadSchema = z.object({
-  listingId: uuidSchema,
-  sellerId: uuidSchema,
-});
+export const createChatThreadSchema = z
+  .object({
+    listingId: uuidSchema,
+    sellerId: uuidSchema.optional(),
+    buyerId: uuidSchema.optional(),
+  })
+  .refine((data) => Boolean(data.sellerId || data.buyerId), {
+    message: 'Either sellerId or buyerId is required',
+  });
 
 export const sendChatMessageSchema = z.object({
   threadId: uuidSchema,
@@ -88,6 +96,31 @@ export const chatModerationSearchSchema = z.object({
   q: z.string().min(1).max(200),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
+});
+
+export const reportMessageSchema = z.object({
+  messageId: uuidSchema,
+  reason: z.string().min(3).max(200),
+});
+
+export const blockConversationSchema = z.object({
+  conversationId: uuidSchema,
+});
+
+export const sendMessageApiSchema = z.object({
+  conversationId: uuidSchema,
+  messageText: z.string().min(1).max(4000),
+  messageType: chatMessageTypeSchema.default('text'),
+  attachmentUrl: z.string().url().optional(),
+});
+
+export const resolveMessageFlagSchema = z.object({
+  status: z.enum(['resolved', 'dismissed']),
+  moderationNotes: z.string().max(2000).optional(),
+});
+
+export const messageFlagsQuerySchema = paginationSchema.extend({
+  status: z.enum(['open', 'reviewing', 'resolved', 'dismissed']).optional(),
 });
 
 /** @deprecated Use sendChatMessageSchema */

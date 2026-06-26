@@ -9,7 +9,7 @@ import {
 
 import { PERMISSIONS } from '@community-marketplace/types';
 
-import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
+import { RequireAnyPermission, RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { ChatService } from '../chat/chat.service';
@@ -19,7 +19,7 @@ import { ChatService } from '../chat/chat.service';
 export class AdminChatController {
   constructor(private readonly chatService: ChatService) {}
 
-  @RequirePermissions(PERMISSIONS.MODERATE_CHAT)
+  @RequireAnyPermission(PERMISSIONS.MODERATE_CHAT, PERMISSIONS.MODERATE_MESSAGES)
   @Get('threads/:threadId')
   getThread(
     @CurrentUser() user: AuthenticatedUser,
@@ -28,7 +28,23 @@ export class AdminChatController {
     return this.chatService.adminGetThread(threadId, user.id, user.role);
   }
 
-  @RequirePermissions(PERMISSIONS.MODERATE_CHAT)
+  @RequireAnyPermission(PERMISSIONS.MODERATE_CHAT, PERMISSIONS.MODERATE_MESSAGES)
+  @Get('flags')
+  listFlags(@Query() query: Record<string, string>) {
+    return this.chatService.adminListMessageFlags(query);
+  }
+
+  @RequireAnyPermission(PERMISSIONS.MODERATE_CHAT, PERMISSIONS.MODERATE_MESSAGES)
+  @Post('flags/:flagId/resolve')
+  resolveFlag(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('flagId') flagId: string,
+    @Body() body: unknown,
+  ) {
+    return this.chatService.adminResolveMessageFlag(flagId, user.id, body);
+  }
+
+  @RequireAnyPermission(PERMISSIONS.MODERATE_CHAT, PERMISSIONS.MODERATE_MESSAGES)
   @Get('messages/search')
   searchMessages(@Query() query: Record<string, string>) {
     return this.chatService.adminSearchMessages(query);
