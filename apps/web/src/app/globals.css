@@ -2,9 +2,9 @@
 @import '@community-marketplace/ui-dashboard/themes.css';
 
 :root {
-  --brand-primary: 221 83% 53%;
-  --brand-secondary: 25 95% 53%;
-  --brand-accent: 142 71% 45%;
+  --brand-primary: 225 100% 61%;
+  --brand-secondary: 145 63% 49%;
+  --brand-accent: 145 63% 49%;
   --brand-neutral: 210 20% 98%;
   --brand-radius-sm: 8px;
   --brand-radius-md: 12px;

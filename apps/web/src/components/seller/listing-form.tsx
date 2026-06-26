@@ -1,11 +1,28 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
-import { cn } from '@community-marketplace/ui';
-import { Button, Input, Label, Select } from '@community-marketplace/ui';
-import type { DeliveryPreview, ListingCondition, ListingDeliverySelection, ListingImage, PricingPreview } from '@community-marketplace/types';
-import { computeListingPricing, MAX_AUTO_APPROVE_DISCOUNT_PERCENT, formatCurrency } from '@community-marketplace/utils';
+import { cn } from "@community-marketplace/ui";
+import {
+  LISTING_DESCRIPTION_HARD_MAX,
+  LISTING_DESCRIPTION_SOFT_MAX,
+  LISTING_TITLE_MAX_LENGTH,
+  listingTitleValidationMessage,
+  normalizeListingTitle,
+} from "@community-marketplace/utils";
+import { Button, Input, Label, Select } from "@community-marketplace/ui";
+import type {
+  DeliveryPreview,
+  ListingCondition,
+  ListingDeliverySelection,
+  ListingImage,
+  PricingPreview,
+} from "@community-marketplace/types";
+import {
+  computeListingPricing,
+  MAX_AUTO_APPROVE_DISCOUNT_PERCENT,
+  formatCurrency,
+} from "@community-marketplace/utils";
 
 import {
   DeliveryOptionsSection,
@@ -14,18 +31,24 @@ import {
   selectionsFromDeliveryState,
   useDeliveryCatalog,
   validateDeliveryForm,
-} from '@/components/seller/delivery-options-section';
-import { DeliveryPreviewModal } from '@/components/seller/DeliveryPreviewModal';
-import { PricingPreviewModal } from '@/components/seller/PricingPreviewModal';
-import { ExistingListingPhotos, SelectedFilePreviews } from '@/components/seller/listing-image-previews';
-import { ListingPreviewDialog } from '@/components/seller/listing-preview-dialog';
-import { deliveryService } from '@/services/delivery.service';
-import { pricingInputFromForm, pricingService } from '@/services/pricing.service';
+} from "@/components/seller/delivery-options-section";
+import { DeliveryPreviewModal } from "@/components/seller/DeliveryPreviewModal";
+import { PricingPreviewModal } from "@/components/seller/PricingPreviewModal";
+import {
+  ExistingListingPhotos,
+  SelectedFilePreviews,
+} from "@/components/seller/listing-image-previews";
+import { ListingPreviewDialog } from "@/components/seller/listing-preview-dialog";
+import { deliveryService } from "@/services/delivery.service";
+import {
+  pricingInputFromForm,
+  pricingService,
+} from "@/services/pricing.service";
 
-const STEPS = ['Details', 'Pricing', 'Pickup & delivery', 'Photos', 'Review'];
+const STEPS = ["Details", "Pricing", "Pickup & delivery", "Photos", "Review"];
 const MAX_LISTING_IMAGES = 10;
 const MAX_IMAGE_FILE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export interface ListingFormData {
   title: string;
@@ -47,21 +70,23 @@ const EMPTY_DELIVERY: DeliveryFormState = {
 };
 
 const INITIAL: ListingFormData = {
-  title: '',
-  description: '',
-  salePrice: '',
-  originalPrice: '',
-  condition: 'good',
-  categoryId: '',
-  location: '',
+  title: "",
+  description: "",
+  salePrice: "",
+  originalPrice: "",
+  condition: "good",
+  categoryId: "",
+  location: "",
   images: [],
   delivery: EMPTY_DELIVERY,
 };
 
-function normalizeInitialData(initial?: Partial<ListingFormData>): Partial<ListingFormData> {
+function normalizeInitialData(
+  initial?: Partial<ListingFormData>,
+): Partial<ListingFormData> {
   if (!initial) return {};
-  const salePrice = initial.salePrice ?? initial.price ?? '';
-  return { ...initial, salePrice, originalPrice: initial.originalPrice ?? '' };
+  const salePrice = initial.salePrice ?? initial.price ?? "";
+  return { ...initial, salePrice, originalPrice: initial.originalPrice ?? "" };
 }
 
 interface ListingFormProps {
@@ -71,8 +96,8 @@ interface ListingFormProps {
   existingImages?: ListingImage[];
   listingId?: string;
   listingStatus?: string;
-  deliveryReviewStatus?: 'none' | 'pending-review' | 'rejected';
-  priceReviewStatus?: 'none' | 'pending-review' | 'rejected';
+  deliveryReviewStatus?: "none" | "pending-review" | "rejected";
+  priceReviewStatus?: "none" | "pending-review" | "rejected";
   deliveryReviewNotes?: string;
   priceReviewNotes?: string;
   submitLabel?: string;
@@ -97,7 +122,7 @@ export function ListingForm({
   priceReviewStatus,
   deliveryReviewNotes,
   priceReviewNotes,
-  submitLabel = 'Save draft',
+  submitLabel = "Save draft",
   disabled = false,
   onSubmit,
   onDeliveryUpdated,
@@ -117,21 +142,28 @@ export function ListingForm({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [photosNotice, setPhotosNotice] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [deliveryPreview, setDeliveryPreview] = useState<DeliveryPreview | null>(null);
+  const [deliveryPreview, setDeliveryPreview] =
+    useState<DeliveryPreview | null>(null);
   const [showDeliveryPreview, setShowDeliveryPreview] = useState(false);
   const [deliverySubmitting, setDeliverySubmitting] = useState(false);
-  const [pricingPreview, setPricingPreview] = useState<PricingPreview | null>(null);
+  const [pricingPreview, setPricingPreview] = useState<PricingPreview | null>(
+    null,
+  );
   const [showPricingPreview, setShowPricingPreview] = useState(false);
   const [pricingSubmitting, setPricingSubmitting] = useState(false);
 
-  const isLiveListing = listingStatus === 'active' || listingStatus === 'paused';
+  const isLiveListing =
+    listingStatus === "active" || listingStatus === "paused";
   const totalPhotoCount = existingImages.length + data.images.length;
   const remainingPhotoSlots = MAX_LISTING_IMAGES - totalPhotoCount;
   const uploadAtCapacity = remainingPhotoSlots <= 0;
   const deliverySeededRef = useRef(false);
   const initialDeliveryKey = initialDeliverySelections
-    .map((s) => `${s.deliveryOptionId}:${s.customLabel ?? ''}:${s.customPrice ?? ''}`)
-    .join('|');
+    .map(
+      (s) =>
+        `${s.deliveryOptionId}:${s.customLabel ?? ""}:${s.customPrice ?? ""}`,
+    )
+    .join("|");
 
   useEffect(() => {
     deliverySeededRef.current = false;
@@ -143,13 +175,16 @@ export function ListingForm({
     if (initialDeliverySelections.length > 0) {
       setData((prev) => ({
         ...prev,
-        delivery: deliveryStateFromSelections(catalog, initialDeliverySelections),
+        delivery: deliveryStateFromSelections(
+          catalog,
+          initialDeliverySelections,
+        ),
       }));
       deliverySeededRef.current = true;
       return;
     }
 
-    const collection = catalog.find((o) => o.zone === 'COLLECTION');
+    const collection = catalog.find((o) => o.zone === "COLLECTION");
     if (collection) {
       setData((prev) => ({
         ...prev,
@@ -172,31 +207,40 @@ export function ListingForm({
 
   function parseSalePrice(): number | null {
     const trimmed = data.salePrice.trim();
-    if (trimmed === '') return null;
+    if (trimmed === "") return null;
     const sale = Number(trimmed);
     return Number.isNaN(sale) ? null : sale;
   }
 
   function validateStep(stepIndex: number): string | null {
     if (stepIndex === 0) {
-      if (data.title.trim().length < 3) return 'Title must be at least 3 characters.';
-      if (data.description.trim().length < 10) return 'Description must be at least 10 characters.';
+      const titleError = listingTitleValidationMessage(data.title);
+      if (titleError) return titleError;
+      const descriptionLength = data.description.trim().length;
+      if (descriptionLength < 10)
+        return "Description must be at least 10 characters.";
+      if (descriptionLength > LISTING_DESCRIPTION_HARD_MAX) {
+        return `Description must be at most ${LISTING_DESCRIPTION_HARD_MAX} characters.`;
+      }
     }
     if (stepIndex === 1) {
       const sale = parseSalePrice();
-      if (sale == null || sale < 0) return 'Enter a valid sale price (use 0 for free items).';
+      if (sale == null || sale < 0)
+        return "Enter a valid sale price (use 0 for free items).";
       if (sale === 0 && data.originalPrice.trim()) {
-        return 'Clear the original price for free items.';
+        return "Clear the original price for free items.";
       }
       if (sale > 0 && data.originalPrice.trim()) {
         const original = Number(data.originalPrice);
-        if (original <= 0) return 'Original price must be greater than 0.';
-        if (sale >= original) return 'Sale price must be lower than original price.';
+        if (original <= 0) return "Original price must be greater than 0.";
+        if (sale >= original)
+          return "Sale price must be lower than original price.";
       }
-      if (categories.length > 0 && !data.categoryId) return 'Select a category.';
+      if (categories.length > 0 && !data.categoryId)
+        return "Select a category.";
     }
     if (stepIndex === 2) {
-      if (!data.location.trim()) return 'Enter a location label.';
+      if (!data.location.trim()) return "Enter a location label.";
       return validateDeliveryForm(catalog, data.delivery);
     }
     return null;
@@ -223,11 +267,16 @@ export function ListingForm({
     if (!listingId) return;
     try {
       const selections = selectionsFromDeliveryState(catalog, data.delivery);
-      const preview = await deliveryService.previewUpdate(listingId, selections);
+      const preview = await deliveryService.previewUpdate(
+        listingId,
+        selections,
+      );
       setDeliveryPreview(preview);
       setShowDeliveryPreview(true);
     } catch (err) {
-      setValidationError(err instanceof Error ? err.message : 'Failed to load delivery preview');
+      setValidationError(
+        err instanceof Error ? err.message : "Failed to load delivery preview",
+      );
     }
   }
 
@@ -236,17 +285,22 @@ export function ListingForm({
     setDeliverySubmitting(true);
     try {
       const selections = selectionsFromDeliveryState(catalog, data.delivery);
-      const result = await deliveryService.updateDelivery(listingId, selections);
+      const result = await deliveryService.updateDelivery(
+        listingId,
+        selections,
+      );
       setShowDeliveryPreview(false);
       onDeliveryUpdated?.({
         status: result.status,
         message:
-          result.status === 'auto-approved'
-            ? 'Your delivery changes are live.'
-            : 'Your delivery changes are pending review. Your listing stays published.',
+          result.status === "auto-approved"
+            ? "Your delivery changes are live."
+            : "Your delivery changes are pending review. Your listing stays published.",
       });
     } catch (err) {
-      setValidationError(err instanceof Error ? err.message : 'Failed to update delivery');
+      setValidationError(
+        err instanceof Error ? err.message : "Failed to update delivery",
+      );
     } finally {
       setDeliverySubmitting(false);
     }
@@ -261,11 +315,12 @@ export function ListingForm({
       salePrice: computed.salePrice,
       discountPercent: computed.discountPercent,
     };
-    const wouldRequireReview = (computed.discountPercent ?? 0) > MAX_AUTO_APPROVE_DISCOUNT_PERCENT;
+    const wouldRequireReview =
+      (computed.discountPercent ?? 0) > MAX_AUTO_APPROVE_DISCOUNT_PERCENT;
     return {
-      listingId: listingId ?? '',
-      listingTitle: data.title || 'Listing',
-      listingStatus: listingStatus ?? 'draft',
+      listingId: listingId ?? "",
+      listingTitle: data.title || "Listing",
+      listingStatus: listingStatus ?? "draft",
       current: proposed,
       proposed,
       savingsAmount: computed.savingsAmount,
@@ -294,7 +349,9 @@ export function ListingForm({
       }
       setShowPricingPreview(true);
     } catch (err) {
-      setValidationError(err instanceof Error ? err.message : 'Failed to load pricing preview');
+      setValidationError(
+        err instanceof Error ? err.message : "Failed to load pricing preview",
+      );
     }
   }
 
@@ -307,15 +364,17 @@ export function ListingForm({
         onPricingUpdated?.({
           status: result.status,
           message:
-            result.status === 'auto-approved'
-              ? 'Your price changes are live.'
-              : 'Your price changes are pending review. Buyers still see your current prices.',
+            result.status === "auto-approved"
+              ? "Your price changes are live."
+              : "Your price changes are pending review. Buyers still see your current prices.",
         });
       }
       setShowPricingPreview(false);
       onSubmit?.(data);
     } catch (err) {
-      setValidationError(err instanceof Error ? err.message : 'Failed to save pricing');
+      setValidationError(
+        err instanceof Error ? err.message : "Failed to save pricing",
+      );
     } finally {
       setPricingSubmitting(false);
     }
@@ -362,26 +421,33 @@ export function ListingForm({
 
   function handleImagesChange(event: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(event.target.files ?? []);
-    event.target.value = '';
+    event.target.value = "";
 
     setData((prev) => {
-      const slotsLeft = MAX_LISTING_IMAGES - existingImages.length - prev.images.length;
+      const slotsLeft =
+        MAX_LISTING_IMAGES - existingImages.length - prev.images.length;
       if (slotsLeft <= 0) {
         return prev;
       }
 
-      const invalidTypeCount = selected.filter((file) => !ALLOWED_IMAGE_TYPES.has(file.type)).length;
+      const invalidTypeCount = selected.filter(
+        (file) => !ALLOWED_IMAGE_TYPES.has(file.type),
+      ).length;
       const oversized = selected.filter(
-        (file) => ALLOWED_IMAGE_TYPES.has(file.type) && file.size > MAX_IMAGE_FILE_BYTES,
+        (file) =>
+          ALLOWED_IMAGE_TYPES.has(file.type) &&
+          file.size > MAX_IMAGE_FILE_BYTES,
       );
       let accepted = selected.filter(
-        (file) => ALLOWED_IMAGE_TYPES.has(file.type) && file.size <= MAX_IMAGE_FILE_BYTES,
+        (file) =>
+          ALLOWED_IMAGE_TYPES.has(file.type) &&
+          file.size <= MAX_IMAGE_FILE_BYTES,
       );
 
       const messages: string[] = [];
       if (accepted.length > slotsLeft) {
         messages.push(
-          `You selected ${selected.length} image${selected.length === 1 ? '' : 's'}. Only ${slotsLeft} more can be added (max ${MAX_LISTING_IMAGES} total).`,
+          `You selected ${selected.length} image${selected.length === 1 ? "" : "s"}. Only ${slotsLeft} more can be added (max ${MAX_LISTING_IMAGES} total).`,
         );
         accepted = accepted.slice(0, slotsLeft);
       }
@@ -392,11 +458,11 @@ export function ListingForm({
       }
       if (oversized.length > 0) {
         messages.push(
-          `${oversized.length} file(s) exceed the 5 MB limit: ${oversized.map((file) => file.name).join(', ')}.`,
+          `${oversized.length} file(s) exceed the 5 MB limit: ${oversized.map((file) => file.name).join(", ")}.`,
         );
       }
 
-      setPhotosNotice(messages.length > 0 ? messages.join(' ') : null);
+      setPhotosNotice(messages.length > 0 ? messages.join(" ") : null);
 
       if (accepted.length === 0) {
         return prev;
@@ -426,12 +492,17 @@ export function ListingForm({
 
   const saleAmount = parseSalePrice();
   const isFreeListing = saleAmount === 0;
-  const selectedCategoryName = categories.find((category) => category.id === data.categoryId)?.name;
-  const deliverySelections = selectionsFromDeliveryState(catalog, data.delivery);
+  const selectedCategoryName = categories.find(
+    (category) => category.id === data.categoryId,
+  )?.name;
+  const deliverySelections = selectionsFromDeliveryState(
+    catalog,
+    data.delivery,
+  );
 
   let pricingSummary: ReturnType<typeof computeListingPricing> | null = null;
   try {
-    if (data.salePrice.trim() !== '') {
+    if (data.salePrice.trim() !== "") {
       pricingSummary = computeListingPricing(
         pricingInputFromForm(data.salePrice, data.originalPrice),
       );
@@ -447,10 +518,10 @@ export function ListingForm({
           <div
             key={label}
             className={cn(
-              'rounded-lg px-2 py-2 text-center text-xs font-medium sm:text-sm',
+              "rounded-lg px-2 py-2 text-center text-xs font-medium sm:text-sm",
               idx === step
-                ? 'bg-[hsl(var(--dashboard-accent))] text-white'
-                : 'bg-[hsl(var(--dashboard-sidebar-active))] text-[hsl(var(--dashboard-sidebar-muted))]',
+                ? "bg-[hsl(var(--dashboard-accent))] text-white"
+                : "bg-[hsl(var(--dashboard-sidebar-active))] text-[hsl(var(--dashboard-sidebar-muted))]",
             )}
           >
             {label}
@@ -458,30 +529,35 @@ export function ListingForm({
         ))}
       </div>
 
-      {priceReviewStatus === 'pending-review' && (
+      {priceReviewStatus === "pending-review" && (
         <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
-          Your price changes are pending admin review. Buyers still see your current prices.
+          Your price changes are pending admin review. Buyers still see your
+          current prices.
         </p>
       )}
 
-      {priceReviewStatus === 'rejected' && (
+      {priceReviewStatus === "rejected" && (
         <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-900">
           Your last price change was rejected.
-          {priceReviewNotes ? ` ${priceReviewNotes}` : ' Adjust your prices and submit again.'}
+          {priceReviewNotes
+            ? ` ${priceReviewNotes}`
+            : " Adjust your prices and submit again."}
         </p>
       )}
 
-      {deliveryReviewStatus === 'pending-review' && (
+      {deliveryReviewStatus === "pending-review" && (
         <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
-          Your delivery changes are pending admin review. Buyers still see your current delivery
-          options.
+          Your delivery changes are pending admin review. Buyers still see your
+          current delivery options.
         </p>
       )}
 
-      {deliveryReviewStatus === 'rejected' && (
+      {deliveryReviewStatus === "rejected" && (
         <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-900">
           Your last delivery change was rejected.
-          {deliveryReviewNotes ? ` ${deliveryReviewNotes}` : ' Update your delivery options and submit again.'}
+          {deliveryReviewNotes
+            ? ` ${deliveryReviewNotes}`
+            : " Update your delivery options and submit again."}
         </p>
       )}
 
@@ -496,20 +572,44 @@ export function ListingForm({
             <Input
               id="title"
               value={data.title}
+              maxLength={LISTING_TITLE_MAX_LENGTH}
               onChange={(e) => update({ title: e.target.value })}
+              onBlur={() => {
+                const normalized = normalizeListingTitle(data.title);
+                if (normalized !== data.title) update({ title: normalized });
+              }}
               placeholder="What are you selling?"
             />
+            <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              {data.title.trim().length}/{LISTING_TITLE_MAX_LENGTH} characters ·
+              use a descriptive title
+            </p>
           </div>
           <div>
             <Label htmlFor="description">Description</Label>
             <textarea
               id="description"
               value={data.description}
+              maxLength={LISTING_DESCRIPTION_HARD_MAX}
               onChange={(e) => update({ description: e.target.value })}
               rows={5}
               className="mt-1 w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-white px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
               placeholder="Describe your item (min. 10 characters)..."
             />
+            <p
+              className={cn(
+                "mt-1 text-xs",
+                data.description.length > LISTING_DESCRIPTION_SOFT_MAX
+                  ? "text-amber-700"
+                  : "text-[hsl(var(--dashboard-sidebar-muted))]",
+              )}
+            >
+              {data.description.length}/{LISTING_DESCRIPTION_HARD_MAX}{" "}
+              characters
+              {data.description.length > LISTING_DESCRIPTION_SOFT_MAX
+                ? ` · recommended max ${LISTING_DESCRIPTION_SOFT_MAX}`
+                : ""}
+            </p>
           </div>
         </div>
       )}
@@ -522,19 +622,19 @@ export function ListingForm({
               <button
                 type="button"
                 className={cn(
-                  'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                   isFreeListing
-                    ? 'border-[hsl(var(--dashboard-accent))] bg-[hsl(var(--dashboard-accent))] text-white'
-                    : 'border-[hsl(var(--dashboard-sidebar-border))] text-[hsl(var(--dashboard-sidebar-muted))] hover:border-[hsl(var(--dashboard-accent))]',
+                    ? "border-[hsl(var(--dashboard-accent))] bg-[hsl(var(--dashboard-accent))] text-white"
+                    : "border-[hsl(var(--dashboard-sidebar-border))] text-[hsl(var(--dashboard-sidebar-muted))] hover:border-[hsl(var(--dashboard-accent))]",
                 )}
                 onClick={() =>
                   update({
-                    salePrice: isFreeListing ? '' : '0',
-                    originalPrice: isFreeListing ? data.originalPrice : '',
+                    salePrice: isFreeListing ? "" : "0",
+                    originalPrice: isFreeListing ? data.originalPrice : "",
                   })
                 }
               >
-                {isFreeListing ? 'Free item ✓' : 'Mark as free'}
+                {isFreeListing ? "Free item ✓" : "Mark as free"}
               </button>
             </div>
             <Input
@@ -548,8 +648,8 @@ export function ListingForm({
             />
             <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
               {isFreeListing
-                ? 'Free items appear in free listings. Collection-only pickup is recommended on the next step.'
-                : 'The price buyers will pay. Enter 0 to give the item away for free.'}
+                ? "Free items appear in free listings. Collection-only pickup is recommended on the next step."
+                : "The price buyers will pay. Enter 0 to give the item away for free."}
             </p>
           </div>
           {!isFreeListing && (
@@ -569,37 +669,44 @@ export function ListingForm({
               </p>
             </div>
           )}
-          {pricingSummary?.hasSaleBadge && pricingSummary.discountPercent != null && (
-            <p className="rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-900">
-              You are offering {pricingSummary.discountPercent}% OFF
-              {pricingSummary.savingsAmount != null
-                ? ` (save ${formatCurrency(pricingSummary.savingsAmount, 'EUR')})`
-                : ''}
-            </p>
-          )}
+          {pricingSummary?.hasSaleBadge &&
+            pricingSummary.discountPercent != null && (
+              <p className="rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-900">
+                You are offering {pricingSummary.discountPercent}% OFF
+                {pricingSummary.savingsAmount != null
+                  ? ` (save ${formatCurrency(pricingSummary.savingsAmount, "EUR")})`
+                  : ""}
+              </p>
+            )}
           {pricingSummary?.discountPercent != null &&
-            pricingSummary.discountPercent > MAX_AUTO_APPROVE_DISCOUNT_PERCENT && (
+            pricingSummary.discountPercent >
+              MAX_AUTO_APPROVE_DISCOUNT_PERCENT && (
               <p className="rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-900">
-                Large discounts may be reviewed by our team before going live for buyers.
+                Large discounts may be reviewed by our team before going live
+                for buyers.
               </p>
             )}
           {data.originalPrice.trim() &&
             data.salePrice.trim() &&
             Number(data.salePrice) >= Number(data.originalPrice) && (
-              <p className="text-sm text-red-600">Sale price must be lower than original price.</p>
+              <p className="text-sm text-red-600">
+                Sale price must be lower than original price.
+              </p>
             )}
           <div>
             <Label htmlFor="condition">Condition</Label>
             <Select
               id="condition"
               value={data.condition}
-              onChange={(e) => update({ condition: e.target.value as ListingCondition })}
+              onChange={(e) =>
+                update({ condition: e.target.value as ListingCondition })
+              }
             >
               <option value="new">New</option>
               <option value="like_new">Like New</option>
               <option value="good">Good</option>
               <option value="fair">Fair</option>
-              <option value="poor">Poor</option>
+              <option value="poor">Needs Work</option>
             </Select>
           </div>
           {categories.length > 0 && (
@@ -639,12 +746,14 @@ export function ListingForm({
           <div className="border-t border-[hsl(var(--dashboard-sidebar-border))] pt-6">
             {isFreeListing && (
               <p className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-900">
-                Free items work best with <strong>Collection only</strong> — buyers pick up at your
-                location with no delivery fee.
+                Free items work best with <strong>Collection only</strong> —
+                buyers pick up at your location with no delivery fee.
               </p>
             )}
             {catalogLoading ? (
-              <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading delivery options…</p>
+              <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+                Loading delivery options…
+              </p>
             ) : (
               <>
                 <DeliveryOptionsSection
@@ -656,8 +765,8 @@ export function ListingForm({
                 {isLiveListing && listingId && (
                   <div className="mt-4 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-4">
                     <p className="text-sm text-[hsl(var(--dashboard-main-fg))]">
-                      This listing is live. Delivery changes require a preview and may be reviewed
-                      before going live for buyers.
+                      This listing is live. Delivery changes require a preview
+                      and may be reviewed before going live for buyers.
                     </p>
                     <Button
                       type="button"
@@ -687,8 +796,8 @@ export function ListingForm({
               disabled={disabled || uploadAtCapacity}
               onChange={handleImagesChange}
               className={cn(
-                'mt-1 block w-full text-sm text-[hsl(var(--dashboard-main-fg))]',
-                uploadAtCapacity && 'cursor-not-allowed opacity-50',
+                "mt-1 block w-full text-sm text-[hsl(var(--dashboard-main-fg))]",
+                uploadAtCapacity && "cursor-not-allowed opacity-50",
               )}
             />
             <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
@@ -715,7 +824,9 @@ export function ListingForm({
             <SelectedFilePreviews
               files={data.images}
               onRemove={removeSelectedImage}
-              onReorder={(files) => setData((prev) => ({ ...prev, images: files }))}
+              onReorder={(files) =>
+                setData((prev) => ({ ...prev, images: files }))
+              }
               title={
                 existingImages.length > 0
                   ? `New photos to upload (${data.images.length})`
@@ -731,51 +842,55 @@ export function ListingForm({
           <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">
             {isLiveListing ? (
               <>
-                Non-delivery changes will be saved. Use the Pickup &amp; delivery step to preview and
-                submit delivery updates separately.
+                Non-delivery changes will be saved. Use the Pickup &amp;
+                delivery step to preview and submit delivery updates separately.
               </>
             ) : (
               <>
-                Your listing will be saved as a <strong>draft</strong>. An administrator must approve
-                it before it appears on the public marketplace.
+                Your listing will be saved as a <strong>draft</strong>. An
+                administrator must approve it before it appears on the public
+                marketplace.
               </>
             )}
           </p>
           <div className="space-y-3 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-4 text-sm text-[hsl(var(--dashboard-main-fg))]">
             <p>
-              <span className="font-medium">Title:</span> {data.title || '—'}
+              <span className="font-medium">Title:</span> {data.title || "—"}
             </p>
             <p>
-              <span className="font-medium">Price:</span>{' '}
+              <span className="font-medium">Price:</span>{" "}
               {isFreeListing
-                ? 'Free'
+                ? "Free"
                 : pricingSummary
-                  ? formatCurrency(pricingSummary.price, 'EUR')
-                  : data.salePrice || '—'}
-              {pricingSummary?.hasSaleBadge && pricingSummary.originalPrice != null && (
-                <span className="ml-2 text-gray-500 line-through">
-                  {formatCurrency(pricingSummary.originalPrice, 'EUR')}
-                </span>
-              )}
+                  ? formatCurrency(pricingSummary.price, "EUR")
+                  : data.salePrice || "—"}
+              {pricingSummary?.hasSaleBadge &&
+                pricingSummary.originalPrice != null && (
+                  <span className="ml-2 text-gray-500 line-through">
+                    {formatCurrency(pricingSummary.originalPrice, "EUR")}
+                  </span>
+                )}
             </p>
             <p>
-              <span className="font-medium">Category:</span> {selectedCategoryName || '—'}
+              <span className="font-medium">Category:</span>{" "}
+              {selectedCategoryName || "—"}
             </p>
             <p>
               <span className="font-medium">Condition:</span> {data.condition}
             </p>
             <p>
-              <span className="font-medium">Location:</span> {data.location || '—'}
+              <span className="font-medium">Location:</span>{" "}
+              {data.location || "—"}
             </p>
             <p>
-              <span className="font-medium">Delivery:</span>{' '}
-              {deliverySelections.map((s) => s.label).join(', ') || '—'}
+              <span className="font-medium">Delivery:</span>{" "}
+              {deliverySelections.map((s) => s.label).join(", ") || "—"}
             </p>
             <p>
-              <span className="font-medium">Photos:</span>{' '}
+              <span className="font-medium">Photos:</span>{" "}
               {totalPhotoCount > 0
                 ? `${existingImages.length} current, ${data.images.length} new (${totalPhotoCount} total)`
-                : 'None selected'}
+                : "None selected"}
             </p>
           </div>
         </div>
@@ -807,7 +922,12 @@ export function ListingForm({
       />
 
       <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
-        <Button variant="outline" onClick={handleBack} disabled={step === 0 || disabled} className="w-full sm:w-auto">
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          disabled={step === 0 || disabled}
+          className="w-full sm:w-auto"
+        >
           Back
         </Button>
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -827,7 +947,7 @@ export function ListingForm({
             disabled={disabled || catalogLoading || pricingSubmitting}
             className="w-full sm:w-auto"
           >
-            {step === STEPS.length - 1 ? submitLabel : 'Next'}
+            {step === STEPS.length - 1 ? submitLabel : "Next"}
           </Button>
         </div>
       </div>

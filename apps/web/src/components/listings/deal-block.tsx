@@ -1,5 +1,6 @@
-import { Badge, cn } from '@community-marketplace/ui';
-import { buildSaleBadgeLabel, formatCurrency, listingHasSale } from '@community-marketplace/utils';
+import { ListingBadge } from '@/components/listings/listing-badge';
+import { cn } from '@community-marketplace/ui';
+import { buildSaleBadgeLabel, formatCurrency, isFreeListingPrice, listingHasSale } from '@community-marketplace/utils';
 import { ArrowDown, Tag } from 'lucide-react';
 
 export interface DealBlockProps {
@@ -19,6 +20,28 @@ function daysSince(isoDate: string): number {
   return Math.max(0, Math.floor((Date.now() - then) / (1000 * 60 * 60 * 24)));
 }
 
+function FreePriceDisplay({
+  variant,
+  className,
+}: {
+  variant: DealBlockProps['variant'];
+  className?: string;
+}) {
+  return (
+    <ListingBadge
+      tone="free"
+      className={cn(
+        variant === 'detail' && 'px-4 py-2 text-lg',
+        variant === 'card' && 'text-base',
+        variant === 'inline' && 'text-sm',
+        className,
+      )}
+    >
+      FREE
+    </ListingBadge>
+  );
+}
+
 export function DealBlock({
   price,
   originalPrice,
@@ -30,6 +53,10 @@ export function DealBlock({
   priceDroppedAt,
   className,
 }: DealBlockProps) {
+  if (isFreeListingPrice(price)) {
+    return <FreePriceDisplay variant={variant} className={className} />;
+  }
+
   const hasSale = listingHasSale(originalPrice, salePrice, discountPercent);
 
   if (!hasSale || originalPrice == null || salePrice == null || discountPercent == null) {
@@ -62,10 +89,10 @@ export function DealBlock({
     >
       {showBadge && (
         <div className="flex flex-wrap items-center gap-2">
-          <Badge className="border-0 bg-[hsl(var(--brand-secondary))] text-white hover:bg-[hsl(var(--brand-secondary))]">
+          <ListingBadge tone="sale">
             <Tag className="mr-1 h-3 w-3" aria-hidden />
             {badgeLabel}
-          </Badge>
+          </ListingBadge>
         </div>
       )}
 
@@ -124,6 +151,9 @@ export function formatDealShareLine(
   salePrice?: number,
   discountPercent?: number,
 ): string {
+  if (isFreeListingPrice(price)) {
+    return `${title} — FREE`;
+  }
   const hasSale = listingHasSale(originalPrice, salePrice, discountPercent);
   if (hasSale && originalPrice != null && salePrice != null) {
     const savings = Math.round((originalPrice - salePrice) * 100) / 100;

@@ -11,6 +11,7 @@ import { CategoriesService } from './services/categories.service';
 import { ListingAnalyticsService } from './services/listing-analytics.service';
 import { ListingFavoritesService } from './services/listing-favorites.service';
 import { ListingFeedsService } from './services/listing-feeds.service';
+import { CommunityStatsService } from './services/community-stats.service';
 import { ListingImagesService } from './services/listing-images.service';
 import { ListingLifecycleService } from './services/listing-lifecycle.service';
 import { ListingReviewService } from './services/listing-review.service';
@@ -20,6 +21,9 @@ import { ListingsCrudService } from './services/listings-crud.service';
 import { ListingDeliveryService } from './services/listing-delivery.service';
 import { ListingPricingService } from './services/listing-pricing.service';
 import { DeliveryOptionsService } from './services/delivery-options.service';
+import { SellerTrustService } from './services/seller-trust.service';
+import { GeocodingService } from './services/geocoding.service';
+import { NearbyAreasService } from './services/nearby-areas.service';
 
 /** Facade for listing domain operations. */
 @Injectable()
@@ -31,6 +35,7 @@ export class ListingsService {
     private readonly lifecycle: ListingLifecycleService,
     private readonly searchService: ListingSearchService,
     private readonly feeds: ListingFeedsService,
+    private readonly communityStats: CommunityStatsService,
     private readonly favorites: ListingFavoritesService,
     private readonly reports: ListingReportsService,
     private readonly review: ListingReviewService,
@@ -38,6 +43,9 @@ export class ListingsService {
     private readonly delivery: ListingDeliveryService,
     private readonly pricing: ListingPricingService,
     private readonly deliveryOptions: DeliveryOptionsService,
+    private readonly sellerTrust: SellerTrustService,
+    private readonly geocoding: GeocodingService,
+    private readonly nearbyAreas: NearbyAreasService,
   ) {}
 
   findAll(page?: number, limit?: number) {
@@ -172,6 +180,22 @@ export class ListingsService {
 
   getFeed(input: unknown) {
     return this.feeds.getFeed(input);
+  }
+
+  getNearbyAreas(input: unknown) {
+    return this.nearbyAreas.getNearbyAreas(input);
+  }
+
+  reverseGeocode(input: unknown) {
+    return this.geocoding.reverseGeocode(input);
+  }
+
+  getCommunityStats() {
+    return this.communityStats.getPublicStats();
+  }
+
+  getSellerTrust(sellerId: string) {
+    return this.sellerTrust.getProfile(sellerId);
   }
 
   getImages(listingId: string) {

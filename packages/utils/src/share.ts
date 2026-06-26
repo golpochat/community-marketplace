@@ -1,6 +1,6 @@
 import type { ListingDeliverySelection } from '@community-marketplace/types';
 
-const DEFAULT_MARKETPLACE_NAME = 'Community Marketplace';
+const DEFAULT_MARKETPLACE_NAME = 'SellNearby.ie';
 
 function formatEuro(amount: number): string {
   return `€${amount.toFixed(amount % 1 === 0 ? 0 : 2)}`;

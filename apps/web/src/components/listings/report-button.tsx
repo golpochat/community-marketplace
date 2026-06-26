@@ -32,7 +32,7 @@ export function ReportButton({ listingId }: ReportButtonProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const canReport = isAuthenticated && user?.role === 'BUYER';
+  const canReport = isAuthenticated && !!user;
 
   async function handleReport() {
     if (!canReport) return;
@@ -61,10 +61,6 @@ export function ReportButton({ listingId }: ReportButtonProps) {
         </Button>
       </Link>
     );
-  }
-
-  if (user?.role !== 'BUYER') {
-    return null;
   }
 
   return (

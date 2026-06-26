@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import type {
   Notification,
   NotificationLog,
+  AdminNotificationLogEntry,
   NotificationProvider,
   NotificationTemplate,
 } from '@community-marketplace/types';
@@ -102,5 +103,40 @@ export function mapLog(row: {
     response: (row.response as Record<string, unknown> | null) ?? undefined,
     attempts: row.attempts,
     createdAt: row.createdAt.toISOString(),
+  };
+}
+
+type DeliveryLogWithRelations = {
+  id: string;
+  notificationId: string | null;
+  providerId: string;
+  status: string;
+  response: Prisma.JsonValue | null;
+  attempts: number;
+  createdAt: Date;
+  notification: {
+    type: string;
+    title: string;
+    channel: string;
+    user: { email: string; displayName: string | null };
+  } | null;
+  provider: { name: string; type: string };
+};
+
+export function mapAdminDeliveryLog(row: DeliveryLogWithRelations): AdminNotificationLogEntry {
+  const recipientLabel = row.notification?.user.displayName?.trim()
+    || row.notification?.user.email;
+
+  return {
+    id: row.id,
+    status: row.status as AdminNotificationLogEntry['status'],
+    attempts: row.attempts,
+    createdAt: row.createdAt.toISOString(),
+    notificationTitle: row.notification?.title,
+    notificationType: row.notification?.type as AdminNotificationLogEntry['notificationType'],
+    channel: row.notification?.channel as AdminNotificationLogEntry['channel'],
+    recipientLabel,
+    providerName: row.provider.name,
+    providerType: row.provider.type as AdminNotificationLogEntry['providerType'],
   };
 }

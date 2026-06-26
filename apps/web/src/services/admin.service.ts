@@ -1,5 +1,6 @@
 import type {
   AdminDashboardStats,
+  AdminNotificationLogEntry,
   Listing,
   ListingReviewContext,
   ModerationAction,
@@ -9,6 +10,7 @@ import type {
   Payment,
   PlatformSettings,
   RbacRole,
+  RbacRoleTemplateId,
   SuspensionDuration,
   UserProfile,
   UserVerification,
@@ -39,6 +41,8 @@ type ListParams = {
   search?: string;
   role?: string;
   status?: string;
+  categoryId?: string;
+  sellerId?: string;
 };
 
 export interface SuperAdminPlatformOverview extends AdminDashboardStats {
@@ -92,6 +96,8 @@ export const adminService = {
           limit: String(params.limit ?? 20),
           ...(params.search ? { search: params.search } : {}),
           ...(params.status ? { status: params.status } : {}),
+          ...(params.categoryId ? { categoryId: params.categoryId } : {}),
+          ...(params.sellerId ? { sellerId: params.sellerId } : {}),
         },
       },
     );
@@ -269,6 +275,69 @@ export const adminService = {
     return matrix;
   },
 
+  async listRbacRoles(role: AdminApiRole): Promise<AdminRbacRoleRow[]> {
+    const response = await apiClient<AdminRbacRoleRow[]>(adminApiPath(role, '/rbac/roles'));
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
+  async listRbacPermissions(role: AdminApiRole): Promise<AdminRbacPermissionRow[]> {
+    const response = await apiClient<AdminRbacPermissionRow[]>(
+      adminApiPath(role, '/rbac/permissions'),
+    );
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
+  async listRbacScopes(role: AdminApiRole): Promise<AdminRbacScopeRow[]> {
+    const response = await apiClient<AdminRbacScopeRow[]>(adminApiPath(role, '/rbac/scopes'));
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
+  async getRbacRolePermissions(role: AdminApiRole, roleId: string): Promise<string[]> {
+    const response = await apiClient<{ permissions: Array<{ id: string; code: string }> }>(
+      adminApiPath(role, `/rbac/roles/${roleId}/permissions`),
+    );
+    const permissions = response.data?.permissions ?? [];
+    return permissions.map((p) => p.code);
+  },
+
+  async createRbacRole(role: AdminApiRole, input: CreateAdminRoleInput) {
+    const response = await apiClient<AdminRbacRoleRow>(adminApiPath(role, '/rbac/roles'), {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+    return response.data;
+  },
+
+  async updateRbacRole(
+    role: AdminApiRole,
+    roleId: string,
+    input: { name?: string; description?: string },
+  ) {
+    const response = await apiClient<AdminRbacRoleRow>(
+      adminApiPath(role, `/rbac/roles/${roleId}`),
+      {
+        method: 'PUT',
+        body: JSON.stringify(input),
+      },
+    );
+    return response.data;
+  },
+
+  async deleteRbacRole(role: AdminApiRole, roleId: string) {
+    await apiClient(adminApiPath(role, `/rbac/roles/${roleId}`), { method: 'DELETE' });
+  },
+
+  async syncRbacRolePermissions(role: AdminApiRole, roleId: string, permissionIds: string[]) {
+    const response = await apiClient<{ permissionIds: string[] }>(
+      adminApiPath(role, `/rbac/roles/${roleId}/permissions`),
+      {
+        method: 'PUT',
+        body: JSON.stringify({ permissionIds }),
+      },
+    );
+    return response.data;
+  },
+
   async approveVerification(role: AdminApiRole, verificationId: string, reason?: string) {
     const response = await apiClient<UserVerification>(
       adminApiPath(role, `/users/verifications/${verificationId}/approve`),
@@ -383,8 +452,11 @@ export const adminService = {
     }
   },
 
-  async listNotificationLogs(role: AdminApiRole, params: ListParams = {}): Promise<PaginatedResult<unknown>> {
-    const response = await apiClient<unknown[] | PaginatedResult<unknown>>(
+  async listNotificationLogs(
+    role: AdminApiRole,
+    params: ListParams = {},
+  ): Promise<PaginatedResult<AdminNotificationLogEntry>> {
+    const response = await apiClient<AdminNotificationLogEntry[] | PaginatedResult<AdminNotificationLogEntry>>(
       adminApiPath(role, '/notifications/logs'),
       {
         params: {
@@ -398,3 +470,26 @@ export const adminService = {
 };
 
 export type AdminServiceRole = Extract<RbacRole, 'SUPER_ADMIN' | 'ADMIN'>;
+
+export interface AdminRbacRoleRow {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  isSystem: boolean;
+  userCount?: number;
+}
+
+export interface AdminRbacPermissionRow {
+  id: string;
+  code: string;
+  name: string;
+  scope?: string | null;
+}
+
+export interface CreateAdminRoleInput {
+  name: string;
+  code?: string;
+  description?: string;
+  template?: RbacRoleTemplateId;
+}

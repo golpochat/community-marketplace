@@ -16,11 +16,16 @@ export type {
 
 export {
   RBAC_ROLES,
+  RBAC_ROLE_TEMPLATES,
   PERMISSIONS,
   PERMISSION_CODES,
   PERMISSION_EFFECTS,
   DEFAULT_ROLE_PERMISSIONS,
+  isSystemRoleCode,
+  isPrivilegedSystemRole,
 } from './rbac';
+
+export type { RoleCodeValue, RbacRoleTemplateId } from './rbac';
 
 export {
   RBAC_PERMISSION_SCOPES,
@@ -85,6 +90,7 @@ export type {
   ListingReportAction,
   ListingLocation,
   ListingImage,
+  ListingVehicleAttributes,
   ListingReviewMessage,
   ListingReviewContext,
   ListingSellerSummary,
@@ -98,6 +104,12 @@ export type {
   ListingSearchFilters,
   ListingAdminFilters,
 } from './listing';
+export type {
+  SellerTrustProfile,
+  BuyerTrustProfile,
+  PendingReviewItem,
+} from './trust';
+export type { NearbyArea, UserGeoLocation, ReverseGeocodeResult } from './location';
 export type {
   ListingStatusActorType,
   ListingStatusChangeLog,
@@ -173,6 +185,7 @@ export type {
   NotificationTemplate,
   NotificationProvider,
   NotificationLog,
+  AdminNotificationLogEntry,
   DispatchNotificationInput,
   BroadcastNotificationInput,
 } from './notification';

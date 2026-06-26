@@ -127,6 +127,8 @@ export {
   updateListingSchema,
   listingSearchFiltersSchema,
   listingFeedQuerySchema,
+  nearbyAreasQuerySchema,
+  reverseGeocodeQuerySchema,
   listingImageUploadRequestSchema,
   confirmListingImagesSchema,
   reorderListingImagesSchema,
@@ -150,6 +152,13 @@ export {
   type ListingModerationActionInput,
   type ListingAdminFiltersInput,
 } from './listing.schema';
+
+export {
+  listingVehicleAttributesSchema,
+  vehicleListingCreateSchema,
+  stripEmptyVehicleAttributes,
+  type VehicleListingFormFields,
+} from './vehicle-listing.schema';
 
 export {
   deliveryZoneSchema,

@@ -7,11 +7,48 @@
 
 export const RBAC_ROLES = ['SUPER_ADMIN', 'ADMIN', 'SELLER', 'BUYER'] as const;
 
-/** System role code — aligns with Prisma `RbacRoleCode`. */
+/** System role codes (fixed at seed time). Custom roles use other uppercase codes. */
 export type RbacRole = (typeof RBAC_ROLES)[number];
 
-/** Alias for role code enum (Prisma `RbacRoleCode`). */
+/** Alias for system role code. */
 export type RoleCode = RbacRole;
+
+/** Any role code stored in `roles.code`. */
+export type RoleCodeValue = RbacRole | (string & {});
+
+export function isSystemRoleCode(code: string): code is RbacRole {
+  return (RBAC_ROLES as readonly string[]).includes(code);
+}
+
+export function isPrivilegedSystemRole(code: string): boolean {
+  return code === 'SUPER_ADMIN' || code === 'ADMIN';
+}
+
+/** Smart templates when creating a custom role. */
+export const RBAC_ROLE_TEMPLATES = [
+  {
+    id: 'blank',
+    label: 'Blank role',
+    description: 'Start with no permissions — pick exactly what this role needs.',
+  },
+  {
+    id: 'BUYER',
+    label: 'Buyer template',
+    description: 'Copy default buyer permissions (browse, purchase, chat).',
+  },
+  {
+    id: 'SELLER',
+    label: 'Seller template',
+    description: 'Copy default seller permissions (listings, payments, chat).',
+  },
+  {
+    id: 'ADMIN',
+    label: 'Operations admin template',
+    description: 'Copy admin permissions excluding privileged RBAC controls.',
+  },
+] as const;
+
+export type RbacRoleTemplateId = (typeof RBAC_ROLE_TEMPLATES)[number]['id'];
 
 /** @deprecated Use RbacRole or RoleCode — alias kept for gradual migration */
 export type UserRole = RbacRole;
@@ -224,7 +261,7 @@ export interface Permission {
 
 export interface Role {
   id: string;
-  code: RbacRole;
+  code: RoleCodeValue;
   name: string;
   description?: string;
   isSystem: boolean;

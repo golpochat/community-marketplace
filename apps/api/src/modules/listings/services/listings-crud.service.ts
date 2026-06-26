@@ -3,29 +3,41 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+} from "@nestjs/common";
+import type { Prisma } from "@prisma/client";
 
-import type { Listing, RbacRole } from '@community-marketplace/types';
+import type { Listing, RbacRole } from "@community-marketplace/types";
 import {
   createListingSchema,
   paginationSchema,
   updateListingSchema,
-} from '@community-marketplace/validation';
+} from "@community-marketplace/validation";
 
-import { PrismaService } from '../../../database/prisma.service';
-import { EventBusService } from '../../../events/event-bus.service';
-import { ApiUtilsService } from '../../../utils/api-utils.service';
+import { PrismaService } from "../../../database/prisma.service";
+import { EventBusService } from "../../../events/event-bus.service";
+import { ApiUtilsService } from "../../../utils/api-utils.service";
 import {
   listingInclude,
   mapListing,
-  mapListingSummary,
-} from '../mappers/listing.mapper';
-import { ListingAuditService } from './listing-audit.service';
-import { ListingVisibilityService } from './listing-visibility.service';
-import { ListingDeliveryService } from './listing-delivery.service';
-import { computeListingPricing } from '../lib/listing-pricing.lib';
-import { CategoriesService } from './categories.service';
+  mapListingSummaryWithTrust,
+  mapListingWithTrust,
+} from "../mappers/listing.mapper";
+import { ListingAuditService } from "./listing-audit.service";
+import { ListingVisibilityService } from "./listing-visibility.service";
+import { ListingDeliveryService } from "./listing-delivery.service";
+import { SellerTrustService } from "./seller-trust.service";
+import { computeListingPricing } from "../lib/listing-pricing.lib";
+import { CategoriesService } from "./categories.service";
+import {
+  detectListingFraudSignals,
+  isNewSellerAccount,
+  NEW_SELLER_DAILY_LISTING_LIMIT,
+} from "../lib/listing-fraud.lib";
+import { resolvePriceDroppedAt } from "../lib/listing-price-dropped.lib";
+import {
+  normalizeListingTitle,
+  formatLocationLabel,
+} from "@community-marketplace/utils";
 
 @Injectable()
 export class ListingsCrudService {
@@ -37,6 +49,7 @@ export class ListingsCrudService {
     private readonly visibility: ListingVisibilityService,
     private readonly delivery: ListingDeliveryService,
     private readonly eventBus: EventBusService,
+    private readonly sellerTrust: SellerTrustService,
   ) {}
 
   async findPublic(page = 1, limit = 20) {
@@ -47,15 +60,30 @@ export class ListingsCrudService {
       this.prisma.listing.findMany({
         where,
         include: listingInclude,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip: (p - 1) * l,
         take: l,
       }),
       this.prisma.listing.count({ where }),
     ]);
 
+    const trustMap = await this.sellerTrust.getSummariesForSellers(rows.map((r) => r.sellerId));
+
     return this.apiUtils.paginate(
-      rows.map((row) => mapListingSummary(row)),
+      rows.map((row) => {
+        const trust = trustMap.get(row.sellerId);
+        return mapListingSummaryWithTrust(
+          row,
+          undefined,
+          trust
+            ? {
+                averageRating: trust.averageRating,
+                reviewCount: trust.reviewCount,
+                soldCount: trust.soldCount,
+              }
+            : undefined,
+        );
+      }),
       p,
       l,
       total,
@@ -69,7 +97,7 @@ export class ListingsCrudService {
     });
     if (!row) throw new NotFoundException(`Listing ${id} not found`);
 
-    if (incrementView && row.status === 'active') {
+    if (incrementView && row.status === "active") {
       await this.prisma.listing.update({
         where: { id },
         data: { viewCount: { increment: 1 } },
@@ -77,7 +105,18 @@ export class ListingsCrudService {
       row.viewCount += 1;
     }
 
-    return mapListing(row);
+    const priceDroppedAt = await resolvePriceDroppedAt(this.prisma, id, row);
+    const trustProfile = await this.sellerTrust.getProfile(row.sellerId);
+    return mapListingWithTrust(row, {
+      priceDroppedAt,
+      trust: {
+        averageRating: trustProfile.averageRating,
+        reviewCount: trustProfile.reviewCount,
+        soldCount: trustProfile.soldCount,
+        responseRate: trustProfile.responseRate,
+        responseTimeMinutes: trustProfile.responseTimeMinutes,
+      },
+    });
   }
 
   async findBySeller(
@@ -97,14 +136,19 @@ export class ListingsCrudService {
       this.prisma.listing.findMany({
         where,
         include: listingInclude,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip: (p - 1) * l,
         take: l,
       }),
       this.prisma.listing.count({ where }),
     ]);
 
-    return this.apiUtils.paginate(rows.map((row) => mapListing(row)), p, l, total);
+    return this.apiUtils.paginate(
+      rows.map((row) => mapListing(row)),
+      p,
+      l,
+      total,
+    );
   }
 
   async create(sellerId: string, input: unknown): Promise<Listing> {
@@ -118,38 +162,79 @@ export class ListingsCrudService {
     };
     const computed = computeListingPricing(pricingInput);
 
+    const seller = await this.prisma.user.findUnique({
+      where: { id: sellerId },
+      select: { createdAt: true },
+    });
+    if (!seller) {
+      throw new NotFoundException("Seller not found");
+    }
+
+    if (isNewSellerAccount(seller.createdAt)) {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const createdToday = await this.prisma.listing.count({
+        where: { sellerId, createdAt: { gte: startOfDay } },
+      });
+      if (createdToday >= NEW_SELLER_DAILY_LISTING_LIMIT) {
+        throw new BadRequestException(
+          `New members can create up to ${NEW_SELLER_DAILY_LISTING_LIMIT} listings per day. Try again tomorrow.`,
+        );
+      }
+    }
+
+    const recentTitles = await this.prisma.listing.findMany({
+      where: { sellerId },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: { title: true },
+    });
+    const fraud = detectListingFraudSignals({
+      title: parsed.title,
+      price: computed.price,
+      recentTitles: recentTitles.map((row) => row.title),
+    });
+
     const row = await this.prisma.listing.create({
       data: {
         sellerId,
         categoryId: parsed.categoryId,
-        title: parsed.title,
-        description: parsed.description,
+        title: normalizeListingTitle(parsed.title),
+        description: parsed.description.trim(),
         price: computed.price,
         originalPrice: computed.originalPrice ?? null,
         salePrice: computed.salePrice ?? computed.price,
         discountPercent: computed.discountPercent ?? null,
         currency: parsed.currency,
         condition: parsed.condition,
-        status: 'draft',
-        locationLabel: parsed.location.label,
+        status: "draft",
+        locationLabel: formatLocationLabel(parsed.location.label),
         latitude: parsed.location.latitude,
         longitude: parsed.location.longitude,
+        requiresFraudReview: fraud.requiresReview,
+        ...(parsed.attributes
+          ? { attributes: parsed.attributes as Prisma.InputJsonValue }
+          : {}),
       },
       include: listingInclude,
     });
 
-    await this.audit.record(row.id, 'listing_created', sellerId, {
+    await this.audit.record(row.id, "listing_created", sellerId, {
       toStatus: row.status,
+      ...(fraud.requiresReview ? { fraudReasons: fraud.reasons } : {}),
     });
 
     this.eventBus.publish({
-      type: 'listing.created',
+      type: "listing.created",
       payload: { listingId: row.id, sellerId },
       timestamp: new Date(),
     });
 
     if (parsed.deliverySelections?.length) {
-      await this.delivery.saveForDraftListing(row.id, parsed.deliverySelections);
+      await this.delivery.saveForDraftListing(
+        row.id,
+        parsed.deliverySelections,
+      );
       return this.findById(row.id);
     }
 
@@ -164,10 +249,16 @@ export class ListingsCrudService {
   ): Promise<Listing> {
     const parsed = updateListingSchema.parse(input);
     const existing = await this.getOwnedOrAdmin(listingId, actorId, actorRole);
-    const isAdmin = actorRole === 'ADMIN' || actorRole === 'SUPER_ADMIN';
+    const isAdmin = actorRole === "ADMIN" || actorRole === "SUPER_ADMIN";
 
-    if (!isAdmin && parsed.status !== undefined && parsed.status !== existing.status) {
-      throw new ForbiddenException('Only administrators can change listing publication status');
+    if (
+      !isAdmin &&
+      parsed.status !== undefined &&
+      parsed.status !== existing.status
+    ) {
+      throw new ForbiddenException(
+        "Only administrators can change listing publication status",
+      );
     }
 
     if (parsed.categoryId) {
@@ -175,9 +266,9 @@ export class ListingsCrudService {
     }
 
     if (parsed.deliverySelections !== undefined) {
-      if (existing.status === 'active') {
+      if (existing.status === "active") {
         throw new BadRequestException(
-          'Use POST /seller/listings/:id/delivery/update to change delivery on active listings',
+          "Use POST /seller/listings/:id/delivery/update to change delivery on active listings",
         );
       }
     }
@@ -187,9 +278,9 @@ export class ListingsCrudService {
       parsed.originalPrice !== undefined ||
       parsed.salePrice !== undefined;
 
-    if (pricingFieldsTouched && existing.status === 'active') {
+    if (pricingFieldsTouched && existing.status === "active") {
       throw new BadRequestException(
-        'Use POST /seller/listings/:id/pricing/update to change prices on active listings',
+        "Use POST /seller/listings/:id/pricing/update to change prices on active listings",
       );
     }
 
@@ -200,7 +291,7 @@ export class ListingsCrudService {
       discountPercent?: number | null;
     } = {};
 
-    if (pricingFieldsTouched && existing.status !== 'active') {
+    if (pricingFieldsTouched && existing.status !== "active") {
       const computed = computeListingPricing({
         originalPrice: parsed.originalPrice ?? undefined,
         salePrice: parsed.salePrice ?? parsed.price,
@@ -217,15 +308,21 @@ export class ListingsCrudService {
     const row = await this.prisma.listing.update({
       where: { id: listingId },
       data: {
-        ...(parsed.title !== undefined ? { title: parsed.title } : {}),
-        ...(parsed.description !== undefined
-          ? { description: parsed.description }
+        ...(parsed.title !== undefined
+          ? { title: normalizeListingTitle(parsed.title) }
           : {}),
-        ...(pricingData.price !== undefined ? { price: pricingData.price } : {}),
+        ...(parsed.description !== undefined
+          ? { description: parsed.description.trim() }
+          : {}),
+        ...(pricingData.price !== undefined
+          ? { price: pricingData.price }
+          : {}),
         ...(pricingData.originalPrice !== undefined
           ? { originalPrice: pricingData.originalPrice }
           : {}),
-        ...(pricingData.salePrice !== undefined ? { salePrice: pricingData.salePrice } : {}),
+        ...(pricingData.salePrice !== undefined
+          ? { salePrice: pricingData.salePrice }
+          : {}),
         ...(pricingData.discountPercent !== undefined
           ? { discountPercent: pricingData.discountPercent }
           : {}),
@@ -233,28 +330,36 @@ export class ListingsCrudService {
         ...(parsed.categoryId !== undefined
           ? { categoryId: parsed.categoryId }
           : {}),
-        ...(parsed.condition !== undefined ? { condition: parsed.condition } : {}),
+        ...(parsed.condition !== undefined
+          ? { condition: parsed.condition }
+          : {}),
         ...(parsed.location
           ? {
-              locationLabel: parsed.location.label,
+              locationLabel: formatLocationLabel(parsed.location.label),
               latitude: parsed.location.latitude,
               longitude: parsed.location.longitude,
             }
+          : {}),
+        ...(parsed.attributes !== undefined
+          ? { attributes: parsed.attributes as Prisma.InputJsonValue }
           : {}),
       },
       include: listingInclude,
     });
 
-    await this.audit.record(listingId, 'listing_updated', actorId);
+    await this.audit.record(listingId, "listing_updated", actorId);
 
     this.eventBus.publish({
-      type: 'listing.updated',
+      type: "listing.updated",
       payload: { listingId },
       timestamp: new Date(),
     });
 
     if (parsed.deliverySelections !== undefined) {
-      await this.delivery.saveForDraftListing(listingId, parsed.deliverySelections);
+      await this.delivery.saveForDraftListing(
+        listingId,
+        parsed.deliverySelections,
+      );
       return this.findById(listingId);
     }
 
@@ -269,10 +374,10 @@ export class ListingsCrudService {
     await this.getOwnedOrAdmin(listingId, actorId, actorRole);
     await this.prisma.listing.delete({ where: { id: listingId } });
 
-    await this.audit.record(listingId, 'listing_deleted', actorId);
+    await this.audit.record(listingId, "listing_deleted", actorId);
 
     this.eventBus.publish({
-      type: 'listing.deleted',
+      type: "listing.deleted",
       payload: { listingId },
       timestamp: new Date(),
     });
@@ -298,8 +403,25 @@ export class ListingsCrudService {
       ...(filters.search
         ? {
             OR: [
-              { title: { contains: filters.search, mode: 'insensitive' } },
-              { description: { contains: filters.search, mode: 'insensitive' } },
+              { title: { contains: filters.search, mode: "insensitive" } },
+              {
+                description: { contains: filters.search, mode: "insensitive" },
+              },
+              {
+                seller: {
+                  OR: [
+                    {
+                      displayName: {
+                        contains: filters.search,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      email: { contains: filters.search, mode: "insensitive" },
+                    },
+                  ],
+                },
+              },
             ],
           }
         : {}),
@@ -309,14 +431,19 @@ export class ListingsCrudService {
       this.prisma.listing.findMany({
         where,
         include: listingInclude,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip: (p - 1) * l,
         take: l,
       }),
       this.prisma.listing.count({ where }),
     ]);
 
-    return this.apiUtils.paginate(rows.map((row) => mapListing(row)), p, l, total);
+    return this.apiUtils.paginate(
+      rows.map((row) => mapListing(row)),
+      p,
+      l,
+      total,
+    );
   }
 
   async adminOverride(
@@ -324,7 +451,7 @@ export class ListingsCrudService {
     adminId: string,
     input: unknown,
   ): Promise<Listing> {
-    return this.update(listingId, adminId, 'ADMIN', input);
+    return this.update(listingId, adminId, "ADMIN", input);
   }
 
   async duplicate(listingId: string, sellerId: string): Promise<Listing> {
@@ -337,7 +464,7 @@ export class ListingsCrudService {
     });
     if (!source) throw new NotFoundException(`Listing ${listingId} not found`);
     if (source.sellerId !== sellerId) {
-      throw new ForbiddenException('You can only duplicate your own listings');
+      throw new ForbiddenException("You can only duplicate your own listings");
     }
 
     const row = await this.prisma.listing.create({
@@ -352,7 +479,7 @@ export class ListingsCrudService {
         discountPercent: source.discountPercent,
         currency: source.currency,
         condition: source.condition,
-        status: 'draft',
+        status: "draft",
         packageType: source.packageType,
         isPaid: false,
         locationLabel: source.locationLabel,
@@ -372,8 +499,8 @@ export class ListingsCrudService {
       });
     }
 
-    await this.audit.record(row.id, 'listing_created', sellerId, {
-      toStatus: 'draft',
+    await this.audit.record(row.id, "listing_created", sellerId, {
+      toStatus: "draft",
       metadata: { duplicatedFrom: listingId },
     });
 
@@ -390,9 +517,9 @@ export class ListingsCrudService {
     });
     if (!listing) throw new NotFoundException(`Listing ${listingId} not found`);
 
-    const isAdmin = actorRole === 'ADMIN' || actorRole === 'SUPER_ADMIN';
+    const isAdmin = actorRole === "ADMIN" || actorRole === "SUPER_ADMIN";
     if (!isAdmin && listing.sellerId !== actorId) {
-      throw new ForbiddenException('You can only modify your own listings');
+      throw new ForbiddenException("You can only modify your own listings");
     }
     return listing;
   }

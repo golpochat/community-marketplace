@@ -2,12 +2,11 @@ import { ForbiddenException, Injectable } from '@nestjs/common';
 
 import {
   PRIVILEGED_PERMISSION_CODES,
-  PRIVILEGED_ROLE_CODES,
   PERMISSIONS,
   RBAC_PERMISSION_SCOPES,
+  isPrivilegedSystemRole,
   type PermissionCode,
   type RbacPermissionScopeId,
-  type RbacRole,
 } from '@community-marketplace/types';
 
 import { AuthorizationService } from '../../../common/authorization/authorization.service';
@@ -69,8 +68,8 @@ export class RbacScopePolicy {
     );
   }
 
-  isPrivilegedRole(roleCode: RbacRole): boolean {
-    return (PRIVILEGED_ROLE_CODES as readonly string[]).includes(roleCode);
+  isPrivilegedRole(roleCode: string): boolean {
+    return isPrivilegedSystemRole(roleCode);
   }
 
   isPrivilegedPermission(code: PermissionCode): boolean {
@@ -79,7 +78,7 @@ export class RbacScopePolicy {
 
   async assertCanAssignRole(
     actor: Pick<AuthenticatedUser, 'id' | 'role' | 'primaryRoleId'>,
-    targetRoleCode: RbacRole,
+    targetRoleCode: string,
   ): Promise<void> {
     if (targetRoleCode === 'SUPER_ADMIN') {
       throw new ForbiddenException('SUPER_ADMIN accounts cannot be created or assigned via the API');
@@ -106,10 +105,10 @@ export class RbacScopePolicy {
 
   async assertCanModifyRolePermissions(
     actor: Pick<AuthenticatedUser, 'id' | 'role' | 'primaryRoleId'>,
-    targetRoleCode: RbacRole,
+    targetRoleCode: string,
     permissionCodes: PermissionCode[],
   ): Promise<void> {
-    if (this.isPrivilegedRole(targetRoleCode)) {
+    if (isPrivilegedSystemRole(targetRoleCode)) {
       if (!this.isSuperAdmin(actor)) {
         throw new ForbiddenException('Only SUPER_ADMIN can modify privileged role permissions');
       }

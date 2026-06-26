@@ -6,13 +6,36 @@ import { formatCurrency } from '@community-marketplace/utils';
 interface ListingDeliveryDisplayProps {
   options?: ListingDeliverySelection[];
   title?: string;
+  compact?: boolean;
 }
 
 export function ListingDeliveryDisplay({
   options = [],
   title = 'Delivery options',
+  compact = false,
 }: ListingDeliveryDisplayProps) {
   if (options.length === 0) return null;
+
+  if (compact) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
+        <h2 className="text-sm font-semibold text-gray-900">{title}</h2>
+        <ul className="mt-2 space-y-1.5">
+          {options.map((option) => (
+            <li
+              key={`${option.deliveryOptionId}-${option.customLabel ?? option.label}`}
+              className="flex items-center justify-between text-sm text-gray-700"
+            >
+              <span>{option.label}</span>
+              <span className="font-medium text-gray-900">
+                {option.price != null ? formatCurrency(option.price, 'EUR') : 'Free'}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <section className="mt-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">

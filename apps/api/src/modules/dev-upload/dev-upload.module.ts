@@ -8,5 +8,6 @@ import { DevUploadService } from './dev-upload.service';
   imports: [UsersModule],
   controllers: [DevUploadController],
   providers: [DevUploadService],
+  exports: [DevUploadService],
 })
 export class DevUploadModule {}

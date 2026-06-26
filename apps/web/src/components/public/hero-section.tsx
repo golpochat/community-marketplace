@@ -3,7 +3,6 @@
 import Link from 'next/link';
 
 import { Button } from '@community-marketplace/ui';
-import { formatCurrency } from '@community-marketplace/utils';
 import { BadgeCheck, MessageSquare, Shield, Truck } from 'lucide-react';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -39,11 +38,10 @@ export function HeroSection() {
       <div className="relative mx-auto max-w-6xl px-4 py-16 sm:py-20 lg:py-24">
         <div className="max-w-2xl text-left">
           <h1 className="text-h1 text-gray-900 sm:text-[40px] lg:text-[48px]">
-            Buy &amp; sell in your community
+            Ireland&apos;s trusted community marketplace for your local area
           </h1>
           <p className="mt-4 text-body text-gray-600">
-            Discover local listings across Ireland starting from {formatCurrency(0)} — connect with
-            trusted neighbours and verified sellers near you.
+            Buy and sell safely within your neighbourhood — faster, safer, local.
           </p>
 
           <ul className="mt-6 flex flex-wrap gap-3">

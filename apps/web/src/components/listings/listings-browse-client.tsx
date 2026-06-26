@@ -4,10 +4,19 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { Category, ListingSearchFilters, ListingSummary } from '@community-marketplace/types';
-import { formatCurrency } from '@community-marketplace/utils';
 
-import { FilterBar } from '@/components/listings/filter-bar';
+import { BrowseFilterSidebar } from '@/components/listings/browse/browse-filter-sidebar';
+import { BrowseListingsToolbar } from '@/components/listings/browse/browse-listings-toolbar';
+import { BrowseMobileFilterDrawer } from '@/components/listings/browse/browse-mobile-filter-drawer';
+import { LocalBrowseBar } from '@/components/local/local-browse-bar';
+import { useBrowseViewMode } from '@/components/listings/browse/browse-view-preferences';
+import {
+  clearCategorySpecificFilters,
+  parseBrowseFiltersFromParams,
+  serializeBrowseFilters,
+} from '@/components/listings/browse/browse-url-filters';
 import { ListingCard } from '@/components/listings/listing-card';
+import { ListingCardList } from '@/components/listings/listing-card-list';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Pagination } from '@/components/shared/pagination';
 import { ListingCardSkeleton } from '@/components/shared/skeleton';
@@ -15,9 +24,15 @@ import { useAuth } from '@/hooks/use-auth';
 import { buyerService } from '@/services/marketplace.service';
 import { listingsService } from '@/services/listings.service';
 
+const GRID_CLASS =
+  'grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
+
+const LIST_CLASS = 'flex flex-col gap-4';
+
 export function ListingsBrowseClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [viewMode, setViewMode] = useBrowseViewMode();
   const { isAuthenticated, user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [listings, setListings] = useState<ListingSummary[]>([]);
@@ -25,16 +40,7 @@ export function ListingsBrowseClient() {
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState({ page: 1, limit: 12, total: 0 });
 
-  const filters: ListingSearchFilters = {
-    q: searchParams.get('q') ?? undefined,
-    categoryId: searchParams.get('categoryId') ?? undefined,
-    condition: (searchParams.get('condition') as ListingSearchFilters['condition']) ?? undefined,
-    minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
-    sort: (searchParams.get('sort') as ListingSearchFilters['sort']) ?? 'newest',
-    page: searchParams.get('page') ? Number(searchParams.get('page')) : 1,
-    limit: 12,
-  };
-
+  const filters = parseBrowseFiltersFromParams(searchParams);
   const paramsKey = searchParams.toString();
 
   const load = useCallback(async () => {
@@ -63,61 +69,109 @@ export function ListingsBrowseClient() {
   }, [load]);
 
   function updateFilters(next: ListingSearchFilters) {
-    const params = new URLSearchParams();
-    if (next.q) params.set('q', next.q);
-    if (next.categoryId) params.set('categoryId', next.categoryId);
-    if (next.condition) params.set('condition', next.condition);
-    if (next.minPrice != null) params.set('minPrice', String(next.minPrice));
-    if (next.sort) params.set('sort', next.sort);
-    if (next.page && next.page > 1) params.set('page', String(next.page));
-    router.push(`/listings?${params.toString()}`);
+    const prevCategoryId = filters.categoryId;
+    let resolved = next;
+    if (next.categoryId !== prevCategoryId) {
+      resolved = clearCategorySpecificFilters(next);
+    }
+    router.push(`/listings?${serializeBrowseFilters(resolved).toString()}`);
   }
 
   const totalPages = Math.max(1, Math.ceil(meta.total / meta.limit));
-  const minPrice = listings.length > 0 ? Math.min(...listings.map((l) => l.price)) : 0;
+  const showSave = isAuthenticated && user?.role === 'BUYER';
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl font-semibold text-gray-900">Browse Listings</h1>
-      <p className="mt-2 text-gray-600">
-        {meta.total} items{listings.length > 0 ? ` — from ${formatCurrency(minPrice)}` : ''}
-      </p>
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
+      <header className="mb-6 space-y-1">
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Browse listings</h1>
+        <p className="text-sm text-gray-500">
+          Discover items from trusted sellers in your community
+        </p>
+      </header>
 
-      <div className="mt-6">
-        <FilterBar categories={categories} filters={filters} onChange={updateFilters} />
-      </div>
-
-      {loading ? (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <ListingCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : listings.length === 0 ? (
-        <EmptyState
-          className="mt-8"
-          title="No listings found"
-          description="Try adjusting your filters or search terms."
-        />
-      ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {listings.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              showSave={isAuthenticated && user?.role === 'BUYER'}
-              initialSaved={savedIds.has(listing.id)}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="hidden w-full shrink-0 lg:block lg:w-72 xl:w-80">
+          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
+            <BrowseFilterSidebar
+              categories={categories}
+              filters={filters}
+              onChange={updateFilters}
             />
-          ))}
+          </div>
         </div>
-      )}
 
-      <Pagination
-        className="mt-8"
-        page={meta.page}
-        totalPages={totalPages}
-        onPageChange={(page) => updateFilters({ ...filters, page })}
-      />
+        <div className="min-w-0 flex-1 space-y-4">
+          <LocalBrowseBar filters={filters} onFiltersChange={updateFilters} />
+
+          <BrowseMobileFilterDrawer
+            categories={categories}
+            filters={filters}
+            onChange={updateFilters}
+          />
+
+          <BrowseListingsToolbar
+            categories={categories}
+            filters={filters}
+            total={meta.total}
+            loading={loading}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onChange={updateFilters}
+          />
+
+          {loading ? (
+            viewMode === 'grid' ? (
+              <div className={GRID_CLASS}>
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <ListingCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className={LIST_CLASS}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <ListingCardSkeleton key={i} />
+                ))}
+              </div>
+            )
+          ) : listings.length === 0 ? (
+            <EmptyState
+              title="No listings found"
+              description="Try adjusting your filters or search terms."
+            />
+          ) : viewMode === 'list' ? (
+            <div className={LIST_CLASS}>
+              {listings.map((listing) => (
+                <ListingCardList
+                  key={listing.id}
+                  listing={listing}
+                  showSave={showSave}
+                  initialSaved={savedIds.has(listing.id)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className={GRID_CLASS}>
+              {listings.map((listing) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  showSave={showSave}
+                  initialSaved={savedIds.has(listing.id)}
+                />
+              ))}
+            </div>
+          )}
+
+          <Pagination
+            className="mt-8"
+            page={meta.page}
+            totalPages={totalPages}
+            total={meta.total}
+            limit={meta.limit}
+            onPageChange={(page) => updateFilters({ ...filters, page })}
+          />
+        </div>
+      </div>
     </div>
   );
 }

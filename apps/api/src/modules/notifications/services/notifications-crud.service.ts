@@ -65,6 +65,12 @@ export class NotificationsCrudService {
     return { success: true };
   }
 
+  getUnreadCount(userId: string) {
+    return this.prisma.notification.count({
+      where: { userId, channel: 'in_app', readAt: null },
+    });
+  }
+
   async createRecord(input: {
     userId: string;
     type: string;

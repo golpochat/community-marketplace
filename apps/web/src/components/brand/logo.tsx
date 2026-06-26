@@ -1,44 +1,54 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
-import { APP_NAME } from '@community-marketplace/config';
+import { APP_NAME, APP_SHORT_NAME } from '@community-marketplace/config';
 import { cn } from '@community-marketplace/ui';
+
+/** Horizontal lockup — icon + SellNearby (560×152 viewBox). */
+const LOGO_HORIZONTAL = '/brand/sellnearby/svg/logo-horizontal-compact.svg';
+const LOGO_DARK = '/brand/sellnearby/svg/logo-dark-mode.svg';
+
+const LOGO_ASPECT = 560 / 152;
+
+const LOGO_SOURCES = {
+  light: { src: LOGO_HORIZONTAL, aspect: LOGO_ASPECT },
+  dark: { src: LOGO_DARK, aspect: 640 / 160 },
+} as const;
+
+/** Display heights in px — nav is 20% larger than the previous 44px default. */
+const SIZE_CONFIG = {
+  /** Footer — same lockup as header, slightly smaller */
+  footer: { logoHeight: 38, logoClass: 'h-[2.375rem] w-auto' },
+  /** Navbar + mobile menu — 44px × 1.2 ≈ 53px */
+  nav: { logoHeight: 53, logoClass: 'h-[3.3125rem] w-auto' },
+} as const;
 
 interface LogoProps {
   className?: string;
-  showText?: boolean;
-  size?: 'sm' | 'md';
+  size?: keyof typeof SIZE_CONFIG;
+  /** Use dark-mode wordmark (white text) on dark backgrounds. */
+  variant?: 'light' | 'dark';
 }
 
-export function Logo({ className, showText = true, size = 'md' }: LogoProps) {
-  const iconSize = size === 'sm' ? 'h-8 w-8' : 'h-9 w-9';
-  const textSize = size === 'sm' ? 'text-base' : 'text-lg';
+export function Logo({ className, size = 'nav', variant = 'light' }: LogoProps) {
+  const { logoHeight, logoClass } = SIZE_CONFIG[size];
+  const { src, aspect } = LOGO_SOURCES[variant];
+  const logoWidth = Math.round(logoHeight * aspect);
 
   return (
     <Link
       href="/"
-      className={cn('group flex items-center gap-2.5 transition-opacity hover:opacity-90', className)}
+      className={cn('group inline-flex shrink-0 items-center transition-opacity hover:opacity-90', className)}
       aria-label={`${APP_NAME} home`}
     >
-      <span
-        className={cn(
-          'flex shrink-0 items-center justify-center rounded-brand-md bg-primary text-primary-foreground shadow-brand-sm',
-          iconSize,
-        )}
-        aria-hidden
-      >
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M6 15h12M8 9h8M10 6h4"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <circle cx="12" cy="18" r="1.25" fill="currentColor" />
-        </svg>
-      </span>
-      {showText ? (
-        <span className={cn('font-semibold text-primary', textSize)}>{APP_NAME}</span>
-      ) : null}
+      <Image
+        src={src}
+        alt={APP_SHORT_NAME}
+        width={logoWidth}
+        height={logoHeight}
+        className={logoClass}
+        priority={size === 'nav'}
+      />
     </Link>
   );
 }

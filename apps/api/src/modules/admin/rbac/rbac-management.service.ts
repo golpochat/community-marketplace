@@ -1,13 +1,24 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import {
   DEFAULT_ROLE_PERMISSIONS,
   PERMISSIONS,
+  PRIVILEGED_PERMISSION_CODES,
   RBAC_PERMISSION_SCOPES,
+  RBAC_ROLES,
+  isPrivilegedSystemRole,
+  isSystemRoleCode,
   type PermissionCode,
   type PermissionEffect,
   type RbacPermissionScopeId,
   type RbacRole,
+  type RbacRoleTemplateId,
   type UserEffectivePermissions,
 } from '@community-marketplace/types';
 import { toIsoString } from '@community-marketplace/utils';
@@ -26,12 +37,14 @@ import { RbacScopePolicy } from './rbac-scope.policy';
 import type {
   AssignPermissionOverrideDto,
   AssignUserRoleDto,
+  CreateCustomRoleDto,
   SyncRolePermissionsDto,
+  UpdateCustomRoleDto,
 } from './dto/rbac-management.dto';
 
 interface StoredRole {
   id: string;
-  code: RbacRole;
+  code: string;
   name: string;
   description?: string;
   isSystem: boolean;
@@ -74,10 +87,166 @@ export class RbacManagementService {
   async listRoles(actor: AuthenticatedUser) {
     await this.scopePolicy.assertCanListRbacCatalog(actor);
     const roles = await this.getRoles();
+    const userCounts = await this.getRoleUserCounts(roles.map((r) => r.id));
+
     return roles.map((role) => ({
       ...role,
-      permissionCount: (this.memoryRolePermissions.get(role.id)?.size ?? 0) || undefined,
+      userCount: userCounts.get(role.id) ?? 0,
+      permissionCount: undefined as number | undefined,
     }));
+  }
+
+  async createRole(actor: AuthenticatedUser, dto: CreateCustomRoleDto) {
+    if (!this.scopePolicy.isSuperAdmin(actor)) {
+      throw new ForbiddenException('Only SUPER_ADMIN can create custom roles');
+    }
+    const effective = await this.scopePolicy.getActorEffectivePermissions(actor);
+    if (!effective.includes(PERMISSIONS.MANAGE_ROLES)) {
+      throw new ForbiddenException('MANAGE_ROLES permission required');
+    }
+
+    const code = dto.code ?? slugifyRoleCode(dto.name);
+    if (isSystemRoleCode(code)) {
+      throw new BadRequestException(
+        `Role code "${code}" is reserved for a system role. Choose a different code.`,
+      );
+    }
+
+    await this.ensureMemoryStore();
+    const existing = (await this.getRoles()).find((r) => r.code === code);
+    if (existing) {
+      throw new ConflictException(`Role code "${code}" already exists`);
+    }
+
+    const templatePermissionIds = await this.resolveTemplatePermissionIds(
+      dto.template ?? 'blank',
+    );
+    let role: StoredRole;
+
+    try {
+      const created = await this.prisma.role.create({
+        data: {
+          code,
+          name: dto.name.trim(),
+          description: dto.description?.trim() || null,
+          isSystem: false,
+        },
+      });
+      role = {
+        id: created.id,
+        code: created.code,
+        name: created.name,
+        description: created.description ?? undefined,
+        isSystem: created.isSystem,
+      };
+      if (templatePermissionIds.length) {
+        await this.prisma.rolePermission.createMany({
+          data: templatePermissionIds.map((permissionId) => ({
+            roleId: role.id,
+            permissionId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    } catch {
+      role = {
+        id: `role-${code.toLowerCase()}`,
+        code,
+        name: dto.name.trim(),
+        description: dto.description?.trim(),
+        isSystem: false,
+      };
+      this.memoryRoles.set(role.id, role);
+      this.memoryRolePermissions.set(role.id, new Set(templatePermissionIds));
+    }
+
+    return {
+      ...role,
+      template: dto.template,
+      permissionCount: templatePermissionIds.length,
+      createdBy: actor.id,
+      createdAt: toIsoString(),
+    };
+  }
+
+  async updateRole(actor: AuthenticatedUser, roleId: string, dto: UpdateCustomRoleDto) {
+    const role = await this.getRoleById(roleId);
+    if (role.isSystem) {
+      throw new ForbiddenException('System roles cannot be renamed');
+    }
+    if (!this.scopePolicy.isSuperAdmin(actor)) {
+      throw new ForbiddenException('Only SUPER_ADMIN can update custom roles');
+    }
+    const effective = await this.scopePolicy.getActorEffectivePermissions(actor);
+    if (!effective.includes(PERMISSIONS.MANAGE_ROLES)) {
+      throw new ForbiddenException('MANAGE_ROLES permission required');
+    }
+
+    try {
+      const updated = await this.prisma.role.update({
+        where: { id: roleId },
+        data: {
+          ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
+          ...(dto.description !== undefined
+            ? { description: dto.description.trim() || null }
+            : {}),
+        },
+      });
+      const stored: StoredRole = {
+        id: updated.id,
+        code: updated.code,
+        name: updated.name,
+        description: updated.description ?? undefined,
+        isSystem: updated.isSystem,
+      };
+      this.memoryRoles.set(stored.id, stored);
+      return { ...stored, updatedBy: actor.id, updatedAt: toIsoString() };
+    } catch {
+      const stored = this.memoryRoles.get(roleId);
+      if (!stored) throw new NotFoundException(`Role ${roleId} not found`);
+      if (dto.name !== undefined) stored.name = dto.name.trim();
+      if (dto.description !== undefined) stored.description = dto.description.trim();
+      this.memoryRoles.set(roleId, stored);
+      return { ...stored, updatedBy: actor.id, updatedAt: toIsoString() };
+    }
+  }
+
+  async deleteRole(actor: AuthenticatedUser, roleId: string) {
+    const role = await this.getRoleById(roleId);
+    if (role.isSystem) {
+      throw new ForbiddenException('System roles cannot be deleted');
+    }
+    if (!this.scopePolicy.isSuperAdmin(actor)) {
+      throw new ForbiddenException('Only SUPER_ADMIN can delete custom roles');
+    }
+    const effective = await this.scopePolicy.getActorEffectivePermissions(actor);
+    if (!effective.includes(PERMISSIONS.MANAGE_ROLES)) {
+      throw new ForbiddenException('MANAGE_ROLES permission required');
+    }
+
+    const userCounts = await this.getRoleUserCounts([roleId]);
+    if ((userCounts.get(roleId) ?? 0) > 0) {
+      throw new ConflictException(
+        'Cannot delete a role that is assigned to users. Reassign users first.',
+      );
+    }
+
+    try {
+      await this.prisma.$transaction([
+        this.prisma.rolePermission.deleteMany({ where: { roleId } }),
+        this.prisma.role.delete({ where: { id: roleId } }),
+      ]);
+    } catch {
+      this.memoryRolePermissions.delete(roleId);
+      this.memoryRoles.delete(roleId);
+    }
+
+    return {
+      roleId,
+      roleCode: role.code,
+      deletedBy: actor.id,
+      deletedAt: toIsoString(),
+    };
   }
 
   async listPermissions(actor: AuthenticatedUser, scopeId?: string) {
@@ -299,7 +468,7 @@ export class RbacManagementService {
 
   // ── Persistence helpers ─────────────────────────────────────────────────────
 
-  private async persistUserRole(userId: string, roleId: string, _roleCode: RbacRole) {
+  private async persistUserRole(userId: string, roleId: string, _roleCode: string) {
     await this.prisma.user.update({
       where: { id: userId },
       data: { primaryRoleId: roleId },
@@ -522,7 +691,7 @@ export class RbacManagementService {
       if (rows.length) {
         return rows.map((r) => ({
           id: r.id,
-          code: r.code as RbacRole,
+          code: r.code,
           name: r.name,
           description: r.description ?? undefined,
           isSystem: r.isSystem,
@@ -532,6 +701,45 @@ export class RbacManagementService {
       // fallback
     }
     return [...this.memoryRoles.values()];
+  }
+
+  private async getRoleByCode(code: string): Promise<StoredRole> {
+    const roles = await this.getRoles();
+    const role = roles.find((r) => r.code === code);
+    if (!role) throw new NotFoundException(`Role ${code} not found`);
+    return role;
+  }
+
+  private async resolveTemplatePermissionIds(template: RbacRoleTemplateId): Promise<string[]> {
+    if (template === 'blank') return [];
+
+    const templateRole = await this.getRoleByCode(template);
+    const permissionIds = await this.getPermissionIdsForRole(templateRole.id);
+    if (template !== 'ADMIN') return permissionIds;
+
+    const permissions = await this.getPermissionsByIds(permissionIds);
+    return permissions
+      .filter((p) => !PRIVILEGED_PERMISSION_CODES.includes(p.code))
+      .map((p) => p.id);
+  }
+
+  private async getRoleUserCounts(roleIds: string[]): Promise<Map<string, number>> {
+    const counts = new Map<string, number>();
+    if (!roleIds.length) return counts;
+
+    try {
+      const rows = await this.prisma.user.groupBy({
+        by: ['primaryRoleId'],
+        where: { primaryRoleId: { in: roleIds } },
+        _count: { _all: true },
+      });
+      for (const row of rows) {
+        counts.set(row.primaryRoleId, row._count._all);
+      }
+    } catch {
+      // memory mode — no user counts
+    }
+    return counts;
   }
 
   private async getRoleById(roleId: string): Promise<StoredRole> {
@@ -591,8 +799,8 @@ export class RbacManagementService {
     if (this.memoryInitialized) return;
 
     for (const role of ROLE_SEED) {
-      const code = role.code as RbacRole;
-      const id = DEV_ROLE_IDS[code];
+      const code = role.code;
+      const id = DEV_ROLE_IDS[code as RbacRole];
       this.memoryRoles.set(id, {
         id,
         code,
@@ -601,7 +809,7 @@ export class RbacManagementService {
         isSystem: role.isSystem,
       });
 
-      const permissionCodes = DEFAULT_ROLE_PERMISSIONS[code];
+      const permissionCodes = DEFAULT_ROLE_PERMISSIONS[code as RbacRole];
       const permissionIds = permissionCodes.map((permCode) => this.permissionIdForCode(permCode));
       this.memoryRolePermissions.set(id, new Set(permissionIds));
     }
@@ -624,4 +832,16 @@ export class RbacManagementService {
   private permissionIdForCode(code: PermissionCode): string {
     return `perm-${code}`;
   }
+}
+
+function slugifyRoleCode(name: string): string {
+  const slug = name
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  if (!slug) {
+    throw new BadRequestException('Role name must contain letters or numbers');
+  }
+  return slug.slice(0, 64);
 }

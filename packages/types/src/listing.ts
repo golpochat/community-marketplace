@@ -1,57 +1,73 @@
 export type ListingStatus =
-  | 'draft'
-  | 'pending_review'
-  | 'active'
-  | 'paused'
-  | 'expired'
-  | 'sold'
-  | 'ended'
-  | 'removed'
-  | 'rejected';
+  | "draft"
+  | "pending_review"
+  | "active"
+  | "paused"
+  | "expired"
+  | "sold"
+  | "ended"
+  | "removed"
+  | "rejected";
 
 export type ListingPackageType =
-  | 'FREE'
-  | 'PAID_7D'
-  | 'PAID_30D'
-  | 'PAID_60D'
-  | 'PAID_90D'
-  | 'PREMIUM_UNTIL_SOLD';
+  | "FREE"
+  | "PAID_7D"
+  | "PAID_30D"
+  | "PAID_60D"
+  | "PAID_90D"
+  | "PREMIUM_UNTIL_SOLD";
 
-import type { RbacRole } from './rbac';
-import type { ListingDeliverySelection, ListingDeliveryState } from './delivery';
-import type { ListingPricingState } from './pricing';
+import type { RbacRole } from "./rbac";
+import type {
+  ListingDeliverySelection,
+  ListingDeliveryState,
+} from "./delivery";
+import type { ListingPricingState } from "./pricing";
 
-export type ListingCondition = 'new' | 'like_new' | 'good' | 'fair' | 'poor';
+export type ListingCondition = "new" | "like_new" | "good" | "fair" | "poor";
 
 export type ListingSortOption =
-  | 'newest'
-  | 'price_low_to_high'
-  | 'price_high_to_low'
-  | 'nearest';
+  | "newest"
+  | "price_low_to_high"
+  | "price_high_to_low"
+  | "nearest"
+  | "mileage_low_to_high"
+  | "mileage_high_to_low"
+  | "year_newest"
+  | "year_oldest"
+  | "highest_rating";
 
 export type ListingFeedType =
-  | 'new_near_you'
-  | 'free_near_you'
-  | 'trending'
-  | 'recently_sold_near_you';
+  | "new_near_you"
+  | "free_near_you"
+  | "trending"
+  | "recently_sold_near_you";
 
 export type ListingAuditEventType =
-  | 'listing_created'
-  | 'listing_updated'
-  | 'listing_deleted'
-  | 'status_changed'
-  | 'listing_approved'
-  | 'listing_renewed'
-  | 'listing_changes_requested'
-  | 'listing_banned'
-  | 'listing_unbanned'
-  | 'image_added'
-  | 'image_removed'
-  | 'image_reordered';
+  | "listing_created"
+  | "listing_updated"
+  | "listing_deleted"
+  | "status_changed"
+  | "listing_approved"
+  | "listing_renewed"
+  | "listing_changes_requested"
+  | "listing_banned"
+  | "listing_unbanned"
+  | "image_added"
+  | "image_removed"
+  | "image_reordered";
 
-export type ListingReportStatus = 'open' | 'reviewing' | 'resolved' | 'dismissed';
+export type ListingReportStatus =
+  | "open"
+  | "reviewing"
+  | "resolved"
+  | "dismissed";
 
-export type ListingReportAction = 'ban_listing' | 'warn_seller' | 'dismiss' | 'none';
+export type ListingReportAction =
+  | "ban_listing"
+  | "warn_seller"
+  | "dismiss"
+  | "none";
 
 export interface ListingLocation {
   label: string;
@@ -59,10 +75,44 @@ export interface ListingLocation {
   longitude: number;
 }
 
+export interface ListingVehicleAttributes {
+  make?: string;
+  model?: string;
+  year?: number;
+  bodyType?: string;
+  color?: string;
+  engineSize?: number;
+  fuelType?: string;
+  transmission?: string;
+  mileage?: number;
+  mileageUnit?: "km" | "mi";
+  chassis?: string;
+  seats?: number;
+  doors?: number;
+  vin?: string;
+  nctExpiry?: string;
+  roadTaxExpiry?: string;
+  owners?: number;
+  auctionGrade?: string;
+  isHybrid?: boolean;
+  engineCc?: number;
+  steering?: "RHD" | "LHD";
+  /** Non-numeric or custom display values */
+  yearText?: string;
+  engineSizeText?: string;
+  seatsText?: string;
+  doorsText?: string;
+  conditionLabel?: string;
+  conditionSet?: boolean;
+}
+
 export interface ListingImage {
   id: string;
   listingId: string;
   url: string;
+  cardUrl?: string;
+  thumbUrl?: string;
+  tinyUrl?: string;
   order: number;
 }
 
@@ -81,7 +131,17 @@ export interface ListingSellerSummary {
   displayName?: string;
   email: string;
   verified?: boolean;
+  phoneVerified?: boolean;
   memberSince?: string;
+  activeListingCount?: number;
+  soldCount?: number;
+  averageRating?: number;
+  reviewCount?: number;
+  isAmbassador?: boolean;
+  isBusiness?: boolean;
+  responseRate?: number;
+  responseTimeMinutes?: number;
+  phone?: string;
 }
 
 export interface ListingReviewContext {
@@ -121,10 +181,12 @@ export interface Listing {
   activatedAt?: string;
   expiresAt?: string;
   endedAt?: string;
+  priceDroppedAt?: string;
   rejectionReason?: string;
   removalReason?: string;
   location: ListingLocation;
   images: ListingImage[];
+  attributes?: ListingVehicleAttributes;
   deliveryOptions?: ListingDeliverySelection[];
   delivery?: ListingDeliveryState;
   pricing?: ListingPricingState;
@@ -148,10 +210,20 @@ export interface ListingSummary {
   status: ListingStatus;
   condition: ListingCondition;
   categoryId: string;
+  categorySlug?: string;
   imageUrl?: string;
   distanceKm?: number;
   favoriteCount: number;
   createdAt: string;
+  updatedAt?: string;
+  activatedAt?: string;
+  deliverySummary?: string;
+  sellerVerified?: boolean;
+  sellerBusiness?: boolean;
+  sellerRating?: number;
+  sellerReviewCount?: number;
+  sellerSoldCount?: number;
+  attributes?: ListingVehicleAttributes;
 }
 
 export interface ListingUploadUrlResponse {
@@ -206,6 +278,31 @@ export interface ListingSearchFilters {
   sort?: ListingSortOption;
   page?: number;
   limit?: number;
+  deliveryAvailable?: boolean;
+  deliveryCollection?: boolean;
+  sellerVerified?: boolean;
+  sellerBusiness?: boolean;
+  minSellerRating?: number;
+  make?: string;
+  model?: string;
+  minYear?: number;
+  maxYear?: number;
+  minMileage?: number;
+  maxMileage?: number;
+  fuelType?: string;
+  transmission?: string;
+  bodyType?: string;
+  engineSize?: string;
+  seats?: string;
+  doors?: string;
+  brand?: string;
+  storage?: string;
+  material?: string;
+  serviceType?: string;
+  clothingSize?: string;
+  gender?: string;
+  area?: string;
+  freeOnly?: boolean;
 }
 
 export interface ListingAdminFilters {

@@ -1,5 +1,6 @@
-export const APP_NAME = 'Community Marketplace';
-export const APP_SHORT_NAME = 'CMarket';
+export const APP_NAME = 'SellNearby.ie';
+export const APP_SHORT_NAME = 'SellNearby';
+export const APP_BRAND_ABBR = 'SN';
 
 export const RBAC_ROLES = ['SUPER_ADMIN', 'ADMIN', 'SELLER', 'BUYER'] as const;
 export const USER_ROLES = RBAC_ROLES;

@@ -1,0 +1,29 @@
+import Link from 'next/link';
+
+import { ContentPageShell } from '@/components/public/content-page-shell';
+
+export const metadata = { title: 'Contact' };
+
+export default function ContactPage() {
+  return (
+    <ContentPageShell
+      title="Contact"
+      subtitle="Questions, feedback, or safety concerns — we read every message."
+    >
+      <p>
+        Email:{' '}
+        <a href="mailto:hello@community.marketplace" className="text-primary hover:underline">
+          hello@community.marketplace
+        </a>
+      </p>
+      <p className="mt-4">
+        For urgent safety issues, use <strong>Report listing</strong> or{' '}
+        <strong>Report user</strong> on the relevant page so our moderation queue can act quickly.
+      </p>
+      <p className="mt-4">
+        Read our <Link href="/safety" className="text-primary hover:underline">safety guide</Link>{' '}
+        before meeting buyers or sellers in person.
+      </p>
+    </ContentPageShell>
+  );
+}

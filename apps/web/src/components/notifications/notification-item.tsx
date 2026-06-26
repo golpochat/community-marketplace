@@ -42,7 +42,15 @@ export function NotificationItem({ notification, onMarkRead }: NotificationItemP
 
   if (notification.actionUrl) {
     return (
-      <Link href={notification.actionUrl} className={`${className} hover:bg-gray-50`}>
+      <Link
+        href={notification.actionUrl}
+        className={`${className} hover:bg-gray-50`}
+        onClick={() => {
+          if (!notification.read && onMarkRead) {
+            onMarkRead(notification.id);
+          }
+        }}
+      >
         {content}
       </Link>
     );

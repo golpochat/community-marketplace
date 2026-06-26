@@ -4,6 +4,7 @@ import { DatabaseModule } from '../../database/database.module';
 import { EventsModule } from '../../events/events.module';
 import { JobsModule } from '../../jobs/jobs.module';
 import { LibsModule } from '../../libs/libs.module';
+import { DevUploadModule } from '../dev-upload/dev-upload.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { SearchModule } from '../search/search.module';
 import { UsersModule } from '../users/users.module';
@@ -16,7 +17,9 @@ import { ListingAnalyticsService } from './services/listing-analytics.service';
 import { ListingAuditService } from './services/listing-audit.service';
 import { ListingFavoritesService } from './services/listing-favorites.service';
 import { ListingFeedsService } from './services/listing-feeds.service';
+import { CommunityStatsService } from './services/community-stats.service';
 import { ListingImagesService } from './services/listing-images.service';
+import { ListingImageProcessorService } from './services/listing-image-processor.service';
 import { ListingLifecycleService } from './services/listing-lifecycle.service';
 import { ListingExpiryJobService } from './services/listing-expiry.job';
 import { ListingR2StorageService } from './services/listing-r2-storage.service';
@@ -24,25 +27,33 @@ import { ListingReviewService } from './services/listing-review.service';
 import { ListingReportsService } from './services/listing-reports.service';
 import { ListingSearchService } from './services/listing-search.service';
 import { ListingVisibilityService } from './services/listing-visibility.service';
+import { SellerTrustService } from './services/seller-trust.service';
+import { GeocodingService } from './services/geocoding.service';
+import { NearbyAreasService } from './services/nearby-areas.service';
 import { ListingsCrudService } from './services/listings-crud.service';
 import { ListingsController } from './listings.controller';
 import { ListingsService } from './listings.service';
 import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
 
 @Module({
-  imports: [DatabaseModule, UtilsModule, EventsModule, LibsModule, JobsModule, SearchModule, UsersModule, NotificationsModule],
+  imports: [DatabaseModule, UtilsModule, EventsModule, LibsModule, JobsModule, SearchModule, UsersModule, NotificationsModule, DevUploadModule],
   controllers: [ListingsController],
   providers: [
     ListingsService,
     ListingsCrudService,
     CategoriesService,
     ListingImagesService,
+    ListingImageProcessorService,
     ListingR2StorageService,
     ListingAuditService,
     ListingLifecycleService,
     ListingExpiryJobService,
     ListingSearchService,
+    SellerTrustService,
+    GeocodingService,
+    NearbyAreasService,
     ListingFeedsService,
+    CommunityStatsService,
     ListingFavoritesService,
     ListingReportsService,
     ListingReviewService,
@@ -60,6 +71,7 @@ import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
     DeliveryOptionsService,
     ListingDeliveryService,
     ListingPricingService,
+    SellerTrustService,
   ],
 })
 export class ListingsModule {}

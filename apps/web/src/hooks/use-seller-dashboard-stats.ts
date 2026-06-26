@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { formatCurrency } from '@community-marketplace/utils';
 
+import { NOTIFICATIONS_UPDATED_EVENT } from '@/lib/notification-unread-events';
 import { chatService } from '@/services/chat.service';
 import { notificationsService } from '@/services/notifications.service';
 import { paymentsService } from '@/services/payments.service';
@@ -37,10 +38,10 @@ export function useSellerDashboardStats() {
     async function load() {
       setLoading(true);
       try {
-        const [analyticsRes, earnings, notifications, inbox] = await Promise.all([
+        const [analyticsRes, earnings, unreadNotifications, inbox] = await Promise.all([
           sellerService.getAnalyticsSummary().catch(() => null),
           paymentsService.getEarningsSummary().catch(() => null),
-          notificationsService.listSeller(1, 1).catch(() => null),
+          notificationsService.getUnreadCount('SELLER').catch(() => 0),
           chatService.getInbox(1, 50).catch(() => null),
         ]);
 
@@ -61,7 +62,7 @@ export function useSellerDashboardStats() {
           totalSales: analytics?.soldCount ?? 0,
           totalEarnings: formatCurrency(earnings?.totalEarnings ?? 0, earnings?.currency ?? 'EUR'),
           unreadMessages,
-          unreadNotifications: notifications?.unreadCount ?? 0,
+          unreadNotifications,
           totalViews: analytics?.totalViews ?? 0,
         });
       } finally {
@@ -70,8 +71,15 @@ export function useSellerDashboardStats() {
     }
 
     void load();
+
+    function handleNotificationsUpdated() {
+      void load();
+    }
+    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, handleNotificationsUpdated);
+
     return () => {
       cancelled = true;
+      window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, handleNotificationsUpdated);
     };
   }, []);
 

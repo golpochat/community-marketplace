@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import type { SharePlatform } from '@community-marketplace/types';
 import { Button } from '@community-marketplace/ui';
@@ -105,21 +106,27 @@ export function ShareListingModal({
     }
   }, [shortUrl, shareText, title, track, onClose]);
 
-  if (!open) return null;
-
   const links = shortUrl ? buildShareLinks(shortUrl, shareText, title) : null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  if (!open || typeof document === 'undefined') return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/50"
+        aria-label="Close share dialog"
+        onClick={onClose}
+      />
       <div
-        className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+        className="relative z-10 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="share-listing-title"
       >
         <div className="flex items-start justify-between gap-4">
           <h2 id="share-listing-title" className="text-lg font-semibold text-gray-900">
-            Share listing
+            Share with your friends
           </h2>
           <button
             type="button"
@@ -252,7 +259,8 @@ export function ShareListingModal({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -276,14 +284,14 @@ export function ShareListingButton({
         <button
           type="button"
           onClick={handleClick}
-          className={`flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-white hover:text-primary ${className ?? ''}`}
+          className={`relative z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-white hover:text-primary ${className ?? ''}`}
           aria-label="Share listing"
         >
           <ShareIcon className="h-4 w-4" />
         </button>
       ) : (
         <Button type="button" variant="outline" onClick={handleClick} className={className}>
-          Share Listing
+          Share
         </Button>
       )}
       <ShareListingModal

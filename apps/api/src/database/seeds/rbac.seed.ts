@@ -1,5 +1,4 @@
 import type { PrismaClient } from '@prisma/client';
-import { RbacRoleCode } from '@prisma/client';
 
 import { DEV_ROLE_IDS } from '../../common/constants/dev-role-ids';
 import {
@@ -78,7 +77,7 @@ async function seedRoles(prisma: PrismaClient): Promise<number> {
   let count = 0;
 
   for (const role of ROLE_SEED) {
-    const code = role.code as RbacRoleCode;
+    const code = role.code;
     const stableId = DEV_ROLE_IDS[code];
 
     await prisma.role.upsert({
@@ -137,7 +136,7 @@ async function seedRolePermissions(prisma: PrismaClient): Promise<number> {
   let count = 0;
 
   for (const [roleCode, permissionCodes] of Object.entries(ROLE_PERMISSION_SEED)) {
-    const role = roleByCode.get(roleCode as RbacRoleCode);
+    const role = roleByCode.get(roleCode);
     if (!role) continue;
 
     for (const code of permissionCodes) {
@@ -169,7 +168,7 @@ async function seedSuperAdminUser(
   config: RbacSeedConfig,
 ): Promise<RbacSeedResult['superAdmin']> {
   const superAdminRole = await prisma.role.findUnique({
-    where: { code: RbacRoleCode.SUPER_ADMIN },
+    where: { code: 'SUPER_ADMIN' },
   });
 
   if (!superAdminRole) {

@@ -24,9 +24,27 @@ export class ListingsController {
   }
 
   @Public()
+  @Get('community-stats')
+  communityStats() {
+    return this.listingsService.getCommunityStats();
+  }
+
+  @Public()
   @Get('feeds')
   feeds(@Query() query: Record<string, string>) {
     return this.listingsService.getFeed(query);
+  }
+
+  @Public()
+  @Get('nearby-areas')
+  nearbyAreas(@Query() query: Record<string, string>) {
+    return this.listingsService.getNearbyAreas(query);
+  }
+
+  @Public()
+  @Get('reverse-geocode')
+  reverseGeocode(@Query() query: Record<string, string>) {
+    return this.listingsService.reverseGeocode(query);
   }
 
   @Public()
@@ -39,6 +57,12 @@ export class ListingsController {
   @Get('categories')
   findCategories() {
     return this.listingsService.findCategories();
+  }
+
+  @Public()
+  @Get('sellers/:sellerId/trust')
+  sellerTrust(@Param('sellerId') sellerId: string) {
+    return this.listingsService.getSellerTrust(sellerId);
   }
 
   @Public()

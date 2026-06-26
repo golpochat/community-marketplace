@@ -30,7 +30,7 @@ export function adminApiPath(role: AdminApiRole, path: string): string {
     return `${API_NAMESPACES.SUPER_ADMIN}${path}`;
   }
 
-  if (role === 'SUPER_ADMIN' && superAdminUsesAdminNamespace(path)) {
+  if (role === 'SUPER_ADMIN' && (superAdminUsesAdminNamespace(path) || path.startsWith('/rbac'))) {
     return `${API_NAMESPACES.ADMIN}${path}`;
   }
 

@@ -17,6 +17,8 @@ interface ProfileSettingsFormProps {
   loadProfile?: () => Promise<UserProfile>;
   saveProfile?: (body: Record<string, unknown>) => Promise<UserProfile>;
   notificationRole?: 'BUYER' | 'SELLER';
+  /** Buyer/seller only — admin accounts use platform settings elsewhere. */
+  includeNotificationPreferences?: boolean;
 }
 
 const NOTIFICATION_TOGGLES: Array<{ key: keyof NotificationPreferences; label: string }> = [
@@ -35,6 +37,7 @@ export function ProfileSettingsForm({
   loadProfile,
   saveProfile,
   notificationRole = 'BUYER',
+  includeNotificationPreferences = true,
 }: ProfileSettingsFormProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [settings, setSettings] = useState<UserSettings | null>(null);
@@ -54,14 +57,17 @@ export function ProfileSettingsForm({
     setLoading(true);
     setError(null);
     try {
-      const [profileData, settingsData, preferencesData] = await Promise.all([
+      const [profileData, settingsData] = await Promise.all([
         loadProfile ? loadProfile() : userService.getMyProfile(),
         userService.getMySettings(),
-        notificationsService.getPreferences(notificationRole),
       ]);
+      let preferencesData: NotificationPreferences | null = null;
+      if (includeNotificationPreferences) {
+        preferencesData = (await notificationsService.getPreferences(notificationRole)) ?? {};
+      }
       setProfile(profileData);
       setSettings(settingsData);
-      setNotificationPreferences(preferencesData ?? {});
+      setNotificationPreferences(preferencesData);
       setDisplayName(profileData.displayName ?? '');
       setBio(profileData.bio ?? '');
       setPhone(profileData.phone ?? '');
@@ -70,7 +76,7 @@ export function ProfileSettingsForm({
     } finally {
       setLoading(false);
     }
-  }, [loadProfile, notificationRole]);
+  }, [loadProfile, notificationRole, includeNotificationPreferences]);
 
   useEffect(() => {
     void load();
@@ -173,7 +179,7 @@ export function ProfileSettingsForm({
                 </pre>
               )}
             </Card>
-            {notificationPreferences && (
+            {notificationPreferences && includeNotificationPreferences && (
               <Card title="Notifications">
                 <div className="space-y-3">
                   {NOTIFICATION_TOGGLES.map(({ key, label }) => (

@@ -6,7 +6,7 @@ import type { ListingImage } from '@community-marketplace/types';
 import { Button } from '@community-marketplace/ui';
 import { cn } from '@community-marketplace/ui';
 
-import { resolveListingImageSrc } from '@/lib/listing-image-url';
+import { listingImageVariantUrl, resolveListingImageSrc } from '@/lib/listing-image-url';
 
 interface ExistingListingPhotosProps {
   images: ListingImage[];
@@ -131,11 +131,13 @@ function ExistingPhotoThumb({
   onSetCover: () => void;
   reordering?: boolean;
 }) {
-  const [src, setSrc] = useState(() => resolveListingImageSrc(image.url));
+  const [src, setSrc] = useState(() =>
+    resolveListingImageSrc(listingImageVariantUrl(image.url, 'tiny') ?? image.url),
+  );
   const hasSrc = Boolean(src);
 
   useEffect(() => {
-    setSrc(resolveListingImageSrc(image.url));
+    setSrc(resolveListingImageSrc(listingImageVariantUrl(image.url, 'tiny') ?? image.url));
   }, [image.url]);
 
   return (

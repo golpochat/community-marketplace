@@ -1,19 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import type { Listing, ListingSummary } from '@community-marketplace/types';
+import { listingIsHybrid } from '@community-marketplace/utils';
 
-import { Gallery } from '@/components/listings/gallery';
-import { SellerCard } from '@/components/listings/seller-card';
-import { ChatButton } from '@/components/listings/chat-button';
-import { SaveButton } from '@/components/listings/save-button';
-import { ReportButton } from '@/components/listings/report-button';
 import { DescriptionSection } from '@/components/listings/description-section';
-import { ShareListingButton } from '@/components/listings/ShareListingButton';
-import { ListingDeliveryDisplay } from '@/components/listings/listing-delivery-display';
+import { Gallery } from '@/components/listings/gallery';
+import { ListingBadge } from '@/components/listings/listing-badge';
+import { ListingDetailSidebar } from '@/components/listings/listing-detail-sidebar';
 import { SimilarListings } from '@/components/listings/similar-listings';
 import { Skeleton } from '@/components/shared/skeleton';
 import { getListingUnavailableMessage } from '@/lib/listing-availability';
@@ -62,7 +59,7 @@ export function ListingDetailClient({ id }: ListingDetailClientProps) {
     return (
       <div className="mx-auto max-w-6xl px-4 py-8">
         <Skeleton className="h-4 w-32" />
-        <Skeleton className="mt-6 h-80 w-full rounded-xl" />
+        <Skeleton className="mt-6 aspect-video w-full rounded-xl" />
         <Skeleton className="mt-6 h-8 w-2/3" />
       </div>
     );
@@ -89,6 +86,8 @@ export function ListingDetailClient({ id }: ListingDetailClientProps) {
     );
   }
 
+  const showHybridNearTitle = listingIsHybrid(listing);
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <Link href="/listings" className="text-sm text-primary hover:text-primary/90">
@@ -96,34 +95,33 @@ export function ListingDetailClient({ id }: ListingDetailClientProps) {
       </Link>
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
-        <div>
-          <Gallery
-            images={listing.images}
-            title={listing.title}
-            originalPrice={listing.originalPrice}
-            salePrice={listing.salePrice}
-            discountPercent={listing.discountPercent}
-          />
-          <h1 className="mt-6 text-2xl font-bold text-gray-900 sm:text-3xl">{listing.title}</h1>
-          <DescriptionSection listing={listing} />
-          <ListingDeliveryDisplay options={listing.deliveryOptions} />
-          <div className="mt-6 flex flex-wrap gap-3">
-            <ChatButton listingId={listing.id} sellerId={listing.sellerId} />
-            <SaveButton listingId={listing.id} initialSaved={initialSaved} />
-            <ShareListingButton listingId={listing.id} title={listing.title} />
-            <ReportButton listingId={listing.id} />
+        <div className="min-w-0">
+          <Gallery images={listing.images} title={listing.title} />
+
+          <div className="mt-6">
+            <div className="flex flex-wrap items-start gap-2">
+              <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{listing.title}</h1>
+              {showHybridNearTitle && (
+                <ListingBadge tone="success" className="mt-1 capitalize">
+                  Hybrid model
+                </ListingBadge>
+              )}
+            </div>
+            {listing.status === 'active' && (
+              <p className="mt-1 text-xs text-gray-500">Active listing</p>
+            )}
           </div>
+
+          <DescriptionSection listing={listing} />
           <SimilarListings listings={similar} />
         </div>
-        <aside>
-          <SellerCard
-            seller={listing.seller}
-            sellerName={sellerDisplayName}
-            sellerSlug={sellerSlug}
-            verified={!!sellerSlug || listing.seller?.verified}
-            location={listing.location.label}
-          />
-        </aside>
+
+        <ListingDetailSidebar
+          listing={listing}
+          sellerDisplayName={sellerDisplayName}
+          sellerSlug={sellerSlug}
+          initialSaved={initialSaved}
+        />
       </div>
     </div>
   );

@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ListingStatus, ModerationReport, PlatformSettings, UserProfile, UserVerification } from '@community-marketplace/types';
-import { formatCurrency } from '@community-marketplace/utils';
+import type { Category, ListingStatus, ModerationReport, PlatformSettings, UserProfile, UserVerification } from '@community-marketplace/types';
+import { formatCurrency, formatDateTime } from '@community-marketplace/utils';
 import {
   Card,
   IconActionButton,
@@ -12,12 +12,19 @@ import {
   TruncatedText,
 } from '@community-marketplace/ui-dashboard';
 
+import { AdminRbacManager } from '@/components/dashboard/admin-rbac-manager';
 import { DashboardPageShell, DataTable, KeyValueList } from '@/components/dashboard/async-resource';
 import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
 import { AdminListingReviewDialog } from '@/components/dashboard/admin-listing-review-dialog';
 import { AdminListingStatusHistoryDialog } from '@/components/dashboard/admin-listing-status-history-dialog';
+import {
+  formatNotificationChannelLabel,
+  formatNotificationTypeLabel,
+  NotificationDeliveryStatusBadge,
+} from '@/components/notifications/notification-delivery-labels';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { adminService, type AdminServiceRole } from '@/services/admin.service';
+import { listingsService } from '@/services/listings.service';
 
 function moderationReportTarget(report: {
   listingId?: string;
@@ -133,6 +140,14 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
   const [reviewListingId, setReviewListingId] = useState<string | null>(null);
   const [historyListing, setHistoryListing] = useState<{ id: string; title: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<ListingStatus | ''>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [sellerFilter, setSellerFilter] = useState('');
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    void listingsService.getCategories().then(setCategories).catch(() => setCategories([]));
+  }, []);
 
   const fetchListings = useCallback(
     (page: number, limit: number) =>
@@ -140,8 +155,11 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
         page,
         limit,
         ...(statusFilter ? { status: statusFilter } : {}),
+        ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
+        ...(categoryFilter ? { categoryId: categoryFilter } : {}),
+        ...(sellerFilter.trim() ? { sellerId: sellerFilter.trim() } : {}),
       }),
-    [role, statusFilter],
+    [role, statusFilter, searchQuery, categoryFilter, sellerFilter],
   );
 
   const { page, setPage, data, meta, loading, error, totalPages, reload } = usePaginatedQuery({
@@ -168,7 +186,13 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
       <TruncatedText key={`title-${listing.id}`} text={listing.title} />,
       formatCurrency(listing.price, listing.currency),
       <ListingStatusBadge key={`status-${listing.id}`} status={listing.status} />,
-      new Date(listing.createdAt).toLocaleDateString(),
+      <div key={`dates-${listing.id}`} className="space-y-0.5 text-xs text-gray-600">
+        <div>Created: {formatDateTime(listing.createdAt)}</div>
+        {listing.activatedAt && <div>Activated: {formatDateTime(listing.activatedAt)}</div>}
+        <div>Updated: {formatDateTime(listing.updatedAt)}</div>
+        {listing.expiresAt && <div>Expires: {formatDateTime(listing.expiresAt)}</div>}
+        {listing.endedAt && <div>Ended: {formatDateTime(listing.endedAt)}</div>}
+      </div>,
       listing.status === 'pending_review' || listing.status === 'draft' ? (
         <IconActionGroup key={`actions-${listing.id}`}>
           <IconActionButton
@@ -287,6 +311,44 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
       />
       <Card>
         <div className="mb-4 flex flex-wrap items-center gap-3">
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Search title, description, seller…"
+            className="min-w-[220px] flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+            aria-label="Search listings"
+          />
+          <select
+            value={categoryFilter}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setPage(1);
+            }}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+            aria-label="Filter listings by category"
+          >
+            <option value="">All categories</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={sellerFilter}
+            onChange={(e) => {
+              setSellerFilter(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Seller user ID"
+            className="min-w-[180px] rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+            aria-label="Filter listings by seller ID"
+          />
           <select
             value={statusFilter}
             onChange={(e) => {
@@ -308,7 +370,7 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
             <option value="rejected">Rejected</option>
           </select>
         </div>
-        <DataTable columns={['Title', 'Price', 'Status', 'Created', 'Actions']} rows={rows} />
+        <DataTable columns={['Title', 'Price', 'Status', 'Timestamps', 'Actions']} rows={rows} />
         <AdminTableFooter
           page={page}
           totalPages={totalPages}
@@ -649,51 +711,52 @@ export function AdminAuditLogPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function AdminNotificationsPage({ role }: { role: AdminServiceRole }) {
-  const [rows, setRows] = useState<Array<Array<React.ReactNode>>>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const fetchLogs = useCallback(
+    (page: number, limit: number) => adminService.listNotificationLogs(role, { page, limit }),
+    [role],
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void adminService
-      .listNotificationLogs(role)
-      .then((result) => {
-        if (cancelled) return;
-        setRows(
-          result.data.map((log, index) => {
-            const entry = log as Record<string, unknown>;
-            return [
-              String(entry.id ?? index),
-              String(entry.channel ?? '—'),
-              String(entry.status ?? '—'),
-              String(entry.createdAt ?? '—'),
-            ];
-          }),
-        );
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [role]);
+  const { page, setPage, data: logs, meta, loading, error, totalPages } = usePaginatedQuery({
+    fetcher: fetchLogs,
+  });
+
+  const rows = logs.map((log) => [
+    <div key={`${log.id}-title`} className="min-w-0">
+      <p className="font-medium text-gray-900">
+        {log.notificationTitle ?? 'System notification'}
+      </p>
+      {log.notificationType && (
+        <p className="text-xs text-gray-500">{formatNotificationTypeLabel(log.notificationType)}</p>
+      )}
+    </div>,
+    log.recipientLabel ?? '—',
+    formatNotificationChannelLabel(log.channel),
+    <NotificationDeliveryStatusBadge key={`${log.id}-status`} status={log.status} />,
+    log.attempts > 1 ? `${log.attempts} attempts` : '1 attempt',
+    formatDateTime(log.createdAt),
+  ]);
 
   return (
     <DashboardPageShell
       title="Notifications"
-      description="Broadcast and delivery logs for platform notifications."
+      description="Recent deliveries across in-app, email, and push channels."
       loading={loading}
       error={error}
       empty={!loading && !error && rows.length === 0}
-      emptyTitle="No notification logs"
+      emptyTitle="No deliveries yet"
+      emptyDescription="Notification delivery attempts will appear here once users receive messages."
     >
       <Card>
-        <DataTable columns={['ID', 'Channel', 'Status', 'Created']} rows={rows} />
+        <DataTable
+          columns={['Notification', 'Recipient', 'Channel', 'Status', 'Attempts', 'Sent']}
+          rows={rows}
+        />
+        <AdminTableFooter
+          page={page}
+          totalPages={totalPages}
+          total={meta.total}
+          onPageChange={setPage}
+        />
       </Card>
     </DashboardPageShell>
   );
@@ -827,43 +890,12 @@ export function SuperAdminAdminsPage() {
 }
 
 export function AdminRbacPage({ role }: { role: AdminServiceRole }) {
-  const [matrix, setMatrix] = useState<Record<string, string[]> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void adminService
-      .getRoleMatrix(role)
-      .then((data) => {
-        if (!cancelled) setMatrix(data);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [role]);
-
   return (
     <DashboardPageShell
       title="RBAC"
-      description="Roles, permissions, and access control policies."
-      loading={loading}
-      error={error}
-      empty={!loading && !error && !matrix}
-      emptyTitle="RBAC data unavailable"
+      description="Create custom roles, assign permissions, and manage access policies."
     >
-      <Card title="Role permission matrix">
-        <pre className="overflow-auto rounded-lg bg-gray-50 p-4 text-xs text-gray-900">
-          {JSON.stringify(matrix, null, 2)}
-        </pre>
-      </Card>
+      <AdminRbacManager role={role} />
     </DashboardPageShell>
   );
 }

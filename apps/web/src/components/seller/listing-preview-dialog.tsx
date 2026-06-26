@@ -105,7 +105,6 @@ export function ListingPreviewDialog({
                   originalPrice={pricingMeta.originalPrice}
                   salePrice={pricingMeta.salePrice}
                   discountPercent={pricingMeta.discountPercent}
-                  size="lg"
                 />
               )}
             </div>

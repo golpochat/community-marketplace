@@ -23,6 +23,7 @@ export interface DashboardLayoutProps {
   settingsHref: string;
   onLogout: () => void | Promise<void>;
   brand?: string;
+  brandAbbr?: string;
   topbarTitle?: string;
   topbarActions?: ReactNode;
   footerCopyright?: string;
@@ -37,6 +38,7 @@ function DashboardLayoutFrame({
   settingsHref,
   onLogout,
   brand,
+  brandAbbr,
   topbarTitle,
   topbarActions,
   footerCopyright,
@@ -46,7 +48,7 @@ function DashboardLayoutFrame({
   return (
     <ThemeProvider role={role} theme={theme}>
       <div className="flex min-h-screen bg-[hsl(var(--dashboard-main-bg))] text-[hsl(var(--dashboard-main-fg))]">
-        <Sidebar role={role} brand={brand} />
+        <Sidebar role={role} brand={brand} brandAbbr={brandAbbr} />
         {mobileOpen ? (
           <button
             type="button"
@@ -61,7 +63,7 @@ function DashboardLayoutFrame({
             mobileOpen ? 'translate-x-0' : '-translate-x-full',
           )}
         >
-          <Sidebar role={role} brand={brand} mobile />
+          <Sidebar role={role} brand={brand} brandAbbr={brandAbbr} mobile />
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar

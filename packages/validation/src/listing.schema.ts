@@ -1,50 +1,124 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-import { DEFAULT_CURRENCY } from '@community-marketplace/config/constants';
+import { DEFAULT_CURRENCY } from "@community-marketplace/config/constants";
 
-import { isoDateSchema, paginationSchema, uuidSchema } from './common.schema';
+import { isoDateSchema, paginationSchema, uuidSchema } from "./common.schema";
+
+export const LISTING_TITLE_MIN_LENGTH = 10;
+export const LISTING_TITLE_MAX_LENGTH = 100;
+export const LISTING_DESCRIPTION_SOFT_MAX = 2000;
+export const LISTING_DESCRIPTION_HARD_MAX = 5000;
+
+function isDescriptiveListingTitle(value: string): boolean {
+  const trimmed = value.trim();
+  if (trimmed.length < LISTING_TITLE_MIN_LENGTH) return false;
+  if (trimmed.length > LISTING_TITLE_MAX_LENGTH) return false;
+
+  const normalized = trimmed.toLowerCase();
+  const junk = new Set([
+    "car",
+    "nice",
+    "item",
+    "sale",
+    "test",
+    "hello",
+    "hi",
+    "baby cott",
+    "cot",
+    "bike",
+    "phone",
+    "laptop",
+    "table",
+    "chair",
+    "sofa",
+    "free",
+    "stuff",
+    "things",
+    "for sale",
+    "listing",
+  ]);
+  if (junk.has(normalized)) return false;
+
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (words.length === 1 && words[0]!.length < 5) return false;
+  if (words.length >= 2) {
+    return words.every((word) => word.length >= 2);
+  }
+
+  return trimmed.length >= 15;
+}
+
+export const listingTitleFieldSchema = z
+  .string()
+  .trim()
+  .min(
+    LISTING_TITLE_MIN_LENGTH,
+    `Title must be at least ${LISTING_TITLE_MIN_LENGTH} characters`,
+  )
+  .max(
+    LISTING_TITLE_MAX_LENGTH,
+    `Title must be at most ${LISTING_TITLE_MAX_LENGTH} characters`,
+  )
+  .refine(isDescriptiveListingTitle, {
+    message:
+      'Use a descriptive title with at least two words (e.g. "2015 Nissan Note automatic").',
+  });
+
+export const listingDescriptionFieldSchema = z
+  .string()
+  .trim()
+  .min(10, "Description must be at least 10 characters")
+  .max(
+    LISTING_DESCRIPTION_HARD_MAX,
+    `Description must be at most ${LISTING_DESCRIPTION_HARD_MAX} characters`,
+  );
 
 export const listingStatusSchema = z.enum([
-  'draft',
-  'pending_review',
-  'active',
-  'paused',
-  'expired',
-  'sold',
-  'ended',
-  'removed',
-  'rejected',
+  "draft",
+  "pending_review",
+  "active",
+  "paused",
+  "expired",
+  "sold",
+  "ended",
+  "removed",
+  "rejected",
 ]);
 
 export const listingPackageTypeSchema = z.enum([
-  'FREE',
-  'PAID_7D',
-  'PAID_30D',
-  'PAID_60D',
-  'PAID_90D',
-  'PREMIUM_UNTIL_SOLD',
+  "FREE",
+  "PAID_7D",
+  "PAID_30D",
+  "PAID_60D",
+  "PAID_90D",
+  "PREMIUM_UNTIL_SOLD",
 ]);
 
 export const listingConditionSchema = z.enum([
-  'new',
-  'like_new',
-  'good',
-  'fair',
-  'poor',
+  "new",
+  "like_new",
+  "good",
+  "fair",
+  "poor",
 ]);
 
 export const listingSortSchema = z.enum([
-  'newest',
-  'price_low_to_high',
-  'price_high_to_low',
-  'nearest',
+  "newest",
+  "price_low_to_high",
+  "price_high_to_low",
+  "nearest",
+  "mileage_low_to_high",
+  "mileage_high_to_low",
+  "year_newest",
+  "year_oldest",
+  "highest_rating",
 ]);
 
 export const listingFeedTypeSchema = z.enum([
-  'new_near_you',
-  'free_near_you',
-  'trending',
-  'recently_sold_near_you',
+  "new_near_you",
+  "free_near_you",
+  "trending",
+  "recently_sold_near_you",
 ]);
 
 export const listingLocationSchema = z.object({
@@ -75,8 +149,8 @@ export const categorySchema = z.object({
 export const listingSchema = z.object({
   id: uuidSchema,
   sellerId: uuidSchema,
-  title: z.string().min(3).max(200),
-  description: z.string().min(10).max(5000),
+  title: listingTitleFieldSchema,
+  description: listingDescriptionFieldSchema,
   price: z.number().min(0).max(1_000_000),
   currency: z.string().length(3).toUpperCase(),
   categoryId: uuidSchema,
@@ -97,7 +171,7 @@ export const listingSchema = z.object({
 
 export const listingSummarySchema = z.object({
   id: uuidSchema,
-  title: z.string().min(3).max(200),
+  title: listingTitleFieldSchema,
   price: z.number().min(0),
   originalPrice: z.number().min(0).optional(),
   salePrice: z.number().min(0).optional(),
@@ -111,11 +185,20 @@ export const listingSummarySchema = z.object({
   distanceKm: z.number().min(0).optional(),
   favoriteCount: z.number().int().min(0),
   createdAt: isoDateSchema,
+  updatedAt: isoDateSchema.optional(),
+  activatedAt: isoDateSchema.optional(),
+  deliverySummary: z.string().max(80).optional(),
+  sellerVerified: z.boolean().optional(),
+  sellerBusiness: z.boolean().optional(),
+  sellerRating: z.number().min(0).max(5).optional(),
+  sellerReviewCount: z.number().int().min(0).optional(),
+  categorySlug: z.string().optional(),
+  attributes: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const createListingSchema = z.object({
-  title: z.string().min(3).max(200),
-  description: z.string().min(10).max(5000),
+  title: listingTitleFieldSchema,
+  description: listingDescriptionFieldSchema,
   price: z.number().min(0).max(1_000_000),
   originalPrice: z.number().min(0.01).max(1_000_000).optional().nullable(),
   salePrice: z.number().min(0).max(1_000_000).optional().nullable(),
@@ -123,21 +206,24 @@ export const createListingSchema = z.object({
   categoryId: uuidSchema,
   condition: listingConditionSchema,
   location: listingLocationSchema,
-  deliverySelections: z.array(
-    z.object({
-      deliveryOptionId: uuidSchema,
-      customLabel: z.string().min(1).max(120).optional(),
-      customPrice: z.number().min(0).max(10_000).optional(),
-    }),
-  ).min(1).max(20).optional(),
-  status: z.enum(['draft', 'active']).optional().default('draft'),
+  deliverySelections: z
+    .array(
+      z.object({
+        deliveryOptionId: uuidSchema,
+        customLabel: z.string().min(1).max(120).optional(),
+        customPrice: z.number().min(0).max(10_000).optional(),
+      }),
+    )
+    .min(1)
+    .max(20)
+    .optional(),
+  attributes: z.record(z.string(), z.unknown()).optional(),
+  status: z.enum(["draft", "active"]).optional().default("draft"),
 });
 
-export const updateListingSchema = createListingSchema
-  .partial()
-  .extend({
-    status: listingStatusSchema.optional(),
-  });
+export const updateListingSchema = createListingSchema.partial().extend({
+  status: listingStatusSchema.optional(),
+});
 
 export const listingSearchFiltersSchema = paginationSchema.extend({
   q: z.string().max(200).optional(),
@@ -148,22 +234,39 @@ export const listingSearchFiltersSchema = paginationSchema.extend({
   latitude: z.coerce.number().min(-90).max(90).optional(),
   longitude: z.coerce.number().min(-180).max(180).optional(),
   radiusKm: z.coerce.number().min(0.1).max(500).optional(),
-  sort: listingSortSchema.optional().default('newest'),
+  sort: listingSortSchema.optional().default("newest"),
 });
 
 export const listingFeedQuerySchema = z.object({
   feed: listingFeedTypeSchema,
   latitude: z.coerce.number().min(-90).max(90),
   longitude: z.coerce.number().min(-180).max(180),
-  radiusKm: z.coerce.number().min(0.1).max(100).optional().default(25),
+  radiusKm: z.coerce.number().min(0.1).max(100).optional().default(10),
+  area: z.string().max(120).optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
   limit: z.coerce.number().int().min(1).max(50).optional().default(20),
 });
 
+export const nearbyAreasQuerySchema = z.object({
+  latitude: z.coerce.number().min(-90).max(90),
+  longitude: z.coerce.number().min(-180).max(180),
+  radiusKm: z.coerce.number().min(5).max(50).optional().default(20),
+  limit: z.coerce.number().int().min(3).max(5).optional().default(5),
+});
+
+export const reverseGeocodeQuerySchema = z.object({
+  latitude: z.coerce.number().min(-90).max(90),
+  longitude: z.coerce.number().min(-180).max(180),
+});
+
 export const listingImageUploadRequestSchema = z.object({
-  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
   fileName: z.string().max(200).optional(),
-  fileSizeBytes: z.number().int().min(1).max(5 * 1024 * 1024),
+  fileSizeBytes: z
+    .number()
+    .int()
+    .min(1)
+    .max(5 * 1024 * 1024),
 });
 
 export const confirmListingImagesSchema = z.object({
@@ -207,11 +310,11 @@ export const removeListingSchema = z.object({
 });
 
 export const restoreListingSchema = z.object({
-  targetStatus: z.enum(['expired', 'draft']).optional().default('expired'),
+  targetStatus: z.enum(["expired", "draft"]).optional().default("expired"),
 });
 
 export const listingModerationActionSchema = z.object({
-  action: z.enum(['ban_listing', 'warn_seller', 'dismiss', 'none']),
+  action: z.enum(["ban_listing", "warn_seller", "dismiss", "none"]),
   moderationNotes: z.string().max(2000).optional(),
   warnMessage: z.string().max(2000).optional(),
 });
@@ -235,8 +338,14 @@ export type ListingInput = z.infer<typeof listingSchema>;
 export type ListingSummaryInput = z.infer<typeof listingSummarySchema>;
 export type CreateListingInput = z.infer<typeof createListingSchema>;
 export type UpdateListingInput = z.infer<typeof updateListingSchema>;
-export type ListingSearchFiltersInput = z.infer<typeof listingSearchFiltersSchema>;
+export type ListingSearchFiltersInput = z.infer<
+  typeof listingSearchFiltersSchema
+>;
 export type ListingFeedQueryInput = z.infer<typeof listingFeedQuerySchema>;
 export type ReportListingInput = z.infer<typeof reportListingSchema>;
-export type ListingModerationActionInput = z.infer<typeof listingModerationActionSchema>;
-export type ListingAdminFiltersInput = z.infer<typeof listingAdminFiltersSchema>;
+export type ListingModerationActionInput = z.infer<
+  typeof listingModerationActionSchema
+>;
+export type ListingAdminFiltersInput = z.infer<
+  typeof listingAdminFiltersSchema
+>;

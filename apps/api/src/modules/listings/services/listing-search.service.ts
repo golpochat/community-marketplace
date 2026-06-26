@@ -9,9 +9,36 @@ import { SearchSemanticService } from '../../search/services/search-semantic.ser
 import {
   haversineKm,
   listingInclude,
-  mapListingSummary,
+  mapListingSummaryWithTrust,
+  type ListingWithRelations,
 } from '../mappers/listing.mapper';
+import {
+  applyExtendedListingFilters,
+  applyExtendedListingSort,
+  hasExtendedSearchFilters,
+  paginateItems,
+} from './listing-search-filters.util';
 import { ListingVisibilityService } from './listing-visibility.service';
+import { SellerTrustService } from './seller-trust.service';
+
+function listingHasDeliveryAvailable(summary?: string): boolean {
+  if (!summary) return false;
+  return summary !== 'Collection only';
+}
+
+function applyDeliveryFilter<T extends { deliverySummary?: string }>(
+  items: T[],
+  deliveryAvailable?: boolean,
+  deliveryCollection?: boolean,
+): T[] {
+  if (deliveryAvailable) {
+    return items.filter((item) => listingHasDeliveryAvailable(item.deliverySummary));
+  }
+  if (deliveryCollection) {
+    return items.filter((item) => item.deliverySummary === 'Collection only');
+  }
+  return items;
+}
 
 @Injectable()
 export class ListingSearchService {
@@ -20,10 +47,25 @@ export class ListingSearchService {
     private readonly meilisearch: MeilisearchService,
     private readonly semantic: SearchSemanticService,
     private readonly visibility: ListingVisibilityService,
+    private readonly sellerTrust: SellerTrustService,
   ) {}
 
   async search(input: unknown) {
     const filters = listingSearchQuerySchema.parse(input);
+    const needsExtendedProcessing =
+      hasExtendedSearchFilters(filters) ||
+      Boolean(filters.area?.trim()) ||
+      filters.freeOnly === true ||
+      filters.sort === 'mileage_low_to_high' ||
+      filters.sort === 'mileage_high_to_low' ||
+      filters.sort === 'year_newest' ||
+      filters.sort === 'year_oldest' ||
+      filters.sort === 'highest_rating';
+
+    if (needsExtendedProcessing) {
+      return this.searchDatabase(filters);
+    }
+
     const offset = filters.cursor
       ? 0
       : (filters.page - 1) * filters.limit;
@@ -59,21 +101,23 @@ export class ListingSearchService {
         include: listingInclude,
       });
       const rowMap = new Map(rows.map((r) => [r.id, r]));
-      const data = ids
+      const orderedRows = ids
         .map((id) => rowMap.get(id))
-        .filter((r): r is NonNullable<typeof r> => Boolean(r))
-        .map((row) => {
-          const distanceKm =
-            filters.latitude !== undefined && filters.longitude !== undefined
-              ? haversineKm(
-                  filters.latitude,
-                  filters.longitude,
-                  Number(row.latitude),
-                  Number(row.longitude),
-                )
-              : undefined;
-          return mapListingSummary(row, distanceKm);
-        });
+        .filter((r): r is ListingWithRelations => Boolean(r));
+      const data = applyDeliveryFilter(
+        await this.summariesFromRows(orderedRows, (row) =>
+          filters.latitude !== undefined && filters.longitude !== undefined
+            ? haversineKm(
+                filters.latitude,
+                filters.longitude,
+                Number(row.latitude),
+                Number(row.longitude),
+              )
+            : undefined,
+        ),
+        filters.deliveryAvailable,
+        filters.deliveryCollection,
+      );
 
       const lastHit = hits[hits.length - 1] as { createdAt?: number } | undefined;
       const nextCursor =
@@ -89,18 +133,6 @@ export class ListingSearchService {
           total: meiliResult.estimatedTotalHits ?? data.length,
           totalPages: Math.ceil((meiliResult.estimatedTotalHits ?? data.length) / filters.limit),
           nextCursor,
-        },
-      };
-    }
-
-    if (this.meilisearch.isAvailable() && filters.q) {
-      return {
-        data: [],
-        meta: {
-          page: filters.page,
-          limit: filters.limit,
-          total: 0,
-          totalPages: 0,
         },
       };
     }
@@ -123,6 +155,51 @@ export class ListingSearchService {
             },
           }
         : {}),
+      ...(filters.deliveryAvailable
+        ? {
+            deliveryOptions: {
+              some: {
+                deliveryOption: {
+                  zone: { in: ['LOCAL', 'NATIONAL', 'CUSTOM'] },
+                },
+              },
+            },
+          }
+        : {}),
+      ...(filters.deliveryCollection
+        ? {
+            AND: [
+              {
+                deliveryOptions: {
+                  some: { deliveryOption: { zone: 'COLLECTION' } },
+                },
+              },
+              {
+                deliveryOptions: {
+                  none: {
+                    deliveryOption: {
+                      zone: { in: ['LOCAL', 'NATIONAL', 'CUSTOM'] },
+                    },
+                  },
+                },
+              },
+            ],
+          }
+        : {}),
+      ...(filters.sellerVerified
+        ? {
+            seller: {
+              verifications: {
+                some: { badgeGranted: true, status: 'approved' },
+              },
+            },
+          }
+        : {}),
+      ...(filters.sellerBusiness === true
+        ? { seller: { profile: { isBusinessAccount: true } } }
+        : filters.sellerBusiness === false
+          ? { seller: { profile: { isBusinessAccount: false } } }
+          : {}),
       ...(filters.q
         ? {
             OR: [
@@ -131,6 +208,12 @@ export class ListingSearchService {
             ],
           }
         : {}),
+      ...(filters.area?.trim()
+        ? {
+            locationLabel: { contains: filters.area.trim(), mode: 'insensitive' },
+          }
+        : {}),
+      ...(filters.freeOnly ? { price: 0 } : {}),
     };
 
     if (filters.latitude !== undefined && filters.longitude !== undefined) {
@@ -148,6 +231,53 @@ export class ListingSearchService {
     }
 
     const orderBy = this.resolveOrderBy(filters.sort);
+    const needsExtendedProcessing =
+      hasExtendedSearchFilters(filters) ||
+      filters.sort === 'mileage_low_to_high' ||
+      filters.sort === 'mileage_high_to_low' ||
+      filters.sort === 'year_newest' ||
+      filters.sort === 'year_oldest' ||
+      filters.sort === 'highest_rating';
+
+    if (needsExtendedProcessing) {
+      const rows = await this.prisma.listing.findMany({
+        where,
+        include: listingInclude,
+        orderBy: { createdAt: 'desc' },
+        take: 500,
+      });
+
+      let data = applyDeliveryFilter(
+        await this.summariesFromRows(rows, (row) =>
+          filters.latitude !== undefined && filters.longitude !== undefined
+            ? haversineKm(
+                filters.latitude,
+                filters.longitude,
+                Number(row.latitude),
+                Number(row.longitude),
+              )
+            : undefined,
+        ),
+        filters.deliveryAvailable,
+        filters.deliveryCollection,
+      );
+
+      data = applyExtendedListingFilters(data, filters);
+      data = applyExtendedListingSort(data, filters.sort);
+
+      const total = data.length;
+      const pageData = paginateItems(data, filters.page, filters.limit);
+
+      return {
+        data: pageData,
+        meta: {
+          page: filters.page,
+          limit: filters.limit,
+          total,
+          totalPages: Math.ceil(total / filters.limit),
+        },
+      };
+    }
 
     const [rows, total] = await Promise.all([
       this.prisma.listing.findMany({
@@ -160,8 +290,8 @@ export class ListingSearchService {
       this.prisma.listing.count({ where }),
     ]);
 
-    const data = rows.map((row) => {
-      const distanceKm =
+    const data = applyDeliveryFilter(
+      await this.summariesFromRows(rows, (row) =>
         filters.latitude !== undefined && filters.longitude !== undefined
           ? haversineKm(
               filters.latitude,
@@ -169,9 +299,11 @@ export class ListingSearchService {
               Number(row.latitude),
               Number(row.longitude),
             )
-          : undefined;
-      return mapListingSummary(row, distanceKm);
-    });
+          : undefined,
+      ),
+      filters.deliveryAvailable,
+      filters.deliveryCollection,
+    );
 
     if (filters.sort === 'nearest' && filters.latitude !== undefined) {
       data.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
@@ -186,6 +318,27 @@ export class ListingSearchService {
         totalPages: Math.ceil(total / filters.limit),
       },
     };
+  }
+
+  private async summariesFromRows(
+    rows: ListingWithRelations[],
+    distanceFor: (row: ListingWithRelations) => number | undefined,
+  ) {
+    const trustMap = await this.sellerTrust.getSummariesForSellers(rows.map((r) => r.sellerId));
+    return rows.map((row) => {
+      const trust = trustMap.get(row.sellerId);
+      return mapListingSummaryWithTrust(
+        row,
+        distanceFor(row),
+        trust
+          ? {
+              averageRating: trust.averageRating,
+              reviewCount: trust.reviewCount,
+              soldCount: trust.soldCount,
+            }
+          : undefined,
+      );
+    });
   }
 
   private resolveOrderBy(

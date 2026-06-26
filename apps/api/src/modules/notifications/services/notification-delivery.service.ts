@@ -4,7 +4,7 @@ import type { Prisma } from '@prisma/client';
 import type { NotificationDeliveryStatus } from '@community-marketplace/types';
 
 import { PrismaService } from '../../../database/prisma.service';
-import { mapLog } from '../mappers/notification.mapper';
+import { mapLog, mapAdminDeliveryLog } from '../mappers/notification.mapper';
 
 @Injectable()
 export class NotificationDeliveryService {
@@ -74,11 +74,22 @@ export class NotificationDeliveryService {
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
+        include: {
+          notification: {
+            select: {
+              type: true,
+              title: true,
+              channel: true,
+              user: { select: { email: true, displayName: true } },
+            },
+          },
+          provider: { select: { name: true, type: true } },
+        },
       }),
       this.prisma.notificationLog.count(),
     ]);
     return {
-      data: rows.map(mapLog),
+      data: rows.map(mapAdminDeliveryLog),
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }

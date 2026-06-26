@@ -80,6 +80,10 @@ export class NotificationsService {
     return this.crud.delete(userId, notificationId);
   }
 
+  getUnreadCount(userId: string) {
+    return this.crud.getUnreadCount(userId);
+  }
+
   getPreferences(userId: string): Promise<NotificationPreferences> {
     return this.preferences.get(userId);
   }

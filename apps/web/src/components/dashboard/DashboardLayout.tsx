@@ -1,5 +1,6 @@
 'use client';
 
+import { APP_BRAND_ABBR, APP_SHORT_NAME } from '@community-marketplace/config';
 import type { RbacRole } from '@community-marketplace/types';
 import {
   DashboardLayout as UIDashboardLayout,
@@ -51,7 +52,8 @@ export default function DashboardLayout({ role, theme, children }: WebDashboardL
     <UIDashboardLayout
       role={role}
       theme={theme}
-      brand="Community Marketplace"
+      brand={APP_SHORT_NAME}
+      brandAbbr={APP_BRAND_ABBR}
       user={{
         name: user?.displayName,
         email: user?.email,

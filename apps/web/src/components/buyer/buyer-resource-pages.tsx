@@ -55,7 +55,7 @@ export function BuyerFavoritesPage() {
       emptyTitle="No favorites yet"
       emptyDescription="Save listings while browsing to find them here."
     >
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {favorites.map((listing) => (
           <ListingCard
             key={listing.id}

@@ -137,7 +137,9 @@ export function AdminListingReviewDialog({
           {listing && (
             <div className="space-y-8">
               <div className="grid gap-6 lg:grid-cols-2">
-                <Gallery images={listing.images} title={listing.title} />
+                <div className="min-w-0">
+                  <Gallery images={listing.images} title={listing.title} />
+                </div>
                 <div className="space-y-3 text-sm text-gray-700">
                   <p className="text-3xl font-bold text-gray-900">
                     {formatCurrency(listing.price, listing.currency)}

@@ -1,5 +1,4 @@
 import type { PrismaClient } from '@prisma/client';
-import { RbacRoleCode } from '@prisma/client';
 
 import { DEV_BOOTSTRAP_USERS } from '../dev-users.seed.data';
 import { hashPassword } from './password-hash';
@@ -24,7 +23,7 @@ export async function runDevUsersSeed(prisma: PrismaClient): Promise<DevUsersSee
   let usersUpserted = 0;
 
   for (const entry of DEV_BOOTSTRAP_USERS) {
-    const role = roleByCode.get(entry.role as RbacRoleCode);
+    const role = roleByCode.get(entry.role);
     if (!role) {
       throw new Error(`Role ${entry.role} not found — run RBAC seed first`);
     }

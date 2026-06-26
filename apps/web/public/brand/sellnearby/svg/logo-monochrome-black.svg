@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" fill="none" role="img" aria-label="SellNearby">
+  <g transform="translate(8, 8) scale(0.28)">
+  <defs>
+    <mask id="sn-mono-black-horizontal">
+      <rect width="512" height="512" fill="white"/>
+      <path d="M196 176l44 44 76-76" stroke="black" stroke-width="52" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </mask>
+  </defs>
+  <path mask="url(#sn-mono-black-horizontal)" d="M256 448s-168-152.8-168-272c0-92.8 75.2-168 168-168s168 75.2 168 168c0 119.2-168 272-168 272z" fill="#2F3542"/>
+</g>
+  <g class="wordmark">
+  <text x="168" y="108" font-family="Inter, Poppins, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="72" font-weight="700" fill="#2F3542">SellNearby</text>
+</g>
+</svg>

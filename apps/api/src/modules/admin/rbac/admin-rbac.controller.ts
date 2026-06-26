@@ -21,8 +21,10 @@ import {
   AddRolePermissionDto,
   AssignPermissionOverrideDto,
   AssignUserRoleDto,
+  CreateCustomRoleDto,
   RemoveUserRoleDto,
   SyncRolePermissionsDto,
+  UpdateCustomRoleDto,
 } from './dto/rbac-management.dto';
 import { RbacManagementService } from './rbac-management.service';
 
@@ -60,6 +62,28 @@ export class AdminRbacController {
   @Get('scopes')
   listScopes(@CurrentUser() actor: AuthenticatedUser) {
     return this.rbacManagement.listScopes(actor);
+  }
+
+  @RequireAnyPermission(PERMISSIONS.MANAGE_ROLES)
+  @Post('roles')
+  createRole(@CurrentUser() actor: AuthenticatedUser, @Body() dto: CreateCustomRoleDto) {
+    return this.rbacManagement.createRole(actor, dto);
+  }
+
+  @RequireAnyPermission(PERMISSIONS.MANAGE_ROLES)
+  @Put('roles/:roleId')
+  updateRole(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('roleId') roleId: string,
+    @Body() dto: UpdateCustomRoleDto,
+  ) {
+    return this.rbacManagement.updateRole(actor, roleId, dto);
+  }
+
+  @RequireAnyPermission(PERMISSIONS.MANAGE_ROLES)
+  @Delete('roles/:roleId')
+  deleteRole(@CurrentUser() actor: AuthenticatedUser, @Param('roleId') roleId: string) {
+    return this.rbacManagement.deleteRole(actor, roleId);
   }
 
   @RequireAnyPermission(...RBAC_CATALOG_PERMISSIONS)

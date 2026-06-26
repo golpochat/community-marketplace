@@ -22,7 +22,7 @@ export class ListingFeedsService {
 
   async getFeed(input: unknown) {
     const query = listingFeedQuerySchema.parse(input);
-    const cacheKey = `feed:${query.feed}:${query.latitude}:${query.longitude}:${query.radiusKm}:${query.page}:${query.limit}`;
+    const cacheKey = `feed:${query.feed}:${query.latitude}:${query.longitude}:${query.radiusKm}:${query.area ?? ''}:${query.page}:${query.limit}`;
 
     const cached = await this.cache.get<{
       data: ReturnType<typeof mapListingSummary>[];
@@ -66,6 +66,13 @@ export class ListingFeedsService {
       case 'new_near_you':
       default:
         break;
+    }
+
+    if (query.area?.trim()) {
+      where = {
+        ...where,
+        locationLabel: { contains: query.area.trim(), mode: 'insensitive' },
+      };
     }
 
     const [rows, total] = await Promise.all([

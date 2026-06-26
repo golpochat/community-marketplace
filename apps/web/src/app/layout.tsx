@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import { APP_NAME, PLATFORM_LOCALE } from '@community-marketplace/config';
 
 import { ServiceWorkerCleanup } from '@/components/dev/service-worker-cleanup';
+import { AppProviders } from '@/providers/app-providers';
 
 import './globals.css';
 
@@ -17,8 +18,13 @@ export const metadata: Metadata = {
   description: 'Buy and sell within your community in Ireland',
   manifest: '/manifest.json',
   icons: {
-    icon: '/icons/icon.svg',
-    apple: '/icons/icon.svg',
+    icon: [
+      { url: '/icons/favicon.ico', sizes: '48x48' },
+      { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    shortcut: '/icons/favicon.ico',
   },
   appleWebApp: {
     capable: true,
@@ -28,7 +34,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#2563eb',
+  themeColor: '#3A6DFF',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -51,7 +57,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         ) : null}
         <ServiceWorkerCleanup />
-        {children}
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

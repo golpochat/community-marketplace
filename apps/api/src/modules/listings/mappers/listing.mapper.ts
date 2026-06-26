@@ -1,29 +1,43 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from "@prisma/client";
 
 import type {
   Category,
   Listing,
   ListingImage,
   ListingSummary,
-} from '@community-marketplace/types';
+  ListingVehicleAttributes,
+} from "@community-marketplace/types";
+import {
+  buildDeliverySummaryLabel,
+  formatLocationLabel,
+} from "@community-marketplace/utils";
 
-import { resolveAssetPublicUrl } from '../../../libs/asset-url.lib';
+import { resolveAssetPublicUrl } from "../../../libs/asset-url.lib";
 import {
   listingDeliveryInclude,
   mapListingDeliverySelection,
-} from './delivery.mapper';
+} from "./delivery.mapper";
 
 export const listingInclude = {
   category: true,
-  images: { orderBy: { sortOrder: 'asc' as const } },
+  images: { orderBy: { sortOrder: "asc" as const } },
   deliveryOptions: {
     include: listingDeliveryInclude,
-    orderBy: { createdAt: 'asc' as const },
+    orderBy: { createdAt: "asc" as const },
   },
   seller: {
     include: {
       primaryRole: true,
-      verifications: { where: { badgeGranted: true, status: 'approved' as const }, take: 1 },
+      profile: true,
+      verifications: {
+        where: { badgeGranted: true, status: "approved" as const },
+        take: 1,
+      },
+      _count: {
+        select: {
+          listings: { where: { status: "active" as const } },
+        },
+      },
     },
   },
 } satisfies Prisma.ListingInclude;
@@ -31,6 +45,30 @@ export const listingInclude = {
 export type ListingWithRelations = Prisma.ListingGetPayload<{
   include: typeof listingInclude;
 }>;
+
+function parseListingAttributes(value: unknown): ListingVehicleAttributes | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  return value as ListingVehicleAttributes;
+}
+
+function buildImageVariantUrls(url: string) {
+  const resolved = resolveAssetPublicUrl(url);
+  const parts = resolved.split("?");
+  const pathPart = parts[0] ?? resolved;
+  const query = parts[1];
+  if (!pathPart.endsWith(".webp")) {
+    return { url: resolved };
+  }
+
+  const base = pathPart.slice(0, -5);
+  const suffix = query ? `?${query}` : "";
+  return {
+    url: resolved,
+    cardUrl: `${base}-card.webp${suffix}`,
+    thumbUrl: `${base}-thumb.webp${suffix}`,
+    tinyUrl: `${base}-tiny.webp${suffix}`,
+  };
+}
 
 export function mapCategory(row: {
   id: string;
@@ -62,15 +100,22 @@ export function mapListingImage(row: {
   url: string;
   sortOrder: number;
 }): ListingImage {
+  const variants = buildImageVariantUrls(row.url);
   return {
     id: row.id,
     listingId: row.listingId,
-    url: resolveAssetPublicUrl(row.url),
+    url: variants.url,
+    cardUrl: variants.cardUrl,
+    thumbUrl: variants.thumbUrl,
+    tinyUrl: variants.tinyUrl,
     order: row.sortOrder,
   };
 }
 
-export function mapListing(row: ListingWithRelations): Listing {
+export function mapListing(
+  row: ListingWithRelations,
+  extras?: { priceDroppedAt?: string },
+): Listing {
   const deliveryOptions =
     row.deliveryOptions?.length > 0
       ? row.deliveryOptions.map(mapListingDeliverySelection)
@@ -86,17 +131,19 @@ export function mapListing(row: ListingWithRelations): Listing {
       row.originalPrice != null ? Number(row.originalPrice) : undefined,
     salePrice: row.salePrice != null ? Number(row.salePrice) : undefined,
     discountPercent: row.discountPercent ?? undefined,
+    priceDroppedAt: extras?.priceDroppedAt,
     currency: row.currency,
     categoryId: row.categoryId,
     category: mapCategory(row.category),
     condition: row.condition,
     status: row.status,
     location: {
-      label: row.locationLabel,
+      label: formatLocationLabel(row.locationLabel),
       latitude: Number(row.latitude),
       longitude: Number(row.longitude),
     },
     images: row.images.map(mapListingImage),
+    attributes: parseListingAttributes(row.attributes),
     deliveryOptions,
     viewCount: row.viewCount,
     favoriteCount: row.favoriteCount,
@@ -115,16 +162,64 @@ export function mapListing(row: ListingWithRelations): Listing {
   };
 }
 
+export interface SellerTrustData {
+  averageRating?: number;
+  reviewCount: number;
+  soldCount: number;
+  responseRate?: number;
+  responseTimeMinutes?: number;
+}
+
+export function mapListingWithTrust(
+  row: ListingWithRelations,
+  extras?: { priceDroppedAt?: string; trust?: SellerTrustData },
+): Listing {
+  const listing = mapListing(row, { priceDroppedAt: extras?.priceDroppedAt });
+  if (listing.seller && extras?.trust) {
+    listing.seller = mapListingSeller(row.seller, extras.trust);
+  }
+  return listing;
+}
+
+export function mapListingSummaryWithTrust(
+  row: ListingWithRelations,
+  distanceKm?: number,
+  trust?: SellerTrustData,
+): ListingSummary {
+  const summary = mapListingSummary(row, distanceKm);
+  if (!trust) return summary;
+  return {
+    ...summary,
+    sellerRating: trust.averageRating,
+    sellerReviewCount: trust.reviewCount,
+    sellerSoldCount: trust.soldCount,
+  };
+}
+
 function mapListingSeller(
-  seller: ListingWithRelations['seller'],
-): Listing['seller'] {
+  seller: ListingWithRelations["seller"],
+  trust?: SellerTrustData,
+): Listing["seller"] {
   if (!seller) return undefined;
   return {
     id: seller.id,
     displayName: seller.displayName ?? undefined,
     email: seller.email,
     verified: seller.verifications.length > 0,
+    phoneVerified: Boolean(seller.phoneVerifiedAt),
     memberSince: seller.createdAt.toISOString(),
+    activeListingCount: seller._count?.listings,
+    soldCount: trust?.soldCount,
+    averageRating: trust?.averageRating,
+    reviewCount: trust?.reviewCount,
+    responseRate: trust?.responseRate,
+    responseTimeMinutes: trust?.responseTimeMinutes,
+    isAmbassador: seller.profile?.isCommunityAmbassador ?? false,
+    isBusiness: seller.profile?.isBusinessAccount ?? false,
+    phone:
+      seller.phoneVerifiedAt && seller.profile?.phone
+        ? seller.profile.phone
+        : undefined,
   };
 }
 
@@ -132,6 +227,14 @@ export function mapListingSummary(
   row: ListingWithRelations,
   distanceKm?: number,
 ): ListingSummary {
+  const deliveryOptions =
+    row.deliveryOptions?.length > 0
+      ? row.deliveryOptions.map(mapListingDeliverySelection)
+      : [];
+
+  const cover = row.images[0];
+  const coverVariants = cover ? buildImageVariantUrls(cover.url) : undefined;
+
   return {
     id: row.id,
     title: row.title,
@@ -142,17 +245,24 @@ export function mapListingSummary(
     discountPercent: row.discountPercent ?? undefined,
     currency: row.currency,
     location: {
-      label: row.locationLabel,
+      label: formatLocationLabel(row.locationLabel),
       latitude: Number(row.latitude),
       longitude: Number(row.longitude),
     },
     status: row.status,
     condition: row.condition,
     categoryId: row.categoryId,
-    imageUrl: row.images[0] ? resolveAssetPublicUrl(row.images[0].url) : undefined,
+    categorySlug: row.category?.slug,
+    imageUrl: coverVariants?.cardUrl ?? coverVariants?.url,
     distanceKm,
     favoriteCount: row.favoriteCount,
     createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+    activatedAt: row.activatedAt?.toISOString(),
+    deliverySummary: buildDeliverySummaryLabel(deliveryOptions),
+    sellerVerified: row.seller.verifications.length > 0,
+    sellerBusiness: row.seller.profile?.isBusinessAccount ?? false,
+    attributes: parseListingAttributes(row.attributes),
   };
 }
 
@@ -171,7 +281,10 @@ export function haversineKm(
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export function toMeiliDocument(row: ListingWithRelations, embedding?: number[]) {
+export function toMeiliDocument(
+  row: ListingWithRelations,
+  embedding?: number[],
+) {
   return {
     id: row.id,
     sellerId: row.sellerId,
@@ -186,12 +299,14 @@ export function toMeiliDocument(row: ListingWithRelations, embedding?: number[])
     categoryName: row.category.name,
     condition: row.condition,
     status: row.status,
-    locationLabel: row.locationLabel,
+    locationLabel: formatLocationLabel(row.locationLabel),
     _geo: {
       lat: Number(row.latitude),
       lng: Number(row.longitude),
     },
-    imageUrl: row.images[0] ? resolveAssetPublicUrl(row.images[0].url) : undefined,
+    imageUrl: row.images[0]
+      ? resolveAssetPublicUrl(row.images[0].url)
+      : undefined,
     favoriteCount: row.favoriteCount,
     viewCount: row.viewCount,
     createdAt: row.createdAt.getTime(),

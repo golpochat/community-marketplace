@@ -15,6 +15,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { EventBusService } from '../../../events/event-bus.service';
 import { mapListingImage } from '../mappers/listing.mapper';
 import { ListingAuditService } from './listing-audit.service';
+import { ListingImageProcessorService } from './listing-image-processor.service';
 import { ListingR2StorageService } from './listing-r2-storage.service';
 
 @Injectable()
@@ -22,6 +23,7 @@ export class ListingImagesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: ListingR2StorageService,
+    private readonly processor: ListingImageProcessorService,
     private readonly audit: ListingAuditService,
     private readonly eventBus: EventBusService,
   ) {}
@@ -72,13 +74,26 @@ export class ListingImagesService {
       }
     }
 
+    const processed = await Promise.all(
+      parsed.keys.map(async (key) => {
+        try {
+          return await this.processor.processListingImage(key);
+        } catch {
+          return {
+            key,
+            publicUrl: this.storage.buildPublicUrl(key),
+          };
+        }
+      }),
+    );
+
     const startOrder = existingCount;
     const created = await this.prisma.$transaction(
-      parsed.keys.map((key, index) =>
+      processed.map((item, index) =>
         this.prisma.listingImage.create({
           data: {
             listingId,
-            url: this.storage.buildPublicUrl(key),
+            url: item.publicUrl,
             sortOrder: parsed.orders?.[index] ?? startOrder + index,
           },
         }),

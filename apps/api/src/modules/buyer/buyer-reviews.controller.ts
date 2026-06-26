@@ -24,4 +24,10 @@ export class BuyerReviewsController {
   findMine(@CurrentUser() user: AuthenticatedUser) {
     return this.reviewsService.findByUser(user.id);
   }
+
+  @RequirePermissions(PERMISSIONS.LEAVE_REVIEW)
+  @Get('pending')
+  findPending(@CurrentUser() user: AuthenticatedUser) {
+    return this.reviewsService.findPendingForBuyer(user.id);
+  }
 }

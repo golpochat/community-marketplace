@@ -152,4 +152,37 @@ export class R2StorageService {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return getSignedUrl(this.getClient(), command, { expiresIn: expiresInSeconds });
   }
+
+  async getObjectBuffer(key: string): Promise<Buffer> {
+    if (!this.isConfigured()) {
+      throw new Error('R2 storage is not configured');
+    }
+    const response = await this.getClient().send(
+      new GetObjectCommand({ Bucket: this.bucket, Key: key }),
+    );
+    const body = response.Body;
+    if (!body) {
+      throw new Error(`Object not found: ${key}`);
+    }
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of body as AsyncIterable<Uint8Array>) {
+      chunks.push(chunk);
+    }
+    return Buffer.concat(chunks);
+  }
+
+  async putObject(key: string, body: Buffer, contentType: string): Promise<void> {
+    if (!this.isConfigured()) {
+      throw new Error('R2 storage is not configured');
+    }
+    await this.getClient().send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: body,
+        ContentType: contentType,
+        CacheControl: 'public, max-age=31536000, immutable',
+      }),
+    );
+  }
 }

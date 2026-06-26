@@ -12,6 +12,7 @@ interface ChatLayoutProps {
   messages: ChatMessage[];
   currentUserId: string;
   typingLabel?: string;
+  threadHeader?: React.ReactNode;
   onSelectThread: (threadId: string | undefined) => void;
   onSend: (content: string) => void;
   onTyping?: () => void;
@@ -23,6 +24,7 @@ export function ChatLayout({
   messages,
   currentUserId,
   typingLabel,
+  threadHeader,
   onSelectThread,
   onSend,
   onTyping,
@@ -62,6 +64,7 @@ export function ChatLayout({
             onSend={onSend}
             onTyping={onTyping}
             typingLabel={typingLabel}
+            header={threadHeader}
           />
         </div>
       ) : (

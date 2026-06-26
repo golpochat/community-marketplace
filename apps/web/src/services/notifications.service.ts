@@ -2,6 +2,7 @@ import type { Notification, NotificationPreferences, PaginationMeta } from '@com
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
+import { notifyNotificationsUpdated } from '@/lib/notification-unread-events';
 import { asArray, getUnreadCount } from '@/lib/normalize-api-response';
 
 export interface NotificationsListResult {
@@ -23,12 +24,25 @@ function toListResult(
 
   return {
     notifications,
-    unreadCount: getUnreadCount(meta),
+    unreadCount: getUnreadCount(meta) || notifications.filter((item) => !item.read).length,
     meta,
   };
 }
 
 export const notificationsService = {
+  async getUnreadCount(role: 'BUYER' | 'SELLER'): Promise<number> {
+    const path =
+      role === 'SELLER'
+        ? WEB_API_ROUTES.seller.notificationsUnreadCount
+        : WEB_API_ROUTES.buyer.notificationsUnreadCount;
+    try {
+      const response = await apiClient<number>(path);
+      return typeof response.data === 'number' ? response.data : 0;
+    } catch {
+      return 0;
+    }
+  },
+
   async listBuyer(page = 1, limit = 20, unreadOnly = false): Promise<NotificationsListResult> {
     const response = await apiClient<Notification[]>(WEB_API_ROUTES.buyer.notifications, {
       params: {
@@ -85,11 +99,14 @@ export const notificationsService = {
       method: 'PATCH',
       body: JSON.stringify({ notificationId }),
     });
+    const count = await this.getUnreadCount('BUYER');
+    notifyNotificationsUpdated(count);
     return response.data;
   },
 
   async markAllReadBuyer() {
     await apiClient(WEB_API_ROUTES.buyer.notificationsReadAll, { method: 'PATCH' });
+    notifyNotificationsUpdated(0);
   },
 
   async markReadSeller(notificationId: string) {
@@ -97,11 +114,14 @@ export const notificationsService = {
       method: 'PATCH',
       body: JSON.stringify({ notificationId }),
     });
+    const count = await this.getUnreadCount('SELLER');
+    notifyNotificationsUpdated(count);
     return response.data;
   },
 
   async markAllReadSeller() {
     await apiClient(WEB_API_ROUTES.seller.notificationsReadAll, { method: 'PATCH' });
+    notifyNotificationsUpdated(0);
   },
 
   /** @deprecated Use markReadBuyer */

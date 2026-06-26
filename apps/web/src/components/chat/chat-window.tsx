@@ -16,6 +16,7 @@ interface ChatWindowProps {
   onSend: (content: string) => void;
   onTyping?: () => void;
   typingLabel?: string;
+  header?: React.ReactNode;
 }
 
 export function ChatWindow({
@@ -25,6 +26,7 @@ export function ChatWindow({
   onSend,
   onTyping,
   typingLabel,
+  header,
 }: ChatWindowProps) {
   const [input, setInput] = useState('');
 
@@ -41,6 +43,9 @@ export function ChatWindow({
 
   return (
     <div className="flex h-[min(32rem,70vh)] flex-col rounded-xl border border-gray-200 bg-white shadow-sm md:h-[32rem]">
+      {header && (
+        <div className="border-b border-gray-200 px-4 py-3">{header}</div>
+      )}
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} currentUserId={currentUserId} />

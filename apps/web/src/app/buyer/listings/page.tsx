@@ -45,7 +45,7 @@ export default function BuyerListingsPage() {
         description="Discover items from sellers near you."
       />
       {loading ? (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <ListingCardSkeleton key={i} />
           ))}
@@ -57,7 +57,7 @@ export default function BuyerListingsPage() {
           description="Check back soon for new items."
         />
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {listings.map((listing) => (
             <ListingCard
               key={listing.id}

@@ -83,6 +83,20 @@ export interface NotificationLog {
   createdAt: string;
 }
 
+/** Admin view of a delivery log with related notification and provider context. */
+export interface AdminNotificationLogEntry {
+  id: string;
+  status: NotificationDeliveryStatus;
+  attempts: number;
+  createdAt: string;
+  notificationTitle?: string;
+  notificationType?: NotificationType;
+  channel?: NotificationChannel;
+  recipientLabel?: string;
+  providerName?: string;
+  providerType?: NotificationProviderType;
+}
+
 export interface DispatchNotificationInput {
   userId: string;
   type: NotificationType;

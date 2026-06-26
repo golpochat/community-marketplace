@@ -2,15 +2,17 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ListingSummary, Payment, PaymentIntentResponse } from '@community-marketplace/types';
+import type { ListingSummary, Payment, PaymentIntentResponse, PendingReviewItem } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { StripeCheckoutPanel } from '@/components/payments/stripe-checkout-form';
 import { Pagination } from '@/components/shared/pagination';
+import { ReviewPromptDialog } from '@/components/trust/review-prompt-dialog';
 import { listingsService } from '@/services/listings.service';
 import { buyerService } from '@/services/marketplace.service';
 import { paymentsService } from '@/services/payments.service';
+import { trustService } from '@/services/trust.service';
 
 interface PayableListing {
   id: string;
@@ -40,6 +42,17 @@ export default function BuyerPurchasesPage() {
   const [intent, setIntent] = useState<PaymentIntentResponse | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [refundingId, setRefundingId] = useState<string | null>(null);
+  const [pendingReviews, setPendingReviews] = useState<PendingReviewItem[]>([]);
+  const [dismissedReviewIds, setDismissedReviewIds] = useState<Set<string>>(new Set());
+
+  const loadPendingReviews = useCallback(async () => {
+    try {
+      const pending = await trustService.getPendingBuyerReviews();
+      setPendingReviews(pending);
+    } catch {
+      setPendingReviews([]);
+    }
+  }, []);
 
   const loadHistory = useCallback(async () => {
     setLoading(true);
@@ -86,6 +99,14 @@ export default function BuyerPurchasesPage() {
     void loadPayableListings();
   }, [loadPayableListings]);
 
+  useEffect(() => {
+    void loadPendingReviews();
+  }, [loadPendingReviews]);
+
+  const visiblePendingReview = pendingReviews.find(
+    (item) => !dismissedReviewIds.has(item.listingId),
+  );
+
   async function handleCreateIntent(event: React.FormEvent) {
     event.preventDefault();
     if (!selectedListingId) return;
@@ -103,7 +124,7 @@ export default function BuyerPurchasesPage() {
 
   async function handlePaymentSuccess() {
     setIntent(null);
-    await loadHistory();
+    await Promise.all([loadHistory(), loadPendingReviews()]);
   }
 
   async function handleRefund(payment: Payment) {
@@ -128,6 +149,21 @@ export default function BuyerPurchasesPage() {
       <PageHeader title="Purchases" description="Initiate and track your purchases." />
 
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+
+      {visiblePendingReview && (
+        <div className="mb-6">
+          <ReviewPromptDialog
+            listingId={visiblePendingReview.listingId}
+            sellerName={visiblePendingReview.counterpartyName}
+            onSubmitted={() => {
+              void loadPendingReviews();
+            }}
+            onDismiss={() => {
+              setDismissedReviewIds((current) => new Set(current).add(visiblePendingReview.listingId));
+            }}
+          />
+        </div>
+      )}
 
       <div className="space-y-6">
         <DashboardCard title="Pay for a listing">

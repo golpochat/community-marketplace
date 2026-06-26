@@ -4,7 +4,9 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Matches,
   MaxLength,
+  MinLength,
 } from 'class-validator';
 
 export class AssignUserRoleDto {
@@ -18,6 +20,44 @@ export class AssignUserRoleDto {
   @IsString()
   @MaxLength(500)
   reason?: string;
+}
+
+export class CreateCustomRoleDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(80)
+  name!: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(64)
+  @Matches(/^[A-Z][A-Z0-9_]*$/, {
+    message: 'code must be uppercase letters, numbers, and underscores',
+  })
+  code?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  @IsOptional()
+  @IsEnum(['blank', 'BUYER', 'SELLER', 'ADMIN'])
+  template?: 'blank' | 'BUYER' | 'SELLER' | 'ADMIN';
+}
+
+export class UpdateCustomRoleDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
+  @MaxLength(80)
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
 }
 
 export class SyncRolePermissionsDto {

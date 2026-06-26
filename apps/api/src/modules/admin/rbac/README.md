@@ -57,6 +57,9 @@ Scoped admin personas are `ADMIN` users with `user_permissions` GRANT overrides 
 
 | Method | Path | Guard | Policy |
 |--------|------|-------|--------|
+| `POST` | `/roles` | `manage_roles` | Create custom role (SUPER_ADMIN only) |
+| `PUT` | `/roles/:roleId` | `manage_roles` | Update custom role name/description |
+| `DELETE` | `/roles/:roleId` | `manage_roles` | Delete custom role (no assigned users) |
 | `POST` | `/roles/:roleId/permissions` | scoped management perms | Add one permission to role |
 | `DELETE` | `/roles/:roleId/permissions/:permissionId` | scoped management perms | Remove permission from role |
 | `PUT` | `/roles/:roleId/permissions` | scoped management perms | Replace all role permissions |

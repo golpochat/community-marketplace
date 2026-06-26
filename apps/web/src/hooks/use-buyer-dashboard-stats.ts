@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { NOTIFICATIONS_UPDATED_EVENT } from '@/lib/notification-unread-events';
 import { chatService } from '@/services/chat.service';
 import { buyerService } from '@/services/marketplace.service';
 import { notificationsService } from '@/services/notifications.service';
@@ -33,10 +34,10 @@ export function useBuyerDashboardStats() {
     async function load() {
       setLoading(true);
       try {
-        const [favoritesRes, paymentsRes, notifications, inbox] = await Promise.all([
+        const [favoritesRes, paymentsRes, unreadNotifications, inbox] = await Promise.all([
           buyerService.getFavorites(1, 1).catch(() => null),
           paymentsService.getBuyerHistory(1, 1).catch(() => null),
-          notificationsService.listBuyer(1, 1).catch(() => null),
+          notificationsService.getUnreadCount('BUYER').catch(() => 0),
           chatService.getInbox(1, 50).catch(() => null),
         ]);
 
@@ -54,7 +55,7 @@ export function useBuyerDashboardStats() {
           favorites: favoritesTotal,
           activeChats: inboxItems.length,
           purchases: paymentsRes?.meta?.total ?? (Array.isArray(paymentsRes?.data) ? paymentsRes.data.length : 0),
-          unreadNotifications: notifications?.unreadCount ?? 0,
+          unreadNotifications,
           unreadMessages,
         });
       } finally {
@@ -63,8 +64,15 @@ export function useBuyerDashboardStats() {
     }
 
     void load();
+
+    function handleNotificationsUpdated() {
+      void load();
+    }
+    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, handleNotificationsUpdated);
+
     return () => {
       cancelled = true;
+      window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, handleNotificationsUpdated);
     };
   }, []);
 

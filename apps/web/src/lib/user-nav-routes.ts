@@ -9,6 +9,7 @@ export interface UserNavLinks {
   notifications: string;
   settings: string;
   sellItem: string;
+  savedItems?: string;
 }
 
 export function getUserNavLinks(role: RbacRole, dashboardPath: string): UserNavLinks {
@@ -30,6 +31,7 @@ export function getUserNavLinks(role: RbacRole, dashboardPath: string): UserNavL
         notifications: WEB_APP_ROUTES.buyerNotifications,
         settings: '/buyer/settings',
         sellItem: '/seller/listings/create',
+        savedItems: '/buyer/favorites',
       };
     case 'ADMIN':
       return {

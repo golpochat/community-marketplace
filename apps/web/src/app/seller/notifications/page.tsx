@@ -7,6 +7,7 @@ import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { NotificationList } from '@/components/notifications/notification-list';
 import { asArray } from '@/lib/normalize-api-response';
+import { notifyNotificationsUpdated } from '@/lib/notification-unread-events';
 import { notificationsService } from '@/services/notifications.service';
 
 export default function SellerNotificationsPage() {
@@ -20,6 +21,7 @@ export default function SellerNotificationsPage() {
       const result = await notificationsService.listSeller();
       setItems(asArray<Notification>(result.notifications));
       setUnreadCount(result.unreadCount);
+      notifyNotificationsUpdated(result.unreadCount);
     } catch {
       setItems([]);
       setUnreadCount(0);

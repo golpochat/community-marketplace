@@ -1,12 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { ChatInboxItem, ChatMessage } from '@community-marketplace/types';
+import type { BuyerTrustProfile, ChatInboxItem, ChatMessage } from '@community-marketplace/types';
 
 import { ChatLayout } from '@/components/layout/chat-layout';
+import { BuyerTrustBadges } from '@/components/trust/buyer-trust-badges';
 import { useChatSocket } from '@/hooks/use-chat-socket';
 import { chatService } from '@/services/chat.service';
+import { trustService } from '@/services/trust.service';
 
 function dedupeMessages(messages: ChatMessage[]): ChatMessage[] {
   const seen = new Set<string>();
@@ -37,6 +39,7 @@ export function ChatPageClient({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typingLabel, setTypingLabel] = useState<string>();
   const [threadError, setThreadError] = useState<string | null>(null);
+  const [buyerTrust, setBuyerTrust] = useState<BuyerTrustProfile | null>(null);
   const activeThreadIdRef = useRef(activeThreadId);
   const autoThreadHandled = useRef(false);
 
@@ -106,6 +109,30 @@ export function ChatPageClient({
     });
   }, [activeThreadId]);
 
+  const activeInboxItem = useMemo(
+    () => inbox.find((item) => item.thread.id === activeThreadId),
+    [inbox, activeThreadId],
+  );
+
+  useEffect(() => {
+    if (role !== 'SELLER' || !activeInboxItem?.thread.buyerId) {
+      setBuyerTrust(null);
+      return;
+    }
+    let cancelled = false;
+    void trustService
+      .getBuyerTrustForSeller(activeInboxItem.thread.buyerId)
+      .then((profile) => {
+        if (!cancelled) setBuyerTrust(profile);
+      })
+      .catch(() => {
+        if (!cancelled) setBuyerTrust(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [role, activeInboxItem?.thread.buyerId]);
+
   const handleMessage = useCallback((message: ChatMessage) => {
     if (message.threadId !== activeThreadIdRef.current) {
       void loadInbox();
@@ -161,6 +188,23 @@ export function ChatPageClient({
     sendTyping(role === 'BUYER' ? 'buyer_typing' : 'seller_typing');
   };
 
+  const threadHeader =
+    role === 'SELLER' && buyerTrust ? (
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-gray-900">
+          {activeInboxItem?.participant.displayName ?? 'Buyer'}
+        </p>
+        <BuyerTrustBadges
+          phoneVerified={buyerTrust.phoneVerified}
+          completedTransactions={buyerTrust.completedTransactions}
+          hasDisputes={buyerTrust.hasDisputes}
+          isCommunityMember={buyerTrust.isCommunityMember}
+          averageRating={buyerTrust.averageRating}
+          reviewCount={buyerTrust.reviewCount}
+        />
+      </div>
+    ) : undefined;
+
   return (
     <>
       {threadError && (
@@ -174,6 +218,7 @@ export function ChatPageClient({
       messages={messages}
       currentUserId={currentUserId}
       typingLabel={typingLabel}
+      threadHeader={threadHeader}
       onSelectThread={setActiveThreadId}
       onSend={handleSend}
       onTyping={handleTypingInput}

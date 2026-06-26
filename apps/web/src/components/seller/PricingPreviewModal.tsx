@@ -142,7 +142,6 @@ export function PricingPreviewModal({
                     originalPrice={preview.proposed.originalPrice}
                     salePrice={preview.proposed.salePrice}
                     discountPercent={preview.proposed.discountPercent}
-                    size="lg"
                   />
                 </div>
               </div>

@@ -19,22 +19,10 @@ datasource db {
 // RBAC
 // ══════════════════════════════════════════════════════════════════════════════
 
-enum RbacRoleCode {
-  SUPER_ADMIN
-  ADMIN
-  SELLER
-  BUYER
-}
-
-enum PermissionEffect {
-  GRANT
-  DENY
-}
-
-/// System and custom roles. `code` aligns with @community-marketplace/types RbacRole.
+/// System and custom roles. `code` is unique (system codes: SUPER_ADMIN, ADMIN, SELLER, BUYER).
 model Role {
-  id          String       @id @default(uuid())
-  code        RbacRoleCode @unique
+  id          String   @id @default(uuid())
+  code        String   @unique @db.VarChar(64)
   name        String
   description String?
   isSystem    Boolean      @default(true) @map("is_system")
@@ -47,7 +35,10 @@ model Role {
   @@map("roles")
 }
 
-/// Granular permission definitions. `code` aligns with PermissionCode in packages/types.
+enum PermissionEffect {
+  GRANT
+  DENY
+}
 model Permission {
   id          String   @id @default(uuid())
   code        String   @unique @db.VarChar(80)
@@ -413,6 +404,10 @@ model User {
   priceChangeLogsAsSeller    PriceChangeLog[]       @relation("PriceChangeSeller")
   priceChangeLogsReviewed    PriceChangeLog[]       @relation("PriceChangeReviewer")
   listingSharesAsSeller      ListingShare[]         @relation("ListingShareSeller")
+  sellerReviewsReceived      SellerReview[]         @relation("SellerReviewsReceived")
+  sellerReviewsGiven         SellerReview[]         @relation("SellerReviewsGiven")
+  buyerReviewsReceived       BuyerReview[]          @relation("BuyerReviewsReceived")
+  buyerReviewsGiven          BuyerReview[]          @relation("BuyerReviewsGiven")
 
   @@index([primaryRoleId])
   @@index([status])
@@ -430,6 +425,16 @@ model UserProfile {
   phone       String?     @unique
   dateOfBirth DateTime?   @map("date_of_birth") @db.Date
   gender      UserGender?
+  communityArea         String?   @map("community_area")
+  referralCode          String?   @unique @map("referral_code")
+  referralCount         Int       @default(0) @map("referral_count")
+  referredById          String?   @map("referred_by_id")
+  isCommunityAmbassador Boolean   @default(false) @map("is_community_ambassador")
+  isBusinessAccount     Boolean   @default(false) @map("is_business_account")
+  businessName          String?   @map("business_name")
+  businessWebsite         String?   @map("business_website")
+  businessLogoUrl         String?   @map("business_logo_url")
+  onboardingDismissedAt DateTime? @map("onboarding_dismissed_at")
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -629,6 +634,10 @@ model Listing {
   bannedById      String?          @map("banned_by_id")
   moderationNotes    String?          @map("moderation_notes")
   moderationHiddenAt DateTime?        @map("moderation_hidden_at")
+  attributes         Json?            @map("attributes")
+  isFeatured         Boolean          @default(false) @map("is_featured")
+  boostedUntil       DateTime?        @map("boosted_until")
+  requiresFraudReview Boolean         @default(false) @map("requires_fraud_review")
   createdAt          DateTime         @default(now()) @map("created_at")
   updatedAt          DateTime         @updatedAt @map("updated_at")
 
@@ -649,6 +658,8 @@ model Listing {
   shortLinks         ShortLink[]
   shares             ListingShare[]
   statusChangeLogs   ListingStatusChangeLog[]
+  sellerReviews      SellerReview[]
+  buyerReviews       BuyerReview[]
 
   @@index([status, createdAt(sort: Desc)])
   @@index([status, expiresAt])
@@ -656,6 +667,43 @@ model Listing {
   @@index([categoryId])
   @@index([latitude, longitude])
   @@map("listings")
+}
+
+model SellerReview {
+  id        String   @id @default(uuid())
+  sellerId  String   @map("seller_id")
+  buyerId   String   @map("buyer_id")
+  listingId String?  @map("listing_id")
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  seller  User     @relation("SellerReviewsReceived", fields: [sellerId], references: [id], onDelete: Cascade)
+  buyer   User     @relation("SellerReviewsGiven", fields: [buyerId], references: [id], onDelete: Cascade)
+  listing Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@unique([buyerId, listingId])
+  @@index([sellerId])
+  @@map("seller_reviews")
+}
+
+model BuyerReview {
+  id        String   @id @default(uuid())
+  buyerId   String   @map("buyer_id")
+  sellerId  String   @map("seller_id")
+  listingId String?  @map("listing_id")
+  paymentId String?  @map("payment_id")
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  buyer   User     @relation("BuyerReviewsReceived", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller  User     @relation("BuyerReviewsGiven", fields: [sellerId], references: [id], onDelete: Cascade)
+  listing Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+
+  @@unique([sellerId, listingId])
+  @@index([buyerId])
+  @@map("buyer_reviews")
 }
 
 model ListingImage {

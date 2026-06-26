@@ -32,6 +32,11 @@ export class BuyerNotificationsController {
     return this.notifications.getPreferences(user.id);
   }
 
+  @Get('unread-count')
+  unreadCount(@CurrentUser() user: AuthenticatedUser) {
+    return this.notifications.getUnreadCount(user.id);
+  }
+
   @Patch('preferences')
   updatePreferences(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     const dto = notificationPreferencesUpdateSchema.parse(body);

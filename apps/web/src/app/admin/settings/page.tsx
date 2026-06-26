@@ -7,6 +7,7 @@ export default function Page() {
     <ProfileSettingsForm
       title="Settings"
       description="Configure your admin profile and preferences."
+      includeNotificationPreferences={false}
     />
   );
 }

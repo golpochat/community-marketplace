@@ -126,6 +126,19 @@ export const userEffectivePermissionsSchema = z.object({
 // ── Request / command payloads ────────────────────────────────────────────────
 
 export const createRoleSchema = z.object({
+  name: z.string().min(2).max(80),
+  code: z
+    .string()
+    .min(2)
+    .max(64)
+    .regex(/^[A-Z][A-Z0-9_]*$/, 'Use uppercase letters, numbers, and underscores')
+    .optional(),
+  description: z.string().max(500).optional(),
+  template: z.enum(['blank', 'BUYER', 'SELLER', 'ADMIN']).default('blank'),
+});
+
+/** @deprecated System-only — use createRoleSchema for custom roles */
+export const createSystemRoleSchema = z.object({
   code: rbacRoleSchema,
   name: z.string().min(1).max(80),
   description: z.string().max(500).optional(),

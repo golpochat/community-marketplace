@@ -18,8 +18,8 @@ export function FeaturedListings({ listings }: FeaturedListingsProps) {
       <div className="mx-auto max-w-6xl px-4">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-h2 text-gray-900">Featured listings</h2>
-            <p className="mt-1 text-small text-gray-600">Recently added items from your community</p>
+            <h2 className="text-2xl font-bold text-gray-900">Featured listings</h2>
+            <p className="mt-1 text-sm text-gray-600">Recently added items from your community</p>
           </div>
           <Link href="/listings">
             <Button variant="ghost" size="sm" className="shrink-0">
@@ -27,9 +27,9 @@ export function FeaturedListings({ listings }: FeaturedListingsProps) {
             </Button>
           </Link>
         </div>
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {items.slice(0, 6).map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
+        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {items.slice(0, 8).map((listing) => (
+            <ListingCard key={listing.id} listing={listing} showTrustCues={false} />
           ))}
         </div>
       </div>

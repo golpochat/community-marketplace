@@ -13,16 +13,24 @@ import { SidebarItem } from './SidebarItem';
 export interface SidebarProps {
   role: RbacRole;
   brand?: string;
+  brandAbbr?: string;
   mobile?: boolean;
 }
 
-export function Sidebar({ role, brand = 'Community Marketplace', mobile = false }: SidebarProps) {
+export function Sidebar({
+  role,
+  brand = 'SellNearby.ie',
+  brandAbbr,
+  mobile = false,
+}: SidebarProps) {
   const pathname = usePathname();
   const items = getSidebarItemsByRole(role);
   const theme = getThemeByRole(role);
   const { collapsed, setMobileOpen } = useSidebar();
 
   const isCollapsed = mobile ? false : collapsed;
+
+  const abbr = brandAbbr ?? brand.replace(/\..*$/, '').slice(0, 2).toUpperCase();
 
   return (
     <aside
@@ -39,7 +47,7 @@ export function Sidebar({ role, brand = 'Community Marketplace', mobile = false 
         )}
       >
         <p className={cn('font-semibold tracking-tight', isCollapsed ? 'text-sm' : 'text-lg')}>
-          {isCollapsed ? 'CM' : brand}
+          {isCollapsed ? abbr : brand}
         </p>
         {!isCollapsed ? (
           <p className="mt-0.5 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{theme.label} Dashboard</p>

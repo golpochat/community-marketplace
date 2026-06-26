@@ -1,41 +1,35 @@
-import { Badge } from '@community-marketplace/ui';
-import type { Listing, ListingCondition } from '@community-marketplace/types';
+import type { Listing } from '@community-marketplace/types';
+import { formatListingConditionLabel } from '@community-marketplace/utils';
 
-import { ListingPriceDisplay } from '@/components/listings/listing-price-display';
+import { ListingBadge } from '@/components/listings/listing-badge';
+import {
+  ListingDescriptionBlock,
+  ListingSpecsSection,
+} from '@/components/listings/listing-specs-section';
 
 interface DescriptionSectionProps {
   listing: Listing;
 }
 
-function formatCondition(condition: ListingCondition): string {
-  return condition.replace('_', ' ');
-}
-
 export function DescriptionSection({ listing }: DescriptionSectionProps) {
+  const hasStructuredVehicle =
+    listing.attributes && Object.keys(listing.attributes).length > 0;
+  const conditionLabel = formatListingConditionLabel(listing.condition);
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary" className="capitalize">
-          {formatCondition(listing.condition)}
-        </Badge>
-        <span className="text-sm text-gray-500">{listing.location.label}</span>
-      </div>
-      <ListingPriceDisplay
-        price={listing.price}
-        originalPrice={listing.originalPrice}
-        salePrice={listing.salePrice}
-        discountPercent={listing.discountPercent}
-        currency={listing.currency}
-        size="detail"
-      />
-      <div className="prose prose-sm max-w-none text-gray-700">
-        <h2 className="text-lg font-semibold text-gray-900">Description</h2>
-        <p className="whitespace-pre-wrap">{listing.description}</p>
-      </div>
-      <div className="flex gap-4 text-sm text-gray-500">
-        <span>{listing.viewCount} views</span>
-        <span>{listing.favoriteCount} saves</span>
-      </div>
+    <div className="mt-4 space-y-4">
+      {!hasStructuredVehicle && listing.category?.name && (
+        <ListingBadge tone="outline">{listing.category.name}</ListingBadge>
+      )}
+
+      {conditionLabel && (
+        <p className="text-sm text-gray-700">
+          <span className="font-medium text-gray-900">Condition:</span> {conditionLabel}
+        </p>
+      )}
+
+      <ListingSpecsSection listing={listing} />
+      <ListingDescriptionBlock listing={listing} />
     </div>
   );
 }
