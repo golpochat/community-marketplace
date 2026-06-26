@@ -4,7 +4,9 @@ import Link from 'next/link';
 
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
+import { CreateListingButton } from '@/components/seller/create-listing-button';
 import { SellerConnectBanner } from '@/components/seller/seller-connect-banner';
+import { SellerVerificationBanner } from '@/components/seller/seller-verification-banner';
 import { SellerDashboardCards } from '@/components/seller/seller-dashboard-cards';
 import { useSellerDashboardStats } from '@/hooks/use-seller-dashboard-stats';
 import { useUserProfile } from '@/hooks/use-user-profile';
@@ -30,6 +32,15 @@ export default function SellerDashboardPage() {
       )}
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
       <SellerConnectBanner className="mb-6" />
+      <SellerVerificationBanner className="mb-6" />
+      <p className="mb-4 text-sm">
+        <Link
+          href="/seller/profile"
+          className="font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+        >
+          Open seller profile →
+        </Link>
+      </p>
       <SellerDashboardCards stats={stats} loading={statsLoading} />
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <DashboardCard title="Listing performance">
@@ -62,12 +73,7 @@ export default function SellerDashboardPage() {
         </p>
       )}
       <p className="mt-4 text-sm">
-        <Link
-          href="/seller/listings/create"
-          className="font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
-        >
-          Create a new listing
-        </Link>
+        <CreateListingButton label="Create a new listing" />
       </p>
     </>
   );

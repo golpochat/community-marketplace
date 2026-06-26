@@ -196,6 +196,15 @@ export function mapListingSummaryWithTrust(
   };
 }
 
+function isSellerVerified(seller: ListingWithRelations['seller']): boolean {
+  if (!seller) return false;
+  return (
+    seller.sellerStatus === 'verified' ||
+    seller.idVerified ||
+    seller.verifications.length > 0
+  );
+}
+
 function mapListingSeller(
   seller: ListingWithRelations["seller"],
   trust?: SellerTrustData,
@@ -205,7 +214,7 @@ function mapListingSeller(
     id: seller.id,
     displayName: seller.displayName ?? undefined,
     email: seller.email,
-    verified: seller.verifications.length > 0,
+    verified: isSellerVerified(seller),
     phoneVerified: Boolean(seller.phoneVerifiedAt),
     memberSince: seller.createdAt.toISOString(),
     activeListingCount: seller._count?.listings,
@@ -260,7 +269,7 @@ export function mapListingSummary(
     updatedAt: row.updatedAt.toISOString(),
     activatedAt: row.activatedAt?.toISOString(),
     deliverySummary: buildDeliverySummaryLabel(deliveryOptions),
-    sellerVerified: row.seller.verifications.length > 0,
+    sellerVerified: isSellerVerified(row.seller),
     sellerBusiness: row.seller.profile?.isBusinessAccount ?? false,
     attributes: parseListingAttributes(row.attributes),
   };
@@ -289,7 +298,7 @@ export function toMeiliDocument(
     id: row.id,
     sellerId: row.sellerId,
     sellerName: row.seller.displayName ?? undefined,
-    sellerVerified: row.seller.verifications.length > 0,
+    sellerVerified: isSellerVerified(row.seller),
     title: row.title,
     description: row.description,
     price: Number(row.price),

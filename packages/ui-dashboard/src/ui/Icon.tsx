@@ -29,6 +29,7 @@ import {
   Search,
   Settings,
   Shield,
+  ShieldCheck,
   ShoppingCart,
   Tag,
   Trash2,
@@ -42,6 +43,7 @@ import {
 export const DASHBOARD_ICONS = {
   crown: Crown,
   shield: Shield,
+  'shield-check': ShieldCheck,
   key: Key,
   folder: Folder,
   landmark: Landmark,

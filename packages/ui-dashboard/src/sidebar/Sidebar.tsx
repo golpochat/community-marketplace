@@ -6,8 +6,10 @@ import { cn } from '@community-marketplace/ui';
 import type { RbacRole } from '@community-marketplace/types';
 
 import { getSidebarItemsByRole } from '../lib/routes';
+import type { SidebarNavItem } from './sidebar-config';
 import { useSidebar } from '../lib/sidebar-context';
 import { getThemeByRole } from '../theme/theme-tokens';
+import { SidebarDisabledItem, SidebarNavGroup } from './SidebarNavGroup';
 import { SidebarItem } from './SidebarItem';
 
 export interface SidebarProps {
@@ -15,6 +17,7 @@ export interface SidebarProps {
   brand?: string;
   brandAbbr?: string;
   mobile?: boolean;
+  items?: SidebarNavItem[];
 }
 
 export function Sidebar({
@@ -22,9 +25,10 @@ export function Sidebar({
   brand = 'SellNearby.ie',
   brandAbbr,
   mobile = false,
+  items,
 }: SidebarProps) {
   const pathname = usePathname();
-  const items = getSidebarItemsByRole(role);
+  const navItems = items ?? getSidebarItemsByRole(role);
   const theme = getThemeByRole(role);
   const { collapsed, setMobileOpen } = useSidebar();
 
@@ -54,7 +58,22 @@ export function Sidebar({
         ) : null}
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-        {items.map((item) => {
+        {navItems.map((item) => {
+          if (item.disabled) {
+            return <SidebarDisabledItem key={item.id} item={item} collapsed={isCollapsed} />;
+          }
+
+          if (item.children && item.children.length > 0) {
+            return (
+              <SidebarNavGroup
+                key={item.id}
+                item={item}
+                collapsed={isCollapsed}
+                onNavigate={mobile ? () => setMobileOpen(false) : undefined}
+              />
+            );
+          }
+
           const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <SidebarItem

@@ -32,7 +32,7 @@ export function SellerTrustBadges({
   if (isNewMember(memberSince)) {
     badges.push({ key: 'new-member', label: 'New member', tone: 'outline' });
   }
-  if (verified || phoneVerified) {
+  if (verified) {
     badges.push({
       key: 'verified',
       label: variant === 'compact' ? 'Verified' : 'Verified seller',

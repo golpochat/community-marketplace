@@ -9,6 +9,8 @@ import {
 
 import { NotificationBell } from '@/components/shared/notification-bell';
 import { useAuth } from '@/hooks/use-auth';
+import { useUserProfile } from '@/hooks/use-user-profile';
+import { filterSidebarItems } from '@/lib/admin-sidebar';
 import { authService } from '@/services/auth.service';
 
 const SETTINGS_HREF: Record<RbacRole, string> = {
@@ -33,6 +35,12 @@ export interface WebDashboardLayoutProps {
 
 export default function DashboardLayout({ role, theme, children }: WebDashboardLayoutProps) {
   const { user, session, clearUser } = useAuth();
+  const { permissions } = useUserProfile();
+
+  const sidebarItems =
+    role === 'ADMIN' || role === 'SUPER_ADMIN'
+      ? filterSidebarItems(role, permissions?.effective ?? [])
+      : undefined;
 
   async function handleLogout() {
     try {
@@ -65,6 +73,7 @@ export default function DashboardLayout({ role, theme, children }: WebDashboardL
       topbarActions={
         <NotificationBell href={NOTIFICATIONS_HREF[role]} role={role} />
       }
+      sidebarItems={sidebarItems}
     >
       {children}
     </UIDashboardLayout>

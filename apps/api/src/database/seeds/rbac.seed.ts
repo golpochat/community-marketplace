@@ -1,4 +1,6 @@
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '../../../generated/prisma';
+
+import type { RbacRole } from '@community-marketplace/types';
 
 import { DEV_ROLE_IDS } from '../../common/constants/dev-role-ids';
 import {
@@ -136,7 +138,7 @@ async function seedRolePermissions(prisma: PrismaClient): Promise<number> {
   let count = 0;
 
   for (const [roleCode, permissionCodes] of Object.entries(ROLE_PERMISSION_SEED)) {
-    const role = roleByCode.get(roleCode);
+    const role = roleByCode.get(roleCode as RbacRole);
     if (!role) continue;
 
     for (const code of permissionCodes) {

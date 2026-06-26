@@ -5,6 +5,7 @@ export interface SellerTrustProfile {
   soldCount: number;
   verified?: boolean;
   phoneVerified?: boolean;
+  sellerStatus?: import('./seller-verification').SellerStatus;
   memberSince?: string;
   activeListingCount?: number;
   responseRate?: number;

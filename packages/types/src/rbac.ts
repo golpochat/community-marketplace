@@ -99,6 +99,10 @@ export const PERMISSIONS = {
   APPROVE_VERIFICATION: 'approve_verification',
   REJECT_VERIFICATION: 'reject_verification',
   SUBMIT_VERIFICATION: 'submit_verification',
+  REVIEW_SELLER_VERIFICATION: 'review_seller_verification',
+  SUSPEND_SELLER: 'suspend_seller',
+  VIEW_SELLER_DOCUMENTS: 'view_seller_documents',
+  MANAGE_SELLER_LIMITS: 'manage_seller_limits',
 
   // Moderation
   VIEW_REPORTS: 'view_reports',
@@ -160,6 +164,7 @@ export type PermissionAction =
   | 'delete'
   | 'approve'
   | 'reject'
+  | 'review'
   | 'assign'
   | 'ban'
   | 'suspend'
@@ -193,6 +198,10 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<RbacRole, readonly Permis
     PERMISSIONS.VIEW_PAYMENTS,
     PERMISSIONS.APPROVE_VERIFICATION,
     PERMISSIONS.REJECT_VERIFICATION,
+    PERMISSIONS.REVIEW_SELLER_VERIFICATION,
+    PERMISSIONS.SUSPEND_SELLER,
+    PERMISSIONS.VIEW_SELLER_DOCUMENTS,
+    PERMISSIONS.MANAGE_SELLER_LIMITS,
     PERMISSIONS.VIEW_REPORTS,
     PERMISSIONS.MANAGE_REPORTS,
     PERMISSIONS.RESOLVE_REPORT,

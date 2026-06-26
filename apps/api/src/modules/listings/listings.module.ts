@@ -7,6 +7,7 @@ import { LibsModule } from '../../libs/libs.module';
 import { DevUploadModule } from '../dev-upload/dev-upload.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { SearchModule } from '../search/search.module';
+import { SellerVerificationModule } from '../seller/seller-verification.module';
 import { UsersModule } from '../users/users.module';
 import { UtilsModule } from '../../utils/utils.module';
 import { CategoriesService } from './services/categories.service';
@@ -36,7 +37,7 @@ import { ListingsService } from './listings.service';
 import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
 
 @Module({
-  imports: [DatabaseModule, UtilsModule, EventsModule, LibsModule, JobsModule, SearchModule, UsersModule, NotificationsModule, DevUploadModule],
+  imports: [DatabaseModule, UtilsModule, EventsModule, LibsModule, JobsModule, SearchModule, UsersModule, NotificationsModule, DevUploadModule, SellerVerificationModule],
   controllers: [ListingsController],
   providers: [
     ListingsService,

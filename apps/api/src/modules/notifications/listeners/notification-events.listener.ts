@@ -24,6 +24,9 @@ export class NotificationEventsListener implements OnModuleInit {
     );
     this.eventBus.subscribe('payment.disputed', (e) => void this.onPaymentDisputed(e.payload));
     this.eventBus.subscribe('listing.created', (e) => void this.onListingCreated(e.payload));
+    this.eventBus.subscribe('seller.verification_nudge', (e) =>
+      void this.onSellerVerificationNudge(e.payload),
+    );
     this.eventBus.subscribe('listing.approved', (e) => void this.onListingApproved(e.payload));
     this.eventBus.subscribe('listing.changes_requested', (e) =>
       void this.onListingChangesRequested(e.payload),
@@ -188,6 +191,21 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'system',
       templateKey: 'payment_disputed',
       channels: ['in_app', 'push'],
+    });
+  }
+
+  private async onSellerVerificationNudge(payload: Record<string, unknown>) {
+    const sellerId = payload.sellerId as string;
+    const message = payload.message as string;
+    if (!sellerId || !message) return;
+
+    await this.dispatcher.dispatch({
+      userId: sellerId,
+      type: 'seller_verification_nudge',
+      templateKey: 'seller_verification_nudge',
+      variables: { message },
+      actionUrl: '/seller/profile?tab=verification',
+      channels: ['in_app', 'email'],
     });
   }
 

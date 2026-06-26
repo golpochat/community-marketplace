@@ -43,8 +43,11 @@ export class SellerTrustService {
 
     return {
       ...summary,
-      verified: (user?.verifications.length ?? 0) > 0,
-      phoneVerified: Boolean(user?.phoneVerifiedAt),
+      verified:
+        (user?.sellerStatus === 'verified' || user?.idVerified) ||
+        (user?.verifications.length ?? 0) > 0,
+      phoneVerified: Boolean(user?.phoneVerifiedAt) || Boolean(user?.phoneVerified),
+      sellerStatus: user?.sellerStatus,
       memberSince: user?.createdAt.toISOString(),
       activeListingCount: activeListingCount ?? user?._count?.listings ?? 0,
       responseRate: responseStats.responseRate,

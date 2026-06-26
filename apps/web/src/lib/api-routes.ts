@@ -35,6 +35,7 @@ export const WEB_API_ROUTES = {
     notificationsReadAll: `${API_NAMESPACES.SELLER}/notifications/read-all`,
     notificationsUnreadCount: `${API_NAMESPACES.SELLER}/notifications/unread-count`,
     profile: `${API_NAMESPACES.SELLER}/profile`,
+    verification: `${API_NAMESPACES.SELLER}/verification`,
     reviews: `${API_NAMESPACES.SELLER}/reviews`,
     reviewsPending: `${API_NAMESPACES.SELLER}/reviews/pending`,
     chat: `${API_NAMESPACES.SELLER}/chat`,

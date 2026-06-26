@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { emailSchema, passwordSchema } from './common.schema';
 
-export const otpPurposeSchema = z.enum(['login', 'register', 'password_reset']);
+export const otpPurposeSchema = z.enum(['login', 'register', 'password_reset', 'seller_verify']);
 
 export const otpChannelSchema = z.enum(['email', 'phone']);
 

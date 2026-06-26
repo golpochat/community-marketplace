@@ -326,6 +326,15 @@ enum OtpPurpose {
   login
   register
   password_reset
+  seller_verify
+}
+
+enum SellerStatus {
+  unverified
+  verification_required
+  verified
+  suspended
+  under_review
 }
 
 enum UserGender {
@@ -352,6 +361,15 @@ model User {
   emailVerifiedAt DateTime?  @map("email_verified_at")
   phoneVerifiedAt DateTime?  @map("phone_verified_at")
   profileCompleted Boolean   @default(false) @map("profile_completed")
+  sellerStatus               SellerStatus @default(unverified) @map("seller_status")
+  unverifiedListingCount     Int          @default(0) @map("unverified_listing_count")
+  phoneVerified              Boolean      @default(false) @map("phone_verified")
+  emailVerified              Boolean      @default(false) @map("email_verified")
+  idVerified                 Boolean      @default(false) @map("id_verified")
+  verificationRequestedAt    DateTime?    @map("verification_requested_at")
+  verificationCompletedAt    DateTime?    @map("verification_completed_at")
+  verificationRejectedReason String?      @map("verification_rejected_reason") @db.Text
+  sellerLimit                Int          @default(5) @map("seller_limit")
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @updatedAt @map("updated_at")
 
@@ -371,6 +389,7 @@ model User {
   auditLogsAsActor           UserAuditLog[]     @relation("UserAuditActor")
   auditLogsAsTarget          UserAuditLog[]     @relation("UserAuditTarget")
   reviewedVerifications      UserVerification[] @relation("VerificationReviewer")
+  reviewedSellerVerifications SellerVerificationRequest[] @relation("SellerVerificationReviewer")
   issuedBans                 UserBan[]          @relation("BanIssuer")
   listingFavorites           ListingFavorite[]
   listingReports             ListingReport[]    @relation("ListingReportReporter")
@@ -408,10 +427,54 @@ model User {
   sellerReviewsGiven         SellerReview[]         @relation("SellerReviewsGiven")
   buyerReviewsReceived       BuyerReview[]          @relation("BuyerReviewsReceived")
   buyerReviewsGiven          BuyerReview[]          @relation("BuyerReviewsGiven")
+  sellerVerificationRequests SellerVerificationRequest[]
+  sellerStatusHistory        SellerStatusHistory[]  @relation("SellerStatusHistoryUser")
+  sellerStatusChanges        SellerStatusHistory[]  @relation("SellerStatusHistoryActor")
 
   @@index([primaryRoleId])
   @@index([status])
+  @@index([sellerStatus])
   @@map("users")
+}
+
+/// Seller identity verification submissions (manual admin review).
+model SellerVerificationRequest {
+  id                  String             @id @default(uuid())
+  userId              String             @map("user_id")
+  phoneNumber         String?            @map("phone_number")
+  idDocumentPath      String?            @map("id_document_path")
+  selfiePath          String?            @map("selfie_path")
+  addressDocumentPath String?            @map("address_document_path")
+  status              VerificationStatus @default(pending)
+  reviewedById        String?            @map("reviewed_by")
+  reviewedAt          DateTime?          @map("reviewed_at")
+  rejectionReason     String?            @map("rejection_reason") @db.Text
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("SellerVerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([status, createdAt(sort: Desc)])
+  @@map("seller_verification_requests")
+}
+
+/// Audit trail for seller_status transitions.
+model SellerStatusHistory {
+  id        String       @id @default(uuid())
+  userId    String       @map("user_id")
+  oldStatus SellerStatus @map("old_status")
+  newStatus SellerStatus @map("new_status")
+  changedBy String?      @map("changed_by")
+  reason    String?      @db.Text
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  user   User  @relation("SellerStatusHistoryUser", fields: [userId], references: [id], onDelete: Cascade)
+  actor  User? @relation("SellerStatusHistoryActor", fields: [changedBy], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("seller_status_history")
 }
 
 model UserProfile {

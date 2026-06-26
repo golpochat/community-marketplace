@@ -25,6 +25,7 @@ import {
   mapDeliveryChangeLog,
   mapListingDeliverySelection,
 } from '../mappers/delivery.mapper';
+import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 import { DeliveryOptionsService } from './delivery-options.service';
 
 const HIGH_RISK_CATEGORY_SLUGS = new Set(['vehicles', 'electronics']);
@@ -37,6 +38,7 @@ export class ListingDeliveryService {
     private readonly catalog: DeliveryOptionsService,
     private readonly eventBus: EventBusService,
     private readonly notifications: NotificationsService,
+    private readonly sellerListingGate: SellerListingGateService,
   ) {}
 
   async getListingDeliveryOptions(listingId: string): Promise<ListingDeliverySelection[]> {
@@ -324,6 +326,9 @@ export class ListingDeliveryService {
     const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
     if (!isAdmin && listing.sellerId !== actorId) {
       throw new ForbiddenException('You can only update delivery for your own listings');
+    }
+    if (!isAdmin) {
+      await this.sellerListingGate.assertSellerNotSuspended(actorId);
     }
     return listing;
   }

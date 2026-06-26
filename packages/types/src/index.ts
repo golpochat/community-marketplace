@@ -109,6 +109,18 @@ export type {
   BuyerTrustProfile,
   PendingReviewItem,
 } from './trust';
+export type {
+  SellerStatus,
+  SellerVerificationStage,
+  SellerVerificationRequest,
+  SellerStatusHistoryEntry,
+  SellerVerificationStatus,
+  SellerListingGateResult,
+  AdminSellerVerificationView,
+  AdminSellerVerificationRow,
+  AdminSellerVerificationDetail,
+} from './seller-verification';
+export { SELLER_VERIFICATION_MESSAGES } from './seller-verification';
 export type { NearbyArea, UserGeoLocation, ReverseGeocodeResult } from './location';
 export type {
   ListingStatusActorType,

@@ -3,7 +3,7 @@ import type { User } from './user';
 
 export type OtpChannel = 'email' | 'phone';
 
-export type OtpPurpose = 'login' | 'register' | 'password_reset';
+export type OtpPurpose = 'login' | 'register' | 'password_reset' | 'seller_verify';
 
 export type LoginAppTarget = 'web' | 'admin';
 

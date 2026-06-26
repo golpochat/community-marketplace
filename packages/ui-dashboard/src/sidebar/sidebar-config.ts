@@ -1,4 +1,15 @@
+import type { PermissionCode } from '@community-marketplace/types';
+
+import { PERMISSIONS } from '@community-marketplace/types';
+
 import type { DashboardIconName } from '../ui/Icon';
+
+export interface SidebarNavChildItem {
+  id: string;
+  label: string;
+  href: string;
+  permission?: PermissionCode;
+}
 
 export interface SidebarNavItem {
   id: string;
@@ -6,12 +17,51 @@ export interface SidebarNavItem {
   href: string;
   icon: DashboardIconName;
   exact?: boolean;
+  /** When set, item is shown only if the user has this permission (SUPER_ADMIN bypasses). */
+  permission?: PermissionCode;
+  children?: SidebarNavChildItem[];
+  disabled?: boolean;
+  disabledReason?: string;
 }
+
+export const SELLER_VERIFICATION_SIDEBAR_CHILDREN: SidebarNavChildItem[] = [
+  {
+    id: 'sv-pending',
+    label: 'Pending Requests',
+    href: '/admin/seller-verification/pending',
+  },
+  {
+    id: 'sv-under-review',
+    label: 'Under Review',
+    href: '/admin/seller-verification/under-review',
+  },
+  {
+    id: 'sv-approved',
+    label: 'Approved',
+    href: '/admin/seller-verification/approved',
+  },
+  {
+    id: 'sv-rejected',
+    label: 'Rejected',
+    href: '/admin/seller-verification/rejected',
+  },
+  {
+    id: 'sv-suspended',
+    label: 'Suspended Sellers',
+    href: '/admin/seller-verification/suspended',
+  },
+  {
+    id: 'sv-history',
+    label: 'Status History',
+    href: '/admin/seller-verification/history',
+  },
+];
 
 export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
   { id: 'overview', label: 'Overview', href: '/super-admin/dashboard', icon: 'crown', exact: true },
   { id: 'users', label: 'Users', href: '/super-admin/users', icon: 'users' },
   { id: 'verifications', label: 'Verifications', href: '/super-admin/verifications', icon: 'medal' },
+  { id: 'seller-verification', label: 'Seller Verification', href: '/admin/seller-verification/pending', icon: 'shield-check', permission: PERMISSIONS.REVIEW_SELLER_VERIFICATION, children: SELLER_VERIFICATION_SIDEBAR_CHILDREN },
   { id: 'listings', label: 'Listings', href: '/super-admin/listings', icon: 'folder' },
   { id: 'delivery-reviews', label: 'Delivery Reviews', href: '/super-admin/delivery-reviews', icon: 'package' },
   { id: 'price-reviews', label: 'Price Reviews', href: '/super-admin/price-reviews', icon: 'tag' },
@@ -29,6 +79,7 @@ export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
 export const ADMIN_SIDEBAR: SidebarNavItem[] = [
   { id: 'dashboard', label: 'Dashboard', href: '/admin/dashboard', icon: 'bar-chart', exact: true },
   { id: 'users', label: 'Users', href: '/admin/users', icon: 'users' },
+  { id: 'seller-verification', label: 'Seller Verification', href: '/admin/seller-verification/pending', icon: 'shield-check', permission: PERMISSIONS.REVIEW_SELLER_VERIFICATION, children: SELLER_VERIFICATION_SIDEBAR_CHILDREN },
   { id: 'listings', label: 'Listings', href: '/admin/listings', icon: 'folder' },
   { id: 'delivery-reviews', label: 'Delivery Reviews', href: '/admin/delivery-reviews', icon: 'package' },
   { id: 'price-reviews', label: 'Price Reviews', href: '/admin/price-reviews', icon: 'tag' },
@@ -48,7 +99,8 @@ export const SELLER_SIDEBAR: SidebarNavItem[] = [
   { id: 'earnings', label: 'Earnings', href: '/seller/earnings', icon: 'wallet' },
   { id: 'share-analytics', label: 'Share Analytics', href: '/seller/analytics/shares', icon: 'bar-chart' },
   { id: 'chat', label: 'Chat', href: '/seller/chat', icon: 'message-circle' },
-  { id: 'verification', label: 'Verification', href: '/seller/verification', icon: 'medal' },
+  { id: 'profile', label: 'Profile', href: '/seller/profile', icon: 'user-cog' },
+  { id: 'verification', label: 'Verification', href: '/seller/profile?tab=verification', icon: 'medal' },
   { id: 'notifications', label: 'Notifications', href: '/seller/notifications', icon: 'bell' },
   { id: 'settings', label: 'Settings', href: '/seller/settings', icon: 'settings' },
 ];

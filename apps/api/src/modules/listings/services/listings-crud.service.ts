@@ -26,6 +26,7 @@ import { ListingAuditService } from "./listing-audit.service";
 import { ListingVisibilityService } from "./listing-visibility.service";
 import { ListingDeliveryService } from "./listing-delivery.service";
 import { SellerTrustService } from "./seller-trust.service";
+import { SellerListingGateService } from "../../seller/services/seller-listing-gate.service";
 import { computeListingPricing } from "../lib/listing-pricing.lib";
 import { CategoriesService } from "./categories.service";
 import {
@@ -50,6 +51,7 @@ export class ListingsCrudService {
     private readonly delivery: ListingDeliveryService,
     private readonly eventBus: EventBusService,
     private readonly sellerTrust: SellerTrustService,
+    private readonly sellerListingGate: SellerListingGateService,
   ) {}
 
   async findPublic(page = 1, limit = 20) {
@@ -151,7 +153,10 @@ export class ListingsCrudService {
     );
   }
 
-  async create(sellerId: string, input: unknown): Promise<Listing> {
+  async create(
+    sellerId: string,
+    input: unknown,
+  ): Promise<Listing & { sellerNudgeMessage?: string }> {
     const parsed = createListingSchema.parse(input);
     await this.categoriesService.findById(parsed.categoryId);
 
@@ -169,6 +174,8 @@ export class ListingsCrudService {
     if (!seller) {
       throw new NotFoundException("Seller not found");
     }
+
+    await this.sellerListingGate.assertCanCreateListing(sellerId);
 
     if (isNewSellerAccount(seller.createdAt)) {
       const startOfDay = new Date();
@@ -230,15 +237,26 @@ export class ListingsCrudService {
       timestamp: new Date(),
     });
 
+    const gateResult = await this.sellerListingGate.onListingCreated(sellerId);
+
+    if (gateResult.nudgeMessage) {
+      this.eventBus.publish({
+        type: "seller.verification_nudge",
+        payload: { sellerId, message: gateResult.nudgeMessage },
+        timestamp: new Date(),
+      });
+    }
+
     if (parsed.deliverySelections?.length) {
       await this.delivery.saveForDraftListing(
         row.id,
         parsed.deliverySelections,
       );
-      return this.findById(row.id);
+      const listing = await this.findById(row.id);
+      return { ...listing, sellerNudgeMessage: gateResult.nudgeMessage };
     }
 
-    return mapListing(row);
+    return { ...mapListing(row), sellerNudgeMessage: gateResult.nudgeMessage };
   }
 
   async update(
@@ -250,6 +268,10 @@ export class ListingsCrudService {
     const parsed = updateListingSchema.parse(input);
     const existing = await this.getOwnedOrAdmin(listingId, actorId, actorRole);
     const isAdmin = actorRole === "ADMIN" || actorRole === "SUPER_ADMIN";
+
+    if (!isAdmin) {
+      await this.sellerListingGate.assertSellerNotSuspended(actorId);
+    }
 
     if (
       !isAdmin &&
@@ -371,7 +393,11 @@ export class ListingsCrudService {
     actorId: string,
     actorRole: RbacRole,
   ): Promise<void> {
+    const isAdmin = actorRole === "ADMIN" || actorRole === "SUPER_ADMIN";
     await this.getOwnedOrAdmin(listingId, actorId, actorRole);
+    if (!isAdmin) {
+      await this.sellerListingGate.assertSellerNotSuspended(actorId);
+    }
     await this.prisma.listing.delete({ where: { id: listingId } });
 
     await this.audit.record(listingId, "listing_deleted", actorId);
@@ -467,6 +493,8 @@ export class ListingsCrudService {
       throw new ForbiddenException("You can only duplicate your own listings");
     }
 
+    await this.sellerListingGate.assertCanCreateListing(sellerId);
+
     const row = await this.prisma.listing.create({
       data: {
         sellerId,
@@ -504,7 +532,18 @@ export class ListingsCrudService {
       metadata: { duplicatedFrom: listingId },
     });
 
-    return this.findById(row.id);
+    const gateResult = await this.sellerListingGate.onListingCreated(sellerId);
+
+    if (gateResult.nudgeMessage) {
+      this.eventBus.publish({
+        type: "seller.verification_nudge",
+        payload: { sellerId, message: gateResult.nudgeMessage },
+        timestamp: new Date(),
+      });
+    }
+
+    const listing = await this.findById(row.id);
+    return Object.assign(listing, { sellerNudgeMessage: gateResult.nudgeMessage });
   }
 
   private async getOwnedOrAdmin(

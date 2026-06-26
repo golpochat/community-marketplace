@@ -136,6 +136,20 @@ const DEFAULT_TEMPLATES: NotificationTemplateInput[] = [
     variables: ['reason'],
   },
   {
+    key: 'seller_verification_nudge',
+    titleTemplate: 'Complete seller verification',
+    bodyTemplate: '{{message}}',
+    channel: 'in_app',
+    variables: ['message'],
+  },
+  {
+    key: 'seller_verification_nudge',
+    titleTemplate: 'Complete seller verification',
+    bodyTemplate: '{{message}}',
+    channel: 'email',
+    variables: ['message'],
+  },
+  {
     key: 'admin_warning',
     titleTemplate: 'Account warning',
     bodyTemplate: '{{message}}',

@@ -25,6 +25,7 @@ import {
   isPaidPackage,
 } from '../lib/listing-lifecycle.lib';
 import { listingInclude, mapListing } from '../mappers/listing.mapper';
+import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 import { ListingAuditService } from './listing-audit.service';
 
 type PrismaListingStatus = ListingStatus;
@@ -47,6 +48,7 @@ export class ListingLifecycleService {
     private readonly prisma: PrismaService,
     private readonly audit: ListingAuditService,
     private readonly eventBus: EventBusService,
+    private readonly sellerListingGate: SellerListingGateService,
   ) {}
 
   submitForReview(listingId: string, sellerId: string): Promise<Listing> {
@@ -537,6 +539,10 @@ export class ListingLifecycleService {
       listing.sellerId !== params.actorId
     ) {
       throw new ForbiddenException('You can only modify your own listings');
+    }
+
+    if (!isAdmin && params.actorRole === 'SELLER' && params.actorId) {
+      await this.sellerListingGate.assertSellerNotSuspended(params.actorId);
     }
 
     const fromStatus = listing.status as ListingStatus;

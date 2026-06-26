@@ -75,6 +75,8 @@ export class EmailActivationService {
         status: 'active',
         emailVerifiedAt: now,
         phoneVerifiedAt: now,
+        emailVerified: true,
+        phoneVerified: true,
         profile: {
           create: {
             phone: payload.phone,

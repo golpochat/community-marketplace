@@ -14,6 +14,7 @@ import {
 import { PrismaService } from '../../../database/prisma.service';
 import { EventBusService } from '../../../events/event-bus.service';
 import { mapListingImage } from '../mappers/listing.mapper';
+import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 import { ListingAuditService } from './listing-audit.service';
 import { ListingImageProcessorService } from './listing-image-processor.service';
 import { ListingR2StorageService } from './listing-r2-storage.service';
@@ -26,6 +27,7 @@ export class ListingImagesService {
     private readonly processor: ListingImageProcessorService,
     private readonly audit: ListingAuditService,
     private readonly eventBus: EventBusService,
+    private readonly sellerListingGate: SellerListingGateService,
   ) {}
 
   async findByListingId(listingId: string): Promise<ListingImage[]> {
@@ -149,6 +151,9 @@ export class ListingImagesService {
     if (!isAdmin && listing.sellerId !== actorId) {
       throw new ForbiddenException('You can only modify your own listing images');
     }
+    if (!isAdmin) {
+      await this.sellerListingGate.assertSellerNotSuspended(actorId);
+    }
 
     const result = await this.prisma.listingImage.deleteMany({
       where: { id: imageId, listingId },
@@ -176,5 +181,6 @@ export class ListingImagesService {
     if (listing.sellerId !== sellerId) {
       throw new ForbiddenException('You can only modify your own listings');
     }
+    await this.sellerListingGate.assertSellerNotSuspended(sellerId);
   }
 }

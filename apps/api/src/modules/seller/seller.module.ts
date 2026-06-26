@@ -18,9 +18,21 @@ import { SellerShareAnalyticsController } from './seller-share-analytics.control
 import { SellerSearchController } from './seller-search.controller';
 import { SellerBuyerReviewsController } from './seller-buyer-reviews.controller';
 import { SellerBuyerReviewsService } from './seller-buyer-reviews.service';
+import { SellerVerificationController } from './seller-verification.controller';
+import { SellerVerificationModule } from './seller-verification.module';
 
 @Module({
-  imports: [ListingsModule, PaymentsModule, UsersModule, ChatModule, NotificationsModule, SearchModule, ModerationModule, ShareModule],
+  imports: [
+    SellerVerificationModule,
+    ListingsModule,
+    PaymentsModule,
+    UsersModule,
+    ChatModule,
+    NotificationsModule,
+    SearchModule,
+    ModerationModule,
+    ShareModule,
+  ],
   controllers: [
     SellerListingsController,
     SellerEarningsController,
@@ -31,6 +43,7 @@ import { SellerBuyerReviewsService } from './seller-buyer-reviews.service';
     SellerReportsController,
     SellerShareAnalyticsController,
     SellerBuyerReviewsController,
+    SellerVerificationController,
   ],
   providers: [SellerBuyerReviewsService],
 })

@@ -306,3 +306,22 @@ export {
   type ReviewAppealInput,
   type ModerationAppealsQueryInput,
 } from './moderation.schema';
+
+export {
+  sellerVerificationStartSchema,
+  sellerVerificationUploadSchema,
+  sellerVerificationFlowSubmitSchema,
+  sellerVerificationReviewSchema,
+  sellerSuspendSchema,
+  sellerLimitSchema,
+  sellerReverificationSchema,
+  adminSellerVerificationListSchema,
+  type SellerVerificationStartInput,
+  type SellerVerificationUploadInput,
+  type SellerVerificationFlowSubmitInput,
+  type SellerVerificationReviewInput,
+  type SellerSuspendInput,
+  type SellerLimitInput,
+  type SellerReverificationInput,
+  type AdminSellerVerificationListInput,
+} from './seller-verification.schema';

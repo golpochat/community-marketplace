@@ -27,6 +27,7 @@ export interface DashboardLayoutProps {
   topbarTitle?: string;
   topbarActions?: ReactNode;
   footerCopyright?: string;
+  sidebarItems?: import('../sidebar/sidebar-config').SidebarNavItem[];
 }
 
 function DashboardLayoutFrame({
@@ -42,13 +43,14 @@ function DashboardLayoutFrame({
   topbarTitle,
   topbarActions,
   footerCopyright,
+  sidebarItems,
 }: DashboardLayoutProps) {
   const { mobileOpen, setMobileOpen } = useSidebar();
 
   return (
     <ThemeProvider role={role} theme={theme}>
       <div className="flex min-h-screen bg-[hsl(var(--dashboard-main-bg))] text-[hsl(var(--dashboard-main-fg))]">
-        <Sidebar role={role} brand={brand} brandAbbr={brandAbbr} />
+        <Sidebar role={role} brand={brand} brandAbbr={brandAbbr} items={sidebarItems} />
         {mobileOpen ? (
           <button
             type="button"
@@ -63,7 +65,7 @@ function DashboardLayoutFrame({
             mobileOpen ? 'translate-x-0' : '-translate-x-full',
           )}
         >
-          <Sidebar role={role} brand={brand} brandAbbr={brandAbbr} mobile />
+          <Sidebar role={role} brand={brand} brandAbbr={brandAbbr} mobile items={sidebarItems} />
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar

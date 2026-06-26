@@ -21,6 +21,7 @@ import {
   MAX_AUTO_APPROVE_DISCOUNT_PERCENT,
 } from '../lib/listing-pricing.lib';
 import { mapPriceChangeLog, mapPricingFromListing } from '../mappers/pricing.mapper';
+import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 
 const HIGH_RISK_CATEGORY_SLUGS = new Set(['vehicles', 'electronics']);
 
@@ -30,6 +31,7 @@ export class ListingPricingService {
     private readonly prisma: PrismaService,
     private readonly eventBus: EventBusService,
     private readonly notifications: NotificationsService,
+    private readonly sellerListingGate: SellerListingGateService,
   ) {}
 
   resolvePricing(input: unknown): ListingPricingFields {
@@ -325,6 +327,9 @@ export class ListingPricingService {
     const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
     if (!isAdmin && listing.sellerId !== actorId) {
       throw new ForbiddenException('You can only update pricing for your own listings');
+    }
+    if (!isAdmin) {
+      await this.sellerListingGate.assertSellerNotSuspended(actorId);
     }
     return listing;
   }

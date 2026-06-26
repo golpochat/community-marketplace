@@ -9,8 +9,9 @@ import type {
   ListingDeliverySelection,
   ListingReviewContext,
   PendingReviewItem,
-  UserVerification,
+  SellerVerificationStatus,
 } from "@community-marketplace/types";
+import { SELLER_VERIFICATION_MESSAGES } from "@community-marketplace/types";
 import {
   formatCurrency,
   formatListedAgo,
@@ -40,6 +41,17 @@ import {
 import { ListingPackageDialog } from "@/components/seller/listing-package-dialog";
 import { ListingReviewThread } from "@/components/dashboard/listing-review-thread";
 import { SellerConnectBanner } from "@/components/seller/seller-connect-banner";
+import { CreateListingButton } from "@/components/seller/create-listing-button";
+import { SellerVerificationBanner } from "@/components/seller/seller-verification-banner";
+import { SellerVerificationModal } from "@/components/seller/seller-verification-modal";
+import { VerificationProgressBar } from "@/components/seller/verification";
+import { VerificationBanner } from "@/components/seller/verification";
+import {
+  isListingCreationBlocked,
+  listingGateBlockMessage,
+  useSellerListingGate,
+} from "@/hooks/use-seller-listing-gate";
+import { resolveVerificationNudge } from "@/lib/verification-nudge";
 import {
   ListingFormRouter,
   type SellerCategoryOption,
@@ -63,6 +75,8 @@ import {
   pricingService,
 } from "@/services/pricing.service";
 import { sellerService } from "@/services/marketplace.service";
+import { sellerVerificationService } from "@/services/seller-verification.service";
+import { ApiClientError } from "@/lib/api-client";
 import { listingsService } from "@/services/listings.service";
 import { ReviewBuyerPromptDialog } from "@/components/trust/review-buyer-prompt-dialog";
 import { trustService } from "@/services/trust.service";
@@ -171,6 +185,9 @@ export function SellerListingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
+  const [showGateModal, setShowGateModal] = useState(false);
+  const { tooltip: listingGateMessage, duplicateBlocked, suspended: sellerSuspended, blockMessage: sellerBlockMessage } =
+    useSellerListingGate();
   const [packageDialog, setPackageDialog] = useState<{
     listingId: string;
     mode: "renew" | "upgrade";
@@ -244,6 +261,9 @@ export function SellerListingsPage() {
       }
       await load();
     } catch (err) {
+      if (err instanceof ApiClientError && err.status === 403) {
+        setShowGateModal(true);
+      }
       setError(err instanceof Error ? err.message : "Action failed");
     } finally {
       setActionId(null);
@@ -296,12 +316,7 @@ export function SellerListingsPage() {
               </option>
             ))}
           </select>
-          <Link
-            href="/seller/listings/create"
-            className="inline-flex rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-          >
-            Create listing
-          </Link>
+          <CreateListingButton label="Create listing" />
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
@@ -391,6 +406,10 @@ export function SellerListingsPage() {
                       listing={listing}
                       actionId={actionId}
                       onAction={(id, action) => void runAction(id, action)}
+                      listingActionsBlocked={sellerSuspended}
+                      listingActionsBlockedReason={sellerBlockMessage}
+                      duplicateBlocked={duplicateBlocked}
+                      duplicateBlockedReason={listingGateMessage}
                     />
                   </td>
                 </tr>
@@ -410,6 +429,12 @@ export function SellerListingsPage() {
         defaultPackage={DEFAULT_RENEW_PACKAGE}
         onClose={() => setPackageDialog(null)}
         onConfirm={(packageType) => void handlePackageConfirm(packageType)}
+      />
+      <SellerVerificationModal
+        open={showGateModal}
+        onClose={() => setShowGateModal(false)}
+        message={listingGateMessage}
+        dismissible={false}
       />
     </DashboardPageShell>
   );
@@ -494,15 +519,15 @@ export function SellerSalesPage() {
 }
 
 export function SellerVerificationPage() {
-  const [verification, setVerification] = useState<UserVerification | null>(
-    null,
-  );
+  const [status, setStatus] = useState<SellerVerificationStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [files, setFiles] = useState<{
-    idDocumentFront?: File;
-    idDocumentBack?: File;
+    idDocument?: File;
     selfie?: File;
     addressProof?: File;
   }>({});
@@ -511,8 +536,8 @@ export function SellerVerificationPage() {
     setLoading(true);
     setError(null);
     try {
-      const response = await sellerService.getVerification();
-      setVerification(response.data ?? null);
+      const response = await sellerVerificationService.getStatus();
+      setStatus(response);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load verification",
@@ -530,38 +555,67 @@ export function SellerVerificationPage() {
     setFiles((current) => ({ ...current, [field]: file }));
   }
 
-  async function handleSubmit(event: React.FormEvent) {
+  async function handleSendOtp() {
+    if (!phone.trim()) {
+      setError("Enter your phone number.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      await sellerVerificationService.start({
+        action: "send_otp",
+        phone: phone.trim(),
+      });
+      setOtpSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send OTP");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleVerifyOtp(event: React.FormEvent) {
     event.preventDefault();
-    if (
-      !files.idDocumentFront ||
-      !files.idDocumentBack ||
-      !files.selfie ||
-      !files.addressProof
-    ) {
-      setError("Please upload all required documents.");
+    setSubmitting(true);
+    setError(null);
+    try {
+      await sellerVerificationService.start({
+        action: "verify_otp",
+        phone: phone.trim(),
+        code: otpCode.trim(),
+      });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid OTP");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleSubmitDocuments(event: React.FormEvent) {
+    event.preventDefault();
+    if (!files.idDocument || !files.selfie) {
+      setError("ID document and selfie are required.");
       return;
     }
 
     setSubmitting(true);
     setError(null);
     try {
-      const [
-        idDocumentFrontUrl,
-        idDocumentBackUrl,
-        selfieUrl,
-        addressProofUrl,
-      ] = await Promise.all([
-        sellerService.uploadVerificationDocument(files.idDocumentFront),
-        sellerService.uploadVerificationDocument(files.idDocumentBack),
-        sellerService.uploadVerificationDocument(files.selfie),
-        sellerService.uploadVerificationDocument(files.addressProof),
+      const [idDocumentPath, selfiePath, addressDocumentPath] = await Promise.all([
+        sellerVerificationService.uploadDocument(files.idDocument, "id"),
+        sellerVerificationService.uploadDocument(files.selfie, "selfie"),
+        files.addressProof
+          ? sellerVerificationService.uploadDocument(files.addressProof, "id")
+          : Promise.resolve(undefined),
       ]);
 
-      await sellerService.submitVerification({
-        idDocumentFrontUrl,
-        idDocumentBackUrl,
-        selfieUrl,
-        addressProofUrl,
+      await sellerVerificationService.submit({
+        idDocumentPath,
+        selfiePath,
+        ...(addressDocumentPath ? { addressDocumentPath } : {}),
+        ...(phone.trim() ? { phoneNumber: phone.trim() } : {}),
       });
       setFiles({});
       await load();
@@ -574,56 +628,134 @@ export function SellerVerificationPage() {
     }
   }
 
-  const canSubmit = !verification || verification.status === "rejected";
+  const stage = status?.currentStage;
+  const canSubmitDocs =
+    status &&
+    status.sellerStatus !== "verified" &&
+    status.sellerStatus !== "under_review" &&
+    !status.pendingRequest &&
+    status.phoneVerified &&
+    status.emailVerified;
 
   return (
     <DashboardPageShell
       title="Verification"
-      description="Complete identity verification to earn a trusted seller badge."
+      description="Complete verification to earn a trusted seller badge and unlock unlimited listings."
       loading={loading}
       error={error}
       empty={false}
     >
+      {status && status.sellerStatus !== "verified" && (
+        <VerificationProgressBar
+          className="mb-4"
+          used={status.unverifiedListingCount}
+          limit={status.sellerLimit}
+        />
+      )}
+
       <Card title="Verification status">
-        {verification ? (
+        {status ? (
           <dl className="mb-6 space-y-2 text-sm">
             <div className="flex justify-between gap-4">
-              <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">
-                Status
-              </dt>
-              <dd className="font-medium capitalize">{verification.status}</dd>
+              <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Seller status</dt>
+              <dd className="font-medium capitalize">
+                {status.sellerStatus.replace(/_/g, " ")}
+              </dd>
             </div>
             <div className="flex justify-between gap-4">
-              <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">
-                Submitted
-              </dt>
-              <dd>{new Date(verification.createdAt).toLocaleString()}</dd>
+              <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Phone</dt>
+              <dd>{status.phoneVerified ? "Verified" : "Required"}</dd>
             </div>
-            {verification.rejectionReason && (
+            <div className="flex justify-between gap-4">
+              <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Email</dt>
+              <dd>{status.emailVerified ? "Verified" : "Required"}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Identity</dt>
+              <dd>{status.idVerified ? "Verified" : stage === "review" ? "Under review" : "Pending"}</dd>
+            </div>
+            {status.verificationRejectedReason && (
               <div className="flex justify-between gap-4">
-                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">
-                  Rejection reason
-                </dt>
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Rejection reason</dt>
                 <dd className="text-right text-red-700">
-                  {verification.rejectionReason}
+                  {status.verificationRejectedReason}
                 </dd>
               </div>
             )}
           </dl>
-        ) : (
-          <p className="mb-6 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-            Upload your identity documents to begin verification.
+        ) : null}
+
+        {status?.sellerStatus === "verified" && (
+          <p className="text-sm font-medium text-green-700">
+            {SELLER_VERIFICATION_MESSAGES.APPROVED}
           </p>
         )}
 
-        {canSubmit && (
-          <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+        {status?.sellerStatus === "under_review" && (
+          <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+            {SELLER_VERIFICATION_MESSAGES.UNDER_REVIEW}
+          </p>
+        )}
+
+        {stage === "phone" && (
+          <div className="space-y-4">
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+              Verify your phone number with a one-time code.
+            </p>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+353..."
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+            {!otpSent ? (
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => void handleSendOtp()}
+                className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+              >
+                Send OTP
+              </button>
+            ) : (
+              <form onSubmit={(e) => void handleVerifyOtp(e)} className="space-y-3">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  placeholder="Enter OTP code"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                />
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+                >
+                  Verify phone
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
+        {stage === "email" && (
+          <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+            Confirm your email address using the link sent at registration, then refresh this page.
+          </p>
+        )}
+
+        {canSubmitDocs && (
+          <form onSubmit={(e) => void handleSubmitDocuments(e)} className="space-y-4">
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+              Upload your identity documents for manual review.
+            </p>
             {(
               [
-                ["idDocumentFront", "ID document (front)"],
-                ["idDocumentBack", "ID document (back)"],
-                ["selfie", "Selfie photo"],
-                ["addressProof", "Proof of address"],
+                ["idDocument", "Government ID (required)"],
+                ["selfie", "Selfie photo (required)"],
+                ["addressProof", "Proof of address (optional)"],
               ] as const
             ).map(([field, label]) => (
               <div key={field}>
@@ -645,7 +777,7 @@ export function SellerVerificationPage() {
               disabled={submitting}
               className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
             >
-              {submitting ? "Uploading…" : "Submit verification"}
+              {submitting ? "Uploading…" : "Submit for review"}
             </button>
           </form>
         )}
@@ -661,7 +793,30 @@ export function SellerCreateListingPage() {
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [nudgeMessage, setNudgeMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [verificationBlocked, setVerificationBlocked] = useState(false);
+  const [gateModalOpen, setGateModalOpen] = useState(false);
+  const [blockMessage, setBlockMessage] = useState<string | undefined>();
+  const [createNudge, setCreateNudge] = useState(
+    null as ReturnType<typeof resolveVerificationNudge>,
+  );
+
+  useEffect(() => {
+    void sellerVerificationService
+      .getStatus()
+      .then((status) => {
+        const blocked = isListingCreationBlocked(status);
+        setVerificationBlocked(blocked);
+        setBlockMessage(listingGateBlockMessage(status));
+        setCreateNudge(resolveVerificationNudge(status));
+
+        if (blocked && status.sellerStatus === "verification_required") {
+          router.replace("/seller/profile?tab=verification");
+        }
+      })
+      .catch(() => undefined);
+  }, [router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -712,14 +867,24 @@ export function SellerCreateListingPage() {
       );
       const response = await sellerService.createListing(payload);
       const listingId = response.data?.id;
+      const nudge = (response.data as { sellerNudgeMessage?: string } | undefined)
+        ?.sellerNudgeMessage;
+      if (nudge) setNudgeMessage(nudge);
       if (listingId && data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
       }
       setSuccess(
-        "Draft saved. An admin will review it before it goes live on the marketplace.",
+        nudge
+          ? `Draft saved. ${nudge}`
+          : "Draft saved. An admin will review it before it goes live on the marketplace.",
       );
       window.setTimeout(() => router.push("/seller/listings"), 1200);
     } catch (err) {
+      if (err instanceof ApiClientError && err.status === 403) {
+        setVerificationBlocked(true);
+        setGateModalOpen(true);
+        setBlockMessage(err.message);
+      }
       setError(
         err instanceof Error ? err.message : "Failed to save listing draft",
       );
@@ -753,14 +918,24 @@ export function SellerCreateListingPage() {
       );
       const response = await sellerService.createListing(payload);
       const listingId = response.data?.id;
+      const nudge = (response.data as { sellerNudgeMessage?: string } | undefined)
+        ?.sellerNudgeMessage;
+      if (nudge) setNudgeMessage(nudge);
       if (listingId && data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
       }
       setSuccess(
-        "Draft saved. An admin will review it before it goes live on the marketplace.",
+        nudge
+          ? `Draft saved. ${nudge}`
+          : "Draft saved. An admin will review it before it goes live on the marketplace.",
       );
       window.setTimeout(() => router.push("/seller/listings"), 1200);
     } catch (err) {
+      if (err instanceof ApiClientError && err.status === 403) {
+        setVerificationBlocked(true);
+        setGateModalOpen(true);
+        setBlockMessage(err.message);
+      }
       setError(
         err instanceof Error ? err.message : "Failed to save listing draft",
       );
@@ -775,6 +950,26 @@ export function SellerCreateListingPage() {
       description="Add a new item to your store."
     >
       <SellerConnectBanner className="mb-4" />
+      <SellerVerificationBanner className="mb-4" />
+      {createNudge && !verificationBlocked ? (
+        <VerificationBanner
+          type={createNudge.bannerType}
+          message={createNudge.message}
+          className="mb-4"
+          actionHref={createNudge.verifyHref}
+          actionLabel={createNudge.verifyLabel}
+          dismissible={createNudge.dismissible}
+        />
+      ) : null}
+      <SellerVerificationModal
+        open={gateModalOpen}
+        onClose={() => setGateModalOpen(false)}
+        message={blockMessage}
+        dismissible={false}
+      />
+      {nudgeMessage && (
+        <VerificationBanner type="info" message={nudgeMessage} className="mb-4" />
+      )}
       {categoriesLoading && (
         <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           Loading categories…
@@ -792,7 +987,10 @@ export function SellerCreateListingPage() {
         <ListingFormRouter
           categories={categories}
           disabled={
-            categoriesLoading || !!categoriesError || categories.length === 0
+            categoriesLoading ||
+            !!categoriesError ||
+            categories.length === 0 ||
+            verificationBlocked
           }
           submitLabel="Save draft"
           onGenericSubmit={(data) => void handleGenericSubmit(data)}

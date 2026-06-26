@@ -7,6 +7,12 @@ interface ListingSellerActionsProps {
   listing: Listing;
   actionId: string | null;
   onAction: (listingId: string, action: SellerListingAction) => void;
+  /** When true, all listing actions are disabled (suspended seller). */
+  listingActionsBlocked?: boolean;
+  listingActionsBlockedReason?: string;
+  /** When true, duplicate is disabled (unverified limit reached). */
+  duplicateBlocked?: boolean;
+  duplicateBlockedReason?: string;
 }
 
 export type SellerListingAction =
@@ -23,9 +29,36 @@ export type SellerListingAction =
   | 'duplicate'
   | 'delete';
 
-export function ListingSellerActions({ listing, actionId, onAction }: ListingSellerActionsProps) {
+export function ListingSellerActions({
+  listing,
+  actionId,
+  onAction,
+  listingActionsBlocked = false,
+  listingActionsBlockedReason,
+  duplicateBlocked = false,
+  duplicateBlockedReason,
+}: ListingSellerActionsProps) {
   const busy = actionId === listing.id;
   const status = listing.status as ListingStatus;
+
+  if (listingActionsBlocked) {
+    return (
+      <p className="text-xs text-red-600" title={listingActionsBlockedReason}>
+        Listing actions unavailable
+      </p>
+    );
+  }
+
+  const duplicateButton = (key: string) => (
+    <span key={key} title={duplicateBlocked ? duplicateBlockedReason : undefined}>
+      <IconActionButton
+        icon="plus"
+        label="Duplicate listing"
+        disabled={busy || duplicateBlocked}
+        onClick={() => onAction(listing.id, 'duplicate')}
+      />
+    </span>
+  );
 
   const editButton = (
     <IconActionButton
@@ -145,26 +178,12 @@ export function ListingSellerActions({ listing, actionId, onAction }: ListingSel
           disabled={busy}
           onClick={() => onAction(listing.id, 'renew')}
         />,
-        <IconActionButton
-          key="duplicate"
-          icon="plus"
-          label="Duplicate listing"
-          disabled={busy}
-          onClick={() => onAction(listing.id, 'duplicate')}
-        />,
+        duplicateButton('duplicate'),
       );
       break;
     case 'sold':
     case 'ended':
-      actions.push(
-        <IconActionButton
-          key="duplicate"
-          icon="plus"
-          label="Duplicate listing"
-          disabled={busy}
-          onClick={() => onAction(listing.id, 'duplicate')}
-        />,
-      );
+      actions.push(duplicateButton('duplicate'));
       break;
     case 'rejected':
       actions.push(editButton);

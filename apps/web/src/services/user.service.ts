@@ -26,4 +26,12 @@ export const userService = {
     });
     return response.data;
   },
+
+  async requestAccountDeactivation(): Promise<{ message: string; deletionRequestedAt?: string }> {
+    const response = await apiClient<{ message: string; deletionRequestedAt?: string }>(
+      `${WEB_API_ROUTES.users.meSettings}/delete-request`,
+      { method: 'POST' },
+    );
+    return response.data;
+  },
 };

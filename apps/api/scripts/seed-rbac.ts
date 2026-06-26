@@ -7,7 +7,7 @@ import { ensureApiEnv } from './load-api-env';
 
 ensureApiEnv();
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma';
 
 import { runRbacSeed } from '../src/database/seeds/rbac.seed';
 

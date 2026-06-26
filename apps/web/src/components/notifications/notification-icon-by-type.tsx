@@ -25,6 +25,7 @@ const ICONS: Record<NotificationType, string> = {
   price_review_pending: '⏳',
   verification_approved: '🛡️',
   verification_rejected: '⚠️',
+  seller_verification_nudge: '🛡️',
   admin_warning: '⚠️',
   system: '🔔',
 };

@@ -42,7 +42,8 @@ export {
   SELLER_SIDEBAR,
   BUYER_SIDEBAR,
 } from './sidebar/sidebar-config';
-export type { SidebarNavItem } from './sidebar/sidebar-config';
+export type { SidebarNavItem, SidebarNavChildItem } from './sidebar/sidebar-config';
+export { SELLER_VERIFICATION_SIDEBAR_CHILDREN } from './sidebar/sidebar-config';
 
 export { PageHeader } from './ui/PageHeader';
 export type { PageHeaderProps } from './ui/PageHeader';

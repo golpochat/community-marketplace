@@ -14,6 +14,7 @@ const PERMISSION_ACTION_PREFIXES = [
   'delete',
   'approve',
   'reject',
+  'review',
   'assign',
   'ban',
   'suspend',
