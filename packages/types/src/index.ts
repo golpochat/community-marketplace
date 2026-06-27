@@ -195,13 +195,27 @@ export type {
 export type {
   WalletTransactionType,
   CashbackGrantStatus,
+  PlatformPurchaseType,
+  PlatformPurchaseStatus,
+  BoostPackageType,
+  PlatformSkuConfig,
+  PlatformPricingConfig,
   MonetizationSettings,
+  PlatformPurchase,
+  BoostIntentResponse,
+  BoostCatalogOption,
+  BoostCatalogListing,
+  BoostCatalogResponse,
   SellerPlatformFeeInfo,
   WalletTransaction,
   CashbackGrant,
   PendingCashbackUnlock,
   BuyerWalletSummary,
   CashbackEstimate,
+} from './monetization';
+export {
+  BOOST_PACKAGE_TYPES,
+  isBoostPackageType,
 } from './monetization';
 export type {
   NotificationType,

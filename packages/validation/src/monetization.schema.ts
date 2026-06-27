@@ -7,6 +7,7 @@ const feePercentSchema = z.number().min(3).max(15);
 
 export const platformSettingsUpdateSchema = z.object({
   defaultPlatformFeePercent: feePercentSchema.optional(),
+  verifiedSellerFeePercent: feePercentSchema.optional(),
   cashbackPercent: z.number().min(0).max(10).optional(),
   coolingDays: z.number().int().min(1).max(90).optional(),
   maxCashbackPerOrder: z.number().min(0).max(10_000).optional(),
@@ -14,7 +15,33 @@ export const platformSettingsUpdateSchema = z.object({
   cashbackEnabled: z.boolean().optional(),
   cashbackMinOrderAmount: z.number().min(0).max(10_000).optional(),
   allowedCashbackMethods: z.array(paymentMethodSchema).min(1).optional(),
+  boostsEnabled: z.boolean().optional(),
+  boostPrice7d: z.number().min(0).max(999).optional(),
+  boostPrice30d: z.number().min(0).max(999).optional(),
 });
+
+export const boostPackageTypeSchema = z.enum(['PAID_7D', 'PAID_30D']);
+
+export const createBoostIntentSchema = z.object({
+  listingId: uuidSchema,
+  packageType: boostPackageTypeSchema,
+});
+
+export const confirmBoostSchema = z.object({
+  purchaseId: uuidSchema,
+});
+
+export const platformPurchasesAdminFiltersSchema = paginationSchema.extend({
+  type: z.enum(['listing_boost']).optional(),
+  status: z.enum(['pending', 'succeeded', 'failed', 'refunded']).optional(),
+  userId: uuidSchema.optional(),
+});
+
+export type CreateBoostIntentInput = z.infer<typeof createBoostIntentSchema>;
+export type ConfirmBoostInput = z.infer<typeof confirmBoostSchema>;
+export type PlatformPurchasesAdminFiltersInput = z.infer<
+  typeof platformPurchasesAdminFiltersSchema
+>;
 
 export const sellerFeeOverrideSchema = z.object({
   userId: uuidSchema,

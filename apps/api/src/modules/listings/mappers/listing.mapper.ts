@@ -13,6 +13,7 @@ import {
 } from "@community-marketplace/utils";
 
 import { resolveAssetPublicUrl } from "../../../libs/asset-url.lib";
+import { isListingBoosted } from "../../monetization/lib/boost.lib";
 import { readStorePrefs } from "../utils/store-contact.util";
 import { buildStoreSlug } from "../utils/store-slug.util";
 import {
@@ -154,6 +155,8 @@ export function mapListing(
     bannedAt: row.bannedAt?.toISOString(),
     isPaid: row.isPaid,
     packageType: row.packageType,
+    boostedUntil: row.boostedUntil?.toISOString(),
+    isBoosted: isListingBoosted(row.boostedUntil),
     activatedAt: row.activatedAt?.toISOString(),
     expiresAt: row.expiresAt?.toISOString(),
     endedAt: row.endedAt?.toISOString(),
@@ -284,6 +287,8 @@ export function mapListingSummary(
     favoriteCount: row.favoriteCount,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    boostedUntil: row.boostedUntil?.toISOString(),
+    isBoosted: isListingBoosted(row.boostedUntil),
     activatedAt: row.activatedAt?.toISOString(),
     deliverySummary: buildDeliverySummaryLabel(deliveryOptions),
     sellerVerified: isSellerVerified(row.seller),
@@ -336,6 +341,8 @@ export function toMeiliDocument(
     favoriteCount: row.favoriteCount,
     viewCount: row.viewCount,
     createdAt: row.createdAt.getTime(),
+    boostedUntil: row.boostedUntil?.getTime() ?? 0,
+    isBoosted: isListingBoosted(row.boostedUntil),
     sellerStatus: row.seller.status,
     ...(embedding ? { embedding } : {}),
   };

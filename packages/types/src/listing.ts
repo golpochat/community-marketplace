@@ -181,6 +181,8 @@ export interface Listing {
   category?: Category;
   condition: ListingCondition;
   status: ListingStatus;
+  boostedUntil?: string;
+  isBoosted?: boolean;
   isPaid: boolean;
   packageType: ListingPackageType;
   activatedAt?: string;
@@ -221,6 +223,8 @@ export interface ListingSummary {
   favoriteCount: number;
   createdAt: string;
   updatedAt?: string;
+  boostedUntil?: string;
+  isBoosted?: boolean;
   activatedAt?: string;
   deliverySummary?: string;
   sellerVerified?: boolean;

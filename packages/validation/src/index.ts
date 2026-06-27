@@ -251,8 +251,15 @@ export {
   cashbackGrantsAdminFiltersSchema,
   walletTransactionsAdminFiltersSchema,
   cashbackEstimateQuerySchema,
+  boostPackageTypeSchema,
+  createBoostIntentSchema,
+  confirmBoostSchema,
+  platformPurchasesAdminFiltersSchema,
   type PlatformSettingsUpdateInput,
   type SellerFeeOverrideInput,
+  type CreateBoostIntentInput,
+  type ConfirmBoostInput,
+  type PlatformPurchasesAdminFiltersInput,
 } from './monetization.schema';
 
 export {

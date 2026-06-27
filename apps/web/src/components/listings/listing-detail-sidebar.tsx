@@ -13,6 +13,7 @@ import { MapPin } from 'lucide-react';
 
 import { ChatButton } from '@/components/listings/chat-button';
 import { BuyerProtectionBanner } from '@/components/listings/buyer-protection-banner';
+import { BoostedBadge } from '@/components/listings/boosted-badge';
 import { ListingCashbackCue } from '@/components/listings/listing-cashback-cue';
 import { ListingDeliveryDisplay } from '@/components/listings/listing-delivery-display';
 import { ListingPriceDisplay } from '@/components/listings/listing-price-display';
@@ -75,15 +76,18 @@ export function ListingDetailSidebar({
       {!compact && <ListingCashbackCue listingId={listing.id} />}
 
       <SidebarPanel>
-        <ListingPriceDisplay
-          price={listing.price}
-          originalPrice={listing.originalPrice}
-          salePrice={listing.salePrice}
-          discountPercent={listing.discountPercent}
-          currency={listing.currency}
-          size="detail"
-          priceDroppedAt={listing.priceDroppedAt}
-        />
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <ListingPriceDisplay
+            price={listing.price}
+            originalPrice={listing.originalPrice}
+            salePrice={listing.salePrice}
+            discountPercent={listing.discountPercent}
+            currency={listing.currency}
+            size="detail"
+            priceDroppedAt={listing.priceDroppedAt}
+          />
+          <BoostedBadge boostedUntil={listing.boostedUntil} />
+        </div>
 
         <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
           <div className="flex items-start gap-2 text-sm text-gray-700">

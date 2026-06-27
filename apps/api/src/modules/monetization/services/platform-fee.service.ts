@@ -45,21 +45,28 @@ export class PlatformFeeService {
     const [seller, platform] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: sellerId },
-        select: { customPlatformFeePercent: true },
+        select: { customPlatformFeePercent: true, sellerStatus: true },
       }),
       this.settings.get(),
     ]);
 
     const defaultFeePercent = platform.defaultPlatformFeePercent;
+    const verifiedSellerFeePercent = platform.verifiedSellerFeePercent;
     const isCustomOverride = seller?.customPlatformFeePercent != null;
     const effectiveFeePercent = isCustomOverride
       ? Number(seller!.customPlatformFeePercent)
       : defaultFeePercent;
+    const isVerifiedRate =
+      seller?.sellerStatus === 'verified' &&
+      isCustomOverride &&
+      effectiveFeePercent === verifiedSellerFeePercent;
 
     return {
       effectiveFeePercent,
       isCustomOverride,
       defaultFeePercent,
+      verifiedSellerFeePercent,
+      isVerifiedRate,
     };
   }
 

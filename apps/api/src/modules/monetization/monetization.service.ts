@@ -5,6 +5,7 @@ import type { PlatformSettingsUpdateInput, SellerFeeOverrideInput } from '@commu
 import { BuyerWalletService } from './services/buyer-wallet.service';
 import { CashbackGrantsService } from './services/cashback-grants.service';
 import { PlatformFeeService } from './services/platform-fee.service';
+import { PlatformPurchaseService } from './services/platform-purchase.service';
 import { PlatformSettingsService } from './services/platform-settings.service';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class MonetizationService {
     private readonly fees: PlatformFeeService,
     private readonly grants: CashbackGrantsService,
     private readonly wallet: BuyerWalletService,
+    private readonly purchases: PlatformPurchaseService,
   ) {}
 
   getPlatformSettings() {
@@ -51,5 +53,9 @@ export class MonetizationService {
 
   listWalletTransactions(filters: Parameters<BuyerWalletService['listTransactionsAdmin']>[0]) {
     return this.wallet.listTransactionsAdmin(filters);
+  }
+
+  listPlatformPurchases(filters: Parameters<PlatformPurchaseService['listAdmin']>[0]) {
+    return this.purchases.listAdmin(filters);
   }
 }

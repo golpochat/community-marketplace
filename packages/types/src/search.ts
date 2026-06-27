@@ -36,6 +36,8 @@ export interface ListingSearchDocument {
   imageUrl?: string;
   favoriteCount: number;
   viewCount: number;
+  boostedUntil: number;
+  isBoosted: boolean;
   createdAt: number;
   sellerStatus: string;
   embedding?: number[];

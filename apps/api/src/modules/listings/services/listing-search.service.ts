@@ -353,7 +353,7 @@ export class ListingSearchService {
         return { createdAt: 'desc' };
       case 'newest':
       default:
-        return { createdAt: 'desc' };
+        return [{ boostedUntil: { sort: 'desc', nulls: 'last' } }, { createdAt: 'desc' }];
     }
   }
 }

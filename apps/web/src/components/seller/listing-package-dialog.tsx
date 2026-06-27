@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import type { ListingPackageType } from '@community-marketplace/types';
 
+import type { ListingPackageOption } from '@/lib/listing-package-options';
 import { LISTING_PACKAGE_OPTIONS } from '@/lib/listing-package-options';
 
 interface ListingPackageDialogProps {
@@ -11,6 +12,7 @@ interface ListingPackageDialogProps {
   title: string;
   confirmLabel?: string;
   defaultPackage?: ListingPackageType;
+  options?: ListingPackageOption[];
   onClose: () => void;
   onConfirm: (packageType: ListingPackageType) => void;
 }
@@ -20,6 +22,7 @@ export function ListingPackageDialog({
   title,
   confirmLabel = 'Confirm',
   defaultPackage = 'FREE',
+  options = LISTING_PACKAGE_OPTIONS,
   onClose,
   onConfirm,
 }: ListingPackageDialogProps) {
@@ -40,7 +43,7 @@ export function ListingPackageDialog({
         </h2>
         <p className="mt-1 text-sm text-gray-600">Choose how long your listing stays live.</p>
         <div className="mt-4 space-y-2">
-          {LISTING_PACKAGE_OPTIONS.map((option) => (
+          {options.map((option) => (
             <label
               key={option.value}
               className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 px-3 py-2 hover:bg-gray-50"

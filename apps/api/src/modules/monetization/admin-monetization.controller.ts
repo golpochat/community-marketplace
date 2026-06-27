@@ -3,6 +3,7 @@ import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
 import { PERMISSIONS } from '@community-marketplace/types';
 import {
   cashbackGrantsAdminFiltersSchema,
+  platformPurchasesAdminFiltersSchema,
   platformSettingsUpdateSchema,
   sellerFeeOverrideSchema,
   walletTransactionsAdminFiltersSchema,
@@ -39,6 +40,19 @@ export class AdminMonetizationController {
   ) {
     const dto = sellerFeeOverrideSchema.parse(body);
     return this.monetization.setSellerFeeOverride(user.id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('platform-purchases')
+  listPlatformPurchases(@Query() query: Record<string, string>) {
+    const filters = platformPurchasesAdminFiltersSchema.parse({
+      page: query.page ? parseInt(query.page, 10) : 1,
+      limit: query.limit ? parseInt(query.limit, 10) : 20,
+      type: query.type,
+      status: query.status,
+      userId: query.userId,
+    });
+    return this.monetization.listPlatformPurchases(filters);
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)

@@ -115,7 +115,7 @@ export function ListingSellerActions({
         <IconActionButton
           key="upgrade"
           icon="check"
-          label="Upgrade package"
+          label="Boost listing"
           disabled={busy}
           onClick={() => onAction(listing.id, 'upgrade')}
         />,

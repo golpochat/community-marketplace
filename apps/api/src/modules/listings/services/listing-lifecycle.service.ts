@@ -244,6 +244,12 @@ export class ListingLifecycleService {
 
     const now = new Date();
     const packageType = parsed.packageType as ListingPackageType;
+    if (isPaidPackage(packageType)) {
+      throw new BadRequestException(
+        'Paid boosts require checkout. Use POST /seller/monetization/boosts/intent.',
+      );
+    }
+
     const expiresAt = computeExpiresAt(now, packageType);
 
     const row = await this.prisma.$transaction(async (tx) => {
@@ -296,6 +302,12 @@ export class ListingLifecycleService {
 
     const now = new Date();
     const packageType = parsed.packageType as ListingPackageType;
+    if (isPaidPackage(packageType)) {
+      throw new BadRequestException(
+        'Paid boosts require checkout. Use POST /seller/monetization/boosts/intent.',
+      );
+    }
+
     const expiresAt = computeExpiresAt(now, packageType);
 
     const row = await this.prisma.listing.update({

@@ -1,11 +1,15 @@
 import type {
+  BoostCatalogResponse,
+  BoostIntentResponse,
   BuyerWalletSummary,
   CashbackEstimate,
   CashbackGrant,
   MonetizationSettings,
+  PlatformPurchase,
   SellerPlatformFeeInfo,
   WalletTransaction,
 } from '@community-marketplace/types';
+import type { CreateBoostIntentInput, PlatformSettingsUpdateInput } from '@community-marketplace/validation';
 import type { PaginatedResult } from '@community-marketplace/types';
 
 import { apiClient } from '@/lib/api-client';
@@ -33,6 +37,29 @@ export const monetizationService = {
     return response.data!;
   },
 
+  async getBoostCatalog(listingId: string): Promise<BoostCatalogResponse> {
+    const response = await apiClient<BoostCatalogResponse>(
+      `${WEB_API_ROUTES.seller.boostCatalog}?listingId=${encodeURIComponent(listingId)}`,
+    );
+    return response.data!;
+  },
+
+  async createBoostIntent(body: CreateBoostIntentInput): Promise<BoostIntentResponse> {
+    const response = await apiClient<BoostIntentResponse>(WEB_API_ROUTES.seller.boostIntent, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return response.data!;
+  },
+
+  async confirmBoost(purchaseId: string): Promise<PlatformPurchase> {
+    const response = await apiClient<PlatformPurchase>(WEB_API_ROUTES.seller.boostConfirm, {
+      method: 'POST',
+      body: JSON.stringify({ purchaseId }),
+    });
+    return response.data!;
+  },
+
   async getMonetizationSettings(role: AdminApiRole): Promise<MonetizationSettings> {
     const response = await apiClient<MonetizationSettings>(
       adminApiPath(role, '/monetization/settings'),
@@ -42,7 +69,7 @@ export const monetizationService = {
 
   async updateMonetizationSettings(
     role: AdminApiRole,
-    body: Partial<MonetizationSettings>,
+    body: PlatformSettingsUpdateInput,
   ): Promise<MonetizationSettings> {
     const response = await apiClient<MonetizationSettings>(
       adminApiPath(role, '/monetization/settings'),

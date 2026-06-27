@@ -16,6 +16,7 @@ const TONE_CLASSES = {
   community: 'border-violet-200 bg-violet-50 text-violet-800',
   hybrid: 'border-teal-200 bg-teal-50 text-teal-800',
   fresh: 'border-violet-200 bg-violet-50 text-violet-800',
+  boosted: 'border-amber-200 bg-amber-50 text-amber-900',
 } as const;
 
 export type ListingBadgeTone = keyof typeof TONE_CLASSES;

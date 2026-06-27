@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { DatabaseModule } from '../../database/database.module';
 import { EventsModule } from '../../events/events.module';
@@ -21,7 +21,7 @@ import { PaymentsWebhooksService } from './services/payments-webhooks.service';
 import { StripeConnectService } from './services/stripe-connect.service';
 
 @Module({
-  imports: [DatabaseModule, EventsModule, LibsModule, ListingsModule, MonetizationModule],
+  imports: [DatabaseModule, EventsModule, LibsModule, ListingsModule, forwardRef(() => MonetizationModule)],
   controllers: [PaymentsWebhooksController],
   providers: [
     PaymentsService,

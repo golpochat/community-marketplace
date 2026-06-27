@@ -233,11 +233,11 @@ export class MeilisearchService implements OnModuleInit, OnModuleDestroy {
       case 'price_high_to_low':
         return ['price:desc'];
       case 'newest':
-        return ['createdAt:desc'];
+        return ['isBoosted:desc', 'boostedUntil:desc', 'createdAt:desc'];
       case 'nearest':
         return undefined;
       default:
-        return ['createdAt:desc'];
+        return ['isBoosted:desc', 'boostedUntil:desc', 'createdAt:desc'];
     }
   }
 
@@ -309,9 +309,10 @@ export class MeilisearchService implements OnModuleInit, OnModuleDestroy {
         'condition',
         'price',
         'createdAt',
+        'isBoosted',
         '_geo',
       ],
-      sortableAttributes: ['price', 'createdAt', 'favoriteCount'],
+      sortableAttributes: ['price', 'createdAt', 'favoriteCount', 'boostedUntil', 'isBoosted'],
     });
 
     await this.client.index('users').updateSettings({

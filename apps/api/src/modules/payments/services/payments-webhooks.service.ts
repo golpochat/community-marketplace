@@ -7,6 +7,7 @@ import { PaymentsAuditService } from './payments-audit.service';
 import { PaymentCompletionService } from './payment-completion.service';
 import { PaymentsDisputesService } from './payments-disputes.service';
 import { PaymentsPayoutsService } from './payments-payouts.service';
+import { PlatformPurchaseService } from '../../monetization/services/platform-purchase.service';
 import { StripeConnectService } from './stripe-connect.service';
 
 @Injectable()
@@ -21,6 +22,7 @@ export class PaymentsWebhooksService {
     private readonly payouts: PaymentsPayoutsService,
     private readonly audit: PaymentsAuditService,
     private readonly eventBus: EventBusService,
+    private readonly platformPurchases: PlatformPurchaseService,
   ) {}
 
   async handleEvent(event: Stripe.Event) {
@@ -66,28 +68,38 @@ export class PaymentsWebhooksService {
     const payment = await this.prisma.payment.findFirst({
       where: { providerPaymentId: intent.id },
     });
-    if (!payment) return;
+    if (payment) {
+      await this.completion.finalizeSuccessfulPayment(payment.id, intent.id);
+      return;
+    }
 
-    await this.completion.finalizeSuccessfulPayment(payment.id, intent.id);
+    if (intent.metadata?.type === 'listing_boost') {
+      await this.platformPurchases.handlePaymentIntentSucceeded(intent.id);
+    }
   }
 
   private async onPaymentFailed(intent: Stripe.PaymentIntent) {
     const payment = await this.prisma.payment.findFirst({
       where: { providerPaymentId: intent.id },
     });
-    if (!payment) return;
+    if (payment) {
+      await this.prisma.payment.update({
+        where: { id: payment.id },
+        data: { status: 'failed' },
+      });
 
-    await this.prisma.payment.update({
-      where: { id: payment.id },
-      data: { status: 'failed' },
-    });
+      await this.audit.record('payment_failed', undefined, payment.id);
+      this.eventBus.publish({
+        type: 'payment.failed',
+        payload: { paymentId: payment.id, listingId: payment.listingId },
+        timestamp: new Date(),
+      });
+      return;
+    }
 
-    await this.audit.record('payment_failed', undefined, payment.id);
-    this.eventBus.publish({
-      type: 'payment.failed',
-      payload: { paymentId: payment.id, listingId: payment.listingId },
-      timestamp: new Date(),
-    });
+    if (intent.metadata?.type === 'listing_boost') {
+      await this.platformPurchases.handlePaymentIntentFailed(intent.id);
+    }
   }
 
   private async onChargeRefunded(charge: Stripe.Charge) {

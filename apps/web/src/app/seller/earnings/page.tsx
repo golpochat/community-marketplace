@@ -100,7 +100,11 @@ function SellerEarningsContent() {
               <p className="text-sm text-[hsl(var(--dashboard-main-fg))]">
                 Your platform fee:{' '}
                 <strong>{platformFee.effectiveFeePercent}%</strong>
-                {platformFee.isCustomOverride ? ' (custom override)' : ' (default)'}
+                {platformFee.isVerifiedRate
+                  ? ' (verified seller rate)'
+                  : platformFee.isCustomOverride
+                    ? ' (custom override)'
+                    : ' (default)'}
               </p>
               <p className="mt-2 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                 Cashback for buyers is funded by the platform, not deducted from your payout.

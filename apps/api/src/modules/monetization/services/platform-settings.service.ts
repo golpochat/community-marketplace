@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 
+import type { Prisma } from '@prisma/client';
+
 import type { MonetizationSettings } from '@community-marketplace/types';
 import type { PlatformSettingsUpdateInput } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../../database/prisma.service';
+import { DEFAULT_PLATFORM_PRICING } from '../lib/boost.lib';
 import {
   getDefaultPlatformSettings,
   mapPlatformSettings,
+  mergePricingUpdate,
 } from '../mappers/monetization.mapper';
 
 @Injectable()
@@ -24,12 +28,20 @@ export class PlatformSettingsService {
   }
 
   async update(input: PlatformSettingsUpdateInput): Promise<MonetizationSettings> {
-    await this.ensureDefaults();
+    const current = await this.ensureDefaults();
+    const pricing = mergePricingUpdate(current.pricing, {
+      boostPrice7d: input.boostPrice7d,
+      boostPrice30d: input.boostPrice30d,
+    });
+
     const row = await this.prisma.platformSettings.update({
       where: { id: 'default' },
       data: {
         ...(input.defaultPlatformFeePercent !== undefined
           ? { defaultPlatformFeePercent: input.defaultPlatformFeePercent }
+          : {}),
+        ...(input.verifiedSellerFeePercent !== undefined
+          ? { verifiedSellerFeePercent: input.verifiedSellerFeePercent }
           : {}),
         ...(input.cashbackPercent !== undefined
           ? { cashbackPercent: input.cashbackPercent }
@@ -50,6 +62,10 @@ export class PlatformSettingsService {
         ...(input.allowedCashbackMethods !== undefined
           ? { allowedCashbackMethods: input.allowedCashbackMethods }
           : {}),
+        ...(input.boostsEnabled !== undefined ? { boostsEnabled: input.boostsEnabled } : {}),
+        ...(input.boostPrice7d !== undefined || input.boostPrice30d !== undefined
+          ? { pricing: pricing as unknown as Prisma.InputJsonValue }
+          : {}),
       },
     });
     return mapPlatformSettings(row);
@@ -62,6 +78,7 @@ export class PlatformSettingsService {
       create: {
         id: 'default',
         defaultPlatformFeePercent: defaults.defaultPlatformFeePercent,
+        verifiedSellerFeePercent: defaults.verifiedSellerFeePercent,
         cashbackPercent: defaults.cashbackPercent,
         coolingDays: defaults.coolingDays,
         maxCashbackPerOrder: defaults.maxCashbackPerOrder,
@@ -69,6 +86,8 @@ export class PlatformSettingsService {
         cashbackEnabled: defaults.cashbackEnabled,
         cashbackMinOrderAmount: defaults.cashbackMinOrderAmount,
         allowedCashbackMethods: defaults.allowedCashbackMethods,
+        pricing: DEFAULT_PLATFORM_PRICING as unknown as Prisma.InputJsonValue,
+        boostsEnabled: defaults.boostsEnabled,
       },
       update: {},
     });

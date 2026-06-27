@@ -7,6 +7,10 @@ import type {
   UserSearchDocument,
 } from '@community-marketplace/types';
 
+function isBoosted(boostedUntil?: Date | null, now = new Date()): boolean {
+  return boostedUntil != null && boostedUntil > now;
+}
+
 type ListingRow = {
   id: string;
   sellerId: string;
@@ -22,6 +26,7 @@ type ListingRow = {
   longitude: Prisma.Decimal;
   favoriteCount: number;
   viewCount: number;
+  boostedUntil?: Date | null;
   createdAt: Date;
   images: Array<{ url: string }>;
   category: { slug: string; name: string };
@@ -57,6 +62,8 @@ export function toMeiliListingDocument(row: ListingRow, embedding?: number[]): L
     favoriteCount: row.favoriteCount,
     viewCount: row.viewCount,
     createdAt: row.createdAt.getTime(),
+    boostedUntil: row.boostedUntil?.getTime() ?? 0,
+    isBoosted: isBoosted(row.boostedUntil),
     sellerStatus: row.seller.status,
     ...(embedding ? { embedding } : {}),
   };

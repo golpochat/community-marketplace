@@ -39,6 +39,9 @@ import {
   type SellerListingAction,
 } from "@/components/seller/listing-seller-actions";
 import { ListingPackageDialog } from "@/components/seller/listing-package-dialog";
+import { ListingBoostDialog } from "@/components/seller/listing-boost-dialog";
+import { BoostedBadge } from "@/components/listings/boosted-badge";
+import { LISTING_PACKAGE_OPTIONS } from "@/lib/listing-package-options";
 import { ListingReviewThread } from "@/components/dashboard/listing-review-thread";
 import { SellerConnectBanner } from "@/components/seller/seller-connect-banner";
 import { CreateListingButton } from "@/components/seller/create-listing-button";
@@ -193,8 +196,13 @@ export function SellerListingsPage() {
     useSellerListingGate();
   const [packageDialog, setPackageDialog] = useState<{
     listingId: string;
-    mode: "renew" | "upgrade";
+    mode: "renew";
   } | null>(null);
+  const [boostDialogListingId, setBoostDialogListingId] = useState<string | null>(null);
+
+  const renewPackageOptions = LISTING_PACKAGE_OPTIONS.filter(
+    (option) => option.value === "FREE",
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -244,9 +252,12 @@ export function SellerListingsPage() {
           await sellerService.endListing(listingId);
           break;
         case "renew":
+          setActionId(null);
+          setPackageDialog({ listingId, mode: "renew" });
+          return;
         case "upgrade":
           setActionId(null);
-          setPackageDialog({ listingId, mode: action });
+          setBoostDialogListingId(listingId);
           return;
         case "duplicate": {
           const dup = await sellerService.duplicateListing(listingId);
@@ -277,16 +288,12 @@ export function SellerListingsPage() {
     packageType: typeof DEFAULT_RENEW_PACKAGE,
   ) {
     if (!packageDialog) return;
-    const { listingId, mode } = packageDialog;
+    const { listingId } = packageDialog;
     setPackageDialog(null);
     setActionId(listingId);
     setError(null);
     try {
-      if (mode === "renew") {
-        await sellerService.renewListing(listingId, packageType);
-      } else {
-        await sellerService.upgradePackage(listingId, packageType);
-      }
+      await sellerService.renewListing(listingId, packageType);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Action failed");
@@ -341,7 +348,10 @@ export function SellerListingsPage() {
                     <SellerListingThumb listing={listing} />
                   </td>
                   <td className="max-w-xs px-3 py-2 font-medium text-gray-900">
-                    <TruncatedText text={listing.title} />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <TruncatedText text={listing.title} />
+                      <BoostedBadge boostedUntil={listing.boostedUntil} />
+                    </div>
                   </td>
                   <td className="px-3 py-2 text-gray-700">
                     <ListingPriceDisplay
@@ -436,16 +446,21 @@ export function SellerListingsPage() {
       </Card>
       <ListingPackageDialog
         open={packageDialog != null}
-        title={
-          packageDialog?.mode === "upgrade"
-            ? "Upgrade listing package"
-            : "Renew listing"
-        }
-        confirmLabel={packageDialog?.mode === "upgrade" ? "Upgrade" : "Renew"}
+        title="Renew listing"
+        confirmLabel="Renew"
         defaultPackage={DEFAULT_RENEW_PACKAGE}
+        options={renewPackageOptions}
         onClose={() => setPackageDialog(null)}
         onConfirm={(packageType) => void handlePackageConfirm(packageType)}
       />
+      {boostDialogListingId && (
+        <ListingBoostDialog
+          open
+          listingId={boostDialogListingId}
+          onClose={() => setBoostDialogListingId(null)}
+          onSuccess={() => void load()}
+        />
+      )}
       <SellerVerificationModal
         open={showGateModal}
         onClose={() => setShowGateModal(false)}
