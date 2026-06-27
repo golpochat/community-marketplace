@@ -20,6 +20,7 @@ export class PaymentsFraudService {
     const activeBan = await this.prisma.userBan.findFirst({
       where: {
         userId: buyerId,
+        liftedAt: null,
         OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
     });

@@ -57,7 +57,7 @@ export function ReportButton({ listingId }: ReportButtonProps) {
     return (
       <Link href={`/auth/login?redirect=/listings/${listingId}`}>
         <Button variant="outline" size="sm">
-          Report
+          Report listing
         </Button>
       </Link>
     );
@@ -66,7 +66,7 @@ export function ReportButton({ listingId }: ReportButtonProps) {
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        Report
+        Report listing
       </Button>
       {success && (
         <span className="text-xs text-green-700">Report submitted. Thank you.</span>

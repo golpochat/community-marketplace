@@ -56,6 +56,10 @@ export class ListingsService {
     return this.crud.findById(id, incrementView);
   }
 
+  findSimilar(listingId: string, limit = 4) {
+    return this.crud.findSimilar(listingId, limit);
+  }
+
   findCategories() {
     return this.categories.findAll();
   }

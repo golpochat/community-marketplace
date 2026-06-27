@@ -14,14 +14,19 @@ import { SellerTrustBadges } from '@/components/trust/seller-trust-badges';
 interface VehicleListingMetaProps {
   listing: ListingSummary;
   variant?: 'grid' | 'list';
+  showTrust?: boolean;
 }
 
 function formatMileage(mileage: number, unit?: 'km' | 'mi'): string {
-  const formatted = mileage.toLocaleString();
+  const formatted = mileage.toLocaleString('en-IE');
   return unit === 'mi' ? `${formatted} mi` : `${formatted} km`;
 }
 
-export function VehicleListingMeta({ listing, variant = 'grid' }: VehicleListingMetaProps) {
+export function VehicleListingMeta({
+  listing,
+  variant = 'grid',
+  showTrust = true,
+}: VehicleListingMetaProps) {
   const category = listing.categorySlug
     ? { slug: listing.categorySlug }
     : { slug: undefined, name: undefined };
@@ -40,9 +45,10 @@ export function VehicleListingMeta({ listing, variant = 'grid' }: VehicleListing
   );
 
   const hasTrust =
-    listing.sellerVerified ||
-    listing.sellerRating != null ||
-    (listing.sellerReviewCount ?? 0) > 0;
+    showTrust &&
+    (listing.sellerVerified ||
+      listing.sellerRating != null ||
+      (listing.sellerReviewCount ?? 0) > 0);
 
   if (items.length === 0 && !hasTrust) return null;
 
@@ -56,17 +62,21 @@ export function VehicleListingMeta({ listing, variant = 'grid' }: VehicleListing
         </p>
       )}
 
-      <SellerRatingDisplay
-        averageRating={listing.sellerRating}
-        reviewCount={listing.sellerReviewCount}
-      />
-      <SellerTrustBadges
-        variant="compact"
-        verified={listing.sellerVerified}
-        soldCount={listing.sellerSoldCount}
-        averageRating={listing.sellerRating}
-        reviewCount={listing.sellerReviewCount}
-      />
+      {showTrust && (
+        <>
+          <SellerRatingDisplay
+            averageRating={listing.sellerRating}
+            reviewCount={listing.sellerReviewCount}
+          />
+          <SellerTrustBadges
+            variant="compact"
+            verified={listing.sellerVerified}
+            soldCount={listing.sellerSoldCount}
+            averageRating={listing.sellerRating}
+            reviewCount={listing.sellerReviewCount}
+          />
+        </>
+      )}
     </div>
   );
 }

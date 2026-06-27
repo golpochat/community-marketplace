@@ -4,9 +4,10 @@ import Link from 'next/link';
 
 import type { ListingSellerSummary } from '@community-marketplace/types';
 import { Button } from '@community-marketplace/ui';
-import { Phone } from 'lucide-react';
+import { BadgeCheck, Phone } from 'lucide-react';
 
-import { ReportUserButton } from '@/components/listings/report-user-button';
+import { ListingBadge } from '@/components/listings/listing-badge';
+
 import { Avatar } from '@/components/shared/avatar';
 import { SellerRatingDisplay } from '@/components/trust/seller-rating-display';
 import { SellerTrustBadges } from '@/components/trust/seller-trust-badges';
@@ -21,13 +22,15 @@ interface SellerCardProps {
   location?: string;
   showCallButton?: boolean;
   listingId?: string;
+  compact?: boolean;
+  className?: string;
 }
 
 function formatMemberSince(iso?: string): string | undefined {
   if (!iso) return undefined;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return undefined;
-  return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString('en-IE', { month: 'long', year: 'numeric' });
 }
 
 export function SellerCard({
@@ -39,6 +42,8 @@ export function SellerCard({
   location,
   showCallButton = false,
   listingId,
+  compact = false,
+  className,
 }: SellerCardProps) {
   const name = seller?.displayName?.trim() || sellerName || 'Community seller';
   const joined = formatMemberSince(memberSince ?? seller?.memberSince);
@@ -48,28 +53,42 @@ export function SellerCard({
   const phone = seller?.phone;
   const listingsHref = storeHref ?? (seller?.id ? `/listings?seller=${seller.id}` : undefined);
   const communityLabel = resolveCommunityLabel(location);
+  const isVerified = verified ?? seller?.verified;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
+    <div className={className}>
       <div className="flex items-start gap-3">
-        <Avatar name={name} size="lg" />
-        <div className="min-w-0 flex-1 space-y-2">
+        <Avatar name={name} size={compact ? 'md' : 'lg'} />
+        <div className="min-w-0 flex-1 space-y-1.5">
           <div>
-            <p className="font-semibold text-gray-900">{name}</p>
-            {location && <p className="text-sm text-gray-500">{location}</p>}
-            {communityLabel && (
-              <p className="text-xs font-medium text-primary">{communityLabel}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-semibold text-gray-900">{name}</p>
+              {isVerified && (
+                <ListingBadge tone="verified" className="font-normal">
+                  <BadgeCheck className="h-3 w-3" aria-hidden />
+                  Verified
+                </ListingBadge>
+              )}
+            </div>
+            {location && (
+              <p className="text-sm text-gray-500">
+                {location}
+                {communityLabel && (
+                  <span className="text-primary"> · {communityLabel}</span>
+                )}
+              </p>
             )}
           </div>
 
           <SellerRatingDisplay
             averageRating={seller?.averageRating}
             reviewCount={seller?.reviewCount}
-            size="md"
+            size={compact ? 'sm' : 'md'}
           />
 
           <SellerTrustBadges
-            verified={verified ?? seller?.verified}
+            variant="compact"
+            verified={false}
             phoneVerified={seller?.phoneVerified}
             memberSince={memberSince ?? seller?.memberSince}
             soldCount={soldCount}
@@ -79,45 +98,44 @@ export function SellerCard({
             isBusiness={seller?.isBusiness}
           />
 
-          {joined && <p className="text-xs text-gray-500">Member since {joined}</p>}
-          {typeof activeCount === 'number' && listingsHref && (
-            <Link
-              href={listingsHref}
-              className="block text-xs font-medium text-primary hover:underline"
-              {...(listingId ? { 'aria-label': `View ${activeCount} active listings from ${name}` } : {})}
-            >
-              {activeCount} active listing{activeCount === 1 ? '' : 's'}
-            </Link>
-          )}
-          {typeof soldCount === 'number' && soldCount > 0 && (
-            <p className="text-xs text-gray-500">{soldCount} item{soldCount === 1 ? '' : 's'} sold</p>
-          )}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+            {joined && <span>Member since {joined}</span>}
+            {typeof activeCount === 'number' && listingsHref && (
+              <Link
+                href={listingsHref}
+                className="font-medium text-primary hover:underline"
+                {...(listingId ? { 'aria-label': `View ${activeCount} active listings from ${name}` } : {})}
+              >
+                {activeCount} active listing{activeCount === 1 ? '' : 's'}
+              </Link>
+            )}
+            {typeof soldCount === 'number' && soldCount > 0 && (
+              <span>{soldCount} sold</span>
+            )}
+          </div>
         </div>
       </div>
 
-      {showCallButton && phone && (
-        <a href={`tel:${phone}`} className="mt-4 block">
-          <Button type="button" variant="outline" className="w-full">
-            <Phone className="mr-2 h-4 w-4" aria-hidden />
-            Call seller
-          </Button>
-        </a>
-      )}
-
-      {storeHref && (
-        <Link
-          href={storeHref}
-          className="mt-4 block text-center text-sm font-medium text-primary hover:underline"
-        >
-          Visit store →
-        </Link>
-      )}
-
-      {seller?.id && (
-        <div className="mt-3 text-center">
-          <ReportUserButton userId={seller.id} userName={name} variant="link" />
+      {(showCallButton && phone) || storeHref ? (
+        <div className={`grid gap-2 ${compact ? 'mt-3' : 'mt-4'} ${showCallButton && phone && storeHref ? 'sm:grid-cols-2' : ''}`}>
+          {showCallButton && phone && (
+            <a href={`tel:${phone}`} className={storeHref ? '' : 'block'}>
+              <Button type="button" variant="outline" className="w-full" size={compact ? 'sm' : 'default'}>
+                <Phone className="mr-2 h-4 w-4" aria-hidden />
+                Call seller
+              </Button>
+            </a>
+          )}
+          {storeHref && (
+            <Link
+              href={storeHref}
+              className={`flex items-center justify-center rounded-md border border-gray-200 bg-white text-sm font-medium text-primary hover:bg-gray-50 ${compact ? 'h-9' : 'h-10'}`}
+            >
+              Visit store
+            </Link>
+          )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

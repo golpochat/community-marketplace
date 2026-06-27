@@ -1,5 +1,6 @@
-import type { Listing } from '@community-marketplace/types';
+import type { Listing, ListingVehicleAttributes } from '@community-marketplace/types';
 import {
+  formatListingConditionLabel,
   formatVehicleDate,
   hasVehicleAttributeValue,
   resolveListingVehicleSpecs,
@@ -9,18 +10,6 @@ import {
   resolveVehicleSeatsDisplay,
   resolveVehicleYearDisplay,
 } from '@community-marketplace/utils';
-import {
-  Calendar,
-  Car,
-  Fuel,
-  Gauge,
-  History,
-  Palette,
-  Settings2,
-  Shield,
-  Users,
-  Wrench,
-} from 'lucide-react';
 
 import { ListingBadge } from '@/components/listings/listing-badge';
 
@@ -28,190 +17,126 @@ interface ListingSpecsSectionProps {
   listing: Listing;
 }
 
-interface SpecItem {
+interface SpecRow {
   label: string;
   value: string;
-  icon: React.ReactNode;
-}
-
-function SpecGroup({
-  title,
-  icon,
-  items,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  items: SpecItem[];
-}) {
-  if (items.length === 0) return null;
-
-  return (
-    <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
-      <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-        {icon}
-        {title}
-      </h3>
-      <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-        {items.map((item) => (
-          <div key={item.label} className="flex items-start gap-2">
-            <span className="mt-0.5 text-primary" aria-hidden>
-              {item.icon}
-            </span>
-            <div>
-              <dt className="text-xs text-gray-500">{item.label}</dt>
-              <dd className="text-sm font-medium text-gray-900">{item.value}</dd>
-            </div>
-          </div>
-        ))}
-      </dl>
-    </section>
-  );
 }
 
 function formatMileage(mileage: number, unit?: 'km' | 'mi'): string {
-  const formatted = mileage.toLocaleString();
+  const formatted = mileage.toLocaleString('en-IE');
   return unit === 'mi' ? `${formatted} mi` : `${formatted} km`;
+}
+
+function buildSpecRows(listing: Listing, specs: ListingVehicleAttributes): SpecRow[] {
+  const rows: SpecRow[] = [];
+
+  const yearDisplay = resolveVehicleYearDisplay(specs);
+  if (yearDisplay) rows.push({ label: 'Year', value: yearDisplay });
+  if (hasVehicleAttributeValue(specs.make)) rows.push({ label: 'Make', value: specs.make! });
+  if (hasVehicleAttributeValue(specs.model)) rows.push({ label: 'Model', value: specs.model! });
+  if (hasVehicleAttributeValue(specs.bodyType)) rows.push({ label: 'Body', value: specs.bodyType! });
+  if (hasVehicleAttributeValue(specs.color)) rows.push({ label: 'Colour', value: specs.color! });
+
+  const engineDisplay = resolveVehicleEngineSizeDisplay(specs);
+  if (engineDisplay) rows.push({ label: 'Engine', value: engineDisplay });
+  if (hasVehicleAttributeValue(specs.fuelType)) rows.push({ label: 'Fuel', value: specs.fuelType! });
+  if (hasVehicleAttributeValue(specs.transmission)) {
+    rows.push({ label: 'Transmission', value: specs.transmission! });
+  }
+  if (specs.mileage != null) {
+    rows.push({ label: 'Mileage', value: formatMileage(specs.mileage, specs.mileageUnit) });
+  }
+  if (hasVehicleAttributeValue(specs.chassis)) rows.push({ label: 'Chassis', value: specs.chassis! });
+
+  const seatsDisplay = resolveVehicleSeatsDisplay(specs);
+  if (seatsDisplay) rows.push({ label: 'Seats', value: seatsDisplay });
+  const doorsDisplay = resolveVehicleDoorsDisplay(specs);
+  if (doorsDisplay) rows.push({ label: 'Doors', value: doorsDisplay });
+  if (hasVehicleAttributeValue(specs.vin)) rows.push({ label: 'VIN', value: specs.vin! });
+
+  const nct = formatVehicleDate(specs.nctExpiry);
+  if (nct) rows.push({ label: 'NCT expiry', value: nct });
+  const roadTax = formatVehicleDate(specs.roadTaxExpiry);
+  if (roadTax) rows.push({ label: 'Road tax', value: roadTax });
+  if (specs.owners != null) rows.push({ label: 'Owners', value: String(specs.owners) });
+  if (hasVehicleAttributeValue(specs.auctionGrade)) {
+    rows.push({ label: 'Auction grade', value: specs.auctionGrade! });
+  }
+
+  const conditionDisplay = resolveVehicleConditionDisplay(specs, listing.condition);
+  if (conditionDisplay) rows.push({ label: 'Condition', value: conditionDisplay });
+
+  return rows;
+}
+
+function resolveVehicleSellerNotes(listing: Listing, specs: ListingVehicleAttributes): string | null {
+  const description = listing.description?.trim();
+  if (!description) return null;
+
+  const title = listing.title.trim().toLowerCase();
+  const normalized = description.toLowerCase();
+  if (normalized === title) return null;
+
+  const specTokens = [
+    listing.title,
+    resolveVehicleYearDisplay(specs),
+    specs.make,
+    specs.model,
+    specs.fuelType,
+    specs.transmission,
+    specs.bodyType,
+    specs.mileage != null ? formatMileage(specs.mileage, specs.mileageUnit) : undefined,
+  ]
+    .filter(Boolean)
+    .map((value) => String(value).toLowerCase());
+
+  const matchedTokens = specTokens.filter((token) => normalized.includes(token)).length;
+  if (matchedTokens >= 3 && description.length <= 160 && !description.includes('\n')) {
+    return null;
+  }
+
+  return description;
 }
 
 export function ListingSpecsSection({ listing }: ListingSpecsSectionProps) {
   const specs = resolveListingVehicleSpecs(listing);
   if (!specs) return null;
 
-  const overview: SpecItem[] = [];
-  const yearDisplay = resolveVehicleYearDisplay(specs);
-  if (yearDisplay) {
-    overview.push({ label: 'Year', value: yearDisplay, icon: <Calendar className="h-4 w-4" /> });
-  }
-  if (hasVehicleAttributeValue(specs.make)) {
-    overview.push({ label: 'Make', value: specs.make!, icon: <Car className="h-4 w-4" /> });
-  }
-  if (hasVehicleAttributeValue(specs.model)) {
-    overview.push({ label: 'Model', value: specs.model!, icon: <Car className="h-4 w-4" /> });
-  }
-  if (hasVehicleAttributeValue(specs.bodyType)) {
-    overview.push({ label: 'Body type', value: specs.bodyType!, icon: <Car className="h-4 w-4" /> });
-  }
-  if (hasVehicleAttributeValue(specs.color)) {
-    overview.push({ label: 'Colour', value: specs.color!, icon: <Palette className="h-4 w-4" /> });
-  }
+  const rows = buildSpecRows(listing, specs);
+  const sellerNotes = resolveVehicleSellerNotes(listing, specs);
 
-  const technical: SpecItem[] = [];
-  const engineDisplay = resolveVehicleEngineSizeDisplay(specs);
-  if (engineDisplay) {
-    technical.push({
-      label: 'Engine size',
-      value: engineDisplay,
-      icon: <Settings2 className="h-4 w-4" />,
-    });
-  }
-  if (hasVehicleAttributeValue(specs.fuelType)) {
-    technical.push({ label: 'Fuel type', value: specs.fuelType!, icon: <Fuel className="h-4 w-4" /> });
-  }
-  if (hasVehicleAttributeValue(specs.transmission)) {
-    technical.push({
-      label: 'Transmission',
-      value: specs.transmission!,
-      icon: <Settings2 className="h-4 w-4" />,
-    });
-  }
-  if (specs.mileage != null) {
-    technical.push({
-      label: 'Mileage',
-      value: formatMileage(specs.mileage, specs.mileageUnit),
-      icon: <Gauge className="h-4 w-4" />,
-    });
-  }
-  if (hasVehicleAttributeValue(specs.chassis)) {
-    technical.push({ label: 'Chassis code', value: specs.chassis!, icon: <Shield className="h-4 w-4" /> });
-  }
-  const seatsDisplay = resolveVehicleSeatsDisplay(specs);
-  if (seatsDisplay) {
-    technical.push({ label: 'Seats', value: seatsDisplay, icon: <Users className="h-4 w-4" /> });
-  }
-  const doorsDisplay = resolveVehicleDoorsDisplay(specs);
-  if (doorsDisplay) {
-    technical.push({ label: 'Doors', value: doorsDisplay, icon: <Car className="h-4 w-4" /> });
-  }
-  if (hasVehicleAttributeValue(specs.vin)) {
-    technical.push({ label: 'VIN', value: specs.vin!, icon: <Shield className="h-4 w-4" /> });
-  }
-
-  const registration: SpecItem[] = [];
-  const nct = formatVehicleDate(specs.nctExpiry);
-  if (nct) {
-    registration.push({ label: 'NCT expiry', value: nct, icon: <Calendar className="h-4 w-4" /> });
-  }
-  const roadTax = formatVehicleDate(specs.roadTaxExpiry);
-  if (roadTax) {
-    registration.push({ label: 'Road tax expiry', value: roadTax, icon: <Calendar className="h-4 w-4" /> });
-  }
-  if (specs.owners != null) {
-    registration.push({
-      label: 'Owners',
-      value: String(specs.owners),
-      icon: <Users className="h-4 w-4" />,
-    });
-  }
-  if (hasVehicleAttributeValue(specs.auctionGrade)) {
-    registration.push({
-      label: 'Auction grade',
-      value: specs.auctionGrade!,
-      icon: <History className="h-4 w-4" />,
-    });
-  }
-
-  const conditionDisplay = resolveVehicleConditionDisplay(specs, listing.condition);
-  const sellerNotes = listing.description?.trim();
-  const hasStructuredAttrs =
-    listing.attributes && Object.keys(listing.attributes).length > 0;
-
-  const hasAnySection =
-    overview.length > 0 ||
-    technical.length > 0 ||
-    registration.length > 0 ||
-    !!conditionDisplay ||
-    (hasStructuredAttrs && !!sellerNotes);
-
-  if (!hasAnySection) return null;
+  if (rows.length === 0 && !sellerNotes) return null;
 
   return (
-    <div className="mt-6 space-y-4">
-      <SpecGroup
-        title="Vehicle overview"
-        icon={<Car className="h-4 w-4 text-primary" />}
-        items={overview}
-      />
-      <SpecGroup
-        title="Technical details"
-        icon={<Settings2 className="h-4 w-4 text-primary" />}
-        items={technical}
-      />
-      <SpecGroup
-        title="Registration & legal"
-        icon={<Shield className="h-4 w-4 text-primary" />}
-        items={registration}
-      />
-      {(conditionDisplay || (hasStructuredAttrs && sellerNotes)) && (
-        <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
-            <Wrench className="h-4 w-4 text-primary" />
-            Condition
-          </h3>
-          <div className="mt-3 space-y-3">
-            {conditionDisplay && (
-              <ListingBadge tone="condition" className="capitalize">
-                {conditionDisplay}
-              </ListingBadge>
-            )}
-            {hasStructuredAttrs && sellerNotes && (
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
-                {sellerNotes}
-              </p>
-            )}
-          </div>
-        </section>
+    <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
+      <h2 className="text-base font-semibold text-gray-900">Vehicle details</h2>
+
+      {rows.length > 0 && (
+        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+          {rows.map((row) => (
+            <div key={row.label}>
+              <dt className="text-xs text-gray-500">{row.label}</dt>
+              <dd className="mt-0.5 text-sm font-medium text-gray-900">
+                {row.label === 'Condition' ? (
+                  <ListingBadge tone="condition" className="capitalize font-medium">
+                    {row.value}
+                  </ListingBadge>
+                ) : (
+                  row.value
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
       )}
-    </div>
+
+      {sellerNotes && (
+        <div className={rows.length > 0 ? 'mt-4 border-t border-gray-100 pt-4' : 'mt-3'}>
+          <h3 className="text-xs font-medium uppercase tracking-wide text-gray-500">Seller notes</h3>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{sellerNotes}</p>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -222,16 +147,22 @@ export function ListingDescriptionBlock({ listing }: ListingSpecsSectionProps) {
   if (hasStructuredVehicle) return null;
 
   const description = listing.description.trim();
-  if (!description) return null;
+  const conditionLabel = formatListingConditionLabel(listing.condition);
+  if (!description && !conditionLabel) return null;
 
   return (
-    <section className="mt-6 rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
-      <h2 className="text-lg font-semibold text-gray-900">Description</h2>
-      <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{description}</p>
-      <div className="mt-4 flex gap-4 border-t border-gray-100 pt-3 text-xs text-gray-500">
-        <span>{listing.viewCount.toLocaleString()} views</span>
-        <span>{listing.favoriteCount.toLocaleString()} saves</span>
-      </div>
+    <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
+      <h2 className="text-base font-semibold text-gray-900">Description</h2>
+      {conditionLabel && (
+        <div className="mt-3">
+          <ListingBadge tone="condition" className="capitalize">
+            {conditionLabel}
+          </ListingBadge>
+        </div>
+      )}
+      {description && (
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{description}</p>
+      )}
     </section>
   );
 }

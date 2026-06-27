@@ -16,18 +16,17 @@ import {
   serializeBrowseFilters,
 } from '@/components/listings/browse/browse-url-filters';
 import { ListingCard } from '@/components/listings/listing-card';
-import { ListingCardList } from '@/components/listings/listing-card-list';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Pagination } from '@/components/shared/pagination';
-import { ListingCardSkeleton } from '@/components/shared/skeleton';
+import { ListingCardListSkeleton, ListingCardSkeleton } from '@/components/shared/skeleton';
 import { useAuth } from '@/hooks/use-auth';
+import { BROWSE_RESULTS_GRID_CLASS, BROWSE_RESULTS_LIST_CLASS } from '@/lib/listing-browse-layout';
+import { SITE_PAGE_CLASS } from '@/lib/page-layout';
 import { buyerService } from '@/services/marketplace.service';
 import { listingsService } from '@/services/listings.service';
 
-const GRID_CLASS =
-  'grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4';
-
-const LIST_CLASS = 'flex flex-col gap-4';
+const GRID_CLASS = BROWSE_RESULTS_GRID_CLASS;
+const LIST_CLASS = BROWSE_RESULTS_LIST_CLASS;
 
 export function ListingsBrowseClient() {
   const searchParams = useSearchParams();
@@ -81,7 +80,7 @@ export function ListingsBrowseClient() {
   const showSave = isAuthenticated && user?.role === 'BUYER';
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
+    <div className={SITE_PAGE_CLASS}>
       <header className="mb-6 space-y-1">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Browse listings</h1>
         <p className="text-sm text-gray-500">
@@ -91,7 +90,7 @@ export function ListingsBrowseClient() {
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <div className="hidden w-full shrink-0 lg:block lg:w-72 xl:w-80">
-          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
+          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-3 shadow-brand-sm">
             <BrowseFilterSidebar
               categories={categories}
               filters={filters}
@@ -129,7 +128,7 @@ export function ListingsBrowseClient() {
             ) : (
               <div className={LIST_CLASS}>
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <ListingCardSkeleton key={i} />
+                  <ListingCardListSkeleton key={i} />
                 ))}
               </div>
             )
@@ -138,25 +137,16 @@ export function ListingsBrowseClient() {
               title="No listings found"
               description="Try adjusting your filters or search terms."
             />
-          ) : viewMode === 'list' ? (
-            <div className={LIST_CLASS}>
-              {listings.map((listing) => (
-                <ListingCardList
-                  key={listing.id}
-                  listing={listing}
-                  showSave={showSave}
-                  initialSaved={savedIds.has(listing.id)}
-                />
-              ))}
-            </div>
           ) : (
-            <div className={GRID_CLASS}>
+            <div className={viewMode === 'list' ? LIST_CLASS : GRID_CLASS}>
               {listings.map((listing) => (
                 <ListingCard
                   key={listing.id}
                   listing={listing}
+                  layout={viewMode === 'list' ? 'list' : 'grid'}
                   showSave={showSave}
                   initialSaved={savedIds.has(listing.id)}
+                  showTrust={false}
                 />
               ))}
             </div>

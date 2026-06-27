@@ -58,9 +58,9 @@ function FilterSection({
   className?: string;
 }) {
   return (
-    <section className={cn('border-b border-gray-100 pb-4', className)}>
-      <h3 className="mb-3 text-sm font-semibold text-gray-900">{title}</h3>
-      <div className="space-y-3">{children}</div>
+    <section className={cn('border-b border-gray-100 pb-3', className)}>
+      <h3 className="mb-2 text-sm font-semibold text-gray-900">{title}</h3>
+      <div className="space-y-2">{children}</div>
     </section>
   );
 }
@@ -97,7 +97,7 @@ export function BrowseFilterSidebar({
   }
 
   return (
-    <aside className={cn('space-y-4', className)} aria-label="Listing filters">
+    <aside className={cn('space-y-3', className)} aria-label="Listing filters">
       <FilterSection title="Search">
         <div className="relative">
           <Search

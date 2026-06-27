@@ -25,9 +25,15 @@ export function formatEngineSizeLitres(size?: number): string | undefined {
   return `${size.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} L`;
 }
 
+const VEHICLE_DATE_LOCALE = 'en-IE';
+
 export function formatVehicleDate(iso?: string): string | undefined {
   if (!iso?.trim()) return undefined;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return date.toLocaleDateString(VEHICLE_DATE_LOCALE, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }

@@ -16,6 +16,7 @@ export class ListingVisibilityService {
     const activeBan = await this.prisma.userBan.findFirst({
       where: {
         userId: sellerId,
+        liftedAt: null,
         OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       select: { id: true },

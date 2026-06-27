@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 
-import type { Listing, RbacRole } from "@community-marketplace/types";
+import type { Listing, ListingSummary, RbacRole } from "@community-marketplace/types";
 import {
   createListingSchema,
   paginationSchema,
@@ -120,6 +120,43 @@ export class ListingsCrudService {
         responseRate: trustProfile.responseRate,
         responseTimeMinutes: trustProfile.responseTimeMinutes,
       },
+    });
+  }
+
+  async findSimilar(listingId: string, limit = 4): Promise<ListingSummary[]> {
+    const source = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { id: true, categoryId: true },
+    });
+    if (!source) throw new NotFoundException(`Listing ${listingId} not found`);
+
+    const rows = await this.prisma.listing.findMany({
+      where: this.visibility.visibleListingWhere({
+        categoryId: source.categoryId,
+        id: { not: listingId },
+      }),
+      include: listingInclude,
+      orderBy: { activatedAt: "desc" },
+      take: limit,
+    });
+
+    const trustMap = await this.sellerTrust.getSummariesForSellers(
+      rows.map((row) => row.sellerId),
+    );
+
+    return rows.map((row) => {
+      const trust = trustMap.get(row.sellerId);
+      return mapListingSummaryWithTrust(
+        row,
+        undefined,
+        trust
+          ? {
+              averageRating: trust.averageRating,
+              reviewCount: trust.reviewCount,
+              soldCount: trust.soldCount,
+            }
+          : undefined,
+      );
     });
   }
 

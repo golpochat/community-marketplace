@@ -66,9 +66,21 @@ export class ListingsController {
   }
 
   @Public()
+  @Get(':id/similar')
+  findSimilar(@Param('id') id: string, @Query('limit') limit?: string) {
+    return this.listingsService.findSimilar(
+      id,
+      limit ? parseInt(limit, 10) : 4,
+    );
+  }
+
+  @Public()
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.listingsService.findById(id, true);
+  findOne(
+    @Param('id') id: string,
+    @Query('trackView') trackView?: string,
+  ) {
+    return this.listingsService.findById(id, trackView !== 'false');
   }
 
   @Public()

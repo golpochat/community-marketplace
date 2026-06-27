@@ -206,7 +206,7 @@ export function NearbyFeedSection({ initialListings = [] }: NearbyFeedSectionPro
           ) : (
             <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} showTrustCues={false} />
+                <ListingCard key={listing.id} listing={listing} showTrust={false} />
               ))}
             </div>
           )}

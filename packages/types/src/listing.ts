@@ -145,6 +145,8 @@ export interface ListingSellerSummary {
   responseRate?: number;
   responseTimeMinutes?: number;
   phone?: string;
+  /** Public storefront slug for /store/{slug} links */
+  storeSlug?: string;
 }
 
 export interface ListingReviewContext {

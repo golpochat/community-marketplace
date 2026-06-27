@@ -9,9 +9,10 @@ interface ListingQrCodeProps {
   shortUrl: string;
   title: string;
   onQrShare?: () => void;
+  compact?: boolean;
 }
 
-export function ListingQrCode({ shortUrl, title, onQrShare }: ListingQrCodeProps) {
+export function ListingQrCode({ shortUrl, title, onQrShare, compact = false }: ListingQrCodeProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const downloadPng = useCallback(() => {
@@ -42,17 +43,20 @@ export function ListingQrCode({ shortUrl, title, onQrShare }: ListingQrCodeProps
   }, [shortUrl, title]);
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-      <p className="text-sm font-medium text-gray-900">Scan to open listing</p>
-      <div ref={canvasRef} className="mt-3 inline-block rounded-lg bg-white p-3 shadow-sm">
-        <QRCodeCanvas value={shortUrl} size={160} level="M" includeMargin />
+    <div className={compact ? 'space-y-3' : 'rounded-lg border border-gray-200 bg-gray-50 p-4'}>
+      {!compact && <p className="text-sm font-medium text-gray-900">Scan to open listing</p>}
+      <div
+        ref={canvasRef}
+        className={`inline-block rounded-lg bg-white ${compact ? 'p-2 shadow-sm ring-1 ring-gray-200' : 'p-3 shadow-sm'}`}
+      >
+        <QRCodeCanvas value={shortUrl} size={compact ? 128 : 160} level="M" includeMargin />
       </div>
-      <p className="mt-2 break-all text-xs text-gray-500">{shortUrl}</p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Button type="button" variant="outline" onClick={downloadPng}>
+      {!compact && <p className="mt-2 break-all text-xs text-gray-500">{shortUrl}</p>}
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" size="sm" onClick={downloadPng}>
           Download PNG
         </Button>
-        <Button type="button" variant="outline" onClick={printQr}>
+        <Button type="button" variant="outline" size="sm" onClick={printQr}>
           Print
         </Button>
       </div>

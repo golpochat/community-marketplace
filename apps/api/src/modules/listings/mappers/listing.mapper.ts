@@ -13,6 +13,8 @@ import {
 } from "@community-marketplace/utils";
 
 import { resolveAssetPublicUrl } from "../../../libs/asset-url.lib";
+import { readStorePrefs } from "../utils/store-contact.util";
+import { buildStoreSlug } from "../utils/store-slug.util";
 import {
   listingDeliveryInclude,
   mapListingDeliverySelection,
@@ -29,6 +31,7 @@ export const listingInclude = {
     include: {
       primaryRole: true,
       profile: true,
+      settings: { select: { communicationPreferences: true } },
       verifications: {
         where: { badgeGranted: true, status: "approved" as const },
         take: 1,
@@ -205,6 +208,19 @@ function isSellerVerified(seller: ListingWithRelations['seller']): boolean {
   );
 }
 
+function resolveSellerStoreSlug(
+  seller: ListingWithRelations["seller"],
+): string | undefined {
+  if (!seller) return undefined;
+  const prefs = readStorePrefs(seller.settings?.communicationPreferences);
+  return buildStoreSlug({
+    id: seller.id,
+    displayName: seller.displayName,
+    businessName: seller.profile?.businessName,
+    preferredSlug: prefs.storeSlug,
+  });
+}
+
 function mapListingSeller(
   seller: ListingWithRelations["seller"],
   trust?: SellerTrustData,
@@ -229,6 +245,7 @@ function mapListingSeller(
       seller.phoneVerifiedAt && seller.profile?.phone
         ? seller.profile.phone
         : undefined,
+    storeSlug: resolveSellerStoreSlug(seller),
   };
 }
 

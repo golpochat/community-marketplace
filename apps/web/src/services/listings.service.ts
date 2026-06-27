@@ -1,7 +1,7 @@
 import type { Category, Listing, ListingFeedType, ListingSearchFilters, ListingSummary, PaginatedResult, SellerTrustProfile } from '@community-marketplace/types';
 import { paginationSchema } from '@community-marketplace/validation';
 
-import { apiClient } from '@/lib/api-client';
+import { apiClient, ApiClientError } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
 import { normalizePaginated } from '@/lib/normalize-api-response';
 import { trustService } from '@/services/trust.service';
@@ -84,12 +84,17 @@ export const listingsService = {
     }
   },
 
-  async getById(id: string): Promise<Listing | null> {
+  async getById(id: string, options?: { trackView?: boolean }): Promise<Listing | null> {
     try {
-      const response = await apiClient<Listing>(`${WEB_API_ROUTES.public.listings}/${id}`);
+      const params: Record<string, string> = {};
+      if (options?.trackView === false) params.trackView = 'false';
+      const response = await apiClient<Listing>(`${WEB_API_ROUTES.public.listings}/${id}`, {
+        params: Object.keys(params).length > 0 ? params : undefined,
+      });
       return response.data;
-    } catch {
-      return null;
+    } catch (error) {
+      if (error instanceof ApiClientError && error.status === 404) return null;
+      throw error;
     }
   },
 
@@ -103,11 +108,15 @@ export const listingsService = {
   },
 
   async getSimilar(listingId: string, limit = 4): Promise<ListingSummary[]> {
-    const listing = await this.getById(listingId);
-    if (!listing) return [];
-
-    const result = await this.search({ categoryId: listing.categoryId, limit: limit + 1 });
-    return result.data.filter((l) => l.id !== listingId).slice(0, limit);
+    try {
+      const response = await apiClient<ListingSummary[]>(
+        `${WEB_API_ROUTES.public.listings}/${listingId}/similar`,
+        { params: { limit: String(limit) } },
+      );
+      return response.data ?? [];
+    } catch {
+      return [];
+    }
   },
 
   async getSellerTrust(sellerId: string): Promise<SellerTrustProfile> {

@@ -18,6 +18,15 @@ import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
 import { AdminListingReviewDialog } from '@/components/dashboard/admin-listing-review-dialog';
 import { AdminListingStatusHistoryDialog } from '@/components/dashboard/admin-listing-status-history-dialog';
 import {
+  AdminToastStack,
+  useAdminToast,
+} from '@/components/admin/seller-verification/admin-toast';
+import { ConfirmDialog } from '@/components/admin/seller-verification/confirm-dialog';
+import {
+  UserModerationModal,
+  type UserModerationSubmitPayload,
+} from '@/components/admin/users/user-moderation-modal';
+import {
   formatNotificationChannelLabel,
   formatNotificationTypeLabel,
   NotificationDeliveryStatusBadge,
@@ -38,7 +47,13 @@ function moderationReportTarget(report: {
 }
 
 export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
+  const { toasts, push, dismiss } = useAdminToast();
   const [actingUserId, setActingUserId] = useState<string | null>(null);
+  const [moderationTarget, setModerationTarget] = useState<{
+    user: UserProfile;
+    action: 'suspend' | 'ban';
+  } | null>(null);
+  const [reinstateTarget, setReinstateTarget] = useState<UserProfile | null>(null);
 
   const fetchUsers = useCallback(
     (page: number, limit: number) => adminService.listUsers(role, { page, limit }),
@@ -56,29 +71,51 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
     reload,
   } = usePaginatedQuery({ fetcher: fetchUsers });
 
-  async function handleSuspend(user: UserProfile) {
-    const reason = window.prompt(`Reason for suspending ${user.email}?`) ?? undefined;
-    if (reason === null) return;
+  async function handleModerationSubmit(payload: UserModerationSubmitPayload) {
+    if (!moderationTarget) return;
+    const { user, action } = moderationTarget;
     setActingUserId(user.id);
     try {
-      await adminService.suspendUser(role, user.id, reason || undefined);
+      if (action === 'suspend') {
+        await adminService.suspendUser(role, user.id, payload.reason || undefined);
+        push(`${user.email} has been suspended.`, 'success');
+      } else {
+        await adminService.banUser(
+          role,
+          user.id,
+          payload.banType ?? 'permanent',
+          payload.reason || undefined,
+          payload.expiresAt,
+        );
+        push(`${user.email} has been banned.`, 'success');
+      }
+      setModerationTarget(null);
       await reload();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to suspend user');
+      push(
+        err instanceof Error ? err.message : `Failed to ${action} user`,
+        'error',
+      );
     } finally {
       setActingUserId(null);
     }
   }
 
-  async function handleBan(user: UserProfile) {
-    const reason = window.prompt(`Reason for banning ${user.email}?`) ?? undefined;
-    if (reason === null) return;
+  async function handleReinstate() {
+    if (!reinstateTarget) return;
+    const user = reinstateTarget;
     setActingUserId(user.id);
     try {
-      await adminService.banUser(role, user.id, 'permanent', reason || undefined);
+      const details = await adminService.getUserDetails(role, user.id);
+      for (const ban of details.activeBans ?? []) {
+        await adminService.unbanUser(role, user.id, ban.id);
+      }
+      await adminService.unsuspendUser(role, user.id);
+      push(`${user.email} has been reinstated.`, 'success');
+      setReinstateTarget(null);
       await reload();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to ban user');
+      push(err instanceof Error ? err.message : 'Failed to reinstate user', 'error');
     } finally {
       setActingUserId(null);
     }
@@ -87,6 +124,7 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
   const rows = users.map((user) => {
     const isProtectedRole = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
     const isActing = actingUserId === user.id;
+    const isSuspended = user.status === 'suspended';
 
     return [
       user.displayName ?? user.email,
@@ -95,43 +133,88 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
       user.status,
       <div key={user.id} className="flex flex-wrap gap-2">
         <IconActionGroup>
-          <IconActionButton
-            icon="user-minus"
-            label={isActing ? 'Working…' : 'Suspend user'}
-            disabled={isProtectedRole || isActing || user.status === 'suspended'}
-            onClick={() => void handleSuspend(user)}
-          />
-          <IconActionButton
-            icon="ban"
-            label="Ban user"
-            variant="danger"
-            disabled={isProtectedRole || isActing}
-            onClick={() => void handleBan(user)}
-          />
+          {isSuspended ? (
+            <IconActionButton
+              icon="circle-check"
+              label={isActing ? 'Working…' : 'Reinstate user'}
+              variant="accent"
+              disabled={isProtectedRole || isActing}
+              onClick={() => setReinstateTarget(user)}
+            />
+          ) : (
+            <>
+              <IconActionButton
+                icon="user-minus"
+                label={isActing ? 'Working…' : 'Suspend user'}
+                disabled={isProtectedRole || isActing}
+                onClick={() => setModerationTarget({ user, action: 'suspend' })}
+              />
+              <IconActionButton
+                icon="ban"
+                label="Ban user"
+                variant="danger"
+                disabled={isProtectedRole || isActing}
+                onClick={() => setModerationTarget({ user, action: 'ban' })}
+              />
+            </>
+          )}
         </IconActionGroup>
       </div>,
     ];
   });
 
   return (
-    <DashboardPageShell
-      title="Users"
-      description="Manage buyer and seller accounts across the marketplace."
-      loading={loading}
-      error={error}
-      empty={!loading && !error && rows.length === 0}
-      emptyTitle="No users found"
-    >
-      <Card>
-        <DataTable columns={['Name', 'Email', 'Role', 'Status', 'Actions']} rows={rows} />
-        <AdminTableFooter
-          page={page}
-          totalPages={totalPages}
-          total={meta.total}
-          onPageChange={setPage}
-        />
-      </Card>
-    </DashboardPageShell>
+    <>
+      <DashboardPageShell
+        title="Users"
+        description="Manage buyer and seller accounts across the marketplace."
+        loading={loading}
+        error={error}
+        empty={!loading && !error && rows.length === 0}
+        emptyTitle="No users found"
+      >
+        <Card>
+          <DataTable columns={['Name', 'Email', 'Role', 'Status', 'Actions']} rows={rows} />
+          <AdminTableFooter
+            page={page}
+            totalPages={totalPages}
+            total={meta.total}
+            onPageChange={setPage}
+          />
+        </Card>
+      </DashboardPageShell>
+
+      <UserModerationModal
+        open={moderationTarget != null}
+        action={moderationTarget?.action ?? 'suspend'}
+        userEmail={moderationTarget?.user.email ?? ''}
+        userName={moderationTarget?.user.displayName}
+        loading={actingUserId != null}
+        onSubmit={(payload) => void handleModerationSubmit(payload)}
+        onClose={() => {
+          if (actingUserId == null) setModerationTarget(null);
+        }}
+      />
+
+      <AdminToastStack toasts={toasts} onDismiss={dismiss} />
+
+      <ConfirmDialog
+        open={reinstateTarget != null}
+        title="Reinstate user"
+        message={
+          reinstateTarget
+            ? `Restore ${reinstateTarget.email} to active status and lift any active bans?`
+            : ''
+        }
+        confirmLabel="Reinstate"
+        tone="primary"
+        loading={actingUserId != null}
+        onConfirm={() => void handleReinstate()}
+        onCancel={() => {
+          if (actingUserId == null) setReinstateTarget(null);
+        }}
+      />
+    </>
   );
 }
 

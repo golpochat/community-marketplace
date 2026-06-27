@@ -1,126 +1,117 @@
 'use client';
 
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import type { Listing, ListingSummary } from '@community-marketplace/types';
-import { listingIsHybrid } from '@community-marketplace/utils';
 
 import { DescriptionSection } from '@/components/listings/description-section';
 import { Gallery } from '@/components/listings/gallery';
-import { ListingBadge } from '@/components/listings/listing-badge';
+import { ListingDetailHeader } from '@/components/listings/listing-detail-header';
 import { ListingDetailSidebar } from '@/components/listings/listing-detail-sidebar';
+import { ListingDetailUnavailable } from '@/components/listings/listing-detail-unavailable';
 import { SimilarListings } from '@/components/listings/similar-listings';
-import { Skeleton } from '@/components/shared/skeleton';
+import { Button } from '@community-marketplace/ui';
+import { useListingFavorite } from '@/hooks/use-listing-favorite';
 import { getListingUnavailableMessage } from '@/lib/listing-availability';
+import {
+  LISTING_DETAIL_GRID_CLASS,
+  LISTING_DETAIL_MAIN_CLASS,
+  SITE_PAGE_CLASS,
+} from '@/lib/page-layout';
 import { listingsService } from '@/services/listings.service';
-import { buyerService } from '@/services/marketplace.service';
-import { useAuth } from '@/hooks/use-auth';
 
 interface ListingDetailClientProps {
   id: string;
+  initialListing: Listing;
+  initialSimilar?: ListingSummary[];
 }
 
-export function ListingDetailClient({ id }: ListingDetailClientProps) {
-  const { isAuthenticated, user } = useAuth();
-  const [listing, setListing] = useState<Listing | null>(null);
-  const [similar, setSimilar] = useState<ListingSummary[]>([]);
-  const [initialSaved, setInitialSaved] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [notFoundState, setNotFoundState] = useState(false);
+export function ListingDetailClient({
+  id,
+  initialListing,
+  initialSimilar = [],
+}: ListingDetailClientProps) {
+  const [listing, setListing] = useState(initialListing);
+  const [similar, setSimilar] = useState(initialSimilar);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const { initialSaved } = useListingFavorite(id);
 
-  useEffect(() => {
-    async function load() {
-      setLoading(true);
-      const data = await listingsService.getById(id);
-      if (!data) {
-        setNotFoundState(true);
-        setLoading(false);
+  const retryRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setRefreshError(null);
+    try {
+      const [nextListing, nextSimilar] = await Promise.all([
+        listingsService.getById(id, { trackView: false }),
+        listingsService.getSimilar(id),
+      ]);
+      if (!nextListing) {
+        setRefreshError('This listing is no longer available.');
         return;
       }
-      setListing(data);
-      const similarListings = await listingsService.getSimilar(id);
-      setSimilar(similarListings);
-
-      if (isAuthenticated && user?.role === 'BUYER') {
-        const saved = await buyerService.isFavorite(id);
-        setInitialSaved(saved);
-      }
-
-      setLoading(false);
+      setListing(nextListing);
+      setSimilar(nextSimilar);
+    } catch {
+      setRefreshError('Could not refresh this listing. Check your connection and try again.');
+    } finally {
+      setRefreshing(false);
     }
-    void load();
-  }, [id, isAuthenticated, user?.role]);
+  }, [id]);
 
-  if (notFoundState) notFound();
-
-  if (loading || !listing) {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="mt-6 aspect-video w-full rounded-xl" />
-        <Skeleton className="mt-6 h-8 w-2/3" />
-      </div>
-    );
-  }
-
-  const sellerSlug = listing.sellerId;
-  const sellerDisplayName =
-    listing.seller?.displayName?.trim() || 'Seller';
   const unavailableMessage = getListingUnavailableMessage(listing.status);
 
   if (unavailableMessage) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8">
-        <Link href="/listings" className="text-sm text-primary hover:text-primary/90">
-          ← Back to listings
-        </Link>
-        <div className="mt-12 rounded-xl border border-gray-200 bg-gray-50 px-6 py-12 text-center">
-          <h1 className="text-xl font-semibold text-gray-900">{listing.title}</h1>
-          <p className="mt-4 text-gray-600">{unavailableMessage}</p>
-        </div>
-        <SimilarListings listings={similar} />
-      </div>
+      <ListingDetailUnavailable
+        listing={listing}
+        message={unavailableMessage}
+        similar={similar}
+        initialSaved={initialSaved}
+      />
     );
   }
 
-  const showHybridNearTitle = listingIsHybrid(listing);
-
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className={SITE_PAGE_CLASS}>
       <Link href="/listings" className="text-sm text-primary hover:text-primary/90">
         ← Back to listings
       </Link>
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_320px]">
-        <div className="min-w-0">
+      {refreshError && (
+        <div
+          className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          role="alert"
+        >
+          <span>{refreshError}</span>
+          <Button type="button" variant="outline" size="sm" disabled={refreshing} onClick={retryRefresh}>
+            {refreshing ? 'Retrying…' : 'Retry'}
+          </Button>
+        </div>
+      )}
+
+      <div className={`mt-6 ${LISTING_DETAIL_GRID_CLASS}`}>
+        <div className={`order-1 lg:col-start-1 lg:row-start-1 ${LISTING_DETAIL_MAIN_CLASS}`}>
           <Gallery images={listing.images} title={listing.title} />
-
-          <div className="mt-6">
-            <div className="flex flex-wrap items-start gap-2">
-              <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{listing.title}</h1>
-              {showHybridNearTitle && (
-                <ListingBadge tone="success" className="mt-1 capitalize">
-                  Hybrid model
-                </ListingBadge>
-              )}
-            </div>
-            {listing.status === 'active' && (
-              <p className="mt-1 text-xs text-gray-500">Active listing</p>
-            )}
-          </div>
-
-          <DescriptionSection listing={listing} />
-          <SimilarListings listings={similar} />
         </div>
 
-        <ListingDetailSidebar
-          listing={listing}
-          sellerDisplayName={sellerDisplayName}
-          sellerSlug={sellerSlug}
-          initialSaved={initialSaved}
-        />
+        <aside className="order-2 min-w-0 lg:col-start-2 lg:row-start-1 lg:row-span-3">
+          <ListingDetailSidebar listing={listing} initialSaved={initialSaved} />
+        </aside>
+
+        <div className={`order-3 space-y-6 lg:col-start-1 lg:row-start-2 ${LISTING_DETAIL_MAIN_CLASS}`}>
+          <ListingDetailHeader listing={listing} />
+          <DescriptionSection listing={listing} />
+        </div>
+
+        <div className={`order-4 lg:col-start-1 lg:row-start-3 ${LISTING_DETAIL_MAIN_CLASS}`}>
+          <SimilarListings
+            listings={similar}
+            categoryName={listing.category?.name}
+            categorySlug={listing.category?.slug}
+            narrow
+          />
+        </div>
       </div>
     </div>
   );

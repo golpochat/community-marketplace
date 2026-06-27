@@ -17,6 +17,7 @@ import type {
   SearchIndexMeta,
   SearchIndexName,
   SuspensionDuration,
+  UserBan,
   UserProfile,
   UserVerification,
 } from '@community-marketplace/types';
@@ -481,6 +482,30 @@ export const adminService = {
         ...(expiresAt ? { expiresAt } : {}),
       }),
     });
+    return response.data;
+  },
+
+  async getUserDetails(role: AdminApiRole, userId: string) {
+    const response = await apiClient<{
+      profile: UserProfile;
+      activeBans: UserBan[];
+    }>(adminApiPath(role, `/users/${userId}`));
+    return response.data;
+  },
+
+  async unsuspendUser(role: AdminApiRole, userId: string) {
+    const response = await apiClient<{ userId: string; status: string }>(
+      adminApiPath(role, `/users/${userId}/unsuspend`),
+      { method: 'POST' },
+    );
+    return response.data;
+  },
+
+  async unbanUser(role: AdminApiRole, userId: string, banId: string) {
+    const response = await apiClient<{ userId: string; banId: string; lifted: boolean }>(
+      adminApiPath(role, `/users/${userId}/bans/${banId}/unban`),
+      { method: 'POST' },
+    );
     return response.data;
   },
 

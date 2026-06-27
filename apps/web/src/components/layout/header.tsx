@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
-import { Button } from '@community-marketplace/ui';
+import { Button, cn } from '@community-marketplace/ui';
 import { Menu } from 'lucide-react';
 
 import { Logo } from '@/components/brand/logo';
@@ -25,13 +26,44 @@ function getSellHref(isAuthenticated: boolean, sellItem?: string): string {
   return WEB_APP_ROUTES.login;
 }
 
+function isBuyRoute(pathname: string): boolean {
+  return pathname === WEB_APP_ROUTES.listings || pathname.startsWith('/listings/');
+}
+
+function isSellRoute(pathname: string): boolean {
+  return pathname.startsWith('/seller');
+}
+
+function HeaderNavLink({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={cn(NAV_LINK_CLASS, active && 'text-primary')}
+      aria-current={active ? 'page' : undefined}
+    >
+      {children}
+    </Link>
+  );
+}
+
 export function Header() {
+  const pathname = usePathname();
   const { user, session, isAuthenticated, clearUser, dashboardPath } = useAuth();
   const hasAuthState = isAuthenticated || !!user;
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = user && dashboardPath ? getUserNavLinks(user.role, dashboardPath) : null;
   const sellHref = getSellHref(hasAuthState, navLinks?.sellItem);
+  const buyActive = isBuyRoute(pathname);
+  const sellActive = isSellRoute(pathname);
 
   const notificationsHref =
     user?.role === 'SELLER'
@@ -62,29 +94,30 @@ export function Header() {
     <>
       <header className="sticky top-0 z-40 border-b border-gray-200/50 bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center justify-between gap-4 px-4 md:px-6 lg:px-8">
-          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+          <div className="flex min-w-0 flex-1 items-center gap-1 md:gap-3">
             <Logo size="nav" />
             <div className="hidden md:block">
               <NavCategoriesDropdown />
             </div>
+            <nav
+              className="ml-1 hidden items-center gap-1 md:flex"
+              aria-label="Primary navigation"
+            >
+              <HeaderNavLink href={WEB_APP_ROUTES.listings} active={buyActive}>
+                Buy
+              </HeaderNavLink>
+              {!hasAuthState && (
+                <HeaderNavLink href={sellHref} active={sellActive}>
+                  Sell
+                </HeaderNavLink>
+              )}
+            </nav>
           </div>
 
-          <nav
-            className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex"
-            aria-label="Primary navigation"
-          >
-            <Link href={WEB_APP_ROUTES.listings} className={NAV_LINK_CLASS}>
-              Buy
-            </Link>
-            <Link href={sellHref} className={NAV_LINK_CLASS}>
-              Sell
-            </Link>
-          </nav>
-
-          <div className="hidden items-center gap-3 md:flex">
+          <div className="hidden shrink-0 items-center gap-3 md:flex">
             {hasAuthState && user && navLinks ? (
               <>
-                <Link href={sellHref}>
+                <Link href={sellHref} aria-current={sellActive ? 'page' : undefined}>
                   <Button className="h-10 rounded-md px-4 text-[15px] font-semibold transition-all duration-200">
                     Sell
                   </Button>
