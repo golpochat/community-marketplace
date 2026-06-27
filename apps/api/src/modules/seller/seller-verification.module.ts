@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { DatabaseModule } from '../../database/database.module';
 import { EventsModule } from '../../events/events.module';
@@ -13,7 +13,7 @@ import { SellerStatusHistoryService } from './services/seller-status-history.ser
 import { SellerVerificationService } from './services/seller-verification.service';
 
 @Module({
-  imports: [DatabaseModule, EventsModule, AuthModule, UsersModule, MonetizationModule],
+  imports: [DatabaseModule, EventsModule, AuthModule, UsersModule, forwardRef(() => MonetizationModule)],
   providers: [
     SellerStatusHistoryService,
     SellerListingGateService,

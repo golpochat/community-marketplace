@@ -79,7 +79,7 @@ function FastTrackCard({
   if (
     status.sellerStatus === 'verified' ||
     !fastTrack.enabled ||
-    !fastTrack.eligible
+    (!fastTrack.eligible && !fastTrack.hasPriority)
   ) {
     return null;
   }

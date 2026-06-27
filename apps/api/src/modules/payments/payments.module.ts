@@ -21,7 +21,7 @@ import { PaymentsWebhooksService } from './services/payments-webhooks.service';
 import { StripeConnectService } from './services/stripe-connect.service';
 
 @Module({
-  imports: [DatabaseModule, EventsModule, LibsModule, ListingsModule, forwardRef(() => MonetizationModule)],
+  imports: [DatabaseModule, EventsModule, LibsModule, forwardRef(() => ListingsModule), forwardRef(() => MonetizationModule)],
   controllers: [PaymentsWebhooksController],
   providers: [
     PaymentsService,

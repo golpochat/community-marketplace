@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { DatabaseModule } from '../../database/database.module';
 import { EventsModule } from '../../events/events.module';
@@ -42,7 +42,19 @@ import { ListingAutoModerationListener } from './listeners/listing-auto-moderati
 import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
 
 @Module({
-  imports: [DatabaseModule, UtilsModule, EventsModule, LibsModule, JobsModule, SearchModule, UsersModule, NotificationsModule, DevUploadModule, SellerVerificationModule, ModerationModule],
+  imports: [
+    DatabaseModule,
+    UtilsModule,
+    EventsModule,
+    LibsModule,
+    JobsModule,
+    SearchModule,
+    UsersModule,
+    NotificationsModule,
+    DevUploadModule,
+    forwardRef(() => SellerVerificationModule),
+    ModerationModule,
+  ],
   controllers: [ListingsController, StoresController],
   providers: [
     ListingsService,
