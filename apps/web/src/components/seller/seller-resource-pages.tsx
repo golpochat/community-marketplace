@@ -40,7 +40,9 @@ import {
 } from "@/components/seller/listing-seller-actions";
 import { ListingPackageDialog } from "@/components/seller/listing-package-dialog";
 import { ListingBoostDialog } from "@/components/seller/listing-boost-dialog";
+import { ListingFeaturedDialog } from "@/components/seller/listing-featured-dialog";
 import { BoostedBadge } from "@/components/listings/boosted-badge";
+import { FeaturedBadge } from "@/components/listings/featured-badge";
 import { LISTING_PACKAGE_OPTIONS } from "@/lib/listing-package-options";
 import { ListingReviewThread } from "@/components/dashboard/listing-review-thread";
 import { SellerConnectBanner } from "@/components/seller/seller-connect-banner";
@@ -199,6 +201,7 @@ export function SellerListingsPage() {
     mode: "renew";
   } | null>(null);
   const [boostDialogListingId, setBoostDialogListingId] = useState<string | null>(null);
+  const [featuredDialogListingId, setFeaturedDialogListingId] = useState<string | null>(null);
 
   const renewPackageOptions = LISTING_PACKAGE_OPTIONS.filter(
     (option) => option.value === "FREE",
@@ -258,6 +261,10 @@ export function SellerListingsPage() {
         case "upgrade":
           setActionId(null);
           setBoostDialogListingId(listingId);
+          return;
+        case "feature":
+          setActionId(null);
+          setFeaturedDialogListingId(listingId);
           return;
         case "duplicate": {
           const dup = await sellerService.duplicateListing(listingId);
@@ -350,6 +357,10 @@ export function SellerListingsPage() {
                   <td className="max-w-xs px-3 py-2 font-medium text-gray-900">
                     <div className="flex flex-wrap items-center gap-2">
                       <TruncatedText text={listing.title} />
+                      <FeaturedBadge
+                        featuredUntil={listing.featuredUntil}
+                        isFeatured={listing.isFeatured}
+                      />
                       <BoostedBadge boostedUntil={listing.boostedUntil} />
                     </div>
                   </td>
@@ -458,6 +469,14 @@ export function SellerListingsPage() {
           open
           listingId={boostDialogListingId}
           onClose={() => setBoostDialogListingId(null)}
+          onSuccess={() => void load()}
+        />
+      )}
+      {featuredDialogListingId && (
+        <ListingFeaturedDialog
+          open
+          listingId={featuredDialogListingId}
+          onClose={() => setFeaturedDialogListingId(null)}
           onSuccess={() => void load()}
         />
       )}

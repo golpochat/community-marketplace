@@ -9,6 +9,7 @@ import type { Prisma } from "@prisma/client";
 import type { Listing, ListingSummary, RbacRole } from "@community-marketplace/types";
 import {
   createListingSchema,
+  featuredListingsQuerySchema,
   paginationSchema,
   updateListingSchema,
 } from "@community-marketplace/validation";
@@ -28,6 +29,7 @@ import { ListingDeliveryService } from "./listing-delivery.service";
 import { SellerTrustService } from "./seller-trust.service";
 import { SellerListingGateService } from "../../seller/services/seller-listing-gate.service";
 import { ListingAutoModerationService } from "./listing-auto-moderation.service";
+import { buildActiveFeaturedWhere } from "../../monetization/lib/featured.lib";
 import { computeListingPricing } from "../lib/listing-pricing.lib";
 import { CategoriesService } from "./categories.service";
 import {
@@ -92,6 +94,40 @@ export class ListingsCrudService {
       l,
       total,
     );
+  }
+
+  async findFeatured(input: unknown): Promise<ListingSummary[]> {
+    const query = featuredListingsQuerySchema.parse(input);
+    const limit = query.limit ?? 20;
+    const now = new Date();
+
+    const rows = await this.prisma.listing.findMany({
+      where: this.visibility.visibleListingWhere(
+        buildActiveFeaturedWhere(query.placement, now, query.categoryId),
+      ),
+      include: listingInclude,
+      orderBy: [{ featuredUntil: "desc" }, { createdAt: "desc" }],
+      take: limit,
+    });
+
+    const trustMap = await this.sellerTrust.getSummariesForSellers(
+      rows.map((row) => row.sellerId),
+    );
+
+    return rows.map((row) => {
+      const trust = trustMap.get(row.sellerId);
+      return mapListingSummaryWithTrust(
+        row,
+        undefined,
+        trust
+          ? {
+              averageRating: trust.averageRating,
+              reviewCount: trust.reviewCount,
+              soldCount: trust.soldCount,
+            }
+          : undefined,
+      );
+    });
   }
 
   async findById(id: string, incrementView = false): Promise<Listing> {

@@ -14,6 +14,7 @@ import { MapPin } from 'lucide-react';
 import { ChatButton } from '@/components/listings/chat-button';
 import { BuyerProtectionBanner } from '@/components/listings/buyer-protection-banner';
 import { BoostedBadge } from '@/components/listings/boosted-badge';
+import { FeaturedBadge } from '@/components/listings/featured-badge';
 import { ListingCashbackCue } from '@/components/listings/listing-cashback-cue';
 import { ListingDeliveryDisplay } from '@/components/listings/listing-delivery-display';
 import { ListingPriceDisplay } from '@/components/listings/listing-price-display';
@@ -86,7 +87,10 @@ export function ListingDetailSidebar({
             size="detail"
             priceDroppedAt={listing.priceDroppedAt}
           />
-          <BoostedBadge boostedUntil={listing.boostedUntil} />
+          <div className="flex flex-wrap items-center gap-2">
+            <FeaturedBadge featuredUntil={listing.featuredUntil} isFeatured={listing.isFeatured} />
+            <BoostedBadge boostedUntil={listing.boostedUntil} />
+          </div>
         </div>
 
         <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">

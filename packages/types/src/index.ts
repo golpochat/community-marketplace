@@ -206,6 +206,13 @@ export type {
   BoostCatalogOption,
   BoostCatalogListing,
   BoostCatalogResponse,
+  FeaturedPlacement,
+  FeaturedCatalogOption,
+  FeaturedCatalogListing,
+  FeaturedCatalogResponse,
+  FeaturedIntentResponse,
+  FastTrackStatusResponse,
+  FastTrackIntentResponse,
   SellerPlatformFeeInfo,
   WalletTransaction,
   CashbackGrant,
@@ -215,7 +222,9 @@ export type {
 } from './monetization';
 export {
   BOOST_PACKAGE_TYPES,
+  FEATURED_PLACEMENTS,
   isBoostPackageType,
+  isFeaturedPlacement,
 } from './monetization';
 export type {
   NotificationType,

@@ -49,10 +49,27 @@ export function ListingsBrowseClient() {
       listingsService.search(filters),
     ]);
     setCategories(cats);
-    setListings(result.data);
+
+    let merged = result.data;
+    if (filters.categoryId) {
+      const categoryFeatured = await listingsService.getFeatured({
+        placement: 'category',
+        categoryId: filters.categoryId,
+        limit: 8,
+      });
+      if (categoryFeatured.length > 0) {
+        const featuredIds = new Set(categoryFeatured.map((listing) => listing.id));
+        merged = [
+          ...categoryFeatured,
+          ...result.data.filter((listing) => !featuredIds.has(listing.id)),
+        ];
+      }
+    }
+
+    setListings(merged);
     setMeta(result.meta);
 
-    if (isAuthenticated && user?.role === 'BUYER' && result.data.length > 0) {
+    if (isAuthenticated && user?.role === 'BUYER' && merged.length > 0) {
       const favorites = await buyerService.getFavorites(1, 100);
       setSavedIds(new Set(favorites.data.map((listing) => listing.id)));
     } else {

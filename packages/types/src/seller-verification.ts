@@ -38,6 +38,7 @@ export interface SellerVerificationRequest {
   selfiePath?: string;
   addressDocumentPath?: string;
   status: 'pending' | 'approved' | 'rejected';
+  priority?: boolean;
   reviewedById?: string;
   reviewedAt?: string;
   rejectionReason?: string;
@@ -93,6 +94,7 @@ export interface AdminSellerVerificationRow {
   phone?: string;
   submittedAt?: string;
   requestStatus?: 'pending' | 'approved' | 'rejected';
+  priority?: boolean;
   sellerStatus: SellerStatus;
   verificationRequestedAt?: string;
   verificationCompletedAt?: string;

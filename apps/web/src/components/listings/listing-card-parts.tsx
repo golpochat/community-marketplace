@@ -14,6 +14,7 @@ import { BadgeCheck, MapPin } from 'lucide-react';
 
 import { DealBlock } from '@/components/listings/deal-block';
 import { BoostedBadge } from '@/components/listings/boosted-badge';
+import { FeaturedBadge } from '@/components/listings/featured-badge';
 import { ListingBadge } from '@/components/listings/listing-badge';
 import { SaveButton } from '@/components/listings/save-button';
 import { ShareListingButton } from '@/components/listings/ShareListingButton';
@@ -227,6 +228,7 @@ export function ListingCardContent({
           </span>
           <DeliveryBadge summary={listing.deliverySummary} />
           {!isCompact && <ListingCardVerifiedBadge verified={listing.sellerVerified} />}
+          <FeaturedBadge featuredUntil={listing.featuredUntil} isFeatured={listing.isFeatured} />
           <BoostedBadge boostedUntil={listing.boostedUntil} />
         </div>
 

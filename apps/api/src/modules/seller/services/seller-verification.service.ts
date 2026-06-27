@@ -33,6 +33,7 @@ import { EventBusService } from '../../../events/event-bus.service';
 import { OtpService } from '../../auth/services/otp.service';
 import { R2StorageService } from '../../users/services/r2-storage.service';
 import { UserAuditService } from '../../users/services/user-audit.service';
+import { FastTrackFulfillmentService } from '../../monetization/services/fast-track-fulfillment.service';
 import {
   SellerListingGateService,
   SellerVerificationStatusService,
@@ -52,6 +53,7 @@ export class SellerVerificationService {
     private readonly listingGate: SellerListingGateService,
     private readonly statusService: SellerVerificationStatusService,
     private readonly statusHistory: SellerStatusHistoryService,
+    private readonly fastTrackFulfillment: FastTrackFulfillmentService,
   ) {}
 
   getStatus(userId: string): Promise<SellerVerificationStatus> {
@@ -217,6 +219,8 @@ export class SellerVerificationService {
       return updated;
     });
 
+    await this.fastTrackFulfillment.applyPendingFastTrackOnSubmit(userId, request.id);
+
     await this.audit.record('verification_submitted', userId, userId, {
       verificationId: request.id,
     });
@@ -326,7 +330,10 @@ export class SellerVerificationService {
     const [rows, total] = await Promise.all([
       this.prisma.sellerVerificationRequest.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy:
+          view === 'pending'
+            ? [{ priority: 'desc' }, { createdAt: 'asc' }]
+            : { createdAt: 'desc' },
         skip,
         take: limit,
         include: {
@@ -435,6 +442,7 @@ export class SellerVerificationService {
       phone: row.phoneNumber ?? row.user.profile?.phone ?? undefined,
       submittedAt: row.createdAt.toISOString(),
       requestStatus: row.status as AdminSellerVerificationRow['requestStatus'],
+      priority: row.priority,
       sellerStatus: row.user.sellerStatus as AdminSellerVerificationRow['sellerStatus'],
       verificationRequestedAt: row.user.verificationRequestedAt?.toISOString(),
       verificationCompletedAt: row.user.verificationCompletedAt?.toISOString(),
@@ -463,6 +471,7 @@ export class SellerVerificationService {
       selfiePath: string | null;
       addressDocumentPath: string | null;
       status: VerificationStatus;
+      priority?: boolean;
       rejectionReason: string | null;
       createdAt: Date;
     } | null,
@@ -475,6 +484,7 @@ export class SellerVerificationService {
       phone: request?.phoneNumber ?? user.profile?.phone ?? undefined,
       submittedAt: request?.createdAt.toISOString(),
       requestStatus: request?.status as AdminSellerVerificationRow['requestStatus'],
+      priority: request?.priority,
       sellerStatus: user.sellerStatus as AdminSellerVerificationRow['sellerStatus'],
       verificationRequestedAt: user.verificationRequestedAt?.toISOString(),
       verificationCompletedAt: user.verificationCompletedAt?.toISOString(),

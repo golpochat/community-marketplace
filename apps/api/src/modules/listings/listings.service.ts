@@ -52,6 +52,10 @@ export class ListingsService {
     return this.crud.findPublic(page, limit);
   }
 
+  findFeatured(input: unknown) {
+    return this.crud.findFeatured(input);
+  }
+
   findById(id: string, incrementView = false): Promise<Listing> {
     return this.crud.findById(id, incrementView);
   }

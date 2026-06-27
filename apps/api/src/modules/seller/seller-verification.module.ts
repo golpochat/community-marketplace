@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../database/database.module';
 import { EventsModule } from '../../events/events.module';
 import { AuthModule } from '../auth/auth.module';
+import { MonetizationModule } from '../monetization/monetization.module';
 import { UsersModule } from '../users/users.module';
 import {
   SellerListingGateService,
@@ -12,7 +13,7 @@ import { SellerStatusHistoryService } from './services/seller-status-history.ser
 import { SellerVerificationService } from './services/seller-verification.service';
 
 @Module({
-  imports: [DatabaseModule, EventsModule, AuthModule, UsersModule],
+  imports: [DatabaseModule, EventsModule, AuthModule, UsersModule, MonetizationModule],
   providers: [
     SellerStatusHistoryService,
     SellerListingGateService,

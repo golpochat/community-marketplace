@@ -253,6 +253,8 @@ enum CashbackGrantStatus {
 
 enum PlatformPurchaseType {
   listing_boost
+  featured_slot
+  fast_track_verification
 }
 
 enum PlatformPurchaseStatus {
@@ -509,6 +511,7 @@ model SellerVerificationRequest {
   selfiePath          String?            @map("selfie_path")
   addressDocumentPath String?            @map("address_document_path")
   status              VerificationStatus @default(pending)
+  priority            Boolean            @default(false)
   reviewedById        String?            @map("reviewed_by")
   reviewedAt          DateTime?          @map("reviewed_at")
   rejectionReason     String?            @map("rejection_reason") @db.Text
@@ -762,6 +765,8 @@ model Listing {
   moderationHiddenAt DateTime?        @map("moderation_hidden_at")
   attributes         Json?            @map("attributes")
   isFeatured         Boolean          @default(false) @map("is_featured")
+  featuredUntil      DateTime?        @map("featured_until")
+  featuredPlacement  String?          @map("featured_placement")
   boostedUntil       DateTime?        @map("boosted_until")
   requiresFraudReview Boolean         @default(false) @map("requires_fraud_review")
   createdAt          DateTime         @default(now()) @map("created_at")
@@ -1105,6 +1110,7 @@ model PlatformSettings {
   allowedCashbackMethods   Json     @map("allowed_cashback_methods")
   pricing                  Json?
   boostsEnabled            Boolean  @default(true) @map("boosts_enabled")
+  featuredEnabled          Boolean  @default(true) @map("featured_enabled")
   createdAt                DateTime @default(now()) @map("created_at")
   updatedAt                DateTime @updatedAt @map("updated_at")
 

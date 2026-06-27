@@ -10,11 +10,18 @@ import {
 import type {
   BoostIntentResponse,
   BoostPackageType,
+  FastTrackIntentResponse,
+  FastTrackStatusResponse,
+  FeaturedIntentResponse,
+  FeaturedPlacement,
   PlatformPurchase,
 } from '@community-marketplace/types';
 import type {
   ConfirmBoostInput,
+  ConfirmFastTrackInput,
+  ConfirmFeaturedInput,
   CreateBoostIntentInput,
+  CreateFeaturedIntentInput,
 } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../../database/prisma.service';
@@ -23,9 +30,20 @@ import {
   boostSkuKey,
   roundMoney,
 } from '../lib/boost.lib';
+import {
+  buildActiveFeaturedWhere,
+  featuredSkuKey,
+  slotsPerDayForPlacement,
+} from '../lib/featured.lib';
 import { mapPlatformPurchase } from '../mappers/monetization.mapper';
 import { BoostCatalogService } from './boost-catalog.service';
 import { BoostFulfillmentService } from './boost-fulfillment.service';
+import {
+  FAST_TRACK_COOLDOWN_DAYS,
+  FastTrackFulfillmentService,
+} from './fast-track-fulfillment.service';
+import { FeaturedCatalogService } from './featured-catalog.service';
+import { FeaturedFulfillmentService } from './featured-fulfillment.service';
 import { PlatformSettingsService } from './platform-settings.service';
 
 const DAILY_INTENT_LIMIT = 10;
@@ -35,8 +53,11 @@ export class PlatformPurchaseService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly settings: PlatformSettingsService,
-    private readonly catalog: BoostCatalogService,
-    private readonly fulfillment: BoostFulfillmentService,
+    private readonly boostCatalog: BoostCatalogService,
+    private readonly featuredCatalog: FeaturedCatalogService,
+    private readonly boostFulfillment: BoostFulfillmentService,
+    private readonly featuredFulfillment: FeaturedFulfillmentService,
+    private readonly fastTrackFulfillment: FastTrackFulfillmentService,
     private readonly stripeConnect: StripeConnectService,
   ) {}
 
@@ -44,9 +65,9 @@ export class PlatformPurchaseService {
     sellerId: string,
     dto: CreateBoostIntentInput,
   ): Promise<BoostIntentResponse> {
-    await this.assertIntentRateLimit(sellerId);
+    await this.assertIntentRateLimit(sellerId, 'listing_boost');
 
-    const catalog = await this.catalog.getCatalog(sellerId, dto.listingId);
+    const catalog = await this.boostCatalog.getCatalog(sellerId, dto.listingId);
     const option = catalog.options.find((item) => item.packageType === dto.packageType);
     if (!option?.eligible) {
       throw new BadRequestException(
@@ -55,12 +76,11 @@ export class PlatformPurchaseService {
     }
 
     const settings = await this.settings.get();
-    const amount = await this.resolveBoostPrice(sellerId, dto.packageType, settings.pricing.skus[
-      boostSkuKey(dto.packageType)
-    ].amount);
-
-    const stripe = this.stripeConnect.getStripeClient();
-    const currency = settings.pricing.currency.toLowerCase();
+    const amount = await this.resolveBoostPrice(
+      sellerId,
+      dto.packageType,
+      settings.pricing.skus[boostSkuKey(dto.packageType)].amount,
+    );
 
     const purchase = await this.prisma.platformPurchase.create({
       data: {
@@ -78,27 +98,18 @@ export class PlatformPurchaseService {
       },
     });
 
-    let providerPaymentId: string;
-    let clientSecret: string;
-
-    if (stripe) {
-      const intent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100),
-        currency,
-        metadata: {
-          type: 'listing_boost',
-          listingId: dto.listingId,
-          userId: sellerId,
-          packageType: dto.packageType,
-          platformPurchaseId: purchase.id,
-        },
-      });
-      providerPaymentId = intent.id;
-      clientSecret = intent.client_secret ?? '';
-    } else {
-      providerPaymentId = `pi_dev_boost_${Date.now()}`;
-      clientSecret = `pi_dev_boost_secret_${Date.now()}`;
-    }
+    const { providerPaymentId, clientSecret } = await this.createStripeIntent(
+      amount,
+      settings.pricing.currency,
+      {
+        type: 'listing_boost',
+        listingId: dto.listingId,
+        userId: sellerId,
+        packageType: dto.packageType,
+        platformPurchaseId: purchase.id,
+      },
+      'boost',
+    );
 
     const updated = await this.prisma.platformPurchase.update({
       where: { id: purchase.id },
@@ -112,33 +123,187 @@ export class PlatformPurchaseService {
   }
 
   async confirmBoost(sellerId: string, dto: ConfirmBoostInput): Promise<PlatformPurchase> {
-    const purchase = await this.prisma.platformPurchase.findUnique({
-      where: { id: dto.purchaseId },
+    return this.confirmPurchase(sellerId, dto.purchaseId, (id) =>
+      this.boostFulfillment.fulfillListingBoost(id),
+    );
+  }
+
+  async createFeaturedIntent(
+    sellerId: string,
+    dto: CreateFeaturedIntentInput,
+  ): Promise<FeaturedIntentResponse> {
+    await this.assertIntentRateLimit(sellerId, 'featured_slot');
+
+    const categoryId =
+      dto.placement === 'category' ? dto.categoryId : undefined;
+    const catalog = await this.featuredCatalog.getCatalog(
+      sellerId,
+      dto.listingId,
+      categoryId,
+    );
+    const option = catalog.options.find((item) => item.placement === dto.placement);
+    if (!option?.eligible) {
+      throw new BadRequestException(
+        option?.reason ?? 'This listing is not eligible for featured placement',
+      );
+    }
+
+    const settings = await this.settings.get();
+    const sku = settings.pricing.skus[featuredSkuKey(dto.placement)];
+    const amount = roundMoney(sku?.amount ?? 0);
+
+    const purchase = await this.prisma.platformPurchase.create({
+      data: {
+        userId: sellerId,
+        type: 'featured_slot',
+        status: 'pending',
+        amount,
+        currency: settings.pricing.currency.toUpperCase(),
+        listingId: dto.listingId,
+        metadata: {
+          placement: dto.placement,
+          categoryId: categoryId ?? null,
+          priceAtPurchase: amount,
+        },
+      },
     });
-    if (!purchase) throw new NotFoundException('Purchase not found');
-    if (purchase.userId !== sellerId) {
-      throw new ForbiddenException('You can only confirm your own purchases');
-    }
 
-    const stripe = this.stripeConnect.getStripeClient();
-    if (stripe && purchase.providerPaymentId) {
-      const intent = await stripe.paymentIntents.retrieve(purchase.providerPaymentId);
-      if (intent.status === 'succeeded') {
-        await this.fulfillment.fulfillListingBoost(purchase.id);
-      } else if (intent.status === 'canceled') {
-        await this.prisma.platformPurchase.update({
-          where: { id: purchase.id },
-          data: { status: 'failed' },
-        });
-      }
-    } else {
-      await this.fulfillment.fulfillListingBoost(purchase.id);
-    }
+    const { providerPaymentId, clientSecret } = await this.createStripeIntent(
+      amount,
+      settings.pricing.currency,
+      {
+        type: 'featured_slot',
+        listingId: dto.listingId,
+        userId: sellerId,
+        placement: dto.placement,
+        categoryId: categoryId ?? '',
+        platformPurchaseId: purchase.id,
+      },
+      'featured',
+    );
 
-    const row = await this.prisma.platformPurchase.findUniqueOrThrow({
+    const updated = await this.prisma.platformPurchase.update({
       where: { id: purchase.id },
+      data: { providerPaymentId, clientSecret },
     });
-    return mapPlatformPurchase(row);
+
+    return {
+      purchase: mapPlatformPurchase(updated),
+      clientSecret,
+    };
+  }
+
+  async confirmFeatured(
+    sellerId: string,
+    dto: ConfirmFeaturedInput,
+  ): Promise<PlatformPurchase> {
+    return this.confirmPurchase(sellerId, dto.purchaseId, (id) =>
+      this.featuredFulfillment.fulfillFeaturedSlot(id),
+    );
+  }
+
+  async getFastTrackStatus(sellerId: string): Promise<FastTrackStatusResponse> {
+    const settings = await this.settings.get();
+    const sku = settings.pricing.skus.fast_track_verification;
+    const price = sku?.amount ?? 0;
+    const enabled = Boolean(sku?.enabled);
+
+    const pendingRequest = await this.prisma.sellerVerificationRequest.findFirst({
+      where: {
+        userId: sellerId,
+        status: 'pending',
+        user: { verificationRequestedAt: { not: null } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const pendingPurchase = await this.prisma.platformPurchase.findFirst({
+      where: {
+        userId: sellerId,
+        type: 'fast_track_verification',
+        status: 'pending',
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: sellerId },
+      select: { sellerStatus: true },
+    });
+
+    const { eligible, reason, nextEligibleAt } = await this.evaluateFastTrackEligibility(
+      sellerId,
+      user.sellerStatus,
+      enabled,
+    );
+
+    return {
+      enabled,
+      currency: settings.pricing.currency,
+      price,
+      eligible,
+      reason,
+      hasPriority: pendingRequest?.priority ?? false,
+      pendingPurchase: pendingPurchase
+        ? mapPlatformPurchase(pendingPurchase)
+        : undefined,
+      nextEligibleAt,
+    };
+  }
+
+  async createFastTrackIntent(sellerId: string): Promise<FastTrackIntentResponse> {
+    await this.assertIntentRateLimit(sellerId, 'fast_track_verification');
+
+    const status = await this.getFastTrackStatus(sellerId);
+    if (!status.eligible) {
+      throw new BadRequestException(status.reason ?? 'Fast-track verification is not available');
+    }
+
+    const settings = await this.settings.get();
+    const amount = roundMoney(status.price);
+
+    const purchase = await this.prisma.platformPurchase.create({
+      data: {
+        userId: sellerId,
+        type: 'fast_track_verification',
+        status: 'pending',
+        amount,
+        currency: settings.pricing.currency.toUpperCase(),
+        metadata: {
+          priceAtPurchase: amount,
+        },
+      },
+    });
+
+    const { providerPaymentId, clientSecret } = await this.createStripeIntent(
+      amount,
+      settings.pricing.currency,
+      {
+        type: 'fast_track_verification',
+        userId: sellerId,
+        platformPurchaseId: purchase.id,
+      },
+      'fast_track',
+    );
+
+    const updated = await this.prisma.platformPurchase.update({
+      where: { id: purchase.id },
+      data: { providerPaymentId, clientSecret },
+    });
+
+    return {
+      purchase: mapPlatformPurchase(updated),
+      clientSecret,
+    };
+  }
+
+  async confirmFastTrack(
+    sellerId: string,
+    dto: ConfirmFastTrackInput,
+  ): Promise<PlatformPurchase> {
+    return this.confirmPurchase(sellerId, dto.purchaseId, (id) =>
+      this.fastTrackFulfillment.fulfillFastTrack(id),
+    );
   }
 
   async handlePaymentIntentSucceeded(providerPaymentId: string): Promise<boolean> {
@@ -146,7 +311,17 @@ export class PlatformPurchaseService {
       where: { providerPaymentId },
     });
     if (!purchase) return false;
-    return this.fulfillment.fulfillListingBoost(purchase.id);
+
+    switch (purchase.type) {
+      case 'listing_boost':
+        return this.boostFulfillment.fulfillListingBoost(purchase.id);
+      case 'featured_slot':
+        return this.featuredFulfillment.fulfillFeaturedSlot(purchase.id);
+      case 'fast_track_verification':
+        return this.fastTrackFulfillment.fulfillFastTrack(purchase.id);
+      default:
+        return false;
+    }
   }
 
   async handlePaymentIntentFailed(providerPaymentId: string): Promise<boolean> {
@@ -164,7 +339,7 @@ export class PlatformPurchaseService {
   async listAdmin(filters: {
     page: number;
     limit: number;
-    type?: 'listing_boost';
+    type?: 'listing_boost' | 'featured_slot' | 'fast_track_verification';
     status?: 'pending' | 'succeeded' | 'failed' | 'refunded';
     userId?: string;
   }) {
@@ -193,18 +368,85 @@ export class PlatformPurchaseService {
     };
   }
 
-  private async assertIntentRateLimit(sellerId: string) {
+  private async confirmPurchase(
+    sellerId: string,
+    purchaseId: string,
+    fulfill: (purchaseId: string) => Promise<boolean>,
+  ): Promise<PlatformPurchase> {
+    const purchase = await this.prisma.platformPurchase.findUnique({
+      where: { id: purchaseId },
+    });
+    if (!purchase) throw new NotFoundException('Purchase not found');
+    if (purchase.userId !== sellerId) {
+      throw new ForbiddenException('You can only confirm your own purchases');
+    }
+
+    const stripe = this.stripeConnect.getStripeClient();
+    if (stripe && purchase.providerPaymentId) {
+      const intent = await stripe.paymentIntents.retrieve(purchase.providerPaymentId);
+      if (intent.status === 'succeeded') {
+        await fulfill(purchase.id);
+      } else if (intent.status === 'canceled') {
+        await this.prisma.platformPurchase.update({
+          where: { id: purchase.id },
+          data: { status: 'failed' },
+        });
+      }
+    } else {
+      await fulfill(purchase.id);
+    }
+
+    const row = await this.prisma.platformPurchase.findUniqueOrThrow({
+      where: { id: purchase.id },
+    });
+    return mapPlatformPurchase(row);
+  }
+
+  private async createStripeIntent(
+    amount: number,
+    currency: string,
+    metadata: Record<string, string>,
+    devPrefix: string,
+  ) {
+    const stripe = this.stripeConnect.getStripeClient();
+    const normalizedCurrency = currency.toLowerCase();
+
+    if (stripe) {
+      const intent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100),
+        currency: normalizedCurrency,
+        metadata,
+      });
+      return {
+        providerPaymentId: intent.id,
+        clientSecret: intent.client_secret ?? '',
+      };
+    }
+
+    return {
+      providerPaymentId: `pi_dev_${devPrefix}_${Date.now()}`,
+      clientSecret: `pi_dev_${devPrefix}_secret_${Date.now()}`,
+    };
+  }
+
+  private async assertIntentRateLimit(
+    sellerId: string,
+    type: 'listing_boost' | 'featured_slot' | 'fast_track_verification',
+  ) {
     const since = new Date();
     since.setHours(since.getHours() - 24);
     const count = await this.prisma.platformPurchase.count({
       where: {
         userId: sellerId,
-        type: 'listing_boost',
+        type,
         createdAt: { gte: since },
       },
     });
     if (count >= DAILY_INTENT_LIMIT) {
-      throw new HttpException('Boost purchase limit reached for today', HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException(
+        'Purchase limit reached for today',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
   }
 
@@ -227,5 +469,94 @@ export class PlatformPurchaseService {
     if (priorSuccess > 0) return roundMoney(basePrice);
 
     return roundMoney(basePrice * (1 - discountPercent / 100));
+  }
+
+  private async evaluateFastTrackEligibility(
+    sellerId: string,
+    sellerStatus: string,
+    skuEnabled: boolean,
+  ): Promise<{ eligible: boolean; reason?: string; nextEligibleAt?: string }> {
+    if (!skuEnabled) {
+      return { eligible: false, reason: 'fast_track_disabled' };
+    }
+    if (sellerStatus === 'verified') {
+      return { eligible: false, reason: 'already_verified' };
+    }
+    if (sellerStatus === 'suspended') {
+      return { eligible: false, reason: 'seller_suspended' };
+    }
+
+    const since = new Date();
+    since.setDate(since.getDate() - FAST_TRACK_COOLDOWN_DAYS);
+
+    const recentSuccess = await this.prisma.platformPurchase.findFirst({
+      where: {
+        userId: sellerId,
+        type: 'fast_track_verification',
+        status: 'succeeded',
+        fulfilledAt: { gte: since },
+      },
+      orderBy: { fulfilledAt: 'desc' },
+    });
+
+    if (recentSuccess?.fulfilledAt) {
+      const nextEligibleAt = new Date(recentSuccess.fulfilledAt);
+      nextEligibleAt.setDate(nextEligibleAt.getDate() + FAST_TRACK_COOLDOWN_DAYS);
+      return {
+        eligible: false,
+        reason: 'cooldown_active',
+        nextEligibleAt: nextEligibleAt.toISOString(),
+      };
+    }
+
+    const pendingSuccess = await this.prisma.platformPurchase.findFirst({
+      where: {
+        userId: sellerId,
+        type: 'fast_track_verification',
+        status: 'succeeded',
+        metadata: {
+          path: ['applied'],
+          equals: false,
+        },
+      },
+    });
+    if (pendingSuccess) {
+      return { eligible: false, reason: 'pending_application' };
+    }
+
+    const unappliedPurchase = await this.prisma.platformPurchase.findFirst({
+      where: {
+        userId: sellerId,
+        type: 'fast_track_verification',
+        status: 'succeeded',
+      },
+      orderBy: { fulfilledAt: 'desc' },
+    });
+    if (
+      unappliedPurchase &&
+      this.fastTrackFulfillment.readMetadata(unappliedPurchase.metadata).applyOnSubmit === true
+    ) {
+      return { eligible: false, reason: 'pending_application' };
+    }
+
+    return { eligible: true };
+  }
+
+  async assertFeaturedSlotsAvailable(
+    placement: FeaturedPlacement,
+    categoryId?: string,
+  ): Promise<void> {
+    const settings = await this.settings.get();
+    const slotsPerDay = slotsPerDayForPlacement(
+      placement,
+      settings.pricing.featured ?? {},
+    );
+    const now = new Date();
+    const slotsUsed = await this.prisma.listing.count({
+      where: buildActiveFeaturedWhere(placement, now, categoryId),
+    });
+    if (slotsUsed >= slotsPerDay) {
+      throw new BadRequestException('Featured slots are full');
+    }
   }
 }

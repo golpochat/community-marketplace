@@ -5,11 +5,16 @@ export type WalletTransactionType = 'cashback_earned' | 'expired';
 
 export type CashbackGrantStatus = 'pending' | 'earned' | 'cancelled';
 
-export type PlatformPurchaseType = 'listing_boost';
+export type PlatformPurchaseType =
+  | 'listing_boost'
+  | 'featured_slot'
+  | 'fast_track_verification';
 
 export type PlatformPurchaseStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export type BoostPackageType = Extract<ListingPackageType, 'PAID_7D' | 'PAID_30D'>;
+
+export type FeaturedPlacement = 'homepage' | 'category';
 
 export interface PlatformSkuConfig {
   amount: number;
@@ -32,6 +37,7 @@ export interface PlatformPricingConfig {
   };
   featured?: {
     homepage_slots_per_day?: number;
+    category_slots_per_day?: number;
   };
 }
 
@@ -48,6 +54,7 @@ export interface MonetizationSettings {
   allowedCashbackMethods: PaymentMethod[];
   pricing: PlatformPricingConfig;
   boostsEnabled: boolean;
+  featuredEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -61,6 +68,8 @@ export interface PlatformPurchase {
   currency: string;
   listingId?: string;
   packageType?: BoostPackageType;
+  featuredPlacement?: FeaturedPlacement;
+  categoryId?: string;
   providerPaymentId?: string;
   fulfilledAt?: string;
   createdAt: string;
@@ -68,6 +77,16 @@ export interface PlatformPurchase {
 }
 
 export interface BoostIntentResponse {
+  purchase: PlatformPurchase;
+  clientSecret: string;
+}
+
+export interface FeaturedIntentResponse {
+  purchase: PlatformPurchase;
+  clientSecret: string;
+}
+
+export interface FastTrackIntentResponse {
   purchase: PlatformPurchase;
   clientSecret: string;
 }
@@ -93,6 +112,45 @@ export interface BoostCatalogResponse {
   currency: string;
   options: BoostCatalogOption[];
   listing?: BoostCatalogListing;
+}
+
+export interface FeaturedCatalogOption {
+  placement: FeaturedPlacement;
+  label: string;
+  price: number;
+  durationHours: number;
+  slotsPerDay: number;
+  slotsUsed: number;
+  slotsRemaining: number;
+  eligible: boolean;
+  reason?: string;
+}
+
+export interface FeaturedCatalogListing {
+  id: string;
+  status: string;
+  categoryId: string;
+  isFeatured: boolean;
+  featuredUntil?: string;
+  featuredPlacement?: FeaturedPlacement;
+}
+
+export interface FeaturedCatalogResponse {
+  featuredEnabled: boolean;
+  currency: string;
+  options: FeaturedCatalogOption[];
+  listing?: FeaturedCatalogListing;
+}
+
+export interface FastTrackStatusResponse {
+  enabled: boolean;
+  currency: string;
+  price: number;
+  eligible: boolean;
+  reason?: string;
+  hasPriority: boolean;
+  pendingPurchase?: PlatformPurchase;
+  nextEligibleAt?: string;
 }
 
 export interface SellerPlatformFeeInfo {
@@ -151,6 +209,12 @@ export interface CashbackEstimate {
 
 export const BOOST_PACKAGE_TYPES = ['PAID_7D', 'PAID_30D'] as const;
 
+export const FEATURED_PLACEMENTS = ['homepage', 'category'] as const;
+
 export function isBoostPackageType(value: string): value is BoostPackageType {
   return value === 'PAID_7D' || value === 'PAID_30D';
+}
+
+export function isFeaturedPlacement(value: string): value is FeaturedPlacement {
+  return value === 'homepage' || value === 'category';
 }

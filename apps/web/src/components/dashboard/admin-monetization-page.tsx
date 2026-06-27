@@ -56,8 +56,11 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
         cashbackEnabled: settings.cashbackEnabled,
         cashbackMinOrderAmount: settings.cashbackMinOrderAmount,
         boostsEnabled: settings.boostsEnabled,
+        featuredEnabled: settings.featuredEnabled,
         boostPrice7d: settings.pricing.skus.boost_7d.amount,
         boostPrice30d: settings.pricing.skus.boost_30d.amount,
+        featuredHomepagePrice: settings.pricing.skus.featured_homepage?.amount,
+        featuredCategoryPrice: settings.pricing.skus.featured_category?.amount,
       });
       setSettings(updated);
       setMessage('Settings saved.');
@@ -248,6 +251,78 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                   className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white disabled:opacity-50 sm:col-span-2 sm:w-fit"
                 >
                   {saving ? 'Saving…' : 'Save boost settings'}
+                </button>
+              </form>
+            </DashboardCard>
+
+            <DashboardCard title="Featured listings">
+              <form onSubmit={(e) => void handleSave(e)} className="grid gap-4 sm:grid-cols-2">
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium text-gray-700">Homepage featured price (€)</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={settings.pricing.skus.featured_homepage?.amount ?? 2.99}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        pricing: {
+                          ...settings.pricing,
+                          skus: {
+                            ...settings.pricing.skus,
+                            featured_homepage: {
+                              amount: Number(e.target.value),
+                              enabled: settings.pricing.skus.featured_homepage?.enabled ?? true,
+                            },
+                          },
+                        },
+                      })
+                    }
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium text-gray-700">Category featured price (€)</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={settings.pricing.skus.featured_category?.amount ?? 1.99}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        pricing: {
+                          ...settings.pricing,
+                          skus: {
+                            ...settings.pricing.skus,
+                            featured_category: {
+                              amount: Number(e.target.value),
+                              enabled: settings.pricing.skus.featured_category?.enabled ?? true,
+                            },
+                          },
+                        },
+                      })
+                    }
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  />
+                </label>
+                <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                  <input
+                    type="checkbox"
+                    checked={settings.featuredEnabled ?? true}
+                    onChange={(e) =>
+                      setSettings({ ...settings, featuredEnabled: e.target.checked })
+                    }
+                  />
+                  Featured listings enabled
+                </label>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white disabled:opacity-50 sm:col-span-2 sm:w-fit"
+                >
+                  {saving ? 'Saving…' : 'Save featured settings'}
                 </button>
               </form>
             </DashboardCard>

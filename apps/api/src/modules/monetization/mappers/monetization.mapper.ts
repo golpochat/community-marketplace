@@ -26,6 +26,7 @@ const DEFAULT_SETTINGS = {
   allowedCashbackMethods: ['card'] as PaymentMethod[],
   pricing: DEFAULT_PLATFORM_PRICING,
   boostsEnabled: true,
+  featuredEnabled: true,
 };
 
 export function getDefaultPlatformSettings(): Omit<
@@ -48,6 +49,7 @@ export function mapPlatformSettings(row: {
   allowedCashbackMethods: Prisma.JsonValue;
   pricing: Prisma.JsonValue | null;
   boostsEnabled: boolean;
+  featuredEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 }): MonetizationSettings {
@@ -64,6 +66,7 @@ export function mapPlatformSettings(row: {
     allowedCashbackMethods: row.allowedCashbackMethods as PaymentMethod[],
     pricing: parsePlatformPricing(row.pricing),
     boostsEnabled: row.boostsEnabled,
+    featuredEnabled: row.featuredEnabled,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -74,14 +77,53 @@ export function mergePricingUpdate(
   input: {
     boostPrice7d?: number;
     boostPrice30d?: number;
+    featuredHomepagePrice?: number;
+    featuredCategoryPrice?: number;
+    fastTrackVerificationPrice?: number;
+    homepageSlotsPerDay?: number;
+    categorySlotsPerDay?: number;
   },
 ): PlatformPricingConfig {
-  const next = { ...current, skus: { ...current.skus } };
+  const next = {
+    ...current,
+    skus: { ...current.skus },
+    featured: { ...current.featured },
+  };
   if (input.boostPrice7d !== undefined) {
     next.skus.boost_7d = { ...next.skus.boost_7d, amount: roundMoney(input.boostPrice7d) };
   }
   if (input.boostPrice30d !== undefined) {
     next.skus.boost_30d = { ...next.skus.boost_30d, amount: roundMoney(input.boostPrice30d) };
+  }
+  if (input.featuredHomepagePrice !== undefined && next.skus.featured_homepage) {
+    next.skus.featured_homepage = {
+      ...next.skus.featured_homepage,
+      amount: roundMoney(input.featuredHomepagePrice),
+    };
+  }
+  if (input.featuredCategoryPrice !== undefined && next.skus.featured_category) {
+    next.skus.featured_category = {
+      ...next.skus.featured_category,
+      amount: roundMoney(input.featuredCategoryPrice),
+    };
+  }
+  if (input.fastTrackVerificationPrice !== undefined && next.skus.fast_track_verification) {
+    next.skus.fast_track_verification = {
+      ...next.skus.fast_track_verification,
+      amount: roundMoney(input.fastTrackVerificationPrice),
+    };
+  }
+  if (input.homepageSlotsPerDay !== undefined) {
+    next.featured = {
+      ...next.featured,
+      homepage_slots_per_day: input.homepageSlotsPerDay,
+    };
+  }
+  if (input.categorySlotsPerDay !== undefined) {
+    next.featured = {
+      ...next.featured,
+      category_slots_per_day: input.categorySlotsPerDay,
+    };
   }
   return next;
 }

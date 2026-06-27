@@ -132,6 +132,11 @@ export function AdminSellerVerificationPage({
         <div key={`${item.userId}-name`} className="min-w-0">
           <p className="font-medium text-slate-900">{item.sellerName ?? '—'}</p>
           <p className="text-xs text-slate-500">{item.email}</p>
+          {item.priority && (
+            <span className="mt-1 inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-900">
+              Priority
+            </span>
+          )}
         </div>,
         item.phone ?? '—',
         item.submittedAt ? formatDateTime(item.submittedAt) : '—',

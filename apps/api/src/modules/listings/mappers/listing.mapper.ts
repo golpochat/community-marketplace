@@ -14,6 +14,7 @@ import {
 
 import { resolveAssetPublicUrl } from "../../../libs/asset-url.lib";
 import { isListingBoosted } from "../../monetization/lib/boost.lib";
+import { isListingFeatured } from "../../monetization/lib/featured.lib";
 import { readStorePrefs } from "../utils/store-contact.util";
 import { buildStoreSlug } from "../utils/store-slug.util";
 import {
@@ -157,6 +158,10 @@ export function mapListing(
     packageType: row.packageType,
     boostedUntil: row.boostedUntil?.toISOString(),
     isBoosted: isListingBoosted(row.boostedUntil),
+    featuredUntil: row.featuredUntil?.toISOString(),
+    isFeatured: isListingFeatured(row),
+    featuredPlacement:
+      (row.featuredPlacement as Listing["featuredPlacement"]) ?? undefined,
     activatedAt: row.activatedAt?.toISOString(),
     expiresAt: row.expiresAt?.toISOString(),
     endedAt: row.endedAt?.toISOString(),
@@ -289,6 +294,10 @@ export function mapListingSummary(
     updatedAt: row.updatedAt.toISOString(),
     boostedUntil: row.boostedUntil?.toISOString(),
     isBoosted: isListingBoosted(row.boostedUntil),
+    featuredUntil: row.featuredUntil?.toISOString(),
+    isFeatured: isListingFeatured(row),
+    featuredPlacement:
+      (row.featuredPlacement as ListingSummary["featuredPlacement"]) ?? undefined,
     activatedAt: row.activatedAt?.toISOString(),
     deliverySummary: buildDeliverySummaryLabel(deliveryOptions),
     sellerVerified: isSellerVerified(row.seller),
@@ -343,6 +352,9 @@ export function toMeiliDocument(
     createdAt: row.createdAt.getTime(),
     boostedUntil: row.boostedUntil?.getTime() ?? 0,
     isBoosted: isListingBoosted(row.boostedUntil),
+    featuredUntil: row.featuredUntil?.getTime() ?? 0,
+    isFeatured: isListingFeatured(row),
+    featuredPlacement: row.featuredPlacement ?? undefined,
     sellerStatus: row.seller.status,
     ...(embedding ? { embedding } : {}),
   };

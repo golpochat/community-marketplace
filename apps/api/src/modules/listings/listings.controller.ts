@@ -66,6 +66,12 @@ export class ListingsController {
   }
 
   @Public()
+  @Get('featured')
+  findFeatured(@Query() query: Record<string, string>) {
+    return this.listingsService.findFeatured(query);
+  }
+
+  @Public()
   @Get(':id/similar')
   findSimilar(@Param('id') id: string, @Query('limit') limit?: string) {
     return this.listingsService.findSimilar(

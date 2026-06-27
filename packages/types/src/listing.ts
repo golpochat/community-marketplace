@@ -183,6 +183,9 @@ export interface Listing {
   status: ListingStatus;
   boostedUntil?: string;
   isBoosted?: boolean;
+  featuredUntil?: string;
+  isFeatured?: boolean;
+  featuredPlacement?: "homepage" | "category";
   isPaid: boolean;
   packageType: ListingPackageType;
   activatedAt?: string;
@@ -225,6 +228,9 @@ export interface ListingSummary {
   updatedAt?: string;
   boostedUntil?: string;
   isBoosted?: boolean;
+  featuredUntil?: string;
+  isFeatured?: boolean;
+  featuredPlacement?: "homepage" | "category";
   activatedAt?: string;
   deliverySummary?: string;
   sellerVerified?: boolean;

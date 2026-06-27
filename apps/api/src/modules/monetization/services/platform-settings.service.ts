@@ -32,7 +32,21 @@ export class PlatformSettingsService {
     const pricing = mergePricingUpdate(current.pricing, {
       boostPrice7d: input.boostPrice7d,
       boostPrice30d: input.boostPrice30d,
+      featuredHomepagePrice: input.featuredHomepagePrice,
+      featuredCategoryPrice: input.featuredCategoryPrice,
+      fastTrackVerificationPrice: input.fastTrackVerificationPrice,
+      homepageSlotsPerDay: input.homepageSlotsPerDay,
+      categorySlotsPerDay: input.categorySlotsPerDay,
     });
+
+    const pricingChanged =
+      input.boostPrice7d !== undefined ||
+      input.boostPrice30d !== undefined ||
+      input.featuredHomepagePrice !== undefined ||
+      input.featuredCategoryPrice !== undefined ||
+      input.fastTrackVerificationPrice !== undefined ||
+      input.homepageSlotsPerDay !== undefined ||
+      input.categorySlotsPerDay !== undefined;
 
     const row = await this.prisma.platformSettings.update({
       where: { id: 'default' },
@@ -63,7 +77,10 @@ export class PlatformSettingsService {
           ? { allowedCashbackMethods: input.allowedCashbackMethods }
           : {}),
         ...(input.boostsEnabled !== undefined ? { boostsEnabled: input.boostsEnabled } : {}),
-        ...(input.boostPrice7d !== undefined || input.boostPrice30d !== undefined
+        ...(input.featuredEnabled !== undefined
+          ? { featuredEnabled: input.featuredEnabled }
+          : {}),
+        ...(pricingChanged
           ? { pricing: pricing as unknown as Prisma.InputJsonValue }
           : {}),
       },
@@ -88,6 +105,7 @@ export class PlatformSettingsService {
         allowedCashbackMethods: defaults.allowedCashbackMethods,
         pricing: DEFAULT_PLATFORM_PRICING as unknown as Prisma.InputJsonValue,
         boostsEnabled: defaults.boostsEnabled,
+        featuredEnabled: defaults.featuredEnabled,
       },
       update: {},
     });

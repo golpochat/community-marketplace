@@ -4,12 +4,20 @@ import type {
   BuyerWalletSummary,
   CashbackEstimate,
   CashbackGrant,
+  FeaturedCatalogResponse,
+  FeaturedIntentResponse,
+  FastTrackIntentResponse,
+  FastTrackStatusResponse,
   MonetizationSettings,
   PlatformPurchase,
   SellerPlatformFeeInfo,
   WalletTransaction,
 } from '@community-marketplace/types';
-import type { CreateBoostIntentInput, PlatformSettingsUpdateInput } from '@community-marketplace/validation';
+import type {
+  CreateBoostIntentInput,
+  CreateFeaturedIntentInput,
+  PlatformSettingsUpdateInput,
+} from '@community-marketplace/validation';
 import type { PaginatedResult } from '@community-marketplace/types';
 
 import { apiClient } from '@/lib/api-client';
@@ -54,6 +62,50 @@ export const monetizationService = {
 
   async confirmBoost(purchaseId: string): Promise<PlatformPurchase> {
     const response = await apiClient<PlatformPurchase>(WEB_API_ROUTES.seller.boostConfirm, {
+      method: 'POST',
+      body: JSON.stringify({ purchaseId }),
+    });
+    return response.data!;
+  },
+
+  async getFeaturedCatalog(listingId: string): Promise<FeaturedCatalogResponse> {
+    const response = await apiClient<FeaturedCatalogResponse>(
+      `${WEB_API_ROUTES.seller.featuredCatalog}?listingId=${encodeURIComponent(listingId)}`,
+    );
+    return response.data!;
+  },
+
+  async createFeaturedIntent(body: CreateFeaturedIntentInput): Promise<FeaturedIntentResponse> {
+    const response = await apiClient<FeaturedIntentResponse>(WEB_API_ROUTES.seller.featuredIntent, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return response.data!;
+  },
+
+  async confirmFeatured(purchaseId: string): Promise<PlatformPurchase> {
+    const response = await apiClient<PlatformPurchase>(WEB_API_ROUTES.seller.featuredConfirm, {
+      method: 'POST',
+      body: JSON.stringify({ purchaseId }),
+    });
+    return response.data!;
+  },
+
+  async getFastTrackStatus(): Promise<FastTrackStatusResponse> {
+    const response = await apiClient<FastTrackStatusResponse>(WEB_API_ROUTES.seller.fastTrackStatus);
+    return response.data!;
+  },
+
+  async createFastTrackIntent(): Promise<FastTrackIntentResponse> {
+    const response = await apiClient<FastTrackIntentResponse>(WEB_API_ROUTES.seller.fastTrackIntent, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+    return response.data!;
+  },
+
+  async confirmFastTrack(purchaseId: string): Promise<PlatformPurchase> {
+    const response = await apiClient<PlatformPurchase>(WEB_API_ROUTES.seller.fastTrackConfirm, {
       method: 'POST',
       body: JSON.stringify({ purchaseId }),
     });

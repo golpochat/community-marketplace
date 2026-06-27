@@ -18,9 +18,13 @@ function isDevClientSecret(clientSecret: string): boolean {
 function BoostCheckoutForm({
   purchaseId,
   onSuccess,
+  confirmPurchase,
+  confirmLabel = 'Pay and boost',
 }: {
   purchaseId: string;
   onSuccess: () => void;
+  confirmPurchase: (purchaseId: string) => Promise<unknown>;
+  confirmLabel?: string;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -46,10 +50,10 @@ function BoostCheckoutForm({
     }
 
     try {
-      await monetizationService.confirmBoost(purchaseId);
+      await confirmPurchase(purchaseId);
       onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to confirm boost');
+      setError(err instanceof Error ? err.message : 'Failed to confirm payment');
     } finally {
       setProcessing(false);
     }
@@ -64,7 +68,7 @@ function BoostCheckoutForm({
         disabled={!stripe || processing}
         className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
       >
-        {processing ? 'Processing…' : 'Pay and boost'}
+        {processing ? 'Processing…' : confirmLabel}
       </button>
     </form>
   );
@@ -73,9 +77,13 @@ function BoostCheckoutForm({
 function DevConfirmButton({
   purchaseId,
   onSuccess,
+  confirmPurchase,
+  confirmLabel = 'Confirm boost (dev)',
 }: {
   purchaseId: string;
   onSuccess: () => void;
+  confirmPurchase: (purchaseId: string) => Promise<unknown>;
+  confirmLabel?: string;
 }) {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,10 +92,10 @@ function DevConfirmButton({
     setProcessing(true);
     setError(null);
     try {
-      await monetizationService.confirmBoost(purchaseId);
+      await confirmPurchase(purchaseId);
       onSuccess();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to confirm boost');
+      setError(err instanceof Error ? err.message : 'Failed to confirm payment');
     } finally {
       setProcessing(false);
     }
@@ -105,7 +113,7 @@ function DevConfirmButton({
         disabled={processing}
         className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
       >
-        {processing ? 'Confirming…' : 'Confirm boost (dev)'}
+        {processing ? 'Confirming…' : confirmLabel}
       </button>
     </div>
   );
@@ -114,15 +122,27 @@ function DevConfirmButton({
 interface BoostCheckoutPanelProps {
   intent: BoostIntentResponse;
   onSuccess: () => void;
+  confirmPurchase?: (purchaseId: string) => Promise<unknown>;
+  confirmLabel?: string;
 }
 
-export function BoostCheckoutPanel({ intent, onSuccess }: BoostCheckoutPanelProps) {
+export function BoostCheckoutPanel({
+  intent,
+  onSuccess,
+  confirmPurchase = monetizationService.confirmBoost,
+  confirmLabel,
+}: BoostCheckoutPanelProps) {
   const useStripeElements =
     stripePromise && !isDevClientSecret(intent.clientSecret);
 
   if (!useStripeElements) {
     return (
-      <DevConfirmButton purchaseId={intent.purchase.id} onSuccess={onSuccess} />
+      <DevConfirmButton
+        purchaseId={intent.purchase.id}
+        onSuccess={onSuccess}
+        confirmPurchase={confirmPurchase}
+        confirmLabel={confirmLabel}
+      />
     );
   }
 
@@ -134,7 +154,12 @@ export function BoostCheckoutPanel({ intent, onSuccess }: BoostCheckoutPanelProp
         appearance: { theme: 'stripe' },
       }}
     >
-      <BoostCheckoutForm purchaseId={intent.purchase.id} onSuccess={onSuccess} />
+      <BoostCheckoutForm
+        purchaseId={intent.purchase.id}
+        onSuccess={onSuccess}
+        confirmPurchase={confirmPurchase}
+        confirmLabel={confirmLabel}
+      />
     </Elements>
   );
 }

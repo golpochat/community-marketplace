@@ -11,10 +11,14 @@ import { listingsService } from '@/services/listings.service';
 export const metadata = { title: 'Home' };
 
 export default async function HomePage() {
-  const [categories, featured] = await Promise.all([
+  const [categories, featuredListings, newestFallback] = await Promise.all([
     listingsService.getCategories(),
-    listingsService.search({ page: 1, limit: 6, sort: 'newest' }),
+    listingsService.getFeatured({ placement: 'homepage', limit: 8 }),
+    listingsService.search({ page: 1, limit: 8, sort: 'newest' }),
   ]);
+
+  const featured =
+    featuredListings.length > 0 ? featuredListings : newestFallback.data;
 
   return (
     <>
@@ -22,7 +26,7 @@ export default async function HomePage() {
       <SocialProofBar />
       <CategoryShortcuts categories={categories} />
       <LocalFeedSection />
-      <FeaturedListings listings={featured.data} />
+      <FeaturedListings listings={featured} isPromoted={featuredListings.length > 0} />
       <FounderStorySection />
       <HowItWorks />
       <TrustSection />

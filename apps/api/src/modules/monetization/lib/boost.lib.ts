@@ -47,14 +47,14 @@ export const DEFAULT_PLATFORM_PRICING: PlatformPricingConfig = {
   skus: {
     boost_7d: { amount: 1.99, enabled: true },
     boost_30d: { amount: 4.99, enabled: true },
-    featured_homepage: { amount: 2.99, enabled: false },
-    featured_category: { amount: 1.99, enabled: false },
-    fast_track_verification: { amount: 2.99, enabled: false },
+    featured_homepage: { amount: 2.99, enabled: true },
+    featured_category: { amount: 1.99, enabled: true },
+    fast_track_verification: { amount: 2.99, enabled: true },
     priority_message: { amount: 0.49, enabled: false },
     early_cashback_unlock: { amount: 0.99, enabled: false },
   },
   promos: { first_boost_discount_percent: 50 },
-  featured: { homepage_slots_per_day: 8 },
+  featured: { homepage_slots_per_day: 8, category_slots_per_day: 4 },
 };
 
 export function parsePlatformPricing(value: unknown): PlatformPricingConfig {
@@ -92,9 +92,15 @@ export function mapPlatformPurchase(row: {
   packageType: string | null;
   providerPaymentId: string | null;
   fulfilledAt: Date | null;
+  metadata: Prisma.JsonValue | null;
   createdAt: Date;
   updatedAt: Date;
 }): PlatformPurchase {
+  const metadata =
+    row.metadata && typeof row.metadata === 'object' && !Array.isArray(row.metadata)
+      ? (row.metadata as Record<string, unknown>)
+      : {};
+
   return {
     id: row.id,
     userId: row.userId,
@@ -104,6 +110,11 @@ export function mapPlatformPurchase(row: {
     currency: row.currency,
     listingId: row.listingId ?? undefined,
     packageType: (row.packageType as BoostPackageType | null) ?? undefined,
+    featuredPlacement:
+      typeof metadata.placement === 'string'
+        ? (metadata.placement as PlatformPurchase['featuredPlacement'])
+        : undefined,
+    categoryId: typeof metadata.categoryId === 'string' ? metadata.categoryId : undefined,
     providerPaymentId: row.providerPaymentId ?? undefined,
     fulfilledAt: row.fulfilledAt?.toISOString(),
     createdAt: row.createdAt.toISOString(),

@@ -2,11 +2,17 @@
 
 import { useEffect, useState } from 'react';
 
-import type { SellerVerificationStatus } from '@community-marketplace/types';
+import type {
+  FastTrackIntentResponse,
+  FastTrackStatusResponse,
+  SellerVerificationStatus,
+} from '@community-marketplace/types';
 import { SELLER_VERIFICATION_MESSAGES } from '@community-marketplace/types';
 import { Card } from '@community-marketplace/ui-dashboard';
 
 import { VerificationProgressBar } from '@/components/seller/verification';
+import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
+import { monetizationService } from '@/services/monetization.service';
 import { sellerVerificationService } from '@/services/seller-verification.service';
 
 import { SellerProfileStatusBadge } from './seller-profile-status-badge';
@@ -56,12 +62,99 @@ function FilePreview({ file, label }: { file?: File; label: string }) {
   );
 }
 
+function FastTrackCard({
+  status,
+  fastTrack,
+  onUpdated,
+}: {
+  status: SellerVerificationStatus;
+  fastTrack: FastTrackStatusResponse;
+  onUpdated: () => void;
+}) {
+  const [intent, setIntent] = useState<FastTrackIntentResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  if (
+    status.sellerStatus === 'verified' ||
+    !fastTrack.enabled ||
+    !fastTrack.eligible
+  ) {
+    return null;
+  }
+
+  async function startCheckout() {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await monetizationService.createFastTrackIntent();
+      setIntent(response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start checkout');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card title="Fast-track verification">
+      {fastTrack.hasPriority || success ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-indigo-800">Priority review</p>
+          <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+            You&apos;re in the priority queue. We aim to review within 24 hours.
+          </p>
+        </div>
+      ) : (
+        <>
+          <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+            Verification is free. Want faster review? Fast-track for{' '}
+            <span className="font-semibold text-gray-900">
+              €{fastTrack.price.toFixed(2)}
+            </span>{' '}
+            (24-hour priority queue). Standard review takes 3–5 business days.
+          </p>
+          {fastTrack.reason && (
+            <p className="mt-2 text-sm text-amber-700">{fastTrack.reason}</p>
+          )}
+          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+          {intent ? (
+            <div className="mt-4">
+              <BoostCheckoutPanel
+                intent={intent}
+                confirmPurchase={monetizationService.confirmFastTrack}
+                confirmLabel="Pay and fast-track"
+                onSuccess={() => {
+                  setSuccess(true);
+                  setIntent(null);
+                  onUpdated();
+                }}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => void startCheckout()}
+              className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-900 hover:bg-indigo-100 disabled:opacity-50"
+            >
+              {loading ? 'Starting checkout…' : 'Fast-track verification'}
+            </button>
+          )}
+        </>
+      )}
+    </Card>
+  );
+}
+
 interface SellerVerificationFlowProps {
   onSubmitted?: () => void;
 }
 
 export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowProps) {
   const [status, setStatus] = useState<SellerVerificationStatus | null>(null);
+  const [fastTrack, setFastTrack] = useState<FastTrackStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -78,8 +171,12 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
     setLoading(true);
     setError(null);
     try {
-      const response = await sellerVerificationService.getStatus();
-      setStatus(response);
+      const [verificationStatus, fastTrackStatus] = await Promise.all([
+        sellerVerificationService.getStatus(),
+        monetizationService.getFastTrackStatus().catch(() => null),
+      ]);
+      setStatus(verificationStatus);
+      setFastTrack(fastTrackStatus);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load verification');
     } finally {
@@ -188,6 +285,10 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
           used={status.unverifiedListingCount}
           limit={status.sellerLimit}
         />
+      )}
+
+      {fastTrack && (
+        <FastTrackCard status={status} fastTrack={fastTrack} onUpdated={() => void load()} />
       )}
 
       <Card title="Verification progress">

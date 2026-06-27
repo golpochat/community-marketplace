@@ -1,4 +1,4 @@
-import type { Category, Listing, ListingFeedType, ListingSearchFilters, ListingSummary, PaginatedResult, SellerTrustProfile } from '@community-marketplace/types';
+import type { Category, FeaturedPlacement, Listing, ListingFeedType, ListingSearchFilters, ListingSummary, PaginatedResult, SellerTrustProfile } from '@community-marketplace/types';
 import { paginationSchema } from '@community-marketplace/validation';
 
 import { apiClient, ApiClientError } from '@/lib/api-client';
@@ -65,6 +65,27 @@ export const listingsService = {
       return normalizePaginated(response, { page, limit });
     } catch {
       return { data: [], meta: { page, limit, total: 0 } };
+    }
+  },
+
+  async getFeatured(params: {
+    placement: FeaturedPlacement;
+    categoryId?: string;
+    limit?: number;
+  }): Promise<ListingSummary[]> {
+    const query = new URLSearchParams({
+      placement: params.placement,
+      limit: String(params.limit ?? 8),
+    });
+    if (params.categoryId) query.set('categoryId', params.categoryId);
+
+    try {
+      const response = await apiClient<ListingSummary[]>(
+        `${WEB_API_ROUTES.public.featuredListings}?${query.toString()}`,
+      );
+      return response.data ?? [];
+    } catch {
+      return [];
     }
   },
 

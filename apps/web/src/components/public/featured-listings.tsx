@@ -7,9 +7,10 @@ import { ListingCard } from '@/components/listings/listing-card';
 
 interface FeaturedListingsProps {
   listings: ListingSummary[];
+  isPromoted?: boolean;
 }
 
-export function FeaturedListings({ listings }: FeaturedListingsProps) {
+export function FeaturedListings({ listings, isPromoted = false }: FeaturedListingsProps) {
   const items = Array.isArray(listings) ? listings : [];
   if (items.length === 0) return null;
 
@@ -19,7 +20,11 @@ export function FeaturedListings({ listings }: FeaturedListingsProps) {
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Featured listings</h2>
-            <p className="mt-1 text-sm text-gray-600">Recently added items from your community</p>
+            <p className="mt-1 text-sm text-gray-600">
+              {isPromoted
+                ? 'Seller-promoted picks with premium homepage placement'
+                : 'Recently added items from your community'}
+            </p>
           </div>
           <Link href="/listings">
             <Button variant="ghost" size="sm" className="shrink-0">

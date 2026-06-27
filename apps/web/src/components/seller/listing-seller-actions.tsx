@@ -26,6 +26,7 @@ export type SellerListingAction =
   | 'end'
   | 'renew'
   | 'upgrade'
+  | 'feature'
   | 'duplicate'
   | 'delete';
 
@@ -118,6 +119,13 @@ export function ListingSellerActions({
           label="Boost listing"
           disabled={busy}
           onClick={() => onAction(listing.id, 'upgrade')}
+        />,
+        <IconActionButton
+          key="feature"
+          icon="medal"
+          label="Feature listing"
+          disabled={busy}
+          onClick={() => onAction(listing.id, 'feature')}
         />,
         <IconActionButton
           key="pause"

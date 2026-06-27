@@ -257,6 +257,7 @@ export class SellerVerificationStatusService {
     selfiePath: string | null;
     addressDocumentPath: string | null;
     status: string;
+    priority?: boolean;
     reviewedById: string | null;
     reviewedAt: Date | null;
     rejectionReason: string | null;
@@ -271,6 +272,7 @@ export class SellerVerificationStatusService {
       selfiePath: row.selfiePath ?? undefined,
       addressDocumentPath: row.addressDocumentPath ?? undefined,
       status: row.status as 'pending' | 'approved' | 'rejected',
+      priority: row.priority ?? undefined,
       reviewedById: row.reviewedById ?? undefined,
       reviewedAt: row.reviewedAt?.toISOString(),
       rejectionReason: row.rejectionReason ?? undefined,

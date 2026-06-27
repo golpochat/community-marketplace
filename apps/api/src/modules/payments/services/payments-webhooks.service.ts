@@ -73,9 +73,7 @@ export class PaymentsWebhooksService {
       return;
     }
 
-    if (intent.metadata?.type === 'listing_boost') {
-      await this.platformPurchases.handlePaymentIntentSucceeded(intent.id);
-    }
+    await this.platformPurchases.handlePaymentIntentSucceeded(intent.id);
   }
 
   private async onPaymentFailed(intent: Stripe.PaymentIntent) {
@@ -97,9 +95,7 @@ export class PaymentsWebhooksService {
       return;
     }
 
-    if (intent.metadata?.type === 'listing_boost') {
-      await this.platformPurchases.handlePaymentIntentFailed(intent.id);
-    }
+    await this.platformPurchases.handlePaymentIntentFailed(intent.id);
   }
 
   private async onChargeRefunded(charge: Stripe.Charge) {

@@ -16,8 +16,14 @@ export const platformSettingsUpdateSchema = z.object({
   cashbackMinOrderAmount: z.number().min(0).max(10_000).optional(),
   allowedCashbackMethods: z.array(paymentMethodSchema).min(1).optional(),
   boostsEnabled: z.boolean().optional(),
+  featuredEnabled: z.boolean().optional(),
   boostPrice7d: z.number().min(0).max(999).optional(),
   boostPrice30d: z.number().min(0).max(999).optional(),
+  featuredHomepagePrice: z.number().min(0).max(999).optional(),
+  featuredCategoryPrice: z.number().min(0).max(999).optional(),
+  fastTrackVerificationPrice: z.number().min(0).max(999).optional(),
+  homepageSlotsPerDay: z.number().int().min(1).max(100).optional(),
+  categorySlotsPerDay: z.number().int().min(1).max(100).optional(),
 });
 
 export const boostPackageTypeSchema = z.enum(['PAID_7D', 'PAID_30D']);
@@ -31,17 +37,65 @@ export const confirmBoostSchema = z.object({
   purchaseId: uuidSchema,
 });
 
+export const featuredPlacementSchema = z.enum(['homepage', 'category']);
+
+export const createFeaturedIntentSchema = z
+  .object({
+    listingId: uuidSchema,
+    placement: featuredPlacementSchema,
+    categoryId: uuidSchema.optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.placement === 'category' && !value.categoryId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'categoryId is required for category featured placement',
+        path: ['categoryId'],
+      });
+    }
+  });
+
+export const confirmFeaturedSchema = z.object({
+  purchaseId: uuidSchema,
+});
+
+export const confirmFastTrackSchema = z.object({
+  purchaseId: uuidSchema,
+});
+
 export const platformPurchasesAdminFiltersSchema = paginationSchema.extend({
-  type: z.enum(['listing_boost']).optional(),
+  type: z
+    .enum(['listing_boost', 'featured_slot', 'fast_track_verification'])
+    .optional(),
   status: z.enum(['pending', 'succeeded', 'failed', 'refunded']).optional(),
   userId: uuidSchema.optional(),
 });
 
+export const featuredListingsQuerySchema = z
+  .object({
+    placement: featuredPlacementSchema,
+    categoryId: uuidSchema.optional(),
+    limit: z.coerce.number().int().min(1).max(50).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.placement === 'category' && !value.categoryId) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'categoryId is required when placement is category',
+        path: ['categoryId'],
+      });
+    }
+  });
+
 export type CreateBoostIntentInput = z.infer<typeof createBoostIntentSchema>;
 export type ConfirmBoostInput = z.infer<typeof confirmBoostSchema>;
+export type CreateFeaturedIntentInput = z.infer<typeof createFeaturedIntentSchema>;
+export type ConfirmFeaturedInput = z.infer<typeof confirmFeaturedSchema>;
+export type ConfirmFastTrackInput = z.infer<typeof confirmFastTrackSchema>;
 export type PlatformPurchasesAdminFiltersInput = z.infer<
   typeof platformPurchasesAdminFiltersSchema
 >;
+export type FeaturedListingsQueryInput = z.infer<typeof featuredListingsQuerySchema>;
 
 export const sellerFeeOverrideSchema = z.object({
   userId: uuidSchema,

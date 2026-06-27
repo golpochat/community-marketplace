@@ -9,12 +9,18 @@ import { SearchModule } from '../search/search.module';
 import { AdminMonetizationController } from './admin-monetization.controller';
 import { BuyerWalletController } from './buyer-wallet.controller';
 import { SellerBoostsController } from './seller-boosts.controller';
+import { SellerFeaturedController } from './seller-featured.controller';
+import { SellerFastTrackController } from './seller-fast-track.controller';
 import { CashbackEventsListener } from './listeners/cashback-events.listener';
 import { VerificationFeeListener } from './listeners/verification-fee.listener';
 import { MonetizationService } from './monetization.service';
 import { BoostCatalogService } from './services/boost-catalog.service';
 import { BoostExpiryJobService } from './services/boost-expiry.job';
 import { BoostFulfillmentService } from './services/boost-fulfillment.service';
+import { FeaturedCatalogService } from './services/featured-catalog.service';
+import { FeaturedExpiryJobService } from './services/featured-expiry.job';
+import { FeaturedFulfillmentService } from './services/featured-fulfillment.service';
+import { FastTrackFulfillmentService } from './services/fast-track-fulfillment.service';
 import { BuyerWalletService } from './services/buyer-wallet.service';
 import { CashbackGrantsService } from './services/cashback-grants.service';
 import { CashbackJobsService } from './services/cashback-jobs.service';
@@ -35,6 +41,8 @@ import { PlatformSettingsService } from './services/platform-settings.service';
     AdminMonetizationController,
     BuyerWalletController,
     SellerBoostsController,
+    SellerFeaturedController,
+    SellerFastTrackController,
   ],
   providers: [
     MonetizationService,
@@ -46,6 +54,10 @@ import { PlatformSettingsService } from './services/platform-settings.service';
     CashbackEventsListener,
     BoostCatalogService,
     BoostFulfillmentService,
+    FeaturedCatalogService,
+    FeaturedFulfillmentService,
+    FeaturedExpiryJobService,
+    FastTrackFulfillmentService,
     PlatformPurchaseService,
     BoostExpiryJobService,
     VerificationFeeListener,
@@ -55,6 +67,7 @@ import { PlatformSettingsService } from './services/platform-settings.service';
     PlatformSettingsService,
     MonetizationService,
     PlatformPurchaseService,
+    FastTrackFulfillmentService,
   ],
 })
 export class MonetizationModule {}
