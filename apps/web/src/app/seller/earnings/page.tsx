@@ -3,11 +3,12 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-import type { Payout, SellerEarningsSummary, StripeConnectAccount } from '@community-marketplace/types';
+import type { Payout, SellerEarningsSummary, SellerPlatformFeeInfo, StripeConnectAccount } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { LoadingState } from '@/components/LoadingState';
+import { monetizationService } from '@/services/monetization.service';
 import { paymentsService } from '@/services/payments.service';
 
 function SellerEarningsContent() {
@@ -19,19 +20,22 @@ function SellerEarningsContent() {
   const [error, setError] = useState<string | null>(null);
   const [onboarding, setOnboarding] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [platformFee, setPlatformFee] = useState<SellerPlatformFeeInfo | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [summaryData, payoutResponse, connectData] = await Promise.all([
+      const [summaryData, payoutResponse, connectData, feeInfo] = await Promise.all([
         paymentsService.getEarningsSummary(),
         paymentsService.getPayoutHistory(),
         paymentsService.getConnectStatus(),
+        monetizationService.getSellerPlatformFee().catch(() => null),
       ]);
       setSummary(summaryData);
       setPayouts(payoutResponse.data ?? []);
       setConnect(connectData);
+      setPlatformFee(feeInfo);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load earnings');
     } finally {
@@ -91,6 +95,18 @@ function SellerEarningsContent() {
 
       {!loading && (
         <div className="space-y-6">
+          {platformFee && (
+            <DashboardCard title="Platform fee">
+              <p className="text-sm text-[hsl(var(--dashboard-main-fg))]">
+                Your platform fee:{' '}
+                <strong>{platformFee.effectiveFeePercent}%</strong>
+                {platformFee.isCustomOverride ? ' (custom override)' : ' (default)'}
+              </p>
+              <p className="mt-2 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                Cashback for buyers is funded by the platform, not deducted from your payout.
+              </p>
+            </DashboardCard>
+          )}
           <DashboardCard title="Stripe Connect (required to get paid)">
             <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               Irish sellers onboard with Stripe Express. Buyers cannot pay for your listings until

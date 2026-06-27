@@ -114,6 +114,7 @@ export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
 
   { id: 'section-platform', label: 'Platform', sectionHeader: true },
   { id: 'payments', label: 'Payments', href: '/super-admin/payments', icon: 'landmark' },
+  { id: 'monetization', label: 'Monetization', href: '/super-admin/monetization', icon: 'landmark' },
   { id: 'search', label: 'Search', href: '/super-admin/search', icon: 'search' },
   { id: 'analytics', label: 'Analytics', href: '/super-admin/analytics', icon: 'bar-chart' },
 ];
@@ -156,6 +157,7 @@ export const ADMIN_SIDEBAR: SidebarNavItem[] = [
     permission: PERMISSIONS.VIEW_FRAUD,
   },
   { id: 'payments', label: 'Payments', href: '/admin/payments', icon: 'credit-card' },
+  { id: 'monetization', label: 'Monetization', href: '/admin/monetization', icon: 'landmark' },
   { id: 'search', label: 'Search Tools', href: '/admin/search', icon: 'compass' },
   { id: 'notifications', label: 'Notifications', href: '/admin/notifications', icon: 'bell' },
 ];
@@ -179,6 +181,7 @@ export const BUYER_SIDEBAR: SidebarNavItem[] = [
   { id: 'listings', label: 'Browse Listings', href: '/buyer/listings', icon: 'search' },
   { id: 'favorites', label: 'Favorites', href: '/buyer/favorites', icon: 'heart' },
   { id: 'purchases', label: 'Purchases', href: '/buyer/purchases', icon: 'package' },
+  { id: 'wallet', label: 'SellNearby Credit', href: '/buyer/wallet', icon: 'wallet' },
   { id: 'disputes', label: 'Disputes', href: '/buyer/disputes', icon: 'scale' },
   { id: 'chat', label: 'Chat', href: '/buyer/chat', icon: 'message-circle' },
   { id: 'profile', label: 'Profile', href: '/buyer/profile', icon: 'user-cog' },

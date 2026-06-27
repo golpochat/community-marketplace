@@ -15,10 +15,8 @@ import type {
 
 import { EventBusService } from '../../../events/event-bus.service';
 import { PrismaService } from '../../../database/prisma.service';
-import {
-  calculatePlatformFee,
-  mapPayment,
-} from '../mappers/payment.mapper';
+import { mapPayment } from '../mappers/payment.mapper';
+import { PlatformFeeService } from '../../monetization/services/platform-fee.service';
 import { PaymentsAuditService } from './payments-audit.service';
 import { PaymentCompletionService } from './payment-completion.service';
 import { PaymentsFraudService } from './payments-fraud.service';
@@ -33,6 +31,7 @@ export class PaymentsIntentsService {
     private readonly audit: PaymentsAuditService,
     private readonly completion: PaymentCompletionService,
     private readonly eventBus: EventBusService,
+    private readonly platformFee: PlatformFeeService,
   ) {}
 
   async createPaymentIntent(
@@ -52,7 +51,10 @@ export class PaymentsIntentsService {
 
     const amount = Number(listing.price);
     const currency = listing.currency.toUpperCase();
-    const platformFee = calculatePlatformFee(amount);
+    const { feePercent, platformFee } = await this.platformFee.calculatePlatformFee(
+      amount,
+      listing.sellerId,
+    );
     const stripe = this.stripeConnect.getStripeClient();
 
     let providerPaymentId: string;
@@ -84,6 +86,7 @@ export class PaymentsIntentsService {
         sellerId: listing.sellerId,
         amount,
         platformFee,
+        feePercentApplied: feePercent,
         currency,
         method: dto.method,
         status: 'pending',

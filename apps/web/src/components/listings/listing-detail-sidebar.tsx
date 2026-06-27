@@ -13,6 +13,7 @@ import { MapPin } from 'lucide-react';
 
 import { ChatButton } from '@/components/listings/chat-button';
 import { BuyerProtectionBanner } from '@/components/listings/buyer-protection-banner';
+import { ListingCashbackCue } from '@/components/listings/listing-cashback-cue';
 import { ListingDeliveryDisplay } from '@/components/listings/listing-delivery-display';
 import { ListingPriceDisplay } from '@/components/listings/listing-price-display';
 import { ListingTrustCues } from '@/components/listings/listing-trust-cues';
@@ -71,6 +72,7 @@ export function ListingDetailSidebar({
   return (
     <aside className="space-y-3 lg:sticky lg:top-20 lg:self-start">
       {!compact && <BuyerProtectionBanner />}
+      {!compact && <ListingCashbackCue listingId={listing.id} />}
 
       <SidebarPanel>
         <ListingPriceDisplay

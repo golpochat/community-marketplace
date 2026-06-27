@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ListingSummary, Payment, PaymentIntentResponse, PendingReviewItem } from '@community-marketplace/types';
+import type { ListingSummary, Payment, PaymentIntentResponse, PendingReviewItem, CashbackEstimate } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
@@ -12,6 +12,7 @@ import { Pagination } from '@/components/shared/pagination';
 import { ReviewPromptDialog } from '@/components/trust/review-prompt-dialog';
 import { listingsService } from '@/services/listings.service';
 import { buyerService } from '@/services/marketplace.service';
+import { monetizationService } from '@/services/monetization.service';
 import { paymentsService } from '@/services/payments.service';
 import { trustService } from '@/services/trust.service';
 
@@ -45,6 +46,7 @@ export default function BuyerPurchasesPage() {
   const [refundingId, setRefundingId] = useState<string | null>(null);
   const [pendingReviews, setPendingReviews] = useState<PendingReviewItem[]>([]);
   const [dismissedReviewIds, setDismissedReviewIds] = useState<Set<string>>(new Set());
+  const [cashbackEstimate, setCashbackEstimate] = useState<CashbackEstimate | null>(null);
 
   const loadPendingReviews = useCallback(async () => {
     try {
@@ -103,6 +105,17 @@ export default function BuyerPurchasesPage() {
   useEffect(() => {
     void loadPendingReviews();
   }, [loadPendingReviews]);
+
+  useEffect(() => {
+    if (!selectedListingId) {
+      setCashbackEstimate(null);
+      return;
+    }
+    void monetizationService
+      .estimateCashback(selectedListingId)
+      .then(setCashbackEstimate)
+      .catch(() => setCashbackEstimate(null));
+  }, [selectedListingId]);
 
   const visiblePendingReview = pendingReviews.find(
     (item) => !dismissedReviewIds.has(item.listingId),
@@ -169,9 +182,15 @@ export default function BuyerPurchasesPage() {
       <div className="space-y-6">
         <DashboardCard title="Pay for a listing">
           <p className="mb-4 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-            Choose a listing from your favorites or the marketplace. Card details are handled by
-            Stripe Elements — never stored on our servers.
+            Choose a listing from your favorites or the marketplace. Pay by card to earn SellNearby
+            Credit — card details are handled by Stripe Elements, never stored on our servers.
           </p>
+          {cashbackEstimate?.eligible && (
+            <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
+              You will earn {formatCurrency(cashbackEstimate.amount, 'EUR')} credit. Unlocks on{' '}
+              {new Date(cashbackEstimate.unlockAt).toLocaleDateString()}.
+            </p>
+          )}
           <form onSubmit={handleCreateIntent} className="flex flex-col gap-3 sm:flex-row">
             <select
               value={selectedListingId}

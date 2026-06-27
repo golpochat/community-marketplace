@@ -49,6 +49,7 @@ export interface Payment {
   sellerId: string;
   amount: number;
   platformFee?: number;
+  feePercentApplied?: number;
   currency: string;
   method: PaymentMethod;
   status: PaymentStatus;

@@ -246,6 +246,16 @@ export {
 } from './payment.schema';
 
 export {
+  platformSettingsUpdateSchema,
+  sellerFeeOverrideSchema,
+  cashbackGrantsAdminFiltersSchema,
+  walletTransactionsAdminFiltersSchema,
+  cashbackEstimateQuerySchema,
+  type PlatformSettingsUpdateInput,
+  type SellerFeeOverrideInput,
+} from './monetization.schema';
+
+export {
   notificationTypeSchema,
   notificationChannelSchema,
   notificationDeliveryStatusSchema,

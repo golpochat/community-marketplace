@@ -12,8 +12,10 @@
 
 - Reports from users, listings, messages
 - Assign to moderator, add notes
-- Actions: warn, suspend, ban
+- Actions: warn, suspend, ban, approve/reject listings, escalate
 - Appeals review
+
+**Operational workflow:** [master-blueprint-v1.md §9](../product/master-blueprint-v1.md#9-admin-moderation-workflow)
 
 ```mermaid
 flowchart TD

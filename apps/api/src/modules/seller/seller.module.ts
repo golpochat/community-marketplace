@@ -4,6 +4,7 @@ import { ChatModule } from '../chat/chat.module';
 import { ListingsModule } from '../listings/listings.module';
 import { ModerationModule } from '../moderation/moderation.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { MonetizationModule } from '../monetization/monetization.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { SearchModule } from '../search/search.module';
 import { UsersModule } from '../users/users.module';
@@ -26,6 +27,7 @@ import { SellerVerificationModule } from './seller-verification.module';
   imports: [
     SellerVerificationModule,
     ListingsModule,
+    MonetizationModule,
     PaymentsModule,
     UsersModule,
     ChatModule,

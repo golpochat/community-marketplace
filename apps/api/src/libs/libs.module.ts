@@ -1,7 +1,7 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module } from "@nestjs/common";
 
-import { LoggerLib } from './logger.lib';
-import { RedisCacheService } from './redis-cache.service';
+import { LoggerLib } from "./logger.lib";
+import { RedisCacheService } from "./redis-cache.service";
 
 @Global()
 @Module({

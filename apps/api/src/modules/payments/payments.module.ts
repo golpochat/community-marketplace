@@ -4,6 +4,7 @@ import { DatabaseModule } from '../../database/database.module';
 import { EventsModule } from '../../events/events.module';
 import { ListingsModule } from '../listings/listings.module';
 import { LibsModule } from '../../libs/libs.module';
+import { MonetizationModule } from '../monetization/monetization.module';
 import { PaymentsWebhooksController } from './payments-webhooks.controller';
 import { PaymentsService } from './payments.service';
 import { PaymentsAccessService } from './services/payments-access.service';
@@ -20,7 +21,7 @@ import { PaymentsWebhooksService } from './services/payments-webhooks.service';
 import { StripeConnectService } from './services/stripe-connect.service';
 
 @Module({
-  imports: [DatabaseModule, EventsModule, LibsModule, ListingsModule],
+  imports: [DatabaseModule, EventsModule, LibsModule, ListingsModule, MonetizationModule],
   controllers: [PaymentsWebhooksController],
   providers: [
     PaymentsService,

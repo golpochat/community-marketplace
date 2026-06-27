@@ -41,6 +41,7 @@ export const paymentSchema = z.object({
   sellerId: uuidSchema,
   amount: z.number().positive().max(10_000_000),
   platformFee: z.number().min(0).optional(),
+  feePercentApplied: z.number().min(0).max(100).optional(),
   currency: z.string().length(3).toUpperCase(),
   method: paymentMethodSchema,
   status: paymentStatusSchema,

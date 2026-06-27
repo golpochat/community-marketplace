@@ -18,6 +18,7 @@ import {
   useUserLocation,
   type LocalFilterMode,
 } from '@/hooks/use-user-location';
+import { ApiClientError } from '@/lib/api-client';
 import { listingsService } from '@/services/listings.service';
 import { locationService } from '@/services/location.service';
 
@@ -39,6 +40,7 @@ export function NearbyFeedSection({ initialListings = [] }: NearbyFeedSectionPro
   const [activeFilter, setActiveFilter] = useState<LocalFilterMode>('all');
   const [radiusKm, setRadiusKm] = useState(DEFAULT_NEARBY_RADIUS_KM);
   const [feedLoading, setFeedLoading] = useState(false);
+  const [feedError, setFeedError] = useState<string | null>(null);
   const [areasLoading, setAreasLoading] = useState(false);
   const [locationLabel, setLocationLabel] = useState<string>();
   const [showPicker, setShowPicker] = useState(false);
@@ -53,6 +55,8 @@ export function NearbyFeedSection({ initialListings = [] }: NearbyFeedSectionPro
         limit: 5,
       });
       setAreas(nextAreas);
+    } catch {
+      setAreas([]);
     } finally {
       setAreasLoading(false);
     }
@@ -61,6 +65,7 @@ export function NearbyFeedSection({ initialListings = [] }: NearbyFeedSectionPro
   const loadFeed = useCallback(
     async (lat: number, lng: number, radius: number, filter: LocalFilterMode) => {
       setFeedLoading(true);
+      setFeedError(null);
       try {
         const feedType = filter === 'free' ? 'free_near_you' : 'new_near_you';
         const area = filter !== 'all' && filter !== 'free' ? filter.area : undefined;
@@ -90,6 +95,13 @@ export function NearbyFeedSection({ initialListings = [] }: NearbyFeedSectionPro
         }
 
         setListings(result.data);
+      } catch (err) {
+        setListings([]);
+        setFeedError(
+          err instanceof ApiClientError && err.code === 'NETWORK_ERROR'
+            ? 'Unable to reach the server. Make sure the API is running, then try again.'
+            : 'Could not load nearby listings.',
+        );
       } finally {
         setFeedLoading(false);
       }
@@ -193,6 +205,21 @@ export function NearbyFeedSection({ initialListings = [] }: NearbyFeedSectionPro
 
           {feedLoading ? (
             <p className="mt-8 text-sm text-gray-500">Loading local listings…</p>
+          ) : feedError ? (
+            <div className="mt-8 rounded-xl border border-dashed border-amber-200 bg-amber-50 px-6 py-10 text-center">
+              <p className="text-sm font-medium text-gray-900">{feedError}</p>
+              {location && (
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() =>
+                    void loadFeed(location.latitude, location.longitude, radiusKm, activeFilter)
+                  }
+                >
+                  Try again
+                </Button>
+              )}
+            </div>
           ) : listings.length === 0 ? (
             <div className="mt-8 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center">
               <p className="text-sm font-medium text-gray-900">No listings nearby</p>

@@ -5,7 +5,7 @@
 ## Functional requirements
 
 - Unified reports (users, listings, messages)
-- Automated content checks with auto-flag
+- Automated content checks with auto-flag — see [master blueprint §7–9](../product/master-blueprint-v1.md)
 - Moderator actions: warn, suspend, ban
 - Appeals workflow with status tracking
 - Moderation audit log
@@ -36,6 +36,7 @@ flowchart TD
 | Duplicate report | Link or ignore per policy |
 | Suspension expiry | Job lifts suspension |
 | Appeal approved | Reverse action where applicable |
+| Prohibited item (haram / illegal) | Remove listing; warn/suspend per [master blueprint §6](../product/master-blueprint-v1.md#6-prohibited-items-policy) |
 
 ## Acceptance criteria
 
@@ -46,3 +47,4 @@ flowchart TD
 ## Related
 
 - [Admin — Listings moderation](../admin/listings-moderation.md)
+- [Master blueprint §6–9](../product/master-blueprint-v1.md)

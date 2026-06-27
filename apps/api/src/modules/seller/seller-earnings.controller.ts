@@ -8,6 +8,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { PaymentsAccessService } from '../payments/services/payments-access.service';
 import { PaymentsService } from '../payments/payments.service';
+import { MonetizationService } from '../monetization/monetization.service';
 
 @RequireRole('SELLER')
 @Controller('seller/earnings')
@@ -15,7 +16,14 @@ export class SellerEarningsController {
   constructor(
     private readonly paymentsService: PaymentsService,
     private readonly access: PaymentsAccessService,
+    private readonly monetization: MonetizationService,
   ) {}
+
+  @RequirePermissions(PERMISSIONS.VIEW_PAYMENTS)
+  @Get('platform-fee')
+  platformFee(@CurrentUser() user: AuthenticatedUser) {
+    return this.monetization.getSellerFeeInfo(user.id);
+  }
 
   @RequirePermissions(PERMISSIONS.VIEW_PAYMENTS)
   @Get()

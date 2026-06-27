@@ -9,9 +9,9 @@ export interface AdminDashboardStats {
   activeBans: number;
   revenue: number;
   platformHealth: {
-    database: 'healthy' | 'degraded' | 'down';
-    search: 'healthy' | 'degraded' | 'down';
-    payments: 'healthy' | 'degraded' | 'down';
+    database: "healthy" | "degraded" | "down";
+    search: "healthy" | "degraded" | "down";
+    payments: "healthy" | "degraded" | "down";
   };
   generatedAt: string;
 }
@@ -31,6 +31,6 @@ export interface AdminMeResponse {
   userId: string;
   email: string;
   displayName?: string;
-  role: 'ADMIN' | 'SUPER_ADMIN';
+  role: "ADMIN" | "SUPER_ADMIN";
   permissions: string[];
 }

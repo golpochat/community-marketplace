@@ -23,6 +23,7 @@ export function mapPayment(row: {
   sellerId: string;
   amount: Prisma.Decimal;
   platformFee: Prisma.Decimal | null;
+  feePercentApplied: Prisma.Decimal | null;
   currency: string;
   method: string;
   status: string;
@@ -40,6 +41,7 @@ export function mapPayment(row: {
     sellerId: row.sellerId,
     amount: Number(row.amount),
     platformFee: row.platformFee ? Number(row.platformFee) : undefined,
+    feePercentApplied: row.feePercentApplied ? Number(row.feePercentApplied) : undefined,
     currency: row.currency,
     method: row.method as Payment['method'],
     status: row.status as Payment['status'],
@@ -171,7 +173,7 @@ export function mapDispute(row: {
   };
 }
 
-export function calculatePlatformFee(amount: number): number {
-  const percent = Number(process.env.PLATFORM_FEE_PERCENT ?? 10);
-  return Math.round(amount * (percent / 100) * 100) / 100;
+export function calculatePlatformFee(amount: number, percent?: number): number {
+  const feePercent = percent ?? Number(process.env.PLATFORM_FEE_PERCENT ?? 10);
+  return Math.round(amount * (feePercent / 100) * 100) / 100;
 }
