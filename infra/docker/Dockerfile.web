@@ -33,6 +33,8 @@ RUN NODE_ENV=production pnpm --filter "./packages/*" build \
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
 RUN apk add --no-cache wget \
  && addgroup -S cm && adduser -S cm -G cm
 USER cm

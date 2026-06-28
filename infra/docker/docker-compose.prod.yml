@@ -137,6 +137,10 @@ services:
       dockerfile: infra/docker/Dockerfile.web
       args:
         NEXT_PUBLIC_API_URL: https://api.${DOMAIN}/api
+    environment:
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      INTERNAL_API_URL: http://api:4000
     labels:
       - traefik.enable=true
       - traefik.http.services.web.loadbalancer.server.port=3000
