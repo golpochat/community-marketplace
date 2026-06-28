@@ -4,7 +4,7 @@
 > **Scope:** Ireland-wide marketplace · card-only payments · haram-free catalog  
 > **Audience:** Engineering, Product, Design, Admin, Investors  
 > **Last updated:** 2026-06-27  
-> **Implementation:** No code until explicitly approved
+> **Implementation:** Foundation ✅ · Growth **Phase 1**, **1.5**, **3** ✅ shipped · **Phase 2**, **4–6+** 📋 planned
 
 **Covers:** Monetization · Pricing · Rollout · Revenue model · UX flows · Safety · Moderation · Category tree
 
@@ -50,12 +50,12 @@ SellNearby is a **free-to-start, trust-first, micro-priced** community marketpla
 **Revenue:**
 
 - Platform fees on card sales (live today)
-- Listing boosts, featured listings, fast-track verification (planned)
-- Buyer micro-SKUs, wallet credit economy, seller packages (later)
+- Listing boosts, featured listings, fast-track verification (**live** — Phases 1, 1.5, 3)
+- Buyer micro-SKUs, wallet credit economy, seller packages (planned — Phases 2, 4–6)
 
 **Safety:** No haram products, illegal items, or unsafe content — family-friendly, Ireland-appropriate, high-trust.
 
-**Live today (foundation):** 10% platform fee (8% for verified sellers — auto-apply planned), 1.5% buyer cashback (earn-only wallet), free core (list, message, browse, verify, Stripe onboarding).
+**Live today:** 10% platform fee (8% auto-applied for verified sellers), 1.5% buyer cashback (earn-only wallet), paid boosts + featured slots + fast-track verification, free core (list, message, browse, verify, Stripe onboarding).
 
 This blueprint defines everything needed to build, scale, and govern SellNearby.
 
@@ -81,9 +81,9 @@ This blueprint defines everything needed to build, scale, and govern SellNearby.
 | Stream | Default | Phase | Status |
 |--------|---------|-------|--------|
 | Platform fee | 10% (8% verified) | Foundation | ✅ Live |
-| Listing boosts | €1.99 / €4.99 | 1 | 📋 Planned |
-| Featured listings | €2.99 / €1.99 | 1.5 | 📋 Planned |
-| Fast-track verification | €2.99 | 3 | 📋 Planned |
+| Listing boosts | €1.99 / €4.99 | 1 | ✅ Live |
+| Featured listings | €2.99 / €1.99 | 1.5 | ✅ Live |
+| Fast-track verification | €2.99 | 3 | ✅ Live |
 | Buyer SKUs | €0.49–€1.99 | 4–5 | 📋 Planned |
 | Wallet spend | Credits | 2 | 📋 Planned |
 | Seller packages | €2.99–€9.99 | 6 | 📋 Planned |
@@ -110,7 +110,7 @@ PlatformPurchase {
 }
 ```
 
-**Phase 1 build (when approved):** Boost payment, `boostedUntil`, search ranking bump, Boosted badge, auto 8% fee on verification approve.
+**Phase 1 (✅ shipped):** Boost payment, `boostedUntil`, search ranking bump, Boosted badge, auto 8% fee on verification approve.
 
 ### 1.4 Free core (never paywalled)
 
@@ -185,10 +185,10 @@ All prices **EUR (€)**. Admin-configurable via `platform_settings.pricing` JSO
 | Step | Phase | Focus |
 |------|-------|-------|
 | ✅ | Foundation | Platform fee + earn-only cashback |
-| 1 | Paid boosts + verified 8% auto-fee | Highest ROI |
-| 1.5 | Featured listings (slot caps) | Scarcity revenue |
+| ✅ | 1 | Paid boosts + verified 8% auto-fee | Highest ROI |
+| ✅ | 1.5 | Featured listings (slot caps) | Scarcity revenue |
 | 2 | Wallet spend (boosts + early unlock only) | Credit loop |
-| 3 | Fast-track verification | Trust / speed |
+| ✅ | 3 | Fast-track verification | Trust / speed |
 | 4 | Buyer micro-SKUs | Priority msg, early unlock |
 | 5 | Buyer protection | **Legal sign-off required** |
 | 6 | Seller packages | Bundle existing SKUs |
@@ -204,9 +204,11 @@ All prices **EUR (€)**. Admin-configurable via `platform_settings.pricing` JSO
 
 ### 3.3 Phase 1 scope (in / out)
 
-**In:** Boost prices, Stripe payment, `boostedUntil`, ranking bump, badge, `PlatformPurchase`, 8% on verify approve.
+> **Delivered 2026-06-27** (`b0787f2`). Original boundary below; featured and fast-track shipped in later phases.
 
-**Out:** Wallet spend, featured, fast-track, buyer protection, packages, urgent badge, auto-refresh.
+**In (shipped):** Boost prices, Stripe payment, `boostedUntil`, ranking bump, badge, `PlatformPurchase`, 8% on verify approve.
+
+**Deferred to later phases:** Wallet spend (2), buyer protection (5), packages (6), urgent badge, auto-refresh.
 
 ---
 
@@ -564,10 +566,10 @@ SellNearby monetization should feel:
 | **Foundation 1** | Platform fee governance | ✅ Live | GMV (transaction fee) |
 | **Foundation 2** | Cashback earn-only | ✅ Live | Retention (platform-funded) |
 | **Foundation 3** | UX + messaging | ✅ Live | Supports conversion |
-| **1** | Paid listing boosts + verified 8% fee | 📋 Spec ready | Seller visibility |
-| **1.5** | Featured listing slots | 📋 Planned | Seller visibility |
+| **1** | Paid listing boosts + verified 8% fee | ✅ Live (2026-06-27) | Seller visibility |
+| **1.5** | Featured listing slots | ✅ Live (2026-06-27) | Seller visibility |
 | **2** | Wallet spend (credit economy) | 📋 Planned | Closed-loop credits |
-| **3** | Fast-track verification | 📋 Planned | Trust / speed |
+| **3** | Fast-track verification | ✅ Live (2026-06-27) | Trust / speed |
 | **4** | Buyer micro-SKUs | 📋 Planned | Buyer convenience |
 | **5** | Buyer protection | 📋 Planned (legal gate) | Buyer safety |
 | **6** | Seller packages (bundles) | 📋 Planned | ARPU bundles |
@@ -593,7 +595,9 @@ SellNearby monetization should feel:
 
 ### v1 implementation scope
 
-#### In scope (Growth Phase 1)
+> **Phase 1 delivered 2026-06-27.** Featured (1.5) and fast-track (3) also shipped same day.
+
+#### In scope (Growth Phase 1) ✅
 
 - Boost prices (admin-configurable via `platform_settings.pricing`)
 - Stripe payment for boosts
@@ -607,7 +611,7 @@ SellNearby monetization should feel:
 - Buyer alerts & wanted ads (Phase 6+)
 - Wallet spend (Phase 2)
 - Seller packages (Phase 6)
-- Urgent badge & auto-refresh (Phase 1.5/2 — priced in table, not Phase 1 build)
+- Urgent badge & auto-refresh (priced in table; not built)
 
 ---
 
@@ -917,11 +921,13 @@ Use **Payment** / **Purchase** — not “Order”.
 
 ---
 
-## Growth phases (planned)
+## Growth phases
 
-### Phase 1 — Paid listing boosts + verified seller fee
+Implemented: **1**, **1.5**, **3** · Planned: **2**, **4**, **5**, **6+**
 
-**Timeline:** ~2 weeks · **Status:** 📋 Spec ready — [monetization-phase-1-spec.md](#appendix-b--phase-1-technical-specification)
+### Phase 1 — Paid listing boosts + verified seller fee ✅
+
+**Timeline:** ~2 weeks · **Status:** ✅ Implemented (2026-06-27, `b0787f2`) — [Appendix B](#appendix-b--phase-1-technical-specification)
 
 **Goal:** First secondary revenue stream; optional seller visibility upgrades.
 
@@ -955,18 +961,18 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 
 #### Outcomes
 
-- [ ] Boost catalog + payment intent APIs
-- [ ] Webhook fulfillment → `boostedUntil` + reindex
-- [ ] Search sort: boosted listings first
-- [ ] Boost modal with Stripe Elements + prices
-- [ ] Admin boost pricing + platform purchase ledger
-- [ ] Auto 8% fee on verification approve
+- [x] Boost catalog + payment intent APIs
+- [x] Webhook fulfillment → `boostedUntil` + reindex
+- [x] Search sort: boosted listings first
+- [x] Boost modal with Stripe Elements + prices
+- [x] Admin boost pricing + platform purchase ledger
+- [x] Auto 8% fee on verification approve
 
 ---
 
-### Phase 1.5 — Featured listing slots
+### Phase 1.5 — Featured listing slots ✅
 
-**Timeline:** ~1 week · **Status:** 📋 Planned · **Depends on:** Phase 1 payment flow
+**Timeline:** ~1 week · **Status:** ✅ Implemented (2026-06-27, `ae0de5a`) · **Depends on:** Phase 1 payment flow ✅
 
 **Goal:** Scarcity-driven visibility on homepage and category pages.
 
@@ -991,14 +997,14 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 
 #### Outcomes
 
-- [ ] Featured purchase flow
-- [ ] Homepage/category feed respects paid featured slots
-- [ ] Slot cap + waitlist or “sold out” UX
-- [ ] Admin featured slot limits
+- [x] Featured purchase flow
+- [x] Homepage/category feed respects paid featured slots
+- [x] Slot cap + waitlist or “sold out” UX
+- [x] Admin featured slot limits
 
 ---
 
-### Phase 2 — Wallet spend (credit economy)
+### Phase 2 — Wallet spend (credit economy) 📋
 
 **Timeline:** 2–3 weeks · **Status:** 📋 Planned · **Depends on:** Phase 1 boosts
 
@@ -1033,9 +1039,9 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 
 ---
 
-### Phase 3 — Fast-track verification
+### Phase 3 — Fast-track verification ✅
 
-**Timeline:** ~1 week · **Status:** 📋 Planned · **Depends on:** `platform_purchases`
+**Timeline:** ~1 week · **Status:** ✅ Implemented (2026-06-27, `ae0de5a`, `5d39a47`) · **Depends on:** `platform_purchases` ✅
 
 **Goal:** Optional speed upgrade; standard verification stays free.
 
@@ -1054,13 +1060,13 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 
 #### Outcomes
 
-- [ ] Fast-track purchase flow
-- [ ] Admin pending queue shows priority badge
-- [ ] SLA tracking / optional notification on review complete
+- [x] Fast-track purchase flow
+- [x] Admin pending queue shows priority badge
+- [x] SLA tracking / optional notification on review complete
 
 ---
 
-### Phase 4 — Buyer micro-SKUs
+### Phase 4 — Buyer micro-SKUs 📋
 
 **Timeline:** 2–3 weeks · **Status:** 📋 Planned · **Depends on:** Phase 2 wallet (optional) or direct payment
 
@@ -1196,11 +1202,11 @@ Introduced in Growth Phase 1 — see [monetization-phase-1-spec.md](#appendix-b-
 | Fee + cashback settings | Foundation ✅ |
 | Per-seller fee override | Foundation ✅ |
 | Cashback grants + wallet txns | Foundation ✅ |
-| SKU pricing JSON (`platform_settings.pricing`) | 1+ |
-| Boost kill switch | 1 |
-| Verified seller fee % | 1 |
-| Featured slot caps | 1.5 |
-| Platform purchase ledger | 1+ |
+| SKU pricing JSON (`platform_settings.pricing`) | 1+ ✅ |
+| Boost kill switch | 1 ✅ |
+| Verified seller fee % | 1 ✅ |
+| Featured slot caps | 1.5 ✅ |
+| Platform purchase ledger | 1+ ✅ |
 | Launch promos (e.g. first boost 50% off) | 1+ |
 
 ---
@@ -1255,10 +1261,10 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 ### Implementation order
 
 1. Foundation 1–3 — ✅ Done
-2. **Phase 1** — Paid boosts + verified 8% fee
-3. **Phase 1.5** — Featured slots
+2. **Phase 1** — Paid boosts + verified 8% fee — ✅ Done (2026-06-27)
+3. **Phase 1.5** — Featured slots — ✅ Done (2026-06-27)
 4. **Phase 2** — Wallet spend
-5. **Phase 3** — Fast-track verification
+5. **Phase 3** — Fast-track verification — ✅ Done (2026-06-27)
 6. **Phase 4** — Buyer micro-SKUs
 7. **Phase 5** — Buyer protection (after legal)
 8. **Phase 6** — Seller packages
@@ -1276,13 +1282,18 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 - [x] Monthly cap at unlock
 - [x] `cashback_min_order_amount` excludes micro-farming
 
-#### Growth phases (planned)
+#### Growth phases (1, 1.5, 3) ✅
 
-- [ ] `platform_purchases` idempotent webhook fulfillment
-- [ ] Boost price from server settings only (no client tampering)
-- [ ] Rate limit boost intents per seller per day
-- [ ] Featured slot cap enforced before payment
-- [ ] Fast-track purchase cap per account per 90 days
+- [x] `platform_purchases` idempotent webhook fulfillment
+- [x] Boost price from server settings only (no client tampering)
+- [x] Rate limit boost intents per seller per day
+- [x] Featured slot cap enforced before payment
+- [x] Fast-track purchase cap per account per 90 days
+
+#### Growth phases (2+) 📋
+
+- [ ] Wallet spend debits with balance checks
+- [ ] Early unlock via credits or hybrid payment
 
 ---
 
@@ -1291,9 +1302,9 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 | # | Decision | Suggested default | Phase |
 |---|----------|-------------------|-------|
 | 1 | Default platform fee at launch | `10%` | Foundation ✅ |
-| 2 | Verified seller fee | `8%` auto on approve | 1 |
-| 3 | Boost extend vs replace | Extend from `max(now, boostedUntil)` | 1 |
-| 4 | Currency | EUR for Ireland launch | 1 |
+| 2 | Verified seller fee | `8%` auto on approve | 1 ✅ |
+| 3 | Boost extend vs replace | Extend from `max(now, boostedUntil)` | 1 ✅ |
+| 4 | Currency | EUR for Ireland launch | 1 ✅ |
 | 5 | Monthly cap overflow at unlock | Skip remainder | Foundation ✅ |
 | 6 | Wallet spend trigger | After boosts live 30 days | 2 |
 | 7 | Buyer protection legal | External review before build | 5 |
@@ -1315,6 +1326,11 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 | 2026-06-27 | Pricing table + admin JSON | A/B testing, packaging, Ireland EUR defaults |
 | 2026-06-27 | Revenue projection model | Investor & planning reference |
 | 2026-06-27 | Pro package: no purchasable “Verified” | Trust-first; admin approval only |
+| 2026-06-27 | **Phase 1 shipped** — boosts + verified 8% fee | Commit `b0787f2`; `platform_purchases`, Stripe PaymentIntent, Meilisearch `boostedUntil` sort, Boosted badge, admin pricing |
+| 2026-06-27 | **Phase 1.5 shipped** — featured slots | Commit `ae0de5a`; `featuredUntil`, slot caps, homepage/category feeds, Featured badge |
+| 2026-06-27 | **Phase 3 shipped** — fast-track verification | Commits `ae0de5a`, `5d39a47`; `priority` on verification requests, admin queue sort, seller + admin UI |
+| 2026-06-27 | Force-reverify notification fix | Migration adds `seller_verification_nudge` to `NotificationType`; commit `5d39a47` |
+| 2026-06-27 | Snapshot-tested Phases 1–3 | Boost (Stripe CLI confirm), featured homepage, fast-track Priority UI, admin priority via API |
 
 ---
 
@@ -1351,6 +1367,8 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 | Search index | Meilisearch `listings` index | No `boostedUntil` field; sort by `createdAt` |
 | Listing expiry job | `listing-expiry.job.ts` | Pattern for boost expiry cron |
 | Verified fee override | `users.custom_platform_fee_percent` | Manual admin only |
+
+> **Note (2026-06-27):** Phase 1 shipped — gaps above are resolved. Code: `apps/api/src/modules/monetization/`, seller boost/featured UI, admin `/admin/monetization`.
 
 ---
 
@@ -1875,10 +1893,10 @@ Foundation ✅  →  1 Boosts  →  1.5 Featured  →  2 Wallet spend
 
 | Step | Phase | Gate |
 |------|-------|------|
-| 1 | Paid boosts | Spec approved |
-| 2 | Featured slots | Phase 1 payment flow live |
+| 1 ✅ | Paid boosts | Shipped `b0787f2` |
+| 2 ✅ | Featured slots | Shipped `ae0de5a` |
 | 3 | Wallet spend | Boosts live ~30 days |
-| 4 | Fast-track | `platform_purchases` proven |
+| 4 ✅ | Fast-track | Shipped `ae0de5a`, `5d39a47` |
 | 5 | Buyer micro-SKUs | Optional: wallet spend for early unlock |
 | 6 | Buyer protection | **Legal sign-off** |
 | 7 | Seller packages | À la carte SKUs stable |
@@ -1886,11 +1904,11 @@ Foundation ✅  →  1 Boosts  →  1.5 Featured  →  2 Wallet spend
 
 ---
 
-### 4. Phase 1 — Paid listing boosts
+### 4. Phase 1 — Paid listing boosts ✅
 
 **Goal:** Turn existing boost scaffolding into real, paid visibility.
 
-**Timeline:** 1–2 weeks · **Risk:** Low · **Revenue:** High
+**Timeline:** 1–2 weeks · **Risk:** Low · **Revenue:** High · **Status:** ✅ Shipped 2026-06-27
 
 #### Scope
 
@@ -1913,17 +1931,17 @@ Most data model and UI already exist (`packageType`, `boostedUntil`, package dia
 
 #### Exit criteria
 
-- [ ] Seller can pay for boost; listing ranks higher; badge visible
-- [ ] Platform purchase ledger shows boost revenue
-- [ ] Verified seller receives 8% fee on next sale
+- [x] Seller can pay for boost; listing ranks higher; badge visible
+- [x] Platform purchase ledger shows boost revenue
+- [x] Verified seller receives 8% fee on next sale
 
 ---
 
-### 5. Phase 1.5 — Featured listings
+### 5. Phase 1.5 — Featured listings ✅
 
 **Goal:** Paid, scarce, high-visibility slots.
 
-**Timeline:** +1 week after Phase 1 · **Risk:** Low · **Revenue:** Medium
+**Timeline:** +1 week after Phase 1 · **Risk:** Low · **Revenue:** Medium · **Status:** ✅ Shipped 2026-06-27
 
 #### Scope
 
@@ -1939,13 +1957,13 @@ Most data model and UI already exist (`packageType`, `boostedUntil`, package dia
 
 #### Exit criteria
 
-- [ ] Paid listing appears in homepage/category featured when slot purchased
-- [ ] Slots full → purchase blocked with clear message
-- [ ] Auto-expiry at 24h
+- [x] Paid listing appears in homepage/category featured when slot purchased
+- [x] Slots full → purchase blocked with clear message
+- [x] Auto-expiry at 24h
 
 ---
 
-### 6. Phase 2 — Wallet spend (boosts + early unlock only)
+### 6. Phase 2 — Wallet spend (boosts + early unlock only) 📋
 
 **Goal:** Close the earn → spend loop without overcomplicating checkout.
 
@@ -1971,11 +1989,11 @@ Most data model and UI already exist (`packageType`, `boostedUntil`, package dia
 
 ---
 
-### 7. Phase 3 — Fast-track verification
+### 7. Phase 3 — Fast-track verification ✅
 
 **Goal:** Monetize **speed**, not access. Standard verification stays free.
 
-**Timeline:** 1 week · **Risk:** Low · **Revenue:** Medium
+**Timeline:** 1 week · **Risk:** Low · **Revenue:** Medium · **Status:** ✅ Shipped 2026-06-27
 
 #### Scope
 
@@ -1992,13 +2010,13 @@ Most data model and UI already exist (`packageType`, `boostedUntil`, package dia
 
 #### Exit criteria
 
-- [ ] Priority requests appear first in admin queue
-- [ ] Free verification path always available
-- [ ] No instant auto-verify without human review
+- [x] Priority requests appear first in admin queue
+- [x] Free verification path always available
+- [x] No instant auto-verify without human review
 
 ---
 
-### 8. Phase 4 — Buyer micro-SKUs
+### 8. Phase 4 — Buyer micro-SKUs 📋
 
 **Goal:** Light, optional buyer upgrades (convenience, not tax).
 
@@ -2115,10 +2133,10 @@ Implement when **volume justifies complexity**.
 
 ```mermaid
 flowchart LR
-  F[Foundation ✅] --> P1[Phase 1 Boosts]
-  P1 --> P15[Phase 1.5 Featured]
+  F[Foundation ✅] --> P1[Phase 1 Boosts ✅]
+  P1 --> P15[Phase 1.5 Featured ✅]
   P1 --> P2[Phase 2 Wallet spend]
-  P1 --> P3[Phase 3 Fast-track]
+  P1 --> P3[Phase 3 Fast-track ✅]
   P2 --> P4[Phase 4 Buyer SKUs]
   P4 --> P5[Phase 5 Protection]
   P1 --> P6[Phase 6 Packages]
@@ -2770,14 +2788,14 @@ Phase 1 build detail: [monetization-phase-1-spec.md](#appendix-b--phase-1-techni
 
 ### 7. Phase rollout vs UX
 
-| UX flow | Ship when |
-|---------|-----------|
-| Boost modal + payment + badge | Phase 1 |
-| Featured modal + slots | Phase 1.5 |
-| Wallet “Use credits” toggle | Phase 2 |
-| Fast-track on verification tab | Phase 3 |
-| Priority message + early unlock | Phase 4 |
-| Buyer protection toggle | Phase 5 (post-legal) |
+| UX flow | Ship when | Status |
+|---------|-----------|--------|
+| Boost modal + payment + badge | Phase 1 | ✅ |
+| Featured modal + slots | Phase 1.5 | ✅ |
+| Wallet “Use credits” toggle | Phase 2 | 📋 |
+| Fast-track on verification tab | Phase 3 | ✅ |
+| Priority message + early unlock | Phase 4 | 📋 |
+| Buyer protection toggle | Phase 5 (post-legal) | 📋 |
 
 ---
 
@@ -3903,7 +3921,7 @@ Track in admin analytics — [moderation API analytics](../api/moderation.md).
 | Keyword hard/soft tiers | 📋 | [keyword-filter-list.md](#appendix-g--keyword-filter-list-full) |
 | Image vision flags | 📋 Stub | Image review tool |
 | Violation score | 📋 | Points + thresholds |
-| Fast-track priority queue | 📋 Phase 3 | Sort by `priority` |
+| Fast-track priority queue | ✅ | Sort by `priority` |
 | Escalation queue | 📋 | Separate filter / assignee |
 | Request changes action | 📋 | New moderation action type |
 
@@ -4227,4 +4245,4 @@ This Master Blueprint defines **monetization, pricing, rollout, revenue model, U
 
 **Sections 0–10** = executive blueprint. **Appendices A–L** = complete detail from all consolidated planning documents.
 
-**Next step when approved:** Implement **Phase 1 — paid listing boosts** + verified 8% auto-fee (see [Appendix B](#appendix-b--phase-1-technical-specification)).
+**Next step:** Implement **Phase 2 — wallet spend** (credits → boosts + early unlock). Phases **1**, **1.5**, and **3** are live — see [Growth phases](#growth-phases) and [Appendix B](#appendix-b--phase-1-technical-specification).

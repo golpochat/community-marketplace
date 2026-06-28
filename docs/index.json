@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-06-24T13:17:16.863Z",
-  "docCount": 71,
+  "generatedAt": "2026-06-28T00:07:04.105Z",
+  "docCount": 86,
   "categories": {
     "admin-panel.md": {
       "label": "admin-panel.md",
@@ -19,7 +19,7 @@
         {
           "path": "admin/listings-moderation.md",
           "title": "Listings & Moderation (Admin)",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-06-27"
         },
         {
           "path": "admin/notifications.md",
@@ -189,7 +189,7 @@
         {
           "path": "dev-credentials.md",
           "title": "Development Credentials",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-06-25"
         }
       ]
     },
@@ -219,7 +219,7 @@
         {
           "path": "features/moderation.md",
           "title": "Moderation Module",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-06-27"
         },
         {
           "path": "features/notifications.md",
@@ -249,6 +249,56 @@
         {
           "path": "features/users.md",
           "title": "User Module",
+          "updatedAt": "2026-06-24"
+        }
+      ]
+    },
+    "frontend": {
+      "label": "frontend",
+      "files": [
+        {
+          "path": "frontend/architecture.md",
+          "title": "Frontend Architecture",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "frontend/brand-theme.md",
+          "title": "Brand & Theme Guide",
+          "updatedAt": "2026-06-25"
+        },
+        {
+          "path": "frontend/buyer-flow.md",
+          "title": "Buyer Flow",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "frontend/component-library.md",
+          "title": "Component Library",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "frontend/public-pages.md",
+          "title": "Public Pages",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "frontend/README.md",
+          "title": "Frontend Documentation",
+          "updatedAt": "2026-06-25"
+        },
+        {
+          "path": "frontend/routing-map.md",
+          "title": "Routing Map",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "frontend/seller-flow.md",
+          "title": "Seller Flow",
+          "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "frontend/storefront.md",
+          "title": "Storefront System",
           "updatedAt": "2026-06-24"
         }
       ]
@@ -327,6 +377,21 @@
           "updatedAt": "2026-06-24"
         },
         {
+          "path": "product/launch-checklist.md",
+          "title": "Launch Readiness Checklist",
+          "updatedAt": "2026-06-27"
+        },
+        {
+          "path": "product/master-blueprint-v1.md",
+          "title": "SellNearby — Master Blueprint (v1)",
+          "updatedAt": "2026-06-27"
+        },
+        {
+          "path": "product/monetization.md",
+          "title": "Monetization",
+          "updatedAt": "2026-06-27"
+        },
+        {
           "path": "product/non-functional-requirements.md",
           "title": "Non-Functional Requirements",
           "updatedAt": "2026-06-24"
@@ -334,7 +399,7 @@
         {
           "path": "product/README.md",
           "title": "Product Documentation",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-06-27"
         },
         {
           "path": "product/roadmap.md",
@@ -354,7 +419,7 @@
         {
           "path": "README.md",
           "title": "Community Marketplace — Documentation",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-06-25"
         }
       ]
     },
@@ -377,9 +442,19 @@
           "updatedAt": "2026-06-24"
         },
         {
+          "path": "runbooks/ovh-vps-deploy.md",
+          "title": "OVH VPS deploy — SellNearby pilot",
+          "updatedAt": "2026-06-27"
+        },
+        {
+          "path": "runbooks/pilot-kickoff.md",
+          "title": "Pilot kickoff runbook",
+          "updatedAt": "2026-06-27"
+        },
+        {
           "path": "runbooks/README.md",
           "title": "Operational Runbooks",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-06-28"
         },
         {
           "path": "runbooks/restore-backup.md",
@@ -437,6 +512,16 @@
           "updatedAt": "2026-06-24"
         }
       ]
+    },
+    "troubleshooting.md": {
+      "label": "troubleshooting.md",
+      "files": [
+        {
+          "path": "troubleshooting.md",
+          "title": "Troubleshooting Guide",
+          "updatedAt": "2026-06-25"
+        }
+      ]
     }
   },
   "files": [
@@ -452,7 +537,7 @@
       "title": "Listings & Moderation (Admin)",
       "category": "Admin Guide",
       "categoryId": "admin",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-06-27"
     },
     {
       "path": "admin/notifications.md",
@@ -662,7 +747,7 @@
       "title": "Development Credentials",
       "category": "dev-credentials.md",
       "categoryId": "dev-credentials.md",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-06-25"
     },
     {
       "path": "features/admin-panel.md",
@@ -697,7 +782,7 @@
       "title": "Moderation Module",
       "category": "Feature Specifications",
       "categoryId": "features",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-06-27"
     },
     {
       "path": "features/notifications.md",
@@ -739,6 +824,69 @@
       "title": "User Module",
       "category": "Feature Specifications",
       "categoryId": "features",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "frontend/architecture.md",
+      "title": "Frontend Architecture",
+      "category": "frontend",
+      "categoryId": "frontend",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "frontend/brand-theme.md",
+      "title": "Brand & Theme Guide",
+      "category": "frontend",
+      "categoryId": "frontend",
+      "updatedAt": "2026-06-25"
+    },
+    {
+      "path": "frontend/buyer-flow.md",
+      "title": "Buyer Flow",
+      "category": "frontend",
+      "categoryId": "frontend",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "frontend/component-library.md",
+      "title": "Component Library",
+      "category": "frontend",
+      "categoryId": "frontend",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "frontend/public-pages.md",
+      "title": "Public Pages",
+      "category": "frontend",
+      "categoryId": "frontend",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "frontend/README.md",
+      "title": "Frontend Documentation",
+      "category": "frontend",
+      "categoryId": "frontend",
+      "updatedAt": "2026-06-25"
+    },
+    {
+      "path": "frontend/routing-map.md",
+      "title": "Routing Map",
+      "category": "frontend",
+      "categoryId": "frontend",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "frontend/seller-flow.md",
+      "title": "Seller Flow",
+      "category": "frontend",
+      "categoryId": "frontend",
+      "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "frontend/storefront.md",
+      "title": "Storefront System",
+      "category": "frontend",
+      "categoryId": "frontend",
       "updatedAt": "2026-06-24"
     },
     {
@@ -819,6 +967,27 @@
       "updatedAt": "2026-06-24"
     },
     {
+      "path": "product/launch-checklist.md",
+      "title": "Launch Readiness Checklist",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-06-27"
+    },
+    {
+      "path": "product/master-blueprint-v1.md",
+      "title": "SellNearby — Master Blueprint (v1)",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-06-27"
+    },
+    {
+      "path": "product/monetization.md",
+      "title": "Monetization",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-06-27"
+    },
+    {
       "path": "product/non-functional-requirements.md",
       "title": "Non-Functional Requirements",
       "category": "Product",
@@ -830,7 +999,7 @@
       "title": "Product Documentation",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-06-27"
     },
     {
       "path": "product/roadmap.md",
@@ -851,7 +1020,7 @@
       "title": "Community Marketplace — Documentation",
       "category": "README.md",
       "categoryId": "README.md",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-06-25"
     },
     {
       "path": "RELEASE.md",
@@ -868,11 +1037,25 @@
       "updatedAt": "2026-06-24"
     },
     {
+      "path": "runbooks/ovh-vps-deploy.md",
+      "title": "OVH VPS deploy — SellNearby pilot",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-06-27"
+    },
+    {
+      "path": "runbooks/pilot-kickoff.md",
+      "title": "Pilot kickoff runbook",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-06-27"
+    },
+    {
       "path": "runbooks/README.md",
       "title": "Operational Runbooks",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-06-28"
     },
     {
       "path": "runbooks/restore-backup.md",
@@ -936,6 +1119,13 @@
       "category": "STANDARDS.md",
       "categoryId": "STANDARDS.md",
       "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "troubleshooting.md",
+      "title": "Troubleshooting Guide",
+      "category": "troubleshooting.md",
+      "categoryId": "troubleshooting.md",
+      "updatedAt": "2026-06-25"
     }
   ]
 }
