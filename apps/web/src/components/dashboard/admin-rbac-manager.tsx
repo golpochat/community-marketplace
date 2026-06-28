@@ -7,7 +7,7 @@ import { Button, Input, Label } from '@community-marketplace/ui';
 import { Card, IconActionButton, IconActionGroup } from '@community-marketplace/ui-dashboard';
 
 import { DataTable } from '@/components/dashboard/async-resource';
-import { Tabs } from '@/components/shared/tabs';
+import { Tabs, type TabItem } from '@/components/shared/tabs';
 import {
   adminService,
   type AdminRbacPermissionRow,
@@ -290,8 +290,8 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
     return { groups, unscoped };
   }, [permissions]);
 
-  const scopeTabs = useMemo(() => {
-    const tabs = (Object.keys(RBAC_PERMISSION_SCOPES) as Array<keyof typeof RBAC_PERMISSION_SCOPES>)
+  const scopeTabs = useMemo((): TabItem[] => {
+    const tabs: TabItem[] = (Object.keys(RBAC_PERMISSION_SCOPES) as Array<keyof typeof RBAC_PERMISSION_SCOPES>)
       .filter((scopeId) => (permissionsByScope.groups.get(scopeId) ?? []).length > 0)
       .map((scopeId) => ({
         id: scopeId,
