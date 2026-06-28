@@ -78,10 +78,10 @@ Pilot starts **core services only** (saves RAM on VPS-2). Observability can be a
 cd /opt/sellnearby/infra/docker
 
 docker compose -f docker-compose.prod.yml --env-file .env.prod build \
-  traefik postgres redis meilisearch api worker web admin
+  traefik postgres redis meilisearch api worker web
 
 docker compose -f docker-compose.prod.yml --env-file .env.prod up -d \
-  traefik postgres redis meilisearch api worker web admin
+  traefik postgres redis meilisearch api worker web
 ```
 
 ### 5. Run database migrations
@@ -131,7 +131,8 @@ curl -s https://api.sellnearby.ie/api/health/ready
 | URL | Expected |
 |-----|----------|
 | https://sellnearby.ie | Marketplace homepage |
-| https://admin.sellnearby.ie | Admin login |
+| https://sellnearby.ie/admin | Admin login (dashboard is in apps/web) |
+| https://admin.sellnearby.ie | Same web app (use `/admin` path for dashboard) |
 | https://api.sellnearby.ie/api/health/ready | JSON `status: ok` |
 
 ---
@@ -147,7 +148,7 @@ Restart after env changes:
 
 ```bash
 cd /opt/sellnearby/infra/docker
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d api worker web admin
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d api worker web
 ```
 
 ---
