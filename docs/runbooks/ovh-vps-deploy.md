@@ -213,6 +213,13 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d api worker
 
 Traefik may still be serving a default cert if Let's Encrypt has not issued yet.
 
+**If Traefik logs show `client version 1.24 is too old`:** Docker on the VPS is newer than Traefik v3.2 supports. Upgrade Traefik:
+
+```bash
+git pull origin main   # needs traefik:v3.6.1+ in compose
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-recreate traefik api web
+```
+
 On VPS:
 
 ```bash
