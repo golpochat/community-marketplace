@@ -30,6 +30,9 @@ services:
       ACME_EMAIL: ${ACME_EMAIL}
     command:
       - --configFile=/etc/traefik/traefik.prod.yml
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
     ports:
       - "80:80"
       - "443:443"
