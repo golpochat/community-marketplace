@@ -678,6 +678,14 @@ export interface AdminRbacPermissionRow {
   scope?: string | null;
 }
 
+export interface AdminRbacScopeRow {
+  id: string;
+  label: string;
+  description: string;
+  managementPermission: string;
+  permissionCount: number;
+}
+
 export interface CreateAdminRoleInput {
   name: string;
   code?: string;

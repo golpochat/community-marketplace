@@ -1,4 +1,4 @@
-import type { ListingSortOption, StorefrontListing } from '@community-marketplace/types';
+import type { ListingSortOption, PaginatedResult, StorefrontListing } from '@community-marketplace/types';
 
 import { apiClient } from '@/lib/api-client';
 import type { SellerStorefront } from '@community-marketplace/types';
@@ -25,7 +25,7 @@ export const storefrontService = {
     page = 1,
     limit = 24,
   ) {
-    const response = await apiClient<StorefrontListing[] | { data: StorefrontListing[] }>(
+    const response = await apiClient<StorefrontListing[] | PaginatedResult<StorefrontListing>>(
       `/stores/${encodeURIComponent(slug)}/listings`,
       {
         params: {

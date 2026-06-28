@@ -43,7 +43,9 @@ interface ProfileSettingsFormProps {
   includeNotificationPreferences?: boolean;
 }
 
-const NOTIFICATION_TOGGLES: Array<{ key: keyof NotificationPreferences; label: string }> = [
+type BooleanNotificationPreferenceKey = Exclude<keyof NotificationPreferences, 'events'>;
+
+const NOTIFICATION_TOGGLES: Array<{ key: BooleanNotificationPreferenceKey; label: string }> = [
   { key: 'email', label: 'Email notifications' },
   { key: 'push', label: 'Push notifications' },
   { key: 'inApp', label: 'In-app notifications' },
@@ -178,7 +180,7 @@ function NotificationToggleList({
 }: {
   preferences: NotificationPreferences;
   editable: boolean;
-  onToggle?: (key: keyof NotificationPreferences) => void;
+  onToggle?: (key: BooleanNotificationPreferenceKey) => void;
 }) {
   return (
     <ul className="divide-y divide-[hsl(var(--dashboard-sidebar-border))]">
@@ -370,7 +372,7 @@ export function ProfileSettingsForm({
     }
   }
 
-  function toggleNotification(key: keyof NotificationPreferences) {
+  function toggleNotification(key: BooleanNotificationPreferenceKey) {
     setNotificationPreferences((current) => ({
       ...current,
       [key]: !current?.[key],
