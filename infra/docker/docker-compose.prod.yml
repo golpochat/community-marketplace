@@ -26,6 +26,8 @@ x-api-env: &api-env
 services:
   traefik:
     image: traefik:v3.2
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL}
     command:
       - --configFile=/etc/traefik/traefik.prod.yml
     ports:
@@ -99,6 +101,8 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.api.rule=Host(`api.${DOMAIN}`)
+      - traefik.http.routers.api.entrypoints=websecure
+      - traefik.http.routers.api.tls=true
       - traefik.http.routers.api.tls.certresolver=letsencrypt
       - traefik.http.services.api.loadbalancer.server.port=4000
     deploy:
@@ -133,6 +137,8 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.web.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`) || Host(`admin.${DOMAIN}`)
+      - traefik.http.routers.web.entrypoints=websecure
+      - traefik.http.routers.web.tls=true
       - traefik.http.routers.web.tls.certresolver=letsencrypt
       - traefik.http.services.web.loadbalancer.server.port=3000
     networks:

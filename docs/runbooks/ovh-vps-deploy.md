@@ -86,17 +86,33 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d \
 
 ### 5. Run database migrations
 
+Start Postgres first if the full stack is not up yet:
+
 ```bash
-cd /opt/sellnearby
-docker compose -f infra/docker/docker-compose.prod.yml --env-file infra/docker/.env.prod \
-  exec api sh -c 'cd /app && npx prisma migrate deploy'
+cd /opt/sellnearby/infra/docker
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d postgres
 ```
 
-If `exec` path differs, use:
+Apply migrations with a **one-off container** (works even when `api` is crashed):
 
 ```bash
-docker compose -f infra/docker/docker-compose.prod.yml --env-file infra/docker/.env.prod \
+docker compose -f docker-compose.prod.yml --env-file .env.prod \
   run --rm api npx prisma migrate deploy
+```
+
+You should see `Applying migration` lines and `All migrations have been successfully applied.`
+
+Then start (or restart) the app services:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d api worker web
+```
+
+If `api` is already running, you can use `exec` instead:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.prod \
+  exec api npx prisma migrate deploy
 ```
 
 ### 6. Check logs
@@ -185,9 +201,45 @@ Ensure postgres is healthy:
 docker compose -f docker-compose.prod.yml --env-file .env.prod ps postgres
 ```
 
----
+If `api` crashed with `The table ... does not exist`, migrations were not applied. Use `run --rm` (not `exec`):
 
-## Related
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.prod \
+  run --rm api npx prisma migrate deploy
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d api worker
+```
+
+### SSL / smoke test fails (`Could not establish trust relationship`)
+
+Traefik may still be serving a default cert if Let's Encrypt has not issued yet.
+
+On VPS:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs traefik --tail 50 | grep -i acme
+curl -vk https://api.sellnearby.ie/api/health/ready 2>&1 | grep -E "issuer|subject|SSL"
+```
+
+Ensure `.env.prod` has `ACME_EMAIL=support@sellnearby.ie`, ports **80** and **443** are open (`sudo ufw status`), and DNS A records point to the VPS IP.
+
+After pulling compose TLS label fixes, recreate Traefik and app routers:
+
+```bash
+git pull origin main
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-recreate traefik api web
+```
+
+Wait 1–2 minutes, then hit `https://api.sellnearby.ie` once in a browser to trigger cert issuance.
+
+**Workaround (API already healthy):** smoke test via SSH tunnel without public TLS:
+
+```powershell
+ssh -L 4000:localhost:4000 ubuntu@YOUR_VPS_IP
+# In another terminal on VPS: curl http://localhost:4000/api/health/ready
+.\scripts\smoke-pilot.ps1 -BaseUrl "http://localhost:4000"
+```
+
+---
 
 - [pilot-kickoff.md](./pilot-kickoff.md)
 - [launch-checklist.md](../product/launch-checklist.md)
