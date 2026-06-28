@@ -1,5 +1,7 @@
 # Production simulation — Traefik TLS, observability, resource limits
 # Usage: docker compose -f infra/docker/docker-compose.prod.yml --env-file .env.prod up -d
+# Required in .env.prod: POSTGRES_PASSWORD, JWT_SECRET, MEILI_MASTER_KEY
+# Optional with defaults: DOMAIN, ACME_EMAIL
 
 name: community-marketplace-prod
 
@@ -11,9 +13,9 @@ x-api-env: &api-env
   MEILISEARCH_HOST: http://meilisearch:7700
   MEILISEARCH_API_KEY: ${MEILI_MASTER_KEY}
   JWT_SECRET: ${JWT_SECRET}
-  CORS_ORIGIN: https://${DOMAIN},https://www.${DOMAIN},https://admin.${DOMAIN}
-  WEB_APP_URL: https://${DOMAIN}
-  API_PUBLIC_URL: https://api.${DOMAIN}
+  CORS_ORIGIN: https://${DOMAIN:-sellnearby.ie},https://www.${DOMAIN:-sellnearby.ie},https://admin.${DOMAIN:-sellnearby.ie}
+  WEB_APP_URL: https://${DOMAIN:-sellnearby.ie}
+  API_PUBLIC_URL: https://api.${DOMAIN:-sellnearby.ie}
   STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
   STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
   SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
@@ -103,7 +105,7 @@ services:
         condition: service_healthy
     labels:
       - traefik.enable=true
-      - traefik.http.routers.api.rule=Host(`api.${DOMAIN}`)
+      - traefik.http.routers.api.rule=Host(`api.${DOMAIN:-sellnearby.ie}`)
       - traefik.http.routers.api.entrypoints=websecure
       - traefik.http.routers.api.tls=true
       - traefik.http.routers.api.tls.certresolver=letsencrypt
@@ -136,10 +138,10 @@ services:
       context: ../..
       dockerfile: infra/docker/Dockerfile.web
       args:
-        NEXT_PUBLIC_API_URL: https://api.${DOMAIN}/api
+        NEXT_PUBLIC_API_URL: https://api.${DOMAIN:-sellnearby.ie}/api
     labels:
       - traefik.enable=true
-      - traefik.http.routers.web.rule=Host(`${DOMAIN}`) || Host(`www.${DOMAIN}`) || Host(`admin.${DOMAIN}`)
+      - traefik.http.routers.web.rule=Host(`${DOMAIN:-sellnearby.ie}`) || Host(`www.${DOMAIN:-sellnearby.ie}`) || Host(`admin.${DOMAIN:-sellnearby.ie}`)
       - traefik.http.routers.web.entrypoints=websecure
       - traefik.http.routers.web.tls=true
       - traefik.http.routers.web.tls.certresolver=letsencrypt
