@@ -213,6 +213,21 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d api worker
 
 Traefik may still be serving a default cert if Let's Encrypt has not issued yet.
 
+**If ACME logs show `unable to parse email address`:** set a valid email in `.env.prod`:
+
+```bash
+grep ACME_EMAIL infra/docker/.env.prod
+# ACME_EMAIL=support@sellnearby.ie
+```
+
+Then reset the ACME store and recreate Traefik:
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env.prod stop traefik
+docker volume rm community-marketplace-prod_traefik_acme
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-recreate traefik api web
+```
+
 **If Traefik logs show `client version 1.24 is too old`:** Docker on the VPS is newer than Traefik v3.2 supports. Upgrade Traefik:
 
 ```bash

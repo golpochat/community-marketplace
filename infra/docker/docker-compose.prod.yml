@@ -27,10 +27,10 @@ services:
   traefik:
     image: traefik:v3.6.1
     environment:
-      ACME_EMAIL: ${ACME_EMAIL}
+      ACME_EMAIL: ${ACME_EMAIL:-support@sellnearby.ie}
     command:
       - --configFile=/etc/traefik/traefik.prod.yml
-      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-support@sellnearby.ie}
       - --certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json
       - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
     ports:
@@ -200,4 +200,5 @@ volumes:
 
 networks:
   cm-network:
+    name: cm-network
     driver: bridge
