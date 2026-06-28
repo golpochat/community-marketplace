@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { notFound, usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import type { SellerStorefront, StorefrontListing } from '@community-marketplace/types';
@@ -59,6 +59,14 @@ function StorefrontSkeleton() {
 }
 
 export function StorefrontPageClient({ sellerSlug }: StorefrontPageClientProps) {
+  return (
+    <Suspense fallback={<StorefrontSkeleton />}>
+      <StorefrontPageClientContent sellerSlug={sellerSlug} />
+    </Suspense>
+  );
+}
+
+function StorefrontPageClientContent({ sellerSlug }: StorefrontPageClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

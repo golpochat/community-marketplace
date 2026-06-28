@@ -1,11 +1,13 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import { DashboardPageShell } from '@/components/dashboard/async-resource';
+import { LoadingState } from '@/components/LoadingState';
 import { CreateDisputeForm } from '@/components/disputes/create-dispute-form';
 
-export default function Page() {
+function CreateDisputePageContent() {
   const searchParams = useSearchParams();
   const listingId = searchParams.get('listingId');
   const paymentId = searchParams.get('paymentId') ?? undefined;
@@ -24,5 +26,13 @@ export default function Page() {
     <DashboardPageShell title="Open dispute" description="Describe the issue with your purchase.">
       <CreateDisputeForm listingId={listingId} paymentId={paymentId} />
     </DashboardPageShell>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <CreateDisputePageContent />
+    </Suspense>
   );
 }

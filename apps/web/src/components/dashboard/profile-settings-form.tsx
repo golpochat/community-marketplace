@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, Suspense } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { Button, Input, Label, cn } from '@community-marketplace/ui';
@@ -263,7 +263,15 @@ const PROFILE_TABS: Array<{ id: ProfileTab; label: string }> = [
   { id: 'preferences', label: 'Preferences' },
 ];
 
-export function ProfileSettingsForm({
+export function ProfileSettingsForm(props: ProfileSettingsFormProps) {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <ProfileSettingsFormContent {...props} />
+    </Suspense>
+  );
+}
+
+function ProfileSettingsFormContent({
   title = 'Settings',
   description = 'Manage your profile and preferences.',
   defaultTab = 'profile',
