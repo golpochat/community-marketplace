@@ -10,7 +10,7 @@ import type {
   PricingPreview,
 } from "@community-marketplace/types";
 import { ListingFormSteps } from '@/components/seller/listing-form-steps';
-import { Button, Input, Label, Select } from '@community-marketplace/ui';
+import { Button, Input, Label, Select, cn } from '@community-marketplace/ui';
 import {
   computeListingPricing,
   formatCurrency,
