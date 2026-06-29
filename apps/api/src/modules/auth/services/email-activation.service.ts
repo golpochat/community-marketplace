@@ -2,6 +2,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -9,7 +10,6 @@ import { JwtService } from '@nestjs/jwt';
 import type { ActivationTokenPayload, RegistrationAccountType } from '@community-marketplace/types';
 import { RegistrationAccountType as PrismaRegistrationAccountType } from '../../../../generated/prisma';
 
-import { devRoleIdFor } from '../../../common/constants/dev-role-ids';
 import { hashPassword } from '../../../database/seeds/password-hash';
 import { PrismaService } from '../../../database/prisma.service';
 
@@ -97,7 +97,12 @@ export class EmailActivationService {
 
     const roleCode = accountType === 'seller' ? 'SELLER' : 'BUYER';
     const role = await this.prisma.role.findUnique({ where: { code: roleCode } });
-    const roleId = role?.id ?? devRoleIdFor(roleCode);
+    if (!role) {
+      throw new ServiceUnavailableException(
+        'Account roles are not configured on this server. Run RBAC seed before registration.',
+      );
+    }
+    const roleId = role.id;
     const now = new Date();
 
     const user = await this.prisma.user.create({

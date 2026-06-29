@@ -102,6 +102,16 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod \
 
 You should see `Applying migration` lines and `All migrations have been successfully applied.`
 
+Then **seed RBAC roles** (required once — migrations do not insert roles):
+
+```bash
+cd /opt/sellnearby
+chmod +x infra/scripts/seed-rbac-prod-docker.sh
+./infra/scripts/seed-rbac-prod-docker.sh
+```
+
+Without this step, account activation fails with `users_primary_role_id_fkey`.
+
 Then start (or restart) the app services:
 
 ```bash

@@ -15,6 +15,7 @@
 | [non-functional-requirements.md](./non-functional-requirements.md) | Performance, security, scalability targets |
 | [user-stories.md](./user-stories.md) | Stories by persona (buyer, seller, admin) |
 | [roadmap.md](./roadmap.md) | Phased delivery plan |
+| **[storefront-model.md](./storefront-model.md)** | **Account vs storefront** — listing limits, verification, paid store slots |
 
 ## Redirects
 

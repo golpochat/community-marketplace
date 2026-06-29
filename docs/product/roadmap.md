@@ -86,3 +86,4 @@ gantt
 | 2026-06 | Meilisearch | Fast full-text search, simple ops |
 | 2026-06 | Stripe Connect | Marketplace payment splits |
 | TBD | Prisma ORM | Type-safe DB access (pending wiring) |
+| 2026-06-29 | Account vs storefront model | See [storefront-model.md](./storefront-model.md) |
