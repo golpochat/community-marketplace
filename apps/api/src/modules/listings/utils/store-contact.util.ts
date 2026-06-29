@@ -123,6 +123,50 @@ export function readPrivacySettings(raw: unknown): PrivacySettings {
   };
 }
 
+export type PublicStoreContactContext = {
+  store: {
+    location: string | null | undefined;
+    contactSettings: unknown;
+  };
+  seller: {
+    email: string;
+    profile: {
+      phone: string | null;
+      address: string | null;
+      location: string | null;
+      businessWebsite: string | null;
+      isBusinessAccount: boolean;
+    } | null;
+    settings: {
+      communicationPreferences: unknown;
+      privacySettings: unknown;
+    } | null;
+  };
+};
+
+/** Store-row contact first; legacy account prefs only when store fields are empty. */
+export function resolvePublicStoreContact(
+  ctx: PublicStoreContactContext,
+): StoreContactInfo | undefined {
+  const prefs = readStorePrefs(ctx.seller.settings?.communicationPreferences);
+  const privacy = readPrivacySettings(ctx.seller.settings?.privacySettings);
+  const storeContact = parseStoreContactSettings(ctx.store.contactSettings);
+
+  return (
+    buildStoreContactFromSettings(ctx.store.location, storeContact) ??
+    buildLegacyStoreContact({
+      email: ctx.seller.email,
+      phone: ctx.seller.profile?.phone,
+      address: ctx.seller.profile?.address,
+      location: ctx.store.location ?? ctx.seller.profile?.location,
+      website: ctx.seller.profile?.businessWebsite,
+      isBusinessAccount: ctx.seller.profile?.isBusinessAccount ?? false,
+      privacy,
+      prefs,
+    })
+  );
+}
+
 export function buildStoreContactFromSettings(
   storeLocation: string | null | undefined,
   settings?: StoreContactSettings,

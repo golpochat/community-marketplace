@@ -16,11 +16,8 @@ import {
   slugifyStoreName,
 } from '../utils/store-slug.util';
 import {
-  buildLegacyStoreContact,
-  buildStoreContactFromSettings,
-  parseStoreContactSettings,
-  readPrivacySettings,
   readStorePrefs,
+  resolvePublicStoreContact,
   resolveStoreOpeningHoursFromRow,
   resolveStorePoliciesFromRow,
 } from '../utils/store-contact.util';
@@ -88,7 +85,6 @@ export class StoresService {
     }
 
     const prefs = readStorePrefs(seller.settings?.communicationPreferences);
-    const privacy = readPrivacySettings(seller.settings?.privacySettings);
     const trust = await this.sellerTrust.getProfile(seller.id);
     const listings = await this.fetchStoreListings(store.id, seller.id, 'newest', 1, 48);
     const sections = await this.fetchCategorySections(store.id, seller.id);
@@ -97,19 +93,17 @@ export class StoresService {
     const logoUrl = store.logoUrl ?? undefined;
     const bannerUrl = store.bannerUrl ?? undefined;
 
-    const storeContact = parseStoreContactSettings(store.contactSettings);
-    const contact =
-      buildStoreContactFromSettings(store.location, storeContact) ??
-      buildLegacyStoreContact({
+    const contact = resolvePublicStoreContact({
+      store: {
+        location: store.location,
+        contactSettings: store.contactSettings,
+      },
+      seller: {
         email: seller.email,
-        phone: seller.profile?.phone,
-        address: seller.profile?.address,
-        location: store.location ?? seller.profile?.location,
-        website: seller.profile?.businessWebsite,
-        isBusinessAccount: seller.profile?.isBusinessAccount,
-        privacy,
-        prefs,
-      });
+        profile: seller.profile,
+        settings: seller.settings,
+      },
+    });
 
     const openingHours = resolveStoreOpeningHoursFromRow(store.openingHours, prefs);
     const responseTimeFallback = trust.responseTimeMinutes

@@ -15,7 +15,7 @@ import {
 import { resolveAssetPublicUrl } from "../../../libs/asset-url.lib";
 import { isListingBoosted } from "../../monetization/lib/boost.lib";
 import { isListingFeatured } from "../../monetization/lib/featured.lib";
-import { readStorePrefs } from "../utils/store-contact.util";
+import { readStorePrefs, resolvePublicStoreContact } from "../utils/store-contact.util";
 import { buildStoreSlug } from "../utils/store-slug.util";
 import {
   listingDeliveryInclude,
@@ -29,11 +29,20 @@ export const listingInclude = {
     include: listingDeliveryInclude,
     orderBy: { createdAt: "asc" as const },
   },
+  store: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      location: true,
+      contactSettings: true,
+    },
+  },
   seller: {
     include: {
       primaryRole: true,
       profile: true,
-      settings: { select: { communicationPreferences: true } },
+      settings: { select: { communicationPreferences: true, privacySettings: true } },
       verifications: {
         where: { badgeGranted: true, status: "approved" as const },
         take: 1,
@@ -169,7 +178,7 @@ export function mapListing(
     removalReason: row.removalReason ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-    seller: mapListingSeller(row.seller),
+    seller: mapListingSeller(row.seller, row.store),
   };
 }
 
@@ -187,7 +196,7 @@ export function mapListingWithTrust(
 ): Listing {
   const listing = mapListing(row, { priceDroppedAt: extras?.priceDroppedAt });
   if (listing.seller && extras?.trust) {
-    listing.seller = mapListingSeller(row.seller, extras.trust);
+    listing.seller = mapListingSeller(row.seller, row.store, extras.trust);
   }
   return listing;
 }
@@ -231,12 +240,32 @@ function resolveSellerStoreSlug(
 
 function mapListingSeller(
   seller: ListingWithRelations["seller"],
+  store: ListingWithRelations["store"] | null | undefined,
   trust?: SellerTrustData,
 ): Listing["seller"] {
   if (!seller) return undefined;
+
+  const publicContact =
+    store &&
+    resolvePublicStoreContact({
+      store: {
+        location: store.location,
+        contactSettings: store.contactSettings,
+      },
+      seller: {
+        email: seller.email,
+        profile: seller.profile,
+        settings: seller.settings,
+      },
+    });
+
+  const storeName = store?.name?.trim();
+  const displayName = storeName || seller.displayName?.trim() || undefined;
+  const storeSlug = store?.slug?.trim() || resolveSellerStoreSlug(seller);
+
   return {
     id: seller.id,
-    displayName: seller.displayName ?? undefined,
+    displayName,
     email: seller.email,
     verified: isSellerVerified(seller),
     phoneVerified: Boolean(seller.phoneVerifiedAt),
@@ -249,11 +278,8 @@ function mapListingSeller(
     responseTimeMinutes: trust?.responseTimeMinutes,
     isAmbassador: seller.profile?.isCommunityAmbassador ?? false,
     isBusiness: seller.profile?.isBusinessAccount ?? false,
-    phone:
-      seller.phoneVerifiedAt && seller.profile?.phone
-        ? seller.profile.phone
-        : undefined,
-    storeSlug: resolveSellerStoreSlug(seller),
+    phone: publicContact?.phone,
+    storeSlug,
   };
 }
 
