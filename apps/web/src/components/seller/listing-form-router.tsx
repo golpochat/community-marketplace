@@ -6,17 +6,15 @@ import type {
   ListingDeliverySelection,
   ListingImage,
 } from '@community-marketplace/types';
-import { Label, Select } from '@community-marketplace/ui';
 
+import {
+  ListingCreateContext,
+  pickDefaultListingStoreId,
+} from '@/components/seller/listing-create-context';
 import {
   ListingForm,
   type ListingFormData,
 } from '@/components/seller/listing-form';
-import {
-  ListingStorePicker,
-  ListingStoreRequiredNotice,
-  pickDefaultListingStoreId,
-} from '@/components/seller/listing-store-picker';
 import {
   VehicleListingForm,
   type VehicleFormData,
@@ -24,11 +22,9 @@ import {
 import { useSellerStoreData } from '@/hooks/use-seller-store-data';
 import { isVehicleCategory } from '@/lib/vehicle-catalog';
 
-export type SellerCategoryOption = {
-  id: string;
-  name: string;
-  slug?: string;
-};
+import type { SellerCategoryOption } from '@/components/seller/listing-create-context';
+
+export type { SellerCategoryOption };
 
 interface ListingFormRouterProps {
   categories: SellerCategoryOption[];
@@ -100,14 +96,20 @@ export function ListingFormRouter({
     });
   }, [stores]);
 
+  useEffect(() => {
+    if (categoryId && categories.some((category) => category.id === categoryId)) {
+      return;
+    }
+    const fallback = categories[0]?.id ?? '';
+    if (fallback) setCategoryId(fallback);
+  }, [categories, categoryId]);
+
   const selectedCategory = useMemo(
-    () => categories.find((c) => c.id === categoryId),
+    () => categories.find((category) => category.id === categoryId),
     [categories, categoryId],
   );
 
-  const isVehicle = selectedCategory
-    ? isVehicleCategory(selectedCategory)
-    : false;
+  const isVehicle = selectedCategory ? isVehicleCategory(selectedCategory) : false;
 
   const resolvedStoreId =
     storeId || pickDefaultListingStoreId(stores) || genericInitialData?.storeId;
@@ -120,47 +122,21 @@ export function ListingFormRouter({
 
   return (
     <div className="space-y-6">
-      {storesLoading && (
-        <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading storefronts…</p>
-      )}
-      {!storesLoading && stores.length === 0 && <ListingStoreRequiredNotice />}
-
-      <ListingStorePicker
+      <ListingCreateContext
         stores={stores}
-        value={resolvedStoreId}
-        onChange={setStoreId}
+        storesLoading={storesLoading}
+        storeId={resolvedStoreId}
+        onStoreIdChange={setStoreId}
+        categories={categories}
+        categoryId={categoryId}
+        onCategoryIdChange={setCategoryId}
+        isVehicle={isVehicle}
         disabled={formDisabled}
       />
 
-      {categories.length > 1 && (
-        <div>
-          <Label htmlFor="listing-category">Category</Label>
-          <Select
-            id="listing-category"
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-            disabled={formDisabled}
-            className="mt-1"
-          >
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </Select>
-          <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-            {isVehicle
-              ? 'Vehicle listings use the structured vehicle form.'
-              : 'Standard listings use the general item form.'}
-          </p>
-        </div>
-      )}
-
       {isVehicle ? (
         <VehicleListingForm
-          categories={categories}
           categoryId={categoryId}
-          onCategoryChange={setCategoryId}
           initialData={vehicleInitialData}
           initialDeliverySelections={initialDeliverySelections}
           existingImages={existingImages}

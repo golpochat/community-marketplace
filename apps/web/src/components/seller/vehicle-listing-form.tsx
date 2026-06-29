@@ -9,8 +9,8 @@ import type {
   ListingImage,
   PricingPreview,
 } from "@community-marketplace/types";
-import { cn } from "@community-marketplace/ui";
-import { Button, Input, Label, Select } from "@community-marketplace/ui";
+import { ListingFormSteps } from '@/components/seller/listing-form-steps';
+import { Button, Input, Label, Select } from '@community-marketplace/ui';
 import {
   computeListingPricing,
   formatCurrency,
@@ -143,9 +143,7 @@ const INITIAL: VehicleFormData = {
 };
 
 interface VehicleListingFormProps {
-  categories?: Array<{ id: string; name: string; slug?: string }>;
   categoryId: string;
-  onCategoryChange?: (categoryId: string) => void;
   initialData?: Partial<VehicleFormData>;
   initialDeliverySelections?: ListingDeliverySelection[];
   existingImages?: ListingImage[];
@@ -172,9 +170,7 @@ function FieldError({ message }: { message?: string }) {
 }
 
 export function VehicleListingForm({
-  categories = [],
   categoryId,
-  onCategoryChange,
   initialData,
   initialDeliverySelections = [],
   existingImages = [],
@@ -546,22 +542,14 @@ export function VehicleListingForm({
       : deliveryLabels[data.deliveryMode as Exclude<VehicleDeliveryMode, "custom">];
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
-      <div className="mb-8 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-        {STEPS.map((label, idx) => (
-          <div
-            key={label}
-            className={cn(
-              "rounded-lg px-2 py-2 text-center text-xs font-medium",
-              idx === step
-                ? "bg-[hsl(var(--dashboard-accent))] text-white"
-                : "bg-[hsl(var(--dashboard-sidebar-active))] text-[hsl(var(--dashboard-sidebar-muted))]",
-            )}
-          >
-            {label}
-          </div>
-        ))}
-      </div>
+    <div className="w-full">
+      <ListingFormSteps
+        steps={STEPS}
+        currentStep={step}
+        onStepClick={(index) => {
+          if (index <= step) setStep(index);
+        }}
+      />
 
       {validationError && (
         <p className="mb-4 text-sm text-red-600">{validationError}</p>
@@ -569,23 +557,6 @@ export function VehicleListingForm({
 
       {step === 0 && (
         <div className="space-y-4">
-          {categories.length > 1 && onCategoryChange && (
-            <div>
-              <Label htmlFor="vehicle-category">Category</Label>
-              <Select
-                id="vehicle-category"
-                value={categoryId}
-                onChange={(e) => onCategoryChange(e.target.value)}
-                disabled={disabled}
-              >
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          )}
           <VehicleMakeModelFields
             make={data.make}
             model={data.model}
@@ -1041,17 +1012,18 @@ export function VehicleListingForm({
         </div>
       )}
 
-      <div className="mt-8 flex justify-between gap-3">
+      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
         <Button
           type="button"
           variant="outline"
           onClick={handleBack}
           disabled={step === 0 || disabled}
+          className="w-full sm:w-auto"
         >
           Back
         </Button>
-        <Button type="button" onClick={handleNext} disabled={disabled}>
-          {step === STEPS.length - 1 ? submitLabel : "Next"}
+        <Button type="button" onClick={handleNext} disabled={disabled} className="w-full sm:w-auto">
+          {step === STEPS.length - 1 ? submitLabel : 'Next'}
         </Button>
       </div>
 

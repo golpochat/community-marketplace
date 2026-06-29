@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { cn } from "@community-marketplace/ui";
+import { ListingFormSteps } from '@/components/seller/listing-form-steps';
+import { cn } from '@community-marketplace/ui';
 import {
   LISTING_DESCRIPTION_HARD_MAX,
   LISTING_DESCRIPTION_SOFT_MAX,
@@ -513,22 +514,14 @@ export function ListingForm({
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
-      <div className="mb-8 grid grid-cols-2 gap-2 sm:grid-cols-5">
-        {STEPS.map((label, idx) => (
-          <div
-            key={label}
-            className={cn(
-              "rounded-lg px-2 py-2 text-center text-xs font-medium sm:text-sm",
-              idx === step
-                ? "bg-[hsl(var(--dashboard-accent))] text-white"
-                : "bg-[hsl(var(--dashboard-sidebar-active))] text-[hsl(var(--dashboard-sidebar-muted))]",
-            )}
-          >
-            {label}
-          </div>
-        ))}
-      </div>
+    <div className="w-full">
+      <ListingFormSteps
+        steps={STEPS}
+        currentStep={step}
+        onStepClick={(index) => {
+          if (index <= step) setStep(index);
+        }}
+      />
 
       {priceReviewStatus === "pending-review" && (
         <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
