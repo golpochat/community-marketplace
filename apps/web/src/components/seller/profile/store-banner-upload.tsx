@@ -7,16 +7,18 @@ import { Button } from '@community-marketplace/ui';
 import { StoreBannerPhoto } from '@/components/storefront/store-banner-photo';
 import { STOREFRONT_HERO_BANNER_CLASS } from '@/components/storefront/storefront-layout';
 import { prepareStoreBannerImage } from '@/lib/store-banner-image';
+import { sellerService } from '@/services/marketplace.service';
 import { userService } from '@/services/user.service';
 
 interface StoreBannerUploadProps {
   bannerUrl?: string | null;
+  storeId?: string;
   onUpdated: (bannerUrl: string) => void;
 }
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-export function StoreBannerUpload({ bannerUrl, onUpdated }: StoreBannerUploadProps) {
+export function StoreBannerUpload({ bannerUrl, storeId, onUpdated }: StoreBannerUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,9 +43,14 @@ export function StoreBannerUpload({ bannerUrl, onUpdated }: StoreBannerUploadPro
     try {
       const prepared = await prepareStoreBannerImage(file);
       const updated = await userService.uploadStoreBanner(prepared);
-      if (updated.storeBannerUrl) {
-        onUpdated(updated.storeBannerUrl);
+      const nextBannerUrl = updated.storeBannerUrl;
+      if (!nextBannerUrl) {
+        throw new Error('Banner upload did not return a URL');
       }
+      if (storeId) {
+        await sellerService.updateStore(storeId, { bannerUrl: nextBannerUrl });
+      }
+      onUpdated(nextBannerUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload banner');
     } finally {

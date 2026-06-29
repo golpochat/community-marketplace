@@ -81,7 +81,10 @@ export function resolveVerificationNudge(
     };
   }
 
-  const tier = resolveNudgeTier(status.unverifiedListingCount, status.sellerLimit);
+  const tier = resolveNudgeTier(
+    status.approvedListingCount ?? status.unverifiedListingCount,
+    status.sellerLimit,
+  );
   const message =
     status.nudgeMessage ??
     (tier === 'first_listing'

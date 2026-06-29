@@ -19,7 +19,7 @@ export function isListingCreationBlocked(status: SellerVerificationStatus | null
   }
   if (
     status.sellerStatus !== 'verified' &&
-    status.unverifiedListingCount >= status.sellerLimit
+    (status.approvedListingCount ?? status.unverifiedListingCount) >= status.sellerLimit
   ) {
     return true;
   }

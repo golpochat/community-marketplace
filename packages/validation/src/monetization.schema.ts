@@ -22,6 +22,9 @@ export const platformSettingsUpdateSchema = z.object({
   featuredHomepagePrice: z.number().min(0).max(999).optional(),
   featuredCategoryPrice: z.number().min(0).max(999).optional(),
   fastTrackVerificationPrice: z.number().min(0).max(999).optional(),
+  storeSlot2Price: z.number().min(0).max(999).optional(),
+  storeSlot3Price: z.number().min(0).max(999).optional(),
+  storeBundle3Price: z.number().min(0).max(999).optional(),
   homepageSlotsPerDay: z.number().int().min(1).max(100).optional(),
   categorySlotsPerDay: z.number().int().min(1).max(100).optional(),
 });
@@ -63,9 +66,26 @@ export const confirmFastTrackSchema = z.object({
   purchaseId: uuidSchema,
 });
 
+export const storeSlotSkuSchema = z.enum(['store_slot_2', 'store_slot_3', 'store_bundle_3']);
+
+export const createStoreSlotIntentSchema = z.object({
+  sku: storeSlotSkuSchema,
+});
+
+export const confirmStoreSlotSchema = z.object({
+  purchaseId: uuidSchema,
+});
+
 export const platformPurchasesAdminFiltersSchema = paginationSchema.extend({
   type: z
-    .enum(['listing_boost', 'featured_slot', 'fast_track_verification'])
+    .enum([
+      'listing_boost',
+      'featured_slot',
+      'fast_track_verification',
+      'store_slot_2',
+      'store_slot_3',
+      'store_bundle_3',
+    ])
     .optional(),
   status: z.enum(['pending', 'succeeded', 'failed', 'refunded']).optional(),
   userId: uuidSchema.optional(),
@@ -92,6 +112,8 @@ export type ConfirmBoostInput = z.infer<typeof confirmBoostSchema>;
 export type CreateFeaturedIntentInput = z.infer<typeof createFeaturedIntentSchema>;
 export type ConfirmFeaturedInput = z.infer<typeof confirmFeaturedSchema>;
 export type ConfirmFastTrackInput = z.infer<typeof confirmFastTrackSchema>;
+export type CreateStoreSlotIntentInput = z.infer<typeof createStoreSlotIntentSchema>;
+export type ConfirmStoreSlotInput = z.infer<typeof confirmStoreSlotSchema>;
 export type PlatformPurchasesAdminFiltersInput = z.infer<
   typeof platformPurchasesAdminFiltersSchema
 >;

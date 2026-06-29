@@ -59,7 +59,9 @@ export interface SellerStatusHistoryEntry {
 
 export interface SellerVerificationStatus {
   sellerStatus: SellerStatus;
+  /** @deprecated Use approvedListingCount — kept for older clients */
   unverifiedListingCount: number;
+  approvedListingCount: number;
   sellerLimit: number;
   phoneVerified: boolean;
   emailVerified: boolean;

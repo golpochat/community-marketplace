@@ -697,7 +697,7 @@ export function SellerVerificationPage() {
       {status && status.sellerStatus !== "verified" && (
         <VerificationProgressBar
           className="mb-4"
-          used={status.unverifiedListingCount}
+          used={status.approvedListingCount ?? status.unverifiedListingCount}
           limit={status.sellerLimit}
         />
       )}

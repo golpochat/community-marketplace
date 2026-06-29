@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 
-import type { SellerVerificationStatus, UserProfile } from '@community-marketplace/types';
-import { formatLocationLabel } from '@community-marketplace/utils';
+import type { SellerStore, SellerVerificationStatus, UserProfile } from '@community-marketplace/types';
 import { Card } from '@community-marketplace/ui-dashboard';
 
+import { isStorefrontComplete } from '@/hooks/use-seller-store-data';
 import type { SellerListingsSummary } from '@/hooks/use-seller-profile-data';
 import { getPublicStorefrontPath } from '@/lib/storefront-path';
 import { SELLER_ROUTES } from '@/lib/seller-routes';
@@ -16,25 +16,26 @@ interface SellerDashboardSummaryProps {
   profile: UserProfile;
   verification: SellerVerificationStatus;
   listingsSummary: SellerListingsSummary;
+  primaryStore?: SellerStore | null;
 }
 
 export function SellerDashboardSummary({
   profile,
   verification,
   listingsSummary,
+  primaryStore,
 }: SellerDashboardSummaryProps) {
-  const storeComplete = Boolean(
-    profile.avatarUrl && profile.displayName?.trim() && profile.bio?.trim(),
-  );
+  const storeComplete = isStorefrontComplete(primaryStore);
+  const previewPath = getPublicStorefrontPath(primaryStore?.slug ?? profile.id);
 
   return (
     <div className="mb-6 grid gap-4 lg:grid-cols-3">
       <Card title="Storefront">
         <div className="flex gap-3">
-          {profile.avatarUrl ? (
+          {primaryStore?.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={profile.avatarUrl}
+              src={primaryStore.logoUrl}
               alt=""
               className="h-12 w-12 rounded-lg object-cover"
             />
@@ -44,9 +45,9 @@ export function SellerDashboardSummary({
             </div>
           )}
           <div className="min-w-0 flex-1 text-sm">
-            <p className="font-semibold">{profile.displayName ?? 'Your store'}</p>
+            <p className="font-semibold">{primaryStore?.name ?? 'Your store'}</p>
             <p className="truncate text-[hsl(var(--dashboard-sidebar-muted))]">
-              {profile.bio?.trim() || 'Add a store description'}
+              {primaryStore?.description?.trim() || 'Add a store description'}
             </p>
           </div>
         </div>
@@ -58,7 +59,7 @@ export function SellerDashboardSummary({
             {storeComplete ? 'Edit storefront' : 'Complete storefront →'}
           </Link>
           <Link
-            href={getPublicStorefrontPath(profile.id)}
+            href={previewPath}
             target="_blank"
             rel="noopener noreferrer"
             className="text-[hsl(var(--dashboard-sidebar-muted))] hover:underline"
@@ -68,14 +69,12 @@ export function SellerDashboardSummary({
         </div>
       </Card>
 
-      <Card title="Verification">
+      <Card title="Account">
         <div className="space-y-2 text-sm">
           <SellerProfileStatusBadge status={verification.sellerStatus} />
-          {profile.location?.label ? (
-            <p className="text-[hsl(var(--dashboard-sidebar-muted))]">
-              {formatLocationLabel(profile.location.label)}
-            </p>
-          ) : null}
+          <p className="text-[hsl(var(--dashboard-sidebar-muted))]">
+            {profile.displayName?.trim() || 'Add your display name in Profile'}
+          </p>
         </div>
         {verification.sellerStatus !== 'verified' && (
           <Link

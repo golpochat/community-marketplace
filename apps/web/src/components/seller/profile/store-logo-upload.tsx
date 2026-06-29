@@ -4,18 +4,20 @@ import { useRef, useState } from 'react';
 
 import { Button } from '@community-marketplace/ui';
 
+import { sellerService } from '@/services/marketplace.service';
 import { userService } from '@/services/user.service';
 import { useAuthStore } from '@/store/auth.store';
 
 interface StoreLogoUploadProps {
-  avatarUrl?: string | null;
-  displayName?: string | null;
-  onUpdated: (avatarUrl: string) => void;
+  logoUrl?: string | null;
+  storeName?: string | null;
+  storeId?: string;
+  onUpdated: (logoUrl: string) => void;
 }
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
-export function StoreLogoUpload({ avatarUrl, displayName, onUpdated }: StoreLogoUploadProps) {
+export function StoreLogoUpload({ logoUrl, storeName, storeId, onUpdated }: StoreLogoUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,10 +41,15 @@ export function StoreLogoUpload({ avatarUrl, displayName, onUpdated }: StoreLogo
     setError(null);
     try {
       const updated = await userService.uploadAvatar(file);
-      if (updated.avatarUrl) {
-        useAuthStore.getState().updateUser({ avatarUrl: updated.avatarUrl });
-        onUpdated(updated.avatarUrl);
+      const nextLogoUrl = updated.avatarUrl;
+      if (!nextLogoUrl) {
+        throw new Error('Logo upload did not return a URL');
       }
+      if (storeId) {
+        await sellerService.updateStore(storeId, { logoUrl: nextLogoUrl });
+      }
+      useAuthStore.getState().updateUser({ avatarUrl: nextLogoUrl });
+      onUpdated(nextLogoUrl);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload logo');
     } finally {
@@ -50,16 +57,16 @@ export function StoreLogoUpload({ avatarUrl, displayName, onUpdated }: StoreLogo
     }
   }
 
-  const initials = (displayName ?? 'Store').slice(0, 2).toUpperCase();
+  const initials = (storeName ?? 'Store').slice(0, 2).toUpperCase();
 
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium text-gray-700">Store logo</p>
       <div className="flex items-center gap-4">
-        {avatarUrl ? (
+        {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={avatarUrl}
+            src={logoUrl}
             alt=""
             className="h-16 w-16 rounded-lg border object-cover"
           />
@@ -83,7 +90,7 @@ export function StoreLogoUpload({ avatarUrl, displayName, onUpdated }: StoreLogo
             disabled={uploading}
             onClick={() => inputRef.current?.click()}
           >
-            {uploading ? 'Uploading…' : avatarUrl ? 'Change logo' : 'Upload logo'}
+            {uploading ? 'Uploading…' : logoUrl ? 'Change logo' : 'Upload logo'}
           </Button>
           <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
             Square image recommended. JPEG, PNG, or WebP up to 5 MB.

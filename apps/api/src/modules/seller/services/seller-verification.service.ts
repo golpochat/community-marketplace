@@ -447,7 +447,8 @@ export class SellerVerificationService {
       verificationRequestedAt: row.user.verificationRequestedAt?.toISOString(),
       verificationCompletedAt: row.user.verificationCompletedAt?.toISOString(),
       rejectionReason: row.rejectionReason ?? row.user.verificationRejectedReason ?? undefined,
-      unverifiedListingCount: row.user.unverifiedListingCount,
+      unverifiedListingCount:
+        row.user.approvedListingCount ?? row.user.unverifiedListingCount,
       sellerLimit: row.user.sellerLimit,
       totalListings: row.user._count.listings,
       joinedAt: row.user.createdAt.toISOString(),
@@ -489,7 +490,8 @@ export class SellerVerificationService {
       verificationRequestedAt: user.verificationRequestedAt?.toISOString(),
       verificationCompletedAt: user.verificationCompletedAt?.toISOString(),
       rejectionReason: request?.rejectionReason ?? user.verificationRejectedReason ?? undefined,
-      unverifiedListingCount: user.unverifiedListingCount,
+      unverifiedListingCount:
+        user.approvedListingCount ?? user.unverifiedListingCount,
       sellerLimit: user.sellerLimit,
       totalListings: user._count.listings,
       joinedAt: user.createdAt.toISOString(),
@@ -705,6 +707,7 @@ export class SellerVerificationService {
       where: { id: parsed.userId },
       select: {
         sellerLimit: true,
+        approvedListingCount: true,
         unverifiedListingCount: true,
         sellerStatus: true,
       },
@@ -713,7 +716,13 @@ export class SellerVerificationService {
     const user = await this.prisma.user.update({
       where: { id: parsed.userId },
       data: { sellerLimit: parsed.sellerLimit },
-      select: { id: true, sellerLimit: true, unverifiedListingCount: true, sellerStatus: true },
+      select: {
+        id: true,
+        sellerLimit: true,
+        approvedListingCount: true,
+        unverifiedListingCount: true,
+        sellerStatus: true,
+      },
     });
 
     await this.statusHistory.logChange({
@@ -726,10 +735,9 @@ export class SellerVerificationService {
         `Listing limit changed from ${before.sellerLimit} to ${parsed.sellerLimit}`,
     });
 
-    if (
-      user.sellerStatus === 'unverified' &&
-      user.unverifiedListingCount >= user.sellerLimit
-    ) {
+    const approvedCount =
+      user.approvedListingCount ?? user.unverifiedListingCount ?? 0;
+    if (user.sellerStatus === 'unverified' && approvedCount >= user.sellerLimit) {
       await this.listingGate.transitionStatus(
         parsed.userId,
         user.sellerStatus,

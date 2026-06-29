@@ -56,7 +56,8 @@ export class ListingLifecycleService {
     private readonly autoModeration: ListingAutoModerationService,
   ) {}
 
-  submitForReview(listingId: string, sellerId: string): Promise<Listing> {
+  async submitForReview(listingId: string, sellerId: string): Promise<Listing> {
+    await this.sellerListingGate.assertCanSubmitForReview(sellerId);
     return this.transition({
       listingId,
       actorId: sellerId,
@@ -470,6 +471,12 @@ export class ListingLifecycleService {
       );
     }
 
+    const isFirstActivation = !listing.activatedAt;
+    await this.sellerListingGate.assertCanActivateListing(
+      listing.sellerId,
+      isFirstActivation,
+    );
+
     const now = new Date();
     const packageType = listing.packageType as ListingPackageType;
     const expiresAt = computeExpiresAt(now, packageType);
@@ -505,6 +512,17 @@ export class ListingLifecycleService {
       toStatus: 'active',
     });
 
+    if (isFirstActivation) {
+      const gateResult = await this.sellerListingGate.onListingActivated(listing.sellerId);
+      if (gateResult.nudgeMessage) {
+        this.eventBus.publish({
+          type: 'seller.verification_nudge',
+          payload: { sellerId: listing.sellerId, message: gateResult.nudgeMessage },
+          timestamp: new Date(),
+        });
+      }
+    }
+
     this.publishEvents(listingId, listing.sellerId, 'listing.approved');
     this.publishEvents(listingId, listing.sellerId, 'listing.updated');
 
@@ -530,6 +548,12 @@ export class ListingLifecycleService {
     if (changedByType === 'SELLER' && listing.sellerId !== actorId) {
       throw new ForbiddenException('You can only modify your own listings');
     }
+
+    const isFirstActivation = !listing.activatedAt;
+    await this.sellerListingGate.assertCanActivateListing(
+      listing.sellerId,
+      isFirstActivation,
+    );
 
     const now = new Date();
     const packageType = listing.packageType as ListingPackageType;
@@ -563,6 +587,17 @@ export class ListingLifecycleService {
       fromStatus,
       toStatus: 'active',
     });
+
+    if (isFirstActivation) {
+      const gateResult = await this.sellerListingGate.onListingActivated(listing.sellerId);
+      if (gateResult.nudgeMessage) {
+        this.eventBus.publish({
+          type: 'seller.verification_nudge',
+          payload: { sellerId: listing.sellerId, message: gateResult.nudgeMessage },
+          timestamp: new Date(),
+        });
+      }
+    }
 
     this.publishEvents(listingId, listing.sellerId, 'listing.approved');
     this.publishEvents(listingId, listing.sellerId, 'listing.updated');

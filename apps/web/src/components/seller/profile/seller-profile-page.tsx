@@ -25,8 +25,8 @@ export function SellerProfilePage() {
       onOpenVerification={() => {
         window.location.href = SELLER_ROUTES.verification;
       }}
-      editProfileDescription="Update your personal display name and bio. Store branding is managed in Storefront."
-      storefrontHint="Store logo, banner, and shop details are edited in Storefront."
+      editProfileDescription="Update your personal display name and bio. Your shop brand is managed in Storefront."
+      storefrontHint="Store logo, banner, and shop name are edited in Storefront — not here."
     />
   );
 }

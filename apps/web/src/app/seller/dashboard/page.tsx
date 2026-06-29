@@ -7,11 +7,13 @@ import { SellerDashboardSummary } from '@/components/seller/seller-dashboard-sum
 import { SellerVerificationBanner } from '@/components/seller/seller-verification-banner';
 import { useSellerDashboardStats } from '@/hooks/use-seller-dashboard-stats';
 import { useSellerProfileData } from '@/hooks/use-seller-profile-data';
+import { useSellerStoreData } from '@/hooks/use-seller-store-data';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
 export default function SellerDashboardPage() {
   const { profile, verification, listingsSummary, loading: profileLoading, error } =
     useSellerProfileData();
+  const { primaryStore } = useSellerStoreData();
   const { stats, loading: statsLoading } = useSellerDashboardStats();
 
   return (
@@ -35,6 +37,7 @@ export default function SellerDashboardPage() {
           profile={profile}
           verification={verification}
           listingsSummary={listingsSummary}
+          primaryStore={primaryStore}
         />
       )}
       <SellerDashboardCards stats={stats} loading={statsLoading} />

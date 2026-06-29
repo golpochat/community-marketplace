@@ -15,13 +15,16 @@ import type {
   FeaturedIntentResponse,
   FeaturedPlacement,
   PlatformPurchase,
+  StoreSlotIntentResponse,
 } from '@community-marketplace/types';
 import type {
   ConfirmBoostInput,
   ConfirmFastTrackInput,
   ConfirmFeaturedInput,
+  ConfirmStoreSlotInput,
   CreateBoostIntentInput,
   CreateFeaturedIntentInput,
+  CreateStoreSlotIntentInput,
 } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../../database/prisma.service';
@@ -45,6 +48,9 @@ import {
 import { FeaturedCatalogService } from './featured-catalog.service';
 import { FeaturedFulfillmentService } from './featured-fulfillment.service';
 import { PlatformSettingsService } from './platform-settings.service';
+import { StoreSlotCatalogService } from './store-slot-catalog.service';
+import { StoreSlotFulfillmentService } from './store-slot-fulfillment.service';
+import { slotsGrantedBySku, targetStoreSlotLimit } from '../lib/store-slot.lib';
 
 const DAILY_INTENT_LIMIT = 10;
 
@@ -58,6 +64,8 @@ export class PlatformPurchaseService {
     private readonly boostFulfillment: BoostFulfillmentService,
     private readonly featuredFulfillment: FeaturedFulfillmentService,
     private readonly fastTrackFulfillment: FastTrackFulfillmentService,
+    private readonly storeSlotCatalog: StoreSlotCatalogService,
+    private readonly storeSlotFulfillment: StoreSlotFulfillmentService,
     private readonly stripeConnect: StripeConnectService,
   ) {}
 
@@ -306,6 +314,72 @@ export class PlatformPurchaseService {
     );
   }
 
+  async getStoreSlotCatalog(sellerId: string) {
+    return this.storeSlotCatalog.getCatalog(sellerId);
+  }
+
+  async createStoreSlotIntent(
+    sellerId: string,
+    dto: CreateStoreSlotIntentInput,
+  ): Promise<StoreSlotIntentResponse> {
+    await this.assertIntentRateLimit(sellerId, dto.sku);
+    const amount = await this.storeSlotCatalog.assertSkuEligible(sellerId, dto.sku);
+
+    const settings = await this.settings.get();
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: sellerId },
+      select: { storeSlotLimit: true },
+    });
+    const slotsGranted = slotsGrantedBySku(dto.sku, user.storeSlotLimit);
+    const targetLimit = targetStoreSlotLimit(dto.sku);
+
+    const purchase = await this.prisma.platformPurchase.create({
+      data: {
+        userId: sellerId,
+        type: dto.sku,
+        status: 'pending',
+        amount,
+        currency: settings.pricing.currency.toUpperCase(),
+        metadata: {
+          sku: dto.sku,
+          slotsGranted,
+          targetStoreSlotLimit: targetLimit,
+          priceAtPurchase: amount,
+        },
+      },
+    });
+
+    const { providerPaymentId, clientSecret } = await this.createStripeIntent(
+      amount,
+      settings.pricing.currency,
+      {
+        type: dto.sku,
+        userId: sellerId,
+        platformPurchaseId: purchase.id,
+      },
+      'store_slot',
+    );
+
+    const updated = await this.prisma.platformPurchase.update({
+      where: { id: purchase.id },
+      data: { providerPaymentId, clientSecret },
+    });
+
+    return {
+      purchase: mapPlatformPurchase(updated),
+      clientSecret,
+    };
+  }
+
+  async confirmStoreSlot(
+    sellerId: string,
+    dto: ConfirmStoreSlotInput,
+  ): Promise<PlatformPurchase> {
+    return this.confirmPurchase(sellerId, dto.purchaseId, (id) =>
+      this.storeSlotFulfillment.fulfillStoreSlot(id),
+    );
+  }
+
   async handlePaymentIntentSucceeded(providerPaymentId: string): Promise<boolean> {
     const purchase = await this.prisma.platformPurchase.findFirst({
       where: { providerPaymentId },
@@ -319,6 +393,10 @@ export class PlatformPurchaseService {
         return this.featuredFulfillment.fulfillFeaturedSlot(purchase.id);
       case 'fast_track_verification':
         return this.fastTrackFulfillment.fulfillFastTrack(purchase.id);
+      case 'store_slot_2':
+      case 'store_slot_3':
+      case 'store_bundle_3':
+        return this.storeSlotFulfillment.fulfillStoreSlot(purchase.id);
       default:
         return false;
     }
@@ -339,7 +417,13 @@ export class PlatformPurchaseService {
   async listAdmin(filters: {
     page: number;
     limit: number;
-    type?: 'listing_boost' | 'featured_slot' | 'fast_track_verification';
+    type?:
+      | 'listing_boost'
+      | 'featured_slot'
+      | 'fast_track_verification'
+      | 'store_slot_2'
+      | 'store_slot_3'
+      | 'store_bundle_3';
     status?: 'pending' | 'succeeded' | 'failed' | 'refunded';
     userId?: string;
   }) {
@@ -431,7 +515,13 @@ export class PlatformPurchaseService {
 
   private async assertIntentRateLimit(
     sellerId: string,
-    type: 'listing_boost' | 'featured_slot' | 'fast_track_verification',
+    type:
+      | 'listing_boost'
+      | 'featured_slot'
+      | 'fast_track_verification'
+      | 'store_slot_2'
+      | 'store_slot_3'
+      | 'store_bundle_3',
   ) {
     const since = new Date();
     since.setHours(since.getHours() - 24);

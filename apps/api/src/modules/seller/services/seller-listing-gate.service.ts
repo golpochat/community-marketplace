@@ -31,6 +31,30 @@ export class SellerListingGateService {
     }
   }
 
+  async assertCanSubmitForReview(sellerId: string): Promise<void> {
+    const result = await this.checkCanPublishListing(sellerId);
+    if (!result.allowed) {
+      throw new ForbiddenException({
+        message: result.blockMessage,
+        code: result.blockCode,
+      });
+    }
+  }
+
+  async assertCanActivateListing(
+    sellerId: string,
+    isFirstActivation: boolean,
+  ): Promise<void> {
+    if (!isFirstActivation) return;
+    const result = await this.checkCanPublishListing(sellerId);
+    if (!result.allowed) {
+      throw new ForbiddenException({
+        message: result.blockMessage,
+        code: result.blockCode,
+      });
+    }
+  }
+
   /** Blocks all seller listing mutations when the account is suspended. */
   async assertSellerNotSuspended(sellerId: string): Promise<void> {
     const seller = await this.getSellerFields(sellerId);
@@ -46,6 +70,7 @@ export class SellerListingGateService {
     }
   }
 
+  /** Draft create / duplicate — account status only; no slot consumption. */
   async checkCanCreateListing(sellerId: string): Promise<SellerListingGateResult> {
     const seller = await this.getSellerFields(sellerId);
     if (!seller) {
@@ -54,25 +79,8 @@ export class SellerListingGateService {
 
     switch (seller.sellerStatus) {
       case 'verified':
+      case 'unverified':
         return { allowed: true };
-
-      case 'unverified': {
-        if (seller.unverifiedListingCount >= seller.sellerLimit) {
-          await this.transitionStatus(
-            sellerId,
-            seller.sellerStatus,
-            'verification_required',
-            null,
-            SELLER_VERIFICATION_MESSAGES.MAX_UNVERIFIED,
-          );
-          return {
-            allowed: false,
-            blockMessage: SELLER_VERIFICATION_MESSAGES.BLOCK_VERIFICATION_REQUIRED,
-            blockCode: 'VERIFICATION_REQUIRED',
-          };
-        }
-        return { allowed: true };
-      }
 
       case 'verification_required':
         return {
@@ -100,18 +108,65 @@ export class SellerListingGateService {
     }
   }
 
-  async onListingCreated(sellerId: string): Promise<{ nudgeMessage?: string }> {
+  /** Submit for review or first-time publish — counts approved live slots. */
+  async checkCanPublishListing(sellerId: string): Promise<SellerListingGateResult> {
     const seller = await this.getSellerFields(sellerId);
-    if (!seller || seller.sellerStatus !== 'unverified') {
+    if (!seller) {
+      throw new NotFoundException('Seller not found');
+    }
+
+    if (seller.sellerStatus === 'verified') {
+      return { allowed: true };
+    }
+
+    if (seller.sellerStatus === 'suspended') {
+      return {
+        allowed: false,
+        blockMessage: seller.verificationRejectedReason ?? 'Your seller account is suspended.',
+        blockCode: 'SELLER_SUSPENDED',
+      };
+    }
+
+    if (seller.sellerStatus === 'under_review') {
+      return {
+        allowed: false,
+        blockMessage: SELLER_VERIFICATION_MESSAGES.UNDER_REVIEW,
+        blockCode: 'UNDER_REVIEW',
+      };
+    }
+
+    if (seller.approvedListingCount >= seller.sellerLimit) {
+      if (seller.sellerStatus === 'unverified') {
+        await this.transitionStatus(
+          sellerId,
+          seller.sellerStatus,
+          'verification_required',
+          null,
+          SELLER_VERIFICATION_MESSAGES.MAX_UNVERIFIED,
+        );
+      }
+      return {
+        allowed: false,
+        blockMessage: SELLER_VERIFICATION_MESSAGES.BLOCK_VERIFICATION_REQUIRED,
+        blockCode: 'VERIFICATION_REQUIRED',
+      };
+    }
+
+    return { allowed: true };
+  }
+
+  async onListingActivated(sellerId: string): Promise<{ nudgeMessage?: string }> {
+    const seller = await this.getSellerFields(sellerId);
+    if (!seller || seller.sellerStatus === 'verified') {
       return {};
     }
 
-    const newCount = seller.unverifiedListingCount + 1;
+    const newCount = seller.approvedListingCount + 1;
 
     if (newCount >= seller.sellerLimit) {
       await this.prisma.user.update({
         where: { id: sellerId },
-        data: { unverifiedListingCount: newCount },
+        data: { approvedListingCount: newCount },
       });
       await this.transitionStatus(
         sellerId,
@@ -123,11 +178,16 @@ export class SellerListingGateService {
     } else {
       await this.prisma.user.update({
         where: { id: sellerId },
-        data: { unverifiedListingCount: newCount },
+        data: { approvedListingCount: newCount },
       });
     }
 
     return { nudgeMessage: this.getNudgeMessage(newCount, seller.sellerLimit) };
+  }
+
+  /** @deprecated Listing slots are counted on activation, not create. */
+  async onListingCreated(_sellerId: string): Promise<{ nudgeMessage?: string }> {
+    return {};
   }
 
   getNudgeMessage(count: number, limit: number): string | undefined {
@@ -136,6 +196,13 @@ export class SellerListingGateService {
     if (count === limit - 1) return SELLER_VERIFICATION_MESSAGES.NUDGE_ONE_LEFT;
     if (count === limit) return SELLER_VERIFICATION_MESSAGES.NUDGE_LIMIT_REACHED;
     return undefined;
+  }
+
+  getApprovedCountForStatus(user: {
+    approvedListingCount: number;
+    unverifiedListingCount: number;
+  }): number {
+    return user.approvedListingCount ?? user.unverifiedListingCount ?? 0;
   }
 
   async transitionStatus(
@@ -170,6 +237,7 @@ export class SellerListingGateService {
       where: { id: sellerId },
       select: {
         sellerStatus: true,
+        approvedListingCount: true,
         unverifiedListingCount: true,
         sellerLimit: true,
         verificationRejectedReason: true,
@@ -202,6 +270,7 @@ export class SellerVerificationStatusService {
     const emailVerified = user.emailVerified || Boolean(user.emailVerifiedAt);
     const pendingRequest = user.sellerVerificationRequests[0] ?? null;
     const verificationSubmitted = Boolean(user.verificationRequestedAt);
+    const approvedListingCount = this.listingGate.getApprovedCountForStatus(user);
 
     const currentStage = this.resolveStage({
       phoneVerified,
@@ -213,15 +282,13 @@ export class SellerVerificationStatusService {
 
     const nudgeMessage =
       user.sellerStatus === 'unverified'
-        ? this.listingGate.getNudgeMessage(
-            user.unverifiedListingCount,
-            user.sellerLimit,
-          )
+        ? this.listingGate.getNudgeMessage(approvedListingCount, user.sellerLimit)
         : undefined;
 
     return {
       sellerStatus: user.sellerStatus,
-      unverifiedListingCount: user.unverifiedListingCount,
+      approvedListingCount,
+      unverifiedListingCount: approvedListingCount,
       sellerLimit: user.sellerLimit,
       phoneVerified,
       emailVerified,

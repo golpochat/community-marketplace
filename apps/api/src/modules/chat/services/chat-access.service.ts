@@ -120,6 +120,7 @@ export class ChatAccessService {
       where: { id: sellerId },
       select: {
         sellerStatus: true,
+        approvedListingCount: true,
         unverifiedListingCount: true,
         sellerLimit: true,
       },
@@ -130,9 +131,11 @@ export class ChatAccessService {
       return;
     }
 
+    const approvedCount = seller.approvedListingCount ?? seller.unverifiedListingCount ?? 0;
+
     if (
       seller.sellerStatus === 'unverified' &&
-      seller.unverifiedListingCount < seller.sellerLimit
+      approvedCount < seller.sellerLimit
     ) {
       return;
     }

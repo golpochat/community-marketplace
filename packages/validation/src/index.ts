@@ -274,6 +274,9 @@ export {
   createFeaturedIntentSchema,
   confirmFeaturedSchema,
   confirmFastTrackSchema,
+  storeSlotSkuSchema,
+  createStoreSlotIntentSchema,
+  confirmStoreSlotSchema,
   featuredListingsQuerySchema,
   platformPurchasesAdminFiltersSchema,
   type PlatformSettingsUpdateInput,
@@ -283,6 +286,8 @@ export {
   type CreateFeaturedIntentInput,
   type ConfirmFeaturedInput,
   type ConfirmFastTrackInput,
+  type CreateStoreSlotIntentInput,
+  type ConfirmStoreSlotInput,
   type FeaturedListingsQueryInput,
   type PlatformPurchasesAdminFiltersInput,
 } from './monetization.schema';

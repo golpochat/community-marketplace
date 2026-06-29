@@ -11,11 +11,14 @@ import type {
   MonetizationSettings,
   PlatformPurchase,
   SellerPlatformFeeInfo,
+  StoreSlotCatalogResponse,
+  StoreSlotIntentResponse,
   WalletTransaction,
 } from '@community-marketplace/types';
 import type {
   CreateBoostIntentInput,
   CreateFeaturedIntentInput,
+  CreateStoreSlotIntentInput,
   PlatformSettingsUpdateInput,
 } from '@community-marketplace/validation';
 import type { PaginatedResult } from '@community-marketplace/types';
@@ -106,6 +109,29 @@ export const monetizationService = {
 
   async confirmFastTrack(purchaseId: string): Promise<PlatformPurchase> {
     const response = await apiClient<PlatformPurchase>(WEB_API_ROUTES.seller.fastTrackConfirm, {
+      method: 'POST',
+      body: JSON.stringify({ purchaseId }),
+    });
+    return response.data!;
+  },
+
+  async getStoreSlotCatalog(): Promise<StoreSlotCatalogResponse> {
+    const response = await apiClient<StoreSlotCatalogResponse>(
+      WEB_API_ROUTES.seller.storeSlotCatalog,
+    );
+    return response.data!;
+  },
+
+  async createStoreSlotIntent(body: CreateStoreSlotIntentInput): Promise<StoreSlotIntentResponse> {
+    const response = await apiClient<StoreSlotIntentResponse>(WEB_API_ROUTES.seller.storeSlotIntent, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return response.data!;
+  },
+
+  async confirmStoreSlot(purchaseId: string): Promise<PlatformPurchase> {
+    const response = await apiClient<PlatformPurchase>(WEB_API_ROUTES.seller.storeSlotConfirm, {
       method: 'POST',
       body: JSON.stringify({ purchaseId }),
     });

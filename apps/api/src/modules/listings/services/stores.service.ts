@@ -27,6 +27,40 @@ import { SellerTrustService } from './seller-trust.service';
 
 type StoreSort = 'newest' | 'price_low_to_high' | 'price_high_to_low';
 
+type StoreContext = {
+  store: {
+    id: string;
+    userId: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    logoUrl: string | null;
+    bannerUrl: string | null;
+    location: string | null;
+  };
+  seller: {
+    id: string;
+    email: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    sellerStatus: SellerStatus;
+    idVerified: boolean;
+    createdAt: Date;
+    profile: {
+      businessName: string | null;
+      businessLogoUrl: string | null;
+      storeBannerUrl: string | null;
+      location: string | null;
+      bio: string | null;
+      phone: string | null;
+      address: string | null;
+      businessWebsite: string | null;
+      isBusinessAccount: boolean;
+    } | null;
+    settings: { communicationPreferences: unknown; privacySettings: unknown } | null;
+  };
+};
+
 @Injectable()
 export class StoresService {
   constructor(
@@ -36,37 +70,31 @@ export class StoresService {
   ) {}
 
   async getBySlug(slug: string): Promise<SellerStorefront> {
-    const seller = await this.resolveSeller(slug);
-    if (!seller) {
+    const context = await this.resolveStoreContext(slug);
+    if (!context) {
       throw new NotFoundException('Store not found');
     }
 
+    const { store, seller } = context;
+
     if (seller.sellerStatus === 'suspended') {
-      return this.buildUnavailableStorefront(seller, slug);
+      return this.buildUnavailableStorefront(store, seller);
     }
 
     const prefs = readStorePrefs(seller.settings?.communicationPreferences);
     const privacy = readPrivacySettings(seller.settings?.privacySettings);
-    const storeSlug = buildStoreSlug({
-      id: seller.id,
-      displayName: seller.displayName,
-      businessName: seller.profile?.businessName,
-      preferredSlug: prefs.storeSlug,
-    });
     const trust = await this.sellerTrust.getProfile(seller.id);
-    const listings = await this.fetchSellerListings(seller.id, 'newest', 1, 48);
-    const sections = await this.fetchCategorySections(seller.id);
+    const listings = await this.fetchStoreListings(store.id, seller.id, 'newest', 1, 48);
+    const sections = await this.fetchCategorySections(store.id, seller.id);
 
     const verified = seller.sellerStatus === 'verified' || seller.idVerified;
-    const locationLabel = seller.profile?.location ?? undefined;
-    const logoUrl =
-      seller.profile?.businessLogoUrl ?? seller.avatarUrl ?? undefined;
-    const bannerUrl = seller.profile?.storeBannerUrl ?? undefined;
+    const logoUrl = store.logoUrl ?? seller.profile?.businessLogoUrl ?? seller.avatarUrl ?? undefined;
+    const bannerUrl = store.bannerUrl ?? seller.profile?.storeBannerUrl ?? undefined;
     const contact = buildStoreContact({
       email: seller.email,
       phone: seller.profile?.phone,
       address: seller.profile?.address,
-      location: seller.profile?.location,
+      location: store.location ?? seller.profile?.location,
       website: seller.profile?.businessWebsite,
       isBusinessAccount: seller.profile?.isBusinessAccount,
       privacy,
@@ -75,14 +103,14 @@ export class StoresService {
     const openingHours = resolveStoreOpeningHours(prefs);
 
     return {
-      id: seller.id,
+      id: store.id,
       sellerId: seller.id,
-      slug: storeSlug,
-      name: getStoreDisplayName(seller),
-      description: seller.profile?.bio?.trim() || 'No store description yet.',
+      slug: store.slug,
+      name: store.name,
+      description: store.description?.trim() || 'No store description yet.',
       logoUrl,
       bannerUrl,
-      location: locationLabel,
+      location: store.location ?? seller.profile?.location ?? undefined,
       memberSince: seller.createdAt.toISOString(),
       verified,
       sellerStatus: seller.sellerStatus as SellerStorefront['sellerStatus'],
@@ -117,19 +145,20 @@ export class StoresService {
     page = 1,
     limit = 24,
   ) {
-    const seller = await this.resolveSeller(slug);
-    if (!seller) {
+    const context = await this.resolveStoreContext(slug);
+    if (!context) {
       throw new NotFoundException('Store not found');
     }
-    if (seller.sellerStatus === 'suspended') {
+    if (context.seller.sellerStatus === 'suspended') {
       return { data: [], meta: { page, limit, total: 0, totalPages: 0 } };
     }
-    return this.fetchSellerListings(seller.id, sort, page, limit);
+    return this.fetchStoreListings(context.store.id, context.seller.id, sort, page, limit);
   }
 
-  private async fetchCategorySections(sellerId: string) {
+  private async fetchCategorySections(storeId: string, sellerId: string) {
     const rows = await this.prisma.listing.findMany({
       where: this.visibility.visibleListingWhere({
+        storeId,
         sellerId,
         seller: {
           status: 'active',
@@ -147,13 +176,15 @@ export class StoresService {
     return buildCategoryStoreSections(rows);
   }
 
-  private async fetchSellerListings(
+  private async fetchStoreListings(
+    storeId: string,
     sellerId: string,
     sort: StoreSort,
     page: number,
     limit: number,
   ) {
     const where = this.visibility.visibleListingWhere({
+      storeId,
       sellerId,
       seller: {
         status: 'active',
@@ -194,59 +225,100 @@ export class StoresService {
     };
   }
 
-  private async resolveSeller(slug: string) {
+  private async resolveStoreContext(slug: string): Promise<StoreContext | null> {
+    const sellerInclude = {
+      profile: true,
+      settings: true,
+      primaryRole: true,
+    } as const;
+
     if (isStoreSlugUuid(slug)) {
-      return this.prisma.user.findFirst({
-        where: { id: slug, primaryRole: { code: 'SELLER' } },
-        include: {
-          profile: true,
-          settings: true,
-          primaryRole: true,
-        },
+      const byStoreId = await this.prisma.store.findFirst({
+        where: { id: slug },
+        include: { user: { include: sellerInclude } },
       });
+      if (byStoreId?.user.primaryRole.code === 'SELLER') {
+        return { store: byStoreId, seller: byStoreId.user };
+      }
+
+      const seller = await this.prisma.user.findFirst({
+        where: { id: slug, primaryRole: { code: 'SELLER' } },
+        include: sellerInclude,
+      });
+      if (!seller) return null;
+      const store = await this.prisma.store.findFirst({
+        where: { userId: seller.id, isPrimary: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (!store) return null;
+      return { store, seller };
     }
 
     const normalized = slugifyStoreName(slug);
+    const store = await this.prisma.store.findFirst({
+      where: {
+        OR: [{ slug: normalized }, { slug }],
+      },
+      include: { user: { include: sellerInclude } },
+    });
+    if (store?.user.primaryRole.code === 'SELLER') {
+      return { store, seller: store.user };
+    }
+
+    return this.resolveLegacyStoreContext(normalized, sellerInclude);
+  }
+
+  private async resolveLegacyStoreContext(
+    normalized: string,
+    sellerInclude: {
+      profile: true;
+      settings: true;
+      primaryRole: true;
+    },
+  ): Promise<StoreContext | null> {
     const sellers = await this.prisma.user.findMany({
       where: { primaryRole: { code: 'SELLER' } },
-      include: {
-        profile: true,
-        settings: true,
-        primaryRole: true,
-      },
+      include: sellerInclude,
       take: 500,
       orderBy: { createdAt: 'asc' },
     });
 
-    return (
-      sellers.find((seller) => {
-        const prefs = readStorePrefs(seller.settings?.communicationPreferences);
-        const candidate = buildStoreSlug({
-          id: seller.id,
-          displayName: seller.displayName,
-          businessName: seller.profile?.businessName,
-          preferredSlug: prefs.storeSlug,
-        });
-        return candidate === normalized || slugifyStoreName(getStoreDisplayName(seller)) === normalized;
-      }) ?? null
-    );
+    const seller = sellers.find((row) => {
+      const prefs = readStorePrefs(row.settings?.communicationPreferences);
+      const candidate = buildStoreSlug({
+        id: row.id,
+        displayName: row.displayName,
+        businessName: row.profile?.businessName,
+        preferredSlug: prefs.storeSlug,
+      });
+      return candidate === normalized || slugifyStoreName(getStoreDisplayName(row)) === normalized;
+    });
+
+    if (!seller) return null;
+
+    const store =
+      (await this.prisma.store.findFirst({
+        where: { userId: seller.id, isPrimary: true },
+        orderBy: { createdAt: 'asc' },
+      })) ??
+      (await this.prisma.store.findFirst({
+        where: { userId: seller.id },
+        orderBy: { createdAt: 'asc' },
+      }));
+
+    if (!store) return null;
+    return { store, seller };
   }
 
   private buildUnavailableStorefront(
-    seller: {
-      id: string;
-      displayName: string | null;
-      email: string;
-      sellerStatus: SellerStatus;
-      profile: { businessName: string | null } | null;
-    },
-    slug: string,
+    store: StoreContext['store'],
+    seller: StoreContext['seller'],
   ): SellerStorefront {
     return {
-      id: seller.id,
+      id: store.id,
       sellerId: seller.id,
-      slug,
-      name: getStoreDisplayName(seller),
+      slug: store.slug,
+      name: store.name,
       description: '',
       memberSince: '',
       verified: false,

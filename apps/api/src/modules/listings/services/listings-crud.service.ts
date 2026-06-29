@@ -482,9 +482,15 @@ export class ListingsCrudService {
     actorRole: RbacRole,
   ): Promise<void> {
     const isAdmin = actorRole === "ADMIN" || actorRole === "SUPER_ADMIN";
-    await this.getOwnedOrAdmin(listingId, actorId, actorRole);
+    const listing = await this.getOwnedOrAdmin(listingId, actorId, actorRole);
     if (!isAdmin) {
       await this.sellerListingGate.assertSellerNotSuspended(actorId);
+      const deletable = new Set(["draft", "rejected"]);
+      if (!deletable.has(listing.status)) {
+        throw new BadRequestException(
+          "Published listings cannot be deleted. Pause or end the listing instead.",
+        );
+      }
     }
     await this.prisma.listing.delete({ where: { id: listingId } });
 

@@ -11,6 +11,7 @@ import { BuyerWalletController } from './buyer-wallet.controller';
 import { SellerBoostsController } from './seller-boosts.controller';
 import { SellerFeaturedController } from './seller-featured.controller';
 import { SellerFastTrackController } from './seller-fast-track.controller';
+import { SellerStoreSlotsController } from './seller-store-slots.controller';
 import { CashbackEventsListener } from './listeners/cashback-events.listener';
 import { VerificationFeeListener } from './listeners/verification-fee.listener';
 import { MonetizationService } from './monetization.service';
@@ -27,6 +28,8 @@ import { CashbackJobsService } from './services/cashback-jobs.service';
 import { PlatformFeeService } from './services/platform-fee.service';
 import { PlatformPurchaseService } from './services/platform-purchase.service';
 import { PlatformSettingsService } from './services/platform-settings.service';
+import { StoreSlotCatalogService } from './services/store-slot-catalog.service';
+import { StoreSlotFulfillmentService } from './services/store-slot-fulfillment.service';
 
 @Module({
   imports: [
@@ -43,6 +46,7 @@ import { PlatformSettingsService } from './services/platform-settings.service';
     SellerBoostsController,
     SellerFeaturedController,
     SellerFastTrackController,
+    SellerStoreSlotsController,
   ],
   providers: [
     MonetizationService,
@@ -58,6 +62,8 @@ import { PlatformSettingsService } from './services/platform-settings.service';
     FeaturedFulfillmentService,
     FeaturedExpiryJobService,
     FastTrackFulfillmentService,
+    StoreSlotCatalogService,
+    StoreSlotFulfillmentService,
     PlatformPurchaseService,
     BoostExpiryJobService,
     VerificationFeeListener,

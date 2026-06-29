@@ -2,12 +2,12 @@
 
 import { PageHeader } from '@community-marketplace/ui-dashboard';
 
-import { useSellerProfileData } from '@/hooks/use-seller-profile-data';
+import { useSellerStoreData } from '@/hooks/use-seller-store-data';
 
 import { SellerStorefrontSettings } from './seller-storefront-settings';
 
 export function SellerStorefrontPage() {
-  const { profile, loading, error, reload } = useSellerProfileData();
+  const { primaryStore, limits, loading, error, reload } = useSellerStoreData();
 
   return (
     <>
@@ -20,7 +20,11 @@ export function SellerStorefrontPage() {
       )}
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
       {!loading && (
-        <SellerStorefrontSettings profile={profile} onSaved={() => void reload()} />
+        <SellerStorefrontSettings
+          store={primaryStore}
+          limits={limits}
+          onSaved={() => void reload()}
+        />
       )}
     </>
   );

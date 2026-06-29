@@ -80,6 +80,9 @@ export function mergePricingUpdate(
     featuredHomepagePrice?: number;
     featuredCategoryPrice?: number;
     fastTrackVerificationPrice?: number;
+    storeSlot2Price?: number;
+    storeSlot3Price?: number;
+    storeBundle3Price?: number;
     homepageSlotsPerDay?: number;
     categorySlotsPerDay?: number;
   },
@@ -111,6 +114,24 @@ export function mergePricingUpdate(
     next.skus.fast_track_verification = {
       ...next.skus.fast_track_verification,
       amount: roundMoney(input.fastTrackVerificationPrice),
+    };
+  }
+  if (input.storeSlot2Price !== undefined) {
+    next.skus.store_slot_2 = {
+      ...(next.skus.store_slot_2 ?? { enabled: true }),
+      amount: roundMoney(input.storeSlot2Price),
+    };
+  }
+  if (input.storeSlot3Price !== undefined) {
+    next.skus.store_slot_3 = {
+      ...(next.skus.store_slot_3 ?? { enabled: true }),
+      amount: roundMoney(input.storeSlot3Price),
+    };
+  }
+  if (input.storeBundle3Price !== undefined) {
+    next.skus.store_bundle_3 = {
+      ...(next.skus.store_bundle_3 ?? { enabled: true }),
+      amount: roundMoney(input.storeBundle3Price),
     };
   }
   if (input.homepageSlotsPerDay !== undefined) {
