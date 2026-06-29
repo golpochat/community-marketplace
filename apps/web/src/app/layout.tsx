@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import { APP_NAME, PLATFORM_LOCALE } from '@community-marketplace/config';
 
 import { ServiceWorkerCleanup } from '@/components/dev/service-worker-cleanup';
+import { ServiceWorkerRecovery } from '@/components/pwa/service-worker-recovery';
 import { AppProviders } from '@/providers/app-providers';
 
 import './globals.css';
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang={PLATFORM_LOCALE}>
       <body className={`${inter.variable} font-sans`}>
+        <ServiceWorkerRecovery />
         {process.env.NODE_ENV === 'development' ? (
           <script
             dangerouslySetInnerHTML={{
