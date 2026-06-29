@@ -35,8 +35,14 @@ else
 fi
 
 echo "==> Applying database migrations"
-docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" \
-  run --rm api npx prisma migrate deploy
+docker build -f "$ROOT_DIR/infra/docker/Dockerfile.api" --target builder -t cm-api-migrate "$ROOT_DIR"
+# shellcheck disable=SC1091
+set -a && source "$COMPOSE_DIR/$ENV_FILE" && set +a
+docker run --rm \
+  --network "community-marketplace-prod_cm-network" \
+  -e "DATABASE_URL=postgresql://cm:${POSTGRES_PASSWORD}@postgres:5432/community_marketplace" \
+  cm-api-migrate \
+  sh -c "cd apps/api && pnpm exec prisma migrate deploy"
 
 echo "==> Restarting app services"
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" up -d api worker web
