@@ -175,6 +175,48 @@ export async function runDevUsersSeed(prisma: PrismaClient): Promise<DevUsersSee
           },
         },
       });
+
+      const demoContact = {
+        phone: entry.phone,
+        email: entry.email,
+        addressLine: '14 Grafton Street, Dublin 2',
+        showPhone: true,
+        showEmail: true,
+        showAddress: true,
+      };
+      const demoHours = {
+        timezone: 'Europe/Dublin',
+        note: 'Closed on public holidays.',
+        schedule: {
+          monday: { open: '09:00', close: '18:00' },
+          tuesday: { open: '09:00', close: '18:00' },
+          wednesday: { open: '09:00', close: '18:00' },
+          thursday: { open: '09:00', close: '18:00' },
+          friday: { open: '09:00', close: '18:00' },
+          saturday: { open: '10:00', close: '16:00' },
+          sunday: { closed: true },
+        },
+      };
+      const demoPolicies = {
+        returns: 'Returns accepted within 14 days for eligible items.',
+        shipping: 'Collection in Dublin or nationwide delivery by arrangement.',
+        responseTime: 'Typically responds within 4 minutes',
+      };
+
+      const primaryStore = await prisma.store.findFirst({
+        where: { userId, isPrimary: true },
+        orderBy: { createdAt: 'asc' },
+      });
+      if (primaryStore) {
+        await prisma.store.update({
+          where: { id: primaryStore.id },
+          data: {
+            contactSettings: demoContact,
+            openingHours: demoHours,
+            policies: demoPolicies,
+          },
+        });
+      }
     }
 
     users.push({

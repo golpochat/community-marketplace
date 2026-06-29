@@ -18,6 +18,7 @@ function SellerEarningsContent() {
   const [connect, setConnect] = useState<StripeConnectAccount | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connectSetupError, setConnectSetupError] = useState<string | null>(null);
   const [onboarding, setOnboarding] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [platformFee, setPlatformFee] = useState<SellerPlatformFeeInfo | null>(null);
@@ -56,6 +57,7 @@ function SellerEarningsContent() {
   async function handleOnboard() {
     setOnboarding(true);
     setError(null);
+    setConnectSetupError(null);
     setMessage(null);
     try {
       const returnUrl = `${window.location.origin}/seller/earnings?connect=return`;
@@ -66,11 +68,18 @@ function SellerEarningsContent() {
       }
       setConnect(account);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start onboarding');
+      const message = err instanceof Error ? err.message : 'Failed to start onboarding';
+      if (message.includes('signed up for Connect') || message.includes('dashboard.stripe.com')) {
+        setConnectSetupError(message);
+      } else {
+        setError(message);
+      }
     } finally {
       setOnboarding(false);
     }
   }
+
+  const needsStripeConnectSetup = Boolean(connectSetupError);
 
   const isReady = Boolean(
     connect?.onboardingComplete && connect.chargesEnabled && connect.payoutsEnabled,
@@ -88,7 +97,9 @@ function SellerEarningsContent() {
           {message}
         </p>
       )}
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && !needsStripeConnectSetup && (
+        <p className="mb-4 text-sm text-red-600">{error}</p>
+      )}
       {loading && (
         <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading...</p>
       )}
@@ -116,17 +127,32 @@ function SellerEarningsContent() {
               Irish sellers onboard with Stripe Express. Buyers cannot pay for your listings until
               charges and payouts are enabled. In test mode, use Stripe&apos;s test business details.
             </p>
-            {error?.includes('dashboard.stripe.com') && (
-              <p className="mb-4 text-sm">
-                <a
-                  href="https://dashboard.stripe.com/test/connect"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-[hsl(var(--dashboard-accent))] underline"
-                >
-                  Open Stripe Connect setup (test mode) →
-                </a>
-              </p>
+            {needsStripeConnectSetup && (
+              <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                <p className="font-medium">Stripe Connect is not enabled on your platform account yet.</p>
+                <ol className="mt-2 list-decimal space-y-1 pl-5">
+                  <li>
+                    Open{' '}
+                    <a
+                      href="https://dashboard.stripe.com/test/connect"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-[hsl(var(--dashboard-accent))] underline"
+                    >
+                      Stripe Connect (test mode)
+                    </a>{' '}
+                    and complete the platform setup.
+                  </li>
+                  <li>Return here and click <strong>Connect with Stripe</strong> again.</li>
+                </ol>
+                <p className="mt-3 text-xs text-amber-900/80">
+                  For local-only testing without Stripe, leave <code className="rounded bg-amber-100 px-1">STRIPE_SECRET_KEY</code> empty in{' '}
+                  <code className="rounded bg-amber-100 px-1">apps/api/.env</code> and restart the API.
+                </p>
+              </div>
+            )}
+            {error && !needsStripeConnectSetup && (
+              <p className="mb-4 text-sm text-red-600">{error}</p>
             )}
             {connect ? (
               <div className="space-y-1 text-sm text-[hsl(var(--dashboard-main-fg))]">

@@ -31,6 +31,44 @@ export class StripeConnectService {
     return `${process.env.WEB_APP_URL ?? 'http://localhost:3000'}/seller/earnings`;
   }
 
+  private useDevConnectMock(): boolean {
+    return !this.stripe;
+  }
+
+  private devConnectUrls(dto: ConnectOnboardInput) {
+    return {
+      stripeAccountId: `acct_dev_${crypto.randomUUID()}`,
+      onboardingUrl: dto.returnUrl ?? this.defaultReturnUrl(),
+    };
+  }
+
+  private mapDevConnectRow(
+    row: {
+      id: string;
+      userId: string;
+      stripeAccountId: string;
+      chargesEnabled: boolean;
+      payoutsEnabled: boolean;
+      onboardingComplete: boolean;
+      createdAt: Date;
+      updatedAt: Date;
+    },
+    onboardingUrl?: string,
+  ): StripeConnectAccount {
+    if (!this.useDevConnectMock()) {
+      return mapConnectAccount(row, onboardingUrl);
+    }
+    return mapConnectAccount(
+      {
+        ...row,
+        chargesEnabled: true,
+        payoutsEnabled: true,
+        onboardingComplete: true,
+      },
+      onboardingUrl,
+    );
+  }
+
   private mapStripeError(error: unknown): never {
     if (error instanceof Stripe.errors.StripeError) {
       const connectSignupHint =
@@ -92,18 +130,19 @@ export class StripeConnectService {
         this.mapStripeError(error);
       }
     } else {
-      stripeAccountId = `acct_dev_${userId}`;
-      onboardingUrl = `https://connect.stripe.com/setup/dev/${userId}`;
-      this.logger.log('StripeConnectService', 'Stripe not configured — using dev account');
+      const dev = this.devConnectUrls(dto);
+      stripeAccountId = dev.stripeAccountId;
+      onboardingUrl = dev.onboardingUrl;
+      this.logger.log('StripeConnectService', 'Stripe not configured — using dev Connect account');
     }
 
     const row = await this.prisma.stripeConnectAccount.create({
       data: {
         userId,
         stripeAccountId,
-        chargesEnabled: false,
-        payoutsEnabled: false,
-        onboardingComplete: false,
+        chargesEnabled: this.useDevConnectMock(),
+        payoutsEnabled: this.useDevConnectMock(),
+        onboardingComplete: this.useDevConnectMock(),
       },
     });
 
@@ -111,7 +150,7 @@ export class StripeConnectService {
       stripeAccountId,
     });
 
-    return mapConnectAccount(row, onboardingUrl);
+    return this.mapDevConnectRow(row, onboardingUrl);
   }
 
   async refreshOnboardingLink(
@@ -137,10 +176,10 @@ export class StripeConnectService {
         this.mapStripeError(error);
       }
     } else {
-      onboardingUrl = `https://connect.stripe.com/setup/dev/${userId}`;
+      onboardingUrl = dto.returnUrl ?? this.defaultReturnUrl();
     }
 
-    return mapConnectAccount(row, onboardingUrl);
+    return this.mapDevConnectRow(row, onboardingUrl);
   }
 
   async getAccount(userId: string): Promise<StripeConnectAccount | null> {
@@ -157,7 +196,7 @@ export class StripeConnectService {
       return updated ? mapConnectAccount(updated) : mapConnectAccount(row);
     }
 
-    return mapConnectAccount(row);
+    return this.mapDevConnectRow(row);
   }
 
   async getAccountForAdmin(userId: string): Promise<StripeConnectAccount | null> {

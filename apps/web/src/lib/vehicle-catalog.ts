@@ -1,3 +1,5 @@
+import { buildVehicleListingTitle as buildVehicleListingTitleFromUtils } from '@community-marketplace/utils';
+
 export const VEHICLE_MAKES = [
   'Toyota',
   'Nissan',
@@ -127,10 +129,7 @@ export function buildVehicleListingTitle(
   make?: string,
   model?: string,
 ): string {
-  const yearPart =
-    year != null && String(year).trim() !== '' ? String(year).trim() : '';
-  const parts = [yearPart, make?.trim() ?? '', model?.trim() ?? ''].filter(Boolean);
-  return parts.join(' ').trim();
+  return buildVehicleListingTitleFromUtils(year, make, model);
 }
 
 export function isVehicleCategory(category: { slug?: string; name?: string }): boolean {

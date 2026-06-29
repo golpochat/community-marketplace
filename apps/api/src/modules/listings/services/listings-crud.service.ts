@@ -37,10 +37,17 @@ import {
   isNewSellerAccount,
   NEW_SELLER_DAILY_LISTING_LIMIT,
 } from "../lib/listing-fraud.lib";
+import { assertVehicleUnitAvailable } from "../lib/listing-vehicle-conflict.lib";
 import { resolvePriceDroppedAt } from "../lib/listing-price-dropped.lib";
 import {
   normalizeListingTitle,
   formatLocationLabel,
+  buildVehicleDisplayTitle,
+  normalizeVehicleAttributesForSave,
+  parseVehicleAttributes,
+  stripVehicleUnitIdentity,
+  stripVehicleTitleSuffix,
+  buildVehicleListingTitle,
 } from "@community-marketplace/utils";
 
 @Injectable()
@@ -265,16 +272,33 @@ export class ListingsCrudService {
       }
     }
 
-    const recentTitles = await this.prisma.listing.findMany({
+    const recentListings = await this.prisma.listing.findMany({
       where: { sellerId },
       orderBy: { createdAt: "desc" },
       take: 20,
-      select: { title: true },
+      select: { title: true, attributes: true },
     });
+
+    const normalizedAttributes = parsed.attributes
+      ? normalizeVehicleAttributesForSave(parsed.attributes)
+      : undefined;
+
+    await assertVehicleUnitAvailable(
+      this.prisma,
+      sellerId,
+      normalizedAttributes,
+    );
+
+    const resolvedTitle = resolveVehicleListingTitle(
+      parsed.title,
+      normalizedAttributes,
+    );
+
     const fraud = detectListingFraudSignals({
-      title: parsed.title,
+      title: resolvedTitle,
       price: computed.price,
-      recentTitles: recentTitles.map((row) => row.title),
+      recentListings,
+      attributes: normalizedAttributes,
     });
 
     const storeId = await this.resolveStoreIdForSeller(sellerId, parsed.storeId);
@@ -284,7 +308,7 @@ export class ListingsCrudService {
         sellerId,
         storeId,
         categoryId: parsed.categoryId,
-        title: normalizeListingTitle(parsed.title),
+        title: resolvedTitle,
         description: parsed.description.trim(),
         price: computed.price,
         originalPrice: computed.originalPrice ?? null,
@@ -297,8 +321,8 @@ export class ListingsCrudService {
         latitude: parsed.location.latitude,
         longitude: parsed.location.longitude,
         requiresFraudReview: fraud.requiresReview,
-        ...(parsed.attributes
-          ? { attributes: parsed.attributes as Prisma.InputJsonValue }
+        ...(normalizedAttributes
+          ? { attributes: normalizedAttributes as Prisma.InputJsonValue }
           : {}),
       },
       include: listingInclude,
@@ -415,12 +439,35 @@ export class ListingsCrudService {
       };
     }
 
+    const mergedAttributes =
+      parsed.attributes !== undefined
+        ? normalizeVehicleAttributesForSave({
+            ...(parseVehicleAttributes(existing.attributes) ?? {}),
+            ...(parsed.attributes as Record<string, unknown>),
+          })
+        : undefined;
+
+    if (mergedAttributes) {
+      await assertVehicleUnitAvailable(
+        this.prisma,
+        existing.sellerId,
+        mergedAttributes,
+        listingId,
+      );
+    }
+
+    const resolvedTitle =
+      parsed.title !== undefined || mergedAttributes
+        ? resolveVehicleListingTitle(
+            parsed.title ?? existing.title,
+            mergedAttributes ?? parseVehicleAttributes(existing.attributes),
+          )
+        : undefined;
+
     const row = await this.prisma.listing.update({
       where: { id: listingId },
       data: {
-        ...(parsed.title !== undefined
-          ? { title: normalizeListingTitle(parsed.title) }
-          : {}),
+        ...(resolvedTitle !== undefined ? { title: resolvedTitle } : {}),
         ...(parsed.description !== undefined
           ? { description: parsed.description.trim() }
           : {}),
@@ -450,8 +497,8 @@ export class ListingsCrudService {
               longitude: parsed.location.longitude,
             }
           : {}),
-        ...(parsed.attributes !== undefined
-          ? { attributes: parsed.attributes as Prisma.InputJsonValue }
+        ...(mergedAttributes !== undefined
+          ? { attributes: mergedAttributes as Prisma.InputJsonValue }
           : {}),
       },
       include: listingInclude,
@@ -593,12 +640,27 @@ export class ListingsCrudService {
       source.storeId ??
       (await this.resolveStoreIdForSeller(sellerId));
 
+    const sourceAttrs = parseVehicleAttributes(source.attributes);
+    const duplicateAttributes = stripVehicleUnitIdentity(source.attributes);
+    const duplicateTitle = resolveVehicleListingTitle(
+      sourceAttrs?.make
+        ? buildVehicleListingTitle(
+            sourceAttrs.year ?? sourceAttrs.yearText,
+            sourceAttrs.make,
+            sourceAttrs.model,
+          )
+        : stripVehicleTitleSuffix(
+            source.title.replace(/\s*\(copy\)\s*$/i, "").trim(),
+          ),
+      duplicateAttributes,
+    );
+
     const row = await this.prisma.listing.create({
       data: {
         sellerId,
         storeId,
         categoryId: source.categoryId,
-        title: `${source.title} (copy)`,
+        title: duplicateTitle,
         description: source.description,
         price: source.price,
         originalPrice: source.originalPrice,
@@ -612,18 +674,23 @@ export class ListingsCrudService {
         locationLabel: source.locationLabel,
         latitude: source.latitude,
         longitude: source.longitude,
+        ...(duplicateAttributes
+          ? { attributes: duplicateAttributes as Prisma.InputJsonValue }
+          : {}),
       },
       include: listingInclude,
     });
 
-    if (source.images.length > 0) {
-      await this.prisma.listingImage.createMany({
-        data: source.images.map((img, index) => ({
-          listingId: row.id,
-          url: img.url,
-          sortOrder: index,
+    if (source.deliveryOptions.length > 0) {
+      await this.delivery.saveForDraftListing(
+        row.id,
+        source.deliveryOptions.map((option) => ({
+          deliveryOptionId: option.deliveryOptionId,
+          customLabel: option.customLabel ?? undefined,
+          customPrice:
+            option.customPrice != null ? Number(option.customPrice) : undefined,
         })),
-      });
+      );
     }
 
     await this.audit.record(row.id, "listing_created", sellerId, {
@@ -689,4 +756,22 @@ export class ListingsCrudService {
     }
     return primary.id;
   }
+}
+
+function resolveVehicleListingTitle(
+  title: string,
+  attributes?: Record<string, unknown> | ReturnType<typeof parseVehicleAttributes>,
+): string {
+  const attrs = parseVehicleAttributes(attributes);
+  if (attrs?.make) {
+    return normalizeListingTitle(
+      buildVehicleDisplayTitle(
+        attrs.year ?? attrs.yearText,
+        attrs.make,
+        attrs.model,
+        attrs,
+      ),
+    );
+  }
+  return normalizeListingTitle(title);
 }

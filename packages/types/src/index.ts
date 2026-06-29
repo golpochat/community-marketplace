@@ -299,6 +299,7 @@ export type {
   SellerStore,
   SellerStoreLimits,
   SellerStoresOverview,
+  StoreContactSettings,
 } from './store';
 export { STORE_PLATFORM_MAX } from './store';
 export type { PaginationMeta, ApiResponse, ApiError, PaginatedResult } from './api';

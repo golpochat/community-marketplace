@@ -7,7 +7,6 @@ import { Card } from '@community-marketplace/ui-dashboard';
 
 import { isStorefrontComplete } from '@/hooks/use-seller-store-data';
 import type { SellerListingsSummary } from '@/hooks/use-seller-profile-data';
-import { getPublicStorefrontPath } from '@/lib/storefront-path';
 import { SELLER_ROUTES } from '@/lib/seller-routes';
 
 import { SellerProfileStatusBadge } from '@/components/seller/profile/seller-profile-status-badge';
@@ -16,89 +15,89 @@ interface SellerDashboardSummaryProps {
   profile: UserProfile;
   verification: SellerVerificationStatus;
   listingsSummary: SellerListingsSummary;
-  primaryStore?: SellerStore | null;
+  stores: SellerStore[];
+}
+
+function countIncompleteStores(stores: SellerStore[]): number {
+  return stores.filter((store) => !isStorefrontComplete(store)).length;
 }
 
 export function SellerDashboardSummary({
   profile,
   verification,
   listingsSummary,
-  primaryStore,
+  stores,
 }: SellerDashboardSummaryProps) {
-  const storeComplete = isStorefrontComplete(primaryStore);
-  const previewPath = getPublicStorefrontPath(primaryStore?.slug ?? profile.id);
+  const storeCount = stores.length;
+  const incompleteCount = countIncompleteStores(stores);
 
   return (
-    <div className="mb-6 grid gap-4 lg:grid-cols-3">
-      <Card title="Storefront">
-        <div className="flex gap-3">
-          {primaryStore?.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={primaryStore.logoUrl}
-              alt=""
-              className="h-12 w-12 rounded-lg object-cover"
-            />
-          ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-400">
-              Logo
-            </div>
-          )}
-          <div className="min-w-0 flex-1 text-sm">
-            <p className="font-semibold">{primaryStore?.name ?? 'Your store'}</p>
-            <p className="truncate text-[hsl(var(--dashboard-sidebar-muted))]">
-              {primaryStore?.description?.trim() || 'Add a store description'}
-            </p>
-          </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-3 text-sm">
-          <Link
-            href={SELLER_ROUTES.storefront}
-            className="font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
-          >
-            {storeComplete ? 'Edit storefront' : 'Complete storefront →'}
-          </Link>
-          <Link
-            href={previewPath}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[hsl(var(--dashboard-sidebar-muted))] hover:underline"
-          >
-            Preview
-          </Link>
-        </div>
+    <div className="mb-6 grid gap-4 md:grid-cols-3">
+      <Card title="Storefronts">
+        <p className="text-3xl font-bold tabular-nums text-[hsl(var(--dashboard-main-fg))]">
+          {storeCount}
+        </p>
+        <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+          {storeCount === 0
+            ? 'No storefront yet'
+            : storeCount === 1
+              ? 'Storefront on your account'
+              : 'Storefronts on your account'}
+        </p>
+        {incompleteCount > 0 ? (
+          <p className="mt-2 text-sm text-amber-800">
+            {incompleteCount} need{incompleteCount === 1 ? 's' : ''} setup
+          </p>
+        ) : null}
+        <Link
+          href={SELLER_ROUTES.storefront}
+          className="mt-4 inline-block text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+        >
+          Manage storefronts →
+        </Link>
       </Card>
 
       <Card title="Account">
         <div className="space-y-2 text-sm">
           <SellerProfileStatusBadge status={verification.sellerStatus} />
-          <p className="text-[hsl(var(--dashboard-sidebar-muted))]">
-            {profile.displayName?.trim() || 'Add your display name in Profile'}
+          <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">
+            {profile.displayName?.trim() || 'Add your display name'}
           </p>
+          <p className="truncate text-[hsl(var(--dashboard-sidebar-muted))]">{profile.email}</p>
         </div>
-        {verification.sellerStatus !== 'verified' && (
-          <Link
-            href={SELLER_ROUTES.verification}
-            className="mt-4 inline-block text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
-          >
-            Continue verification →
-          </Link>
-        )}
+        <Link
+          href={
+            verification.sellerStatus !== 'verified'
+              ? SELLER_ROUTES.verification
+              : SELLER_ROUTES.profile
+          }
+          className="mt-4 inline-block text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+        >
+          {verification.sellerStatus !== 'verified'
+            ? 'Continue verification →'
+            : 'View profile →'}
+        </Link>
       </Card>
 
       <Card title="Listings">
         <dl className="grid grid-cols-3 gap-2 text-center text-sm">
-          <div>
-            <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Active</dt>
-            <dd className="mt-1 text-xl font-semibold">{listingsSummary.active}</dd>
+          <div className="rounded-lg bg-[hsl(var(--dashboard-sidebar-border))]/15 px-2 py-3">
+            <dt className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">Active</dt>
+            <dd className="mt-1 text-2xl font-semibold tabular-nums text-[hsl(var(--dashboard-main-fg))]">
+              {listingsSummary.active}
+            </dd>
           </div>
-          <div>
-            <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Sold</dt>
-            <dd className="mt-1 text-xl font-semibold">{listingsSummary.sold}</dd>
+          <div className="rounded-lg bg-[hsl(var(--dashboard-sidebar-border))]/15 px-2 py-3">
+            <dt className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">Sold</dt>
+            <dd className="mt-1 text-2xl font-semibold tabular-nums text-[hsl(var(--dashboard-main-fg))]">
+              {listingsSummary.sold}
+            </dd>
           </div>
-          <div>
-            <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Draft</dt>
-            <dd className="mt-1 text-xl font-semibold">{listingsSummary.draft}</dd>
+          <div className="rounded-lg bg-[hsl(var(--dashboard-sidebar-border))]/15 px-2 py-3">
+            <dt className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">Draft</dt>
+            <dd className="mt-1 text-2xl font-semibold tabular-nums text-[hsl(var(--dashboard-main-fg))]">
+              {listingsSummary.draft}
+            </dd>
           </div>
         </dl>
         <Link

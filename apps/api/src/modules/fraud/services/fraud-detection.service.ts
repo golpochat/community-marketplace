@@ -96,18 +96,19 @@ export class FraudDetectionService {
       });
     }
 
-    const recentTitles = await this.prisma.listing.findMany({
+    const recentListings = await this.prisma.listing.findMany({
       where: { sellerId, id: { not: listingId } },
       orderBy: { createdAt: 'desc' },
       take: 20,
-      select: { title: true },
+      select: { title: true, attributes: true },
     });
     const dup = detectListingFraudSignals({
       title: listing.title,
       price: Number(listing.price),
-      recentTitles: recentTitles.map((r) => r.title),
+      recentListings,
+      attributes: listing.attributes,
     });
-    if (dup.reasons.some((r) => r.includes('copy-paste'))) {
+    if (dup.reasons.some((r) => r.includes('no clear difference'))) {
       await this.recordAndEvaluate({
         userId: sellerId,
         listingId,

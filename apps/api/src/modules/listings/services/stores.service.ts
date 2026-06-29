@@ -16,10 +16,13 @@ import {
   slugifyStoreName,
 } from '../utils/store-slug.util';
 import {
-  buildStoreContact,
+  buildLegacyStoreContact,
+  buildStoreContactFromSettings,
+  parseStoreContactSettings,
   readPrivacySettings,
   readStorePrefs,
-  resolveStoreOpeningHours,
+  resolveStoreOpeningHoursFromRow,
+  resolveStorePoliciesFromRow,
 } from '../utils/store-contact.util';
 import { buildCategoryStoreSections } from '../utils/store-sections.util';
 import { ListingVisibilityService } from './listing-visibility.service';
@@ -37,6 +40,9 @@ type StoreContext = {
     logoUrl: string | null;
     bannerUrl: string | null;
     location: string | null;
+    contactSettings: unknown;
+    openingHours: unknown;
+    policies: unknown;
   };
   seller: {
     id: string;
@@ -90,17 +96,30 @@ export class StoresService {
     const verified = seller.sellerStatus === 'verified' || seller.idVerified;
     const logoUrl = store.logoUrl ?? undefined;
     const bannerUrl = store.bannerUrl ?? undefined;
-    const contact = buildStoreContact({
-      email: seller.email,
-      phone: seller.profile?.phone,
-      address: seller.profile?.address,
-      location: store.location ?? seller.profile?.location,
-      website: seller.profile?.businessWebsite,
-      isBusinessAccount: seller.profile?.isBusinessAccount,
-      privacy,
+
+    const storeContact = parseStoreContactSettings(store.contactSettings);
+    const contact =
+      buildStoreContactFromSettings(store.location, storeContact) ??
+      buildLegacyStoreContact({
+        email: seller.email,
+        phone: seller.profile?.phone,
+        address: seller.profile?.address,
+        location: store.location ?? seller.profile?.location,
+        website: seller.profile?.businessWebsite,
+        isBusinessAccount: seller.profile?.isBusinessAccount,
+        privacy,
+        prefs,
+      });
+
+    const openingHours = resolveStoreOpeningHoursFromRow(store.openingHours, prefs);
+    const responseTimeFallback = trust.responseTimeMinutes
+      ? `Typically responds within ${trust.responseTimeMinutes} minutes`
+      : undefined;
+    const policies = resolveStorePoliciesFromRow(
+      store.policies,
       prefs,
-    });
-    const openingHours = resolveStoreOpeningHours(prefs);
+      responseTimeFallback,
+    );
 
     return {
       id: store.id,
@@ -118,15 +137,7 @@ export class StoresService {
       contactListingId: listings.data[0]?.id,
       contact,
       openingHours,
-      policies: {
-        returns: prefs.storePolicies?.returns,
-        shipping: prefs.storePolicies?.shipping,
-        responseTime:
-          prefs.storePolicies?.responseTime ??
-          (trust.responseTimeMinutes
-            ? `Typically responds within ${trust.responseTimeMinutes} minutes`
-            : undefined),
-      },
+      policies,
       analytics: {
         totalViews: listings.data.reduce((sum, row) => sum + (row.viewCount ?? 0), 0),
         totalSales: trust.soldCount ?? 0,

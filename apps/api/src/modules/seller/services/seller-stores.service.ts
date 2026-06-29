@@ -4,10 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { SellerStatus } from '@prisma/client';
+import type { Prisma, SellerStatus } from '@prisma/client';
 
 import type { SellerStore, SellerStoreLimits, SellerStoresOverview } from '@community-marketplace/types';
 import { STORE_PLATFORM_MAX } from '@community-marketplace/types';
+import { DEFAULT_STORE_OPENING_HOURS, DEFAULT_STORE_POLICIES } from '@community-marketplace/utils';
 import {
   createStoreSchema,
   updateStoreSchema,
@@ -73,6 +74,9 @@ export class SellerStoresService {
         slug,
         description: parsed.description?.trim() || null,
         location: parsed.location?.trim() || null,
+        contactSettings: this.jsonField(parsed.contact),
+        openingHours: this.jsonField(parsed.openingHours ?? DEFAULT_STORE_OPENING_HOURS),
+        policies: this.jsonField(parsed.policies ?? DEFAULT_STORE_POLICIES),
         isPrimary: existingCount === 0,
       },
     });
@@ -101,6 +105,13 @@ export class SellerStoresService {
         ...(parsed.location !== undefined ? { location: parsed.location.trim() || null } : {}),
         ...(parsed.logoUrl !== undefined ? { logoUrl: parsed.logoUrl } : {}),
         ...(parsed.bannerUrl !== undefined ? { bannerUrl: parsed.bannerUrl } : {}),
+        ...(parsed.contact !== undefined
+          ? { contactSettings: this.jsonField(parsed.contact) }
+          : {}),
+        ...(parsed.openingHours !== undefined
+          ? { openingHours: this.jsonField(parsed.openingHours) }
+          : {}),
+        ...(parsed.policies !== undefined ? { policies: this.jsonField(parsed.policies) } : {}),
         slug,
       },
     });
@@ -165,6 +176,11 @@ export class SellerStoresService {
     });
     if (!row) throw new NotFoundException('Store not found');
     return row;
+  }
+
+  private jsonField(value: unknown): Prisma.InputJsonValue | undefined {
+    if (value === undefined || value === null) return undefined;
+    return value as Prisma.InputJsonValue;
   }
 
   private async resolveUniqueSlug(baseSlug: string, storeId: string): Promise<string> {

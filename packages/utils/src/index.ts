@@ -37,6 +37,22 @@ export {
   formatVehicleDate,
 } from './vehicle-attributes';
 export {
+  DEFAULT_STORE_OPENING_HOURS,
+  DEFAULT_STORE_POLICIES,
+} from './store-defaults';
+export {
+  buildVehicleListingTitle,
+  parseVehicleAttributes,
+  normalizeVehicleVin,
+  formatVehicleMileageLabel,
+  buildVehicleUnitSuffix,
+  stripVehicleTitleSuffix,
+  buildVehicleDisplayTitle,
+  vehicleUnitsLikelyMatch,
+  normalizeVehicleAttributesForSave,
+  stripVehicleUnitIdentity,
+} from './vehicle-unit';
+export {
   resolveVehicleYearDisplay,
   resolveVehicleEngineSizeDisplay,
   resolveVehicleSeatsDisplay,

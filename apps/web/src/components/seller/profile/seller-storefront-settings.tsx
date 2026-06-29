@@ -2,8 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
-import type { SellerStore, SellerStoreLimits } from '@community-marketplace/types';
+import type {
+  SellerStore,
+  SellerStoreLimits,
+  StoreContactSettings,
+  StoreOpeningHours,
+  StorePolicy,
+} from '@community-marketplace/types';
 import { Button, Input, Label } from '@community-marketplace/ui';
 import { Card } from '@community-marketplace/ui-dashboard';
 
@@ -13,6 +20,12 @@ import { getPublicStorefrontPath } from '@/lib/storefront-path';
 import { sellerService } from '@/services/marketplace.service';
 
 import { SellerStoreSlotPanel } from './seller-store-slot-panel';
+import {
+  mergeStoreContact,
+  mergeStoreOpeningHours,
+  mergeStorePolicies,
+  StorePublicDetailsForm,
+} from './store-public-details-form';
 import { StoreBannerUpload } from './store-banner-upload';
 import { StoreLogoUpload } from './store-logo-upload';
 
@@ -43,6 +56,9 @@ export function SellerStorefrontSettings({
   limits,
   onSaved,
 }: SellerStorefrontSettingsProps) {
+  const searchParams = useSearchParams();
+  const storeIdFromUrl = searchParams.get('storeId');
+
   const [stores, setStores] = useState(initialStores);
   const [activeStoreId, setActiveStoreId] = useState<string | null>(() =>
     pickDefaultStoreId(initialStores),
@@ -50,6 +66,9 @@ export function SellerStorefrontSettings({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [contact, setContact] = useState<StoreContactSettings>(mergeStoreContact());
+  const [openingHours, setOpeningHours] = useState<StoreOpeningHours>(mergeStoreOpeningHours());
+  const [policies, setPolicies] = useState<StorePolicy>(mergeStorePolicies());
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createName, setCreateName] = useState('');
   const [createDescription, setCreateDescription] = useState('');
@@ -72,18 +91,24 @@ export function SellerStorefrontSettings({
   useEffect(() => {
     setStores(initialStores);
     setActiveStoreId((current) => {
+      if (storeIdFromUrl && initialStores.some((store) => store.id === storeIdFromUrl)) {
+        return storeIdFromUrl;
+      }
       if (current && initialStores.some((store) => store.id === current)) {
         return current;
       }
       return pickDefaultStoreId(initialStores);
     });
-  }, [initialStores]);
+  }, [initialStores, storeIdFromUrl]);
 
   useEffect(() => {
     if (activeStore) {
       setName(activeStore.name ?? '');
       setDescription(activeStore.description ?? '');
       setLocation(activeStore.location ?? '');
+      setContact(mergeStoreContact(activeStore.contact));
+      setOpeningHours(mergeStoreOpeningHours(activeStore.openingHours));
+      setPolicies(mergeStorePolicies(activeStore.policies));
     }
   }, [activeStore]);
 
@@ -129,6 +154,19 @@ export function SellerStorefrontSettings({
         name: name.trim(),
         description: description.trim() || undefined,
         location: location.trim() || undefined,
+        contact: {
+          ...contact,
+          phone: contact.phone?.trim() || undefined,
+          email: contact.email?.trim() || undefined,
+          addressLine: contact.addressLine?.trim() || undefined,
+          website: contact.website?.trim() || undefined,
+        },
+        openingHours,
+        policies: {
+          returns: policies.returns?.trim() || undefined,
+          shipping: policies.shipping?.trim() || undefined,
+          responseTime: policies.responseTime?.trim() || undefined,
+        },
       });
       setStores((current) => current.map((store) => (store.id === updated.id ? updated : store)));
       setMessage('Storefront updated.');
@@ -138,7 +176,7 @@ export function SellerStorefrontSettings({
     } finally {
       setSaving(false);
     }
-  }, [activeStore, description, location, name, onSaved]);
+  }, [activeStore, contact, description, location, name, openingHours, policies, onSaved]);
 
   const limitsLabel = formatStoreLimits(limits);
   const canAddStore = limits?.canCreateStore === true;
@@ -373,6 +411,15 @@ export function SellerStorefrontSettings({
                 <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                   Public URL: /store/{activeStore.slug}
                 </p>
+
+                <StorePublicDetailsForm
+                  contact={contact}
+                  openingHours={openingHours}
+                  policies={policies}
+                  onContactChange={setContact}
+                  onOpeningHoursChange={setOpeningHours}
+                  onPoliciesChange={setPolicies}
+                />
 
                 <Button
                   type="button"
