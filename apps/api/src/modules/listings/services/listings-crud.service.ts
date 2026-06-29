@@ -492,9 +492,9 @@ export class ListingsCrudService {
         );
       }
     }
-    await this.prisma.listing.delete({ where: { id: listingId } });
-
     await this.audit.record(listingId, "listing_deleted", actorId);
+
+    await this.prisma.listing.delete({ where: { id: listingId } });
 
     this.eventBus.publish({
       type: "listing.deleted",

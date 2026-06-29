@@ -7,7 +7,7 @@ import { useSellerStoreData } from '@/hooks/use-seller-store-data';
 import { SellerStorefrontSettings } from './seller-storefront-settings';
 
 export function SellerStorefrontPage() {
-  const { primaryStore, limits, loading, error, reload } = useSellerStoreData();
+  const { stores, limits, loading, error, reload } = useSellerStoreData();
 
   return (
     <>
@@ -21,7 +21,7 @@ export function SellerStorefrontPage() {
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
       {!loading && (
         <SellerStorefrontSettings
-          store={primaryStore}
+          stores={stores}
           limits={limits}
           onSaved={() => void reload()}
         />

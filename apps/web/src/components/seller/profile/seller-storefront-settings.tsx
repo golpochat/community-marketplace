@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import type { SellerStore, SellerStoreLimits } from '@community-marketplace/types';
@@ -19,33 +19,59 @@ const TEXTAREA_CLASSES =
   'flex min-h-[5rem] w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]';
 
 interface SellerStorefrontSettingsProps {
-  store: SellerStore | null;
+  stores: SellerStore[];
   limits: SellerStoreLimits | null;
   onSaved?: () => void;
 }
 
+function pickDefaultStoreId(stores: SellerStore[]): string | null {
+  if (!stores.length) return null;
+  return stores.find((store) => store.isPrimary)?.id ?? stores[0]?.id ?? null;
+}
+
 export function SellerStorefrontSettings({
-  store: initialStore,
+  stores: initialStores,
   limits,
   onSaved,
 }: SellerStorefrontSettingsProps) {
-  const [store, setStore] = useState<SellerStore | null>(initialStore);
+  const [stores, setStores] = useState(initialStores);
+  const [activeStoreId, setActiveStoreId] = useState<string | null>(() =>
+    pickDefaultStoreId(initialStores),
+  );
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createName, setCreateName] = useState('');
+  const [createDescription, setCreateDescription] = useState('');
+  const [createLocation, setCreateLocation] = useState('');
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const activeStore = useMemo(
+    () => stores.find((store) => store.id === activeStoreId) ?? null,
+    [activeStoreId, stores],
+  );
+
   useEffect(() => {
-    setStore(initialStore);
-    if (initialStore) {
-      setName(initialStore.name ?? '');
-      setDescription(initialStore.description ?? '');
-      setLocation(initialStore.location ?? '');
+    setStores(initialStores);
+    setActiveStoreId((current) => {
+      if (current && initialStores.some((store) => store.id === current)) {
+        return current;
+      }
+      return pickDefaultStoreId(initialStores);
+    });
+  }, [initialStores]);
+
+  useEffect(() => {
+    if (activeStore) {
+      setName(activeStore.name ?? '');
+      setDescription(activeStore.description ?? '');
+      setLocation(activeStore.location ?? '');
     }
-  }, [initialStore]);
+  }, [activeStore]);
 
   const handleCreate = useCallback(async () => {
     setCreating(true);
@@ -53,11 +79,16 @@ export function SellerStorefrontSettings({
     setMessage(null);
     try {
       const created = await sellerService.createStore({
-        name: name.trim(),
-        description: description.trim() || undefined,
-        location: location.trim() || undefined,
+        name: createName.trim(),
+        description: createDescription.trim() || undefined,
+        location: createLocation.trim() || undefined,
       });
-      setStore(created);
+      setStores((current) => [...current, created]);
+      setActiveStoreId(created.id);
+      setShowCreateForm(false);
+      setCreateName('');
+      setCreateDescription('');
+      setCreateLocation('');
       setMessage('Storefront created.');
       onSaved?.();
     } catch (err) {
@@ -65,20 +96,20 @@ export function SellerStorefrontSettings({
     } finally {
       setCreating(false);
     }
-  }, [description, location, name, onSaved]);
+  }, [createDescription, createLocation, createName, onSaved]);
 
   const handleSave = useCallback(async () => {
-    if (!store) return;
+    if (!activeStore) return;
     setSaving(true);
     setError(null);
     setMessage(null);
     try {
-      const updated = await sellerService.updateStore(store.id, {
+      const updated = await sellerService.updateStore(activeStore.id, {
         name: name.trim(),
         description: description.trim() || undefined,
         location: location.trim() || undefined,
       });
-      setStore(updated);
+      setStores((current) => current.map((store) => (store.id === updated.id ? updated : store)));
       setMessage('Storefront updated.');
       onSaved?.();
     } catch (err) {
@@ -86,9 +117,12 @@ export function SellerStorefrontSettings({
     } finally {
       setSaving(false);
     }
-  }, [description, location, name, onSaved, store]);
+  }, [activeStore, description, location, name, onSaved]);
 
-  if (!store) {
+  const limitsLabel = formatStoreLimits(limits);
+  const canAddStore = limits?.canCreateStore === true;
+
+  if (!stores.length) {
     return (
       <div className="max-w-2xl space-y-6">
         {error && <p className="text-sm text-red-600">{error}</p>}
@@ -106,8 +140,8 @@ export function SellerStorefrontSettings({
               <Label htmlFor="create-store-name">Store name</Label>
               <Input
                 id="create-store-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={createName}
+                onChange={(e) => setCreateName(e.target.value)}
                 placeholder="e.g. Hijabi Gift"
               />
             </div>
@@ -116,8 +150,8 @@ export function SellerStorefrontSettings({
               <textarea
                 id="create-store-description"
                 rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                value={createDescription}
+                onChange={(e) => setCreateDescription(e.target.value)}
                 placeholder="What do you sell?"
                 className={TEXTAREA_CLASSES}
               />
@@ -126,14 +160,14 @@ export function SellerStorefrontSettings({
               <Label htmlFor="create-store-location">Store location</Label>
               <Input
                 id="create-store-location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
+                value={createLocation}
+                onChange={(e) => setCreateLocation(e.target.value)}
                 placeholder="e.g. Dublin"
               />
             </div>
             <Button
               type="button"
-              disabled={creating || !name.trim() || limits?.canCreateStore === false}
+              disabled={creating || !createName.trim() || limits?.canCreateStore === false}
               onClick={() => void handleCreate()}
             >
               {creating ? 'Creating…' : 'Create storefront'}
@@ -147,94 +181,211 @@ export function SellerStorefrontSettings({
     );
   }
 
-  const limitsLabel = formatStoreLimits(limits);
-
   return (
     <div className="max-w-2xl space-y-6">
       {error && <p className="text-sm text-red-600">{error}</p>}
       {message && <p className="text-sm text-emerald-700">{message}</p>}
 
-      <Card title="Public storefront">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-            <p>This is what buyers see on your public store page.</p>
-            {limitsLabel && <p className="mt-1">{limitsLabel}</p>}
-          </div>
-          <Link
-            href={getPublicStorefrontPath(store.slug)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+      <Card title="Your storefronts">
+        {limitsLabel && (
+          <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">{limitsLabel}</p>
+        )}
+        <ul className="space-y-2">
+          {stores.map((store) => {
+            const isActive = store.id === activeStoreId;
+            return (
+              <li key={store.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveStoreId(store.id);
+                    setMessage(null);
+                    setError(null);
+                  }}
+                  className={`flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
+                    isActive
+                      ? 'border-[hsl(var(--dashboard-accent))] bg-[hsl(var(--dashboard-accent))]/5'
+                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-gray-900">{store.name}</p>
+                    <p className="truncate text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                      /store/{store.slug}
+                      {store.isPrimary ? ' · Primary' : ''}
+                    </p>
+                  </div>
+                  <Link
+                    href={getPublicStorefrontPath(store.slug)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(event) => event.stopPropagation()}
+                    className="shrink-0 text-xs font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+                  >
+                    View →
+                  </Link>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+
+        {canAddStore && !showCreateForm && (
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4"
+            onClick={() => {
+              setShowCreateForm(true);
+              setError(null);
+              setMessage(null);
+            }}
           >
-            View public storefront →
-          </Link>
-        </div>
-
-        <div className="space-y-4">
-          <StoreBannerUpload
-            bannerUrl={store.bannerUrl}
-            storeId={store.id}
-            onUpdated={(bannerUrl) => {
-              setStore((current) => (current ? { ...current, bannerUrl } : current));
-              setError(null);
-              setMessage('Storefront banner updated.');
-              onSaved?.();
-            }}
-          />
-
-          <StoreLogoUpload
-            logoUrl={store.logoUrl}
-            storeName={store.name}
-            storeId={store.id}
-            onUpdated={(logoUrl) => {
-              setStore((current) => (current ? { ...current, logoUrl } : current));
-              setError(null);
-              setMessage('Store logo updated.');
-              onSaved?.();
-            }}
-          />
-
-          <div>
-            <Label htmlFor="storefront-name">Store name</Label>
-            <Input
-              id="storefront-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="storefront-bio">Store description</Label>
-            <textarea
-              id="storefront-bio"
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className={TEXTAREA_CLASSES}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="storefront-location">Store location</Label>
-            <Input
-              id="storefront-location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="e.g. Dublin"
-            />
-          </div>
-
-          <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-            Public URL: /store/{store.slug}
-          </p>
-
-          <Button type="button" disabled={saving || !name.trim()} onClick={() => void handleSave()}>
-            {saving ? 'Saving…' : 'Save storefront'}
+            Add another storefront
           </Button>
-        </div>
+        )}
+
+        {showCreateForm && canAddStore && (
+          <div className="mt-4 space-y-4 rounded-lg border border-dashed border-gray-300 p-4">
+            <p className="text-sm font-medium text-gray-900">New storefront</p>
+            <div>
+              <Label htmlFor="add-store-name">Store name</Label>
+              <Input
+                id="add-store-name"
+                value={createName}
+                onChange={(e) => setCreateName(e.target.value)}
+                placeholder="e.g. Second brand"
+              />
+            </div>
+            <div>
+              <Label htmlFor="add-store-description">Store description</Label>
+              <textarea
+                id="add-store-description"
+                rows={3}
+                value={createDescription}
+                onChange={(e) => setCreateDescription(e.target.value)}
+                className={TEXTAREA_CLASSES}
+              />
+            </div>
+            <div>
+              <Label htmlFor="add-store-location">Store location</Label>
+              <Input
+                id="add-store-location"
+                value={createLocation}
+                onChange={(e) => setCreateLocation(e.target.value)}
+                placeholder="e.g. Dublin"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                disabled={creating || !createName.trim()}
+                onClick={() => void handleCreate()}
+              >
+                {creating ? 'Creating…' : 'Create storefront'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={creating}
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setCreateName('');
+                  setCreateDescription('');
+                  setCreateLocation('');
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {limits?.blockReason && !canAddStore && (
+          <p className="mt-4 text-sm text-amber-700">{limits.blockReason}</p>
+        )}
       </Card>
 
-      {limits && !limits.canCreateStore && limits.storeCount >= limits.storeSlotLimit && (
+      {activeStore && (
+        <Card title="Edit storefront">
+          <div className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+            <p>Editing <span className="font-medium text-gray-900">{activeStore.name}</span>.</p>
+          </div>
+
+          <div className="space-y-4">
+            <StoreBannerUpload
+              bannerUrl={activeStore.bannerUrl}
+              storeId={activeStore.id}
+              onUpdated={(bannerUrl) => {
+                setStores((current) =>
+                  current.map((store) =>
+                    store.id === activeStore.id ? { ...store, bannerUrl } : store,
+                  ),
+                );
+                setError(null);
+                setMessage('Storefront banner updated.');
+                onSaved?.();
+              }}
+            />
+
+            <StoreLogoUpload
+              logoUrl={activeStore.logoUrl}
+              storeName={activeStore.name}
+              storeId={activeStore.id}
+              onUpdated={(logoUrl) => {
+                setStores((current) =>
+                  current.map((store) =>
+                    store.id === activeStore.id ? { ...store, logoUrl } : store,
+                  ),
+                );
+                setError(null);
+                setMessage('Store logo updated.');
+                onSaved?.();
+              }}
+            />
+
+            <div>
+              <Label htmlFor="storefront-name">Store name</Label>
+              <Input
+                id="storefront-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="storefront-bio">Store description</Label>
+              <textarea
+                id="storefront-bio"
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className={TEXTAREA_CLASSES}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="storefront-location">Store location</Label>
+              <Input
+                id="storefront-location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="e.g. Dublin"
+              />
+            </div>
+
+            <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              Public URL: /store/{activeStore.slug}
+            </p>
+
+            <Button type="button" disabled={saving || !name.trim()} onClick={() => void handleSave()}>
+              {saving ? 'Saving…' : 'Save storefront'}
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {limits && !canAddStore && limits.storeCount >= limits.storeSlotLimit && (
         <SellerStoreSlotPanel onUpdated={() => onSaved?.()} />
       )}
     </div>
