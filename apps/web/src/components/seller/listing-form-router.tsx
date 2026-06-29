@@ -112,7 +112,10 @@ export function ListingFormRouter({
   const isVehicle = selectedCategory ? isVehicleCategory(selectedCategory) : false;
 
   const resolvedStoreId =
-    storeId || pickDefaultListingStoreId(stores) || genericInitialData?.storeId;
+    storeId ||
+    pickDefaultListingStoreId(stores) ||
+    genericInitialData?.storeId ||
+    '';
 
   const formDisabled = disabled || storesLoading || stores.length === 0;
 
