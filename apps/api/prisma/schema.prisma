@@ -255,6 +255,9 @@ enum PlatformPurchaseType {
   listing_boost
   featured_slot
   fast_track_verification
+  store_slot_2
+  store_slot_3
+  store_bundle_3
 }
 
 enum PlatformPurchaseStatus {
@@ -425,6 +428,8 @@ model User {
   verificationCompletedAt    DateTime?    @map("verification_completed_at")
   verificationRejectedReason String?      @map("verification_rejected_reason") @db.Text
   sellerLimit                Int          @default(5) @map("seller_limit")
+  approvedListingCount       Int          @default(0) @map("approved_listing_count")
+  storeSlotLimit             Int          @default(1) @map("store_slot_limit")
   customPlatformFeePercent   Decimal?     @map("custom_platform_fee_percent") @db.Decimal(5, 2)
   createdAt       DateTime   @default(now()) @map("created_at")
   updatedAt       DateTime   @updatedAt @map("updated_at")
@@ -497,11 +502,33 @@ model User {
   walletTransactions         WalletTransaction[]
   cashbackGrants             CashbackGrant[]
   platformPurchases          PlatformPurchase[]
+  stores                     Store[]
 
   @@index([primaryRoleId])
   @@index([status])
   @@index([sellerStatus])
   @@map("users")
+}
+
+/// Public storefront owned by a seller account (1+ per user when store slots allow).
+model Store {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  name        String
+  slug        String   @unique
+  description String?  @db.Text
+  logoUrl     String?  @map("logo_url")
+  bannerUrl   String?  @map("banner_url")
+  location    String?
+  isPrimary   Boolean  @default(true) @map("is_primary")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listings Listing[]
+
+  @@index([userId])
+  @@map("stores")
 }
 
 /// Seller identity verification submissions (manual admin review).
@@ -749,6 +776,7 @@ model Category {
 model Listing {
   id              String           @id @default(uuid())
   sellerId        String           @map("seller_id")
+  storeId         String           @map("store_id")
   categoryId      String           @map("category_id")
   title           String
   description     String
@@ -785,6 +813,7 @@ model Listing {
   updatedAt          DateTime         @updatedAt @map("updated_at")
 
   seller    User              @relation(fields: [sellerId], references: [id])
+  store     Store             @relation(fields: [storeId], references: [id])
   category  Category          @relation(fields: [categoryId], references: [id])
   bannedBy  User?             @relation("ListingBannedBy", fields: [bannedById], references: [id], onDelete: SetNull)
   images    ListingImage[]
@@ -810,6 +839,7 @@ model Listing {
   @@index([status, createdAt(sort: Desc)])
   @@index([status, expiresAt])
   @@index([sellerId])
+  @@index([storeId])
   @@index([categoryId])
   @@index([latitude, longitude])
   @@map("listings")
