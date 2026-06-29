@@ -60,6 +60,7 @@ export interface ListingFormData {
   condition: ListingCondition;
   categoryId: string;
   location: string;
+  storeId?: string;
   images: File[];
   delivery: DeliveryFormState;
 }

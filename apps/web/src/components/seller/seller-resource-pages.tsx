@@ -121,6 +121,7 @@ function buildListingCreatePayload(
       customPrice: s.customPrice,
     })),
     status: "draft" as const,
+    ...(data.storeId ? { storeId: data.storeId } : {}),
   };
 }
 
@@ -188,6 +189,7 @@ function SellerListingThumb({ listing }: { listing: Listing }) {
 }
 
 export function SellerListingsPage() {
+  const router = useRouter();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -269,7 +271,7 @@ export function SellerListingsPage() {
         case "duplicate": {
           const dup = await sellerService.duplicateListing(listingId);
           if (dup.data?.id) {
-            window.location.href = `/seller/listings/${dup.data.id}/edit`;
+            router.push(`/seller/listings/${dup.data.id}/edit?duplicated=1`);
             return;
           }
           break;
@@ -1050,7 +1052,13 @@ export function SellerCreateListingPage() {
   );
 }
 
-export function SellerEditListingPage({ listingId }: { listingId: string }) {
+export function SellerEditListingPage({
+  listingId,
+  duplicatedHint = false,
+}: {
+  listingId: string;
+  duplicatedHint?: boolean;
+}) {
   const router = useRouter();
   const { user } = useAuth();
   const [categories, setCategories] = useState<SellerCategoryOption[]>([]);
@@ -1085,6 +1093,13 @@ export function SellerEditListingPage({ listingId }: { listingId: string }) {
   const [existingImages, setExistingImages] = useState<Listing["images"]>([]);
   const [removingImageId, setRemovingImageId] = useState<string | null>(null);
   const [reorderingImages, setReorderingImages] = useState(false);
+  const [showDuplicatedBanner, setShowDuplicatedBanner] = useState(duplicatedHint);
+
+  useEffect(() => {
+    if (!duplicatedHint) return;
+    setShowDuplicatedBanner(true);
+    router.replace(`/seller/listings/${listingId}/edit`, { scroll: false });
+  }, [duplicatedHint, listingId, router]);
 
   useEffect(() => {
     async function load() {
@@ -1288,6 +1303,22 @@ export function SellerEditListingPage({ listingId }: { listingId: string }) {
     >
       {submitting && (
         <p className="mb-4 text-sm text-gray-700">Saving changes…</p>
+      )}
+      {showDuplicatedBanner && listingStatus === "draft" && (
+        <div className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          <p>
+            {vehicleInitialData
+              ? "This is a new copy — add photos and mileage for this vehicle."
+              : "This is a new copy — add photos and update the details before publishing."}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowDuplicatedBanner(false)}
+            className="shrink-0 font-medium text-blue-700 hover:underline"
+          >
+            Dismiss
+          </button>
+        </div>
       )}
       {deliveryMessage && (
         <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">

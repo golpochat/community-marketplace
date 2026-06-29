@@ -15,6 +15,7 @@ import {
   computeListingPricing,
   formatCurrency,
   MAX_AUTO_APPROVE_DISCOUNT_PERCENT,
+  buildVehicleDisplayTitle,
 } from "@community-marketplace/utils";
 
 import { DeliveryPreviewModal } from "@/components/seller/DeliveryPreviewModal";
@@ -76,6 +77,7 @@ const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export interface VehicleFormData {
   categoryId: string;
+  storeId?: string;
   location: string;
   make: string;
   model: string;
@@ -412,7 +414,9 @@ export function VehicleListingForm({
     const attrs = vehicleAttributesFromForm(data);
     return {
       listingId: listingId ?? "",
-      listingTitle: buildVehicleListingTitle(attrs.year, attrs.make, attrs.model),
+      listingTitle:
+        buildVehicleDisplayTitle(attrs.year, attrs.make, attrs.model, attrs) ||
+        buildVehicleListingTitle(attrs.year, attrs.make, attrs.model),
       listingStatus: listingStatus ?? "draft",
       current: proposed,
       proposed,
@@ -517,11 +521,9 @@ export function VehicleListingForm({
   }
 
   const attrs = vehicleAttributesFromForm(data);
-  const previewTitle = buildVehicleListingTitle(
-    attrs.year ?? attrs.yearText,
-    attrs.make,
-    attrs.model,
-  );
+  const previewTitle =
+    buildVehicleDisplayTitle(attrs.year ?? attrs.yearText, attrs.make, attrs.model, attrs) ||
+    buildVehicleListingTitle(attrs.year ?? attrs.yearText, attrs.make, attrs.model);
   let pricingSummary: ReturnType<typeof computeListingPricing> | null = null;
   try {
     if (data.salePrice.trim()) {
@@ -633,7 +635,7 @@ export function VehicleListingForm({
           />
           {previewTitle && (
             <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-              Listing title: <span className="font-medium">{previewTitle}</span>
+              Buyers will see: <span className="font-medium text-gray-900">{previewTitle}</span>
             </p>
           )}
         </div>
@@ -781,6 +783,9 @@ export function VehicleListingForm({
               placeholder="17-character VIN"
               disabled={disabled}
             />
+            <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              Optional. Helps prevent the same car being listed twice. Each vehicle needs its own listing.
+            </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>

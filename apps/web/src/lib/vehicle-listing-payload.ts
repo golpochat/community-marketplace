@@ -6,6 +6,8 @@ import type {
 } from '@community-marketplace/types';
 import { stripEmptyVehicleAttributes } from '@community-marketplace/validation';
 
+import { buildVehicleDisplayTitle } from '@community-marketplace/utils';
+
 import type { VehicleFormData } from '@/components/seller/vehicle-listing-form';
 import {
   VEHICLE_CONDITION_OPTIONS,
@@ -137,11 +139,12 @@ export function buildVehicleListingCreatePayload(
     ? Number(data.originalPrice)
     : undefined;
   const yearForTitle = attrs.year ?? (attrs.yearText ? Number(attrs.yearText) : undefined);
+  const baseTitle =
+    buildVehicleListingTitle(yearForTitle, attrs.make, attrs.model) ||
+    [attrs.yearText, attrs.make, attrs.model].filter(Boolean).join(' ');
 
   return {
-    title:
-      buildVehicleListingTitle(yearForTitle, attrs.make, attrs.model) ||
-      [attrs.yearText, attrs.make, attrs.model].filter(Boolean).join(' '),
+    title: buildVehicleDisplayTitle(yearForTitle, attrs.make, attrs.model, attrs) || baseTitle,
     description: buildVehicleDescription(data, attrs),
     price: salePrice,
     salePrice,
@@ -161,6 +164,7 @@ export function buildVehicleListingCreatePayload(
     })),
     attributes: attrs,
     status: 'draft' as const,
+    ...(data.storeId ? { storeId: data.storeId } : {}),
   };
 }
 
