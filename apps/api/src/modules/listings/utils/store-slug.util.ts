@@ -31,7 +31,20 @@ export function buildStoreSlug(input: {
 export function getStoreDisplayName(input: {
   displayName?: string | null;
   businessName?: string | null;
+  storeName?: string | null;
   email: string;
 }): string {
-  return input.businessName?.trim() || input.displayName?.trim() || input.email.split('@')[0] || 'Seller';
+  return (
+    input.storeName?.trim() ||
+    input.businessName?.trim() ||
+    input.displayName?.trim() ||
+    input.email.split('@')[0] ||
+    'Seller'
+  );
+}
+
+export function buildStoreSlugFromName(name: string, uniqueSuffix?: string): string {
+  const base = slugifyStoreName(name);
+  if (!uniqueSuffix) return base;
+  return `${base}-${uniqueSuffix.replace(/[^a-z0-9]/gi, '').slice(0, 8).toLowerCase()}`;
 }

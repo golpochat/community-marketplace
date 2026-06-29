@@ -207,6 +207,7 @@ export const createListingSchema = z.object({
   salePrice: z.number().min(0).max(1_000_000).optional().nullable(),
   currency: z.string().length(3).toUpperCase().default(DEFAULT_CURRENCY),
   categoryId: uuidSchema,
+  storeId: uuidSchema.optional(),
   condition: listingConditionSchema,
   location: listingLocationSchema,
   deliverySelections: z

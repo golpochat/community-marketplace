@@ -5,6 +5,8 @@ import type {
   ListingSummary,
   ListingUploadUrlResponse,
   PaginatedResult,
+  SellerStore,
+  SellerStoresOverview,
   UserProfile,
   UserVerification,
 } from '@community-marketplace/types';
@@ -194,6 +196,32 @@ export const sellerService = {
 
   async updateProfile(body: Record<string, unknown>): Promise<UserProfile> {
     const response = await apiClient<UserProfile>(WEB_API_ROUTES.seller.profile, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+    return response.data;
+  },
+
+  async getStoresOverview(): Promise<SellerStoresOverview> {
+    const response = await apiClient<SellerStoresOverview>(WEB_API_ROUTES.seller.stores);
+    return response.data;
+  },
+
+  async getPrimaryStore(): Promise<SellerStore | null> {
+    const response = await apiClient<SellerStore | null>(WEB_API_ROUTES.seller.storesPrimary);
+    return response.data;
+  },
+
+  async createStore(body: Record<string, unknown>): Promise<SellerStore> {
+    const response = await apiClient<SellerStore>(WEB_API_ROUTES.seller.stores, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return response.data;
+  },
+
+  async updateStore(storeId: string, body: Record<string, unknown>): Promise<SellerStore> {
+    const response = await apiClient<SellerStore>(WEB_API_ROUTES.seller.store(storeId), {
       method: 'PATCH',
       body: JSON.stringify(body),
     });

@@ -8,7 +8,10 @@ export type CashbackGrantStatus = 'pending' | 'earned' | 'cancelled';
 export type PlatformPurchaseType =
   | 'listing_boost'
   | 'featured_slot'
-  | 'fast_track_verification';
+  | 'fast_track_verification'
+  | 'store_slot_2'
+  | 'store_slot_3'
+  | 'store_bundle_3';
 
 export type PlatformPurchaseStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
@@ -29,6 +32,9 @@ export interface PlatformPricingConfig {
     featured_homepage?: PlatformSkuConfig;
     featured_category?: PlatformSkuConfig;
     fast_track_verification?: PlatformSkuConfig;
+    store_slot_2?: PlatformSkuConfig;
+    store_slot_3?: PlatformSkuConfig;
+    store_bundle_3?: PlatformSkuConfig;
     priority_message?: PlatformSkuConfig;
     early_cashback_unlock?: PlatformSkuConfig;
   };
@@ -89,6 +95,27 @@ export interface FeaturedIntentResponse {
 export interface FastTrackIntentResponse {
   purchase: PlatformPurchase;
   clientSecret: string;
+}
+
+export interface StoreSlotIntentResponse {
+  purchase: PlatformPurchase;
+  clientSecret: string;
+}
+
+export interface StoreSlotCatalogOption {
+  sku: 'store_slot_2' | 'store_slot_3' | 'store_bundle_3';
+  label: string;
+  price: number;
+  slotsGranted: number;
+  eligible: boolean;
+  reason?: string;
+}
+
+export interface StoreSlotCatalogResponse {
+  currency: string;
+  storeSlotLimit: number;
+  storeCount: number;
+  options: StoreSlotCatalogOption[];
 }
 
 export interface BoostCatalogOption {

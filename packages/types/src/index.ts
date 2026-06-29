@@ -215,6 +215,9 @@ export type {
   FeaturedIntentResponse,
   FastTrackStatusResponse,
   FastTrackIntentResponse,
+  StoreSlotIntentResponse,
+  StoreSlotCatalogOption,
+  StoreSlotCatalogResponse,
   SellerPlatformFeeInfo,
   WalletTransaction,
   CashbackGrant,
@@ -292,6 +295,12 @@ export type {
   StoreOpeningHours,
   StoreContactInfo,
 } from './storefront';
+export type {
+  SellerStore,
+  SellerStoreLimits,
+  SellerStoresOverview,
+} from './store';
+export { STORE_PLATFORM_MAX } from './store';
 export type { PaginationMeta, ApiResponse, ApiError, PaginatedResult } from './api';
 export type { AdminDashboardStats, PlatformSettings, AdminMeResponse } from './admin';
 export type {

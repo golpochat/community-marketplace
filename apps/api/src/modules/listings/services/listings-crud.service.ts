@@ -277,9 +277,12 @@ export class ListingsCrudService {
       recentTitles: recentTitles.map((row) => row.title),
     });
 
+    const storeId = await this.resolveStoreIdForSeller(sellerId, parsed.storeId);
+
     const row = await this.prisma.listing.create({
       data: {
         sellerId,
+        storeId,
         categoryId: parsed.categoryId,
         title: normalizeListingTitle(parsed.title),
         description: parsed.description.trim(),
@@ -580,9 +583,14 @@ export class ListingsCrudService {
 
     await this.sellerListingGate.assertCanCreateListing(sellerId);
 
+    const storeId =
+      source.storeId ??
+      (await this.resolveStoreIdForSeller(sellerId));
+
     const row = await this.prisma.listing.create({
       data: {
         sellerId,
+        storeId,
         categoryId: source.categoryId,
         title: `${source.title} (copy)`,
         description: source.description,
@@ -646,5 +654,33 @@ export class ListingsCrudService {
       throw new ForbiddenException("You can only modify your own listings");
     }
     return listing;
+  }
+
+  private async resolveStoreIdForSeller(
+    sellerId: string,
+    storeId?: string,
+  ): Promise<string> {
+    if (storeId) {
+      const store = await this.prisma.store.findFirst({
+        where: { id: storeId, userId: sellerId },
+        select: { id: true },
+      });
+      if (!store) {
+        throw new BadRequestException("Store not found");
+      }
+      return store.id;
+    }
+
+    const primary = await this.prisma.store.findFirst({
+      where: { userId: sellerId },
+      orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
+      select: { id: true },
+    });
+    if (!primary) {
+      throw new BadRequestException(
+        "Create your storefront before adding listings.",
+      );
+    }
+    return primary.id;
   }
 }

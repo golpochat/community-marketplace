@@ -120,6 +120,16 @@ export {
 } from './user.schema';
 
 export {
+  storeNameSchema,
+  storeSlugSchema,
+  createStoreSchema,
+  updateStoreSchema,
+  storeIdParamSchema,
+  type CreateStoreInput,
+  type UpdateStoreInput,
+} from './store.schema';
+
+export {
   listingStatusSchema,
   listingConditionSchema,
   listingSortSchema,
