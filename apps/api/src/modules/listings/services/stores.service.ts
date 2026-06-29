@@ -88,8 +88,8 @@ export class StoresService {
     const sections = await this.fetchCategorySections(store.id, seller.id);
 
     const verified = seller.sellerStatus === 'verified' || seller.idVerified;
-    const logoUrl = store.logoUrl ?? seller.profile?.businessLogoUrl ?? seller.avatarUrl ?? undefined;
-    const bannerUrl = store.bannerUrl ?? seller.profile?.storeBannerUrl ?? undefined;
+    const logoUrl = store.logoUrl ?? undefined;
+    const bannerUrl = store.bannerUrl ?? undefined;
     const contact = buildStoreContact({
       email: seller.email,
       phone: seller.profile?.phone,
@@ -110,7 +110,7 @@ export class StoresService {
       description: store.description?.trim() || 'No store description yet.',
       logoUrl,
       bannerUrl,
-      location: store.location ?? seller.profile?.location ?? undefined,
+      location: store.location ?? undefined,
       memberSince: seller.createdAt.toISOString(),
       verified,
       sellerStatus: seller.sellerStatus as SellerStorefront['sellerStatus'],

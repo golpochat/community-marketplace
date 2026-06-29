@@ -7,6 +7,7 @@ import type { SellerStore, SellerStoreLimits } from '@community-marketplace/type
 import { Button, Input, Label } from '@community-marketplace/ui';
 import { Card } from '@community-marketplace/ui-dashboard';
 
+import { Tabs } from '@/components/shared/tabs';
 import { formatStoreLimits } from '@/hooks/use-seller-store-data';
 import { getPublicStorefrontPath } from '@/lib/storefront-path';
 import { sellerService } from '@/services/marketplace.service';
@@ -18,6 +19,8 @@ import { StoreLogoUpload } from './store-logo-upload';
 const TEXTAREA_CLASSES =
   'flex min-h-[5rem] w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]';
 
+const TAB_LABEL_MAX = 16;
+
 interface SellerStorefrontSettingsProps {
   stores: SellerStore[];
   limits: SellerStoreLimits | null;
@@ -27,6 +30,12 @@ interface SellerStorefrontSettingsProps {
 function pickDefaultStoreId(stores: SellerStore[]): string | null {
   if (!stores.length) return null;
   return stores.find((store) => store.isPrimary)?.id ?? stores[0]?.id ?? null;
+}
+
+function storeTabLabel(store: SellerStore): string {
+  const name = store.name.trim();
+  if (name.length <= TAB_LABEL_MAX) return name;
+  return `${name.slice(0, TAB_LABEL_MAX - 1)}…`;
 }
 
 export function SellerStorefrontSettings({
@@ -55,6 +64,11 @@ export function SellerStorefrontSettings({
     [activeStoreId, stores],
   );
 
+  const storeTabs = useMemo(
+    () => stores.map((store) => ({ id: store.id, label: storeTabLabel(store) })),
+    [stores],
+  );
+
   useEffect(() => {
     setStores(initialStores);
     setActiveStoreId((current) => {
@@ -72,6 +86,13 @@ export function SellerStorefrontSettings({
       setLocation(activeStore.location ?? '');
     }
   }, [activeStore]);
+
+  const selectStore = useCallback((storeId: string) => {
+    setActiveStoreId(storeId);
+    setShowCreateForm(false);
+    setMessage(null);
+    setError(null);
+  }, []);
 
   const handleCreate = useCallback(async () => {
     setCreating(true);
@@ -186,204 +207,189 @@ export function SellerStorefrontSettings({
       {error && <p className="text-sm text-red-600">{error}</p>}
       {message && <p className="text-sm text-emerald-700">{message}</p>}
 
-      <Card title="Your storefronts">
+      <Card title="Storefronts">
         {limitsLabel && (
           <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">{limitsLabel}</p>
         )}
-        <ul className="space-y-2">
-          {stores.map((store) => {
-            const isActive = store.id === activeStoreId;
-            return (
-              <li key={store.id}>
-                <button
+
+        <div className="flex flex-wrap items-end gap-3">
+          <Tabs
+            items={storeTabs}
+            activeId={showCreateForm ? '' : (activeStoreId ?? '')}
+            onChange={selectStore}
+            className="min-w-0 flex-1"
+          />
+          {canAddStore && (
+            <Button
+              type="button"
+              variant="outline"
+              className="shrink-0"
+              onClick={() => {
+                setShowCreateForm(true);
+                setError(null);
+                setMessage(null);
+              }}
+            >
+              + Add
+            </Button>
+          )}
+        </div>
+
+        <div className="mt-6 border-t border-gray-100 pt-6">
+          {showCreateForm && canAddStore ? (
+            <div className="space-y-4">
+              <p className="text-sm font-medium text-gray-900">New storefront</p>
+              <div>
+                <Label htmlFor="add-store-name">Store name</Label>
+                <Input
+                  id="add-store-name"
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                  placeholder="e.g. Second brand"
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-store-description">Store description</Label>
+                <textarea
+                  id="add-store-description"
+                  rows={3}
+                  value={createDescription}
+                  onChange={(e) => setCreateDescription(e.target.value)}
+                  className={TEXTAREA_CLASSES}
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-store-location">Store location</Label>
+                <Input
+                  id="add-store-location"
+                  value={createLocation}
+                  onChange={(e) => setCreateLocation(e.target.value)}
+                  placeholder="e.g. Dublin"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
                   type="button"
-                  onClick={() => {
-                    setActiveStoreId(store.id);
-                    setMessage(null);
-                    setError(null);
-                  }}
-                  className={`flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
-                    isActive
-                      ? 'border-[hsl(var(--dashboard-accent))] bg-[hsl(var(--dashboard-accent))]/5'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
+                  disabled={creating || !createName.trim()}
+                  onClick={() => void handleCreate()}
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-900">{store.name}</p>
-                    <p className="truncate text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-                      /store/{store.slug}
-                      {store.isPrimary ? ' · Primary' : ''}
-                    </p>
-                  </div>
+                  {creating ? 'Creating…' : 'Create storefront'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={creating}
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setCreateName('');
+                    setCreateDescription('');
+                    setCreateLocation('');
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            activeStore && (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+                    {activeStore.isPrimary ? 'Primary storefront' : 'Storefront'}
+                    <span className="mx-1.5 text-gray-300">·</span>
+                    <span className="text-gray-900">{activeStore.name}</span>
+                  </p>
                   <Link
-                    href={getPublicStorefrontPath(store.slug)}
+                    href={getPublicStorefrontPath(activeStore.slug)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={(event) => event.stopPropagation()}
-                    className="shrink-0 text-xs font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+                    className="shrink-0 text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
                   >
-                    View →
+                    View public storefront →
                   </Link>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                </div>
 
-        {canAddStore && !showCreateForm && (
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-4"
-            onClick={() => {
-              setShowCreateForm(true);
-              setError(null);
-              setMessage(null);
-            }}
-          >
-            Add another storefront
-          </Button>
-        )}
+                <StoreBannerUpload
+                  bannerUrl={activeStore.bannerUrl}
+                  storeId={activeStore.id}
+                  onUpdated={(bannerUrl) => {
+                    setStores((current) =>
+                      current.map((store) =>
+                        store.id === activeStore.id ? { ...store, bannerUrl } : store,
+                      ),
+                    );
+                    setError(null);
+                    setMessage('Storefront banner updated.');
+                    onSaved?.();
+                  }}
+                />
 
-        {showCreateForm && canAddStore && (
-          <div className="mt-4 space-y-4 rounded-lg border border-dashed border-gray-300 p-4">
-            <p className="text-sm font-medium text-gray-900">New storefront</p>
-            <div>
-              <Label htmlFor="add-store-name">Store name</Label>
-              <Input
-                id="add-store-name"
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                placeholder="e.g. Second brand"
-              />
-            </div>
-            <div>
-              <Label htmlFor="add-store-description">Store description</Label>
-              <textarea
-                id="add-store-description"
-                rows={3}
-                value={createDescription}
-                onChange={(e) => setCreateDescription(e.target.value)}
-                className={TEXTAREA_CLASSES}
-              />
-            </div>
-            <div>
-              <Label htmlFor="add-store-location">Store location</Label>
-              <Input
-                id="add-store-location"
-                value={createLocation}
-                onChange={(e) => setCreateLocation(e.target.value)}
-                placeholder="e.g. Dublin"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button"
-                disabled={creating || !createName.trim()}
-                onClick={() => void handleCreate()}
-              >
-                {creating ? 'Creating…' : 'Create storefront'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={creating}
-                onClick={() => {
-                  setShowCreateForm(false);
-                  setCreateName('');
-                  setCreateDescription('');
-                  setCreateLocation('');
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
+                <StoreLogoUpload
+                  logoUrl={activeStore.logoUrl}
+                  storeName={activeStore.name}
+                  storeId={activeStore.id}
+                  onUpdated={(logoUrl) => {
+                    setStores((current) =>
+                      current.map((store) =>
+                        store.id === activeStore.id ? { ...store, logoUrl } : store,
+                      ),
+                    );
+                    setError(null);
+                    setMessage('Store logo updated.');
+                    onSaved?.();
+                  }}
+                />
+
+                <div>
+                  <Label htmlFor="storefront-name">Store name</Label>
+                  <Input
+                    id="storefront-name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="storefront-bio">Store description</Label>
+                  <textarea
+                    id="storefront-bio"
+                    rows={3}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className={TEXTAREA_CLASSES}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="storefront-location">Store location</Label>
+                  <Input
+                    id="storefront-location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="e.g. Dublin"
+                  />
+                </div>
+
+                <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                  Public URL: /store/{activeStore.slug}
+                </p>
+
+                <Button
+                  type="button"
+                  disabled={saving || !name.trim()}
+                  onClick={() => void handleSave()}
+                >
+                  {saving ? 'Saving…' : 'Save storefront'}
+                </Button>
+              </div>
+            )
+          )}
+        </div>
 
         {limits?.blockReason && !canAddStore && (
           <p className="mt-4 text-sm text-amber-700">{limits.blockReason}</p>
         )}
       </Card>
-
-      {activeStore && (
-        <Card title="Edit storefront">
-          <div className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-            <p>Editing <span className="font-medium text-gray-900">{activeStore.name}</span>.</p>
-          </div>
-
-          <div className="space-y-4">
-            <StoreBannerUpload
-              bannerUrl={activeStore.bannerUrl}
-              storeId={activeStore.id}
-              onUpdated={(bannerUrl) => {
-                setStores((current) =>
-                  current.map((store) =>
-                    store.id === activeStore.id ? { ...store, bannerUrl } : store,
-                  ),
-                );
-                setError(null);
-                setMessage('Storefront banner updated.');
-                onSaved?.();
-              }}
-            />
-
-            <StoreLogoUpload
-              logoUrl={activeStore.logoUrl}
-              storeName={activeStore.name}
-              storeId={activeStore.id}
-              onUpdated={(logoUrl) => {
-                setStores((current) =>
-                  current.map((store) =>
-                    store.id === activeStore.id ? { ...store, logoUrl } : store,
-                  ),
-                );
-                setError(null);
-                setMessage('Store logo updated.');
-                onSaved?.();
-              }}
-            />
-
-            <div>
-              <Label htmlFor="storefront-name">Store name</Label>
-              <Input
-                id="storefront-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="storefront-bio">Store description</Label>
-              <textarea
-                id="storefront-bio"
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className={TEXTAREA_CLASSES}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="storefront-location">Store location</Label>
-              <Input
-                id="storefront-location"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Dublin"
-              />
-            </div>
-
-            <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-              Public URL: /store/{activeStore.slug}
-            </p>
-
-            <Button type="button" disabled={saving || !name.trim()} onClick={() => void handleSave()}>
-              {saving ? 'Saving…' : 'Save storefront'}
-            </Button>
-          </div>
-        </Card>
-      )}
 
       {limits && !canAddStore && limits.storeCount >= limits.storeSlotLimit && (
         <SellerStoreSlotPanel onUpdated={() => onSaved?.()} />

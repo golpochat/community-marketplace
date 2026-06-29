@@ -11,22 +11,31 @@ export function useSellerStoreData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const load = useCallback(async (options?: { silent?: boolean }) => {
+    const silent = options?.silent ?? false;
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       const data = await sellerService.getStoresOverview();
       setOverview(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load storefront');
+      if (!silent) {
+        setError(err instanceof Error ? err.message : 'Failed to load storefront');
+      }
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const reload = useCallback(() => load({ silent: true }), [load]);
 
   const primaryStore =
     overview?.stores.find((store) => store.isPrimary) ?? overview?.stores[0] ?? null;
@@ -38,7 +47,7 @@ export function useSellerStoreData() {
     primaryStore,
     loading,
     error,
-    reload: load,
+    reload,
   };
 }
 
