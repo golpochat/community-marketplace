@@ -130,6 +130,15 @@ export const confirmAvatarSchema = z.object({
   publicUrl: z.string().url(),
 });
 
+export const phoneChangeSendOtpSchema = z.object({
+  phone: phoneSchema,
+});
+
+export const phoneChangeVerifySchema = z.object({
+  phone: phoneSchema,
+  code: z.string().regex(/^\d{6}$/, 'OTP must be 6 digits'),
+});
+
 export const adminUserListQuerySchema = z.object({
   role: rbacRoleSchema.optional(),
   status: userStatusSchema.optional(),

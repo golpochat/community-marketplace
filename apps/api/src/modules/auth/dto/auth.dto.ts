@@ -9,6 +9,8 @@ import {
   ValidateIf,
 } from 'class-validator';
 
+import type { RegistrationAccountType } from '@community-marketplace/types';
+
 export class RegisterDto {
   @IsEmail()
   email!: string;
@@ -74,6 +76,11 @@ export class ActivateEmailDto {
   token!: string;
 }
 
+export class ActivationPreviewDto {
+  @IsString()
+  token!: string;
+}
+
 export class RefreshTokenDto {
   @IsOptional()
   @IsString()
@@ -96,12 +103,19 @@ export class LogoutDto {
 }
 
 export class CompleteRegistrationDto {
+  @IsEnum(['buyer', 'seller'])
+  accountType!: RegistrationAccountType;
+
   @IsString()
   @MinLength(1)
   name!: string;
 
   @IsEmail()
   email!: string;
+
+  @IsString()
+  @MinLength(8)
+  password!: string;
 
   @IsString()
   phoneVerificationToken!: string;

@@ -5,10 +5,26 @@ import {
 } from '@community-marketplace/ui-dashboard';
 import type { RbacRole } from '@community-marketplace/types';
 
-import { WEB_APP_ROUTES, isWebDashboardRouteAllowed } from './rbac-routes';
+import { WEB_APP_ROUTES, getWebDashboardPathForRole, isWebDashboardRouteAllowed } from './rbac-routes';
 import { getWebRoleFromCookie } from './auth';
 
 export const DASHBOARD_PREFIXES = ['/super-admin', '/admin', '/seller', '/buyer'] as const;
+
+export const GUEST_ONLY_AUTH_PATHS = [
+  WEB_APP_ROUTES.login,
+  WEB_APP_ROUTES.register,
+  '/auth/activate',
+] as const;
+
+export function isGuestOnlyAuthPath(pathname: string): boolean {
+  return GUEST_ONLY_AUTH_PATHS.some((path) => pathname === path);
+}
+
+/** Redirect signed-in users away from login, register, and activation pages. */
+export function resolveGuestAuthRedirect(pathname: string, role: RbacRole | null): string | null {
+  if (!role || !isGuestOnlyAuthPath(pathname)) return null;
+  return getWebDashboardPathForRole(role);
+}
 
 export const LEGACY_DASHBOARD_REDIRECTS: Record<string, string> = {
   '/seller/dashboard/chat': '/seller/chat',
@@ -16,9 +32,13 @@ export const LEGACY_DASHBOARD_REDIRECTS: Record<string, string> = {
   '/buyer/payments': '/buyer/purchases',
   '/super-admin/audit-logs': '/super-admin/audit-log',
   '/admin/reports': '/admin/moderation',
-  '/admin/settings': '/admin/profile?tab=preferences',
-  '/buyer/settings': '/buyer/profile?tab=preferences',
-  '/seller/settings': '/seller/profile?tab=settings',
+  '/admin/preferences': '/admin/settings',
+  '/super-admin/preferences': '/super-admin/settings',
+  '/admin/account': '/admin/profile',
+  '/super-admin/account': '/super-admin/profile',
+  '/buyer/account': '/buyer/profile',
+  '/buyer/preferences': '/buyer/settings',
+  '/seller/account': '/seller/profile',
 };
 
 export function isDashboardPath(pathname: string): boolean {

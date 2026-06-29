@@ -3,12 +3,17 @@
 import type { SellerStorefront } from '@community-marketplace/types';
 import { MapPin, MessageCircle } from 'lucide-react';
 
+import { SellerRatingDisplay } from '@/components/trust/seller-rating-display';
+
 import { StoreBanner } from '@/components/storefront/store-banner';
 import { StoreContactButton } from '@/components/storefront/store-contact-button';
+import {
+  STOREFRONT_CONTAINER_CLASS,
+  STOREFRONT_LOGO_OVERLAP_CLASS,
+} from '@/components/storefront/storefront-layout';
 import { StoreLogo } from '@/components/storefront/store-logo';
 import { StoreStatsStrip } from '@/components/storefront/store-stats-strip';
 import { StoreVerificationLabel } from '@/components/storefront/store-verification-label';
-import { SellerRatingDisplay } from '@/components/trust/seller-rating-display';
 
 interface StoreHeaderProps {
   store: SellerStorefront;
@@ -18,8 +23,8 @@ interface StoreHeaderProps {
 export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
   const joinedLabel = store.memberSince
     ? new Date(store.memberSince).toLocaleDateString(undefined, {
-        year: 'numeric',
         month: 'long',
+        year: 'numeric',
       })
     : null;
 
@@ -27,11 +32,15 @@ export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
     <header className="border-b border-gray-200 bg-white">
       <StoreBanner bannerUrl={store.bannerUrl} name={store.name} />
 
-      <div className="mx-auto max-w-6xl px-4">
-        <div className="relative -mt-14 sm:-mt-16 md:-mt-[4.5rem]">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-              <StoreLogo logoUrl={store.logoUrl} name={store.name} />
+      <div className={STOREFRONT_CONTAINER_CLASS}>
+        <div className="pb-6 pt-0">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5">
+              <StoreLogo
+                logoUrl={store.logoUrl}
+                name={store.name}
+                className={STOREFRONT_LOGO_OVERLAP_CLASS}
+              />
               <div className="min-w-0 space-y-2 pb-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
@@ -43,7 +52,7 @@ export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
                   />
                 </div>
                 {store.tagline ? (
-                  <p className="text-sm text-gray-600 sm:text-base">{store.tagline}</p>
+                  <p className="max-w-xl text-sm text-gray-600 sm:text-base">{store.tagline}</p>
                 ) : null}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                   {joinedLabel ? <span>Joined {joinedLabel}</span> : null}
@@ -53,12 +62,12 @@ export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
                       {store.location}
                     </span>
                   ) : null}
+                  <SellerRatingDisplay
+                    averageRating={store.analytics.averageRating}
+                    reviewCount={store.analytics.reviewCount}
+                    size="md"
+                  />
                 </div>
-                <SellerRatingDisplay
-                  averageRating={store.analytics.averageRating}
-                  reviewCount={store.analytics.reviewCount}
-                  size="md"
-                />
               </div>
             </div>
 
@@ -72,7 +81,7 @@ export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
           </div>
         </div>
 
-        <div className="py-6 md:py-8">
+        <div className="pb-6 md:pb-8">
           <StoreStatsStrip
             listingCount={listingCount}
             analytics={store.analytics}

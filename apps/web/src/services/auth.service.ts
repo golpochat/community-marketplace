@@ -1,8 +1,10 @@
 import type {
   CompleteRegistrationResponse,
+  EmailActivationResponse,
   LoginResponse,
   OtpSentResponse,
   OtpVerifiedResponse,
+  RegistrationAccountType,
 } from '@community-marketplace/types';
 import { loginSchema } from '@community-marketplace/validation';
 
@@ -41,8 +43,10 @@ export const authService = {
   },
 
   async completeRegistration(input: {
+    accountType: RegistrationAccountType;
     name: string;
     email: string;
+    password: string;
     phoneVerificationToken: string;
   }): Promise<CompleteRegistrationResponse> {
     const response = await apiClient<CompleteRegistrationResponse>(
@@ -50,6 +54,17 @@ export const authService = {
       {
         method: 'POST',
         body: JSON.stringify(input),
+      },
+    );
+    return response.data;
+  },
+
+  async activateAccount(token: string): Promise<EmailActivationResponse> {
+    const response = await apiClient<EmailActivationResponse>(
+      WEB_API_ROUTES.public.auth.activate,
+      {
+        method: 'POST',
+        body: JSON.stringify({ token }),
       },
     );
     return response.data;

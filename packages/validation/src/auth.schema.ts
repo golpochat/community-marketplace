@@ -2,7 +2,13 @@ import { z } from 'zod';
 
 import { emailSchema, passwordSchema } from './common.schema';
 
-export const otpPurposeSchema = z.enum(['login', 'register', 'password_reset', 'seller_verify']);
+export const otpPurposeSchema = z.enum([
+  'login',
+  'register',
+  'password_reset',
+  'seller_verify',
+  'phone_change',
+]);
 
 export const otpChannelSchema = z.enum(['email', 'phone']);
 
@@ -12,6 +18,8 @@ export const phoneSchema = z
   .regex(/^\+[1-9]\d{7,14}$/, 'Phone must be in E.164 format (e.g. +14155552671)');
 
 export const displayNameSchema = z.string().trim().min(1).max(100);
+
+export const registrationAccountTypeSchema = z.enum(['buyer', 'seller']);
 
 export const sendOtpSchema = z
   .object({
@@ -47,9 +55,15 @@ export const verifyOtpSchema = z
   });
 
 export const completeRegistrationSchema = z.object({
+  accountType: registrationAccountTypeSchema,
   name: displayNameSchema,
   email: emailSchema,
+  password: passwordSchema,
   phoneVerificationToken: z.string().min(1),
+});
+
+export const activationPreviewSchema = z.object({
+  token: z.string().min(1),
 });
 
 export const activateEmailSchema = z.object({
@@ -71,9 +85,11 @@ export const logoutSchema = z.object({
 
 export const deviceFingerprintHeaderSchema = z.string().min(8).max(128).optional();
 
+export type RegistrationAccountType = z.infer<typeof registrationAccountTypeSchema>;
 export type SendOtpInput = z.infer<typeof sendOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type CompleteRegistrationInput = z.infer<typeof completeRegistrationSchema>;
+export type ActivationPreviewInput = z.infer<typeof activationPreviewSchema>;
 export type ActivateEmailInput = z.infer<typeof activateEmailSchema>;
 export type ResendActivationInput = z.infer<typeof resendActivationSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;

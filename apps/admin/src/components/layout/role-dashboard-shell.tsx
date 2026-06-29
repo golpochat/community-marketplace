@@ -19,8 +19,8 @@ function getSettingsPath(role: RbacRole): string {
 }
 
 function getProfilePath(role: RbacRole): string {
-  if (role === 'SUPER_ADMIN') return '/super-admin/settings';
-  return '/admin/settings';
+  if (role === 'SUPER_ADMIN') return '/super-admin/profile';
+  return '/admin/profile';
 }
 
 export function RoleDashboardShell({ role, children }: RoleDashboardShellProps) {

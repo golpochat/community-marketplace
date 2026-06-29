@@ -7,7 +7,7 @@ import { Logo } from '@/components/brand/logo';
 const FOOTER_LINKS = {
   marketplace: [
     { href: '/listings', label: 'Browse listings' },
-    { href: '/auth/register', label: 'Start selling' },
+    { href: '/auth/register?intent=seller', label: 'Start selling' },
     { href: '/success-stories', label: 'Success stories' },
   ],
   company: [

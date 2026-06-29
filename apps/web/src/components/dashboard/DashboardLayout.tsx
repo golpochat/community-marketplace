@@ -20,7 +20,7 @@ const PROFILE_HREF: Record<RbacRole, string> = {
   BUYER: '/buyer/profile',
 };
 
-const SETTINGS_HREF: Record<RbacRole, string> = {
+const SETTINGS_HREF: Record<RbacRole, string | undefined> = {
   SUPER_ADMIN: '/super-admin/settings',
   ADMIN: '/admin/settings',
   SELLER: '/seller/settings',
@@ -42,7 +42,7 @@ export interface WebDashboardLayoutProps {
 
 export default function DashboardLayout({ role, theme, children }: WebDashboardLayoutProps) {
   const { user, session, clearUser } = useAuth();
-  const { permissions } = useUserProfile();
+  const { profile, permissions } = useUserProfile();
 
   const sidebarItems =
     role === 'ADMIN' || role === 'SUPER_ADMIN'
@@ -70,12 +70,12 @@ export default function DashboardLayout({ role, theme, children }: WebDashboardL
       brand={APP_SHORT_NAME}
       brandAbbr={APP_BRAND_ABBR}
       user={{
-        name: user?.displayName,
+        name: profile?.displayName ?? user?.displayName,
         email: user?.email,
-        avatarUrl: user?.avatarUrl,
+        avatarUrl: profile?.avatarUrl ?? user?.avatarUrl,
       }}
       profileHref={PROFILE_HREF[role]}
-      settingsHref={role === 'SUPER_ADMIN' ? SETTINGS_HREF[role] : undefined}
+      settingsHref={SETTINGS_HREF[role]}
       onLogout={handleLogout}
       topbarActions={
         <NotificationBell href={NOTIFICATIONS_HREF[role]} role={role} />

@@ -1,20 +1,17 @@
 'use client';
 
-import Link from 'next/link';
-
-import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
-
 import { CreateListingButton } from '@/components/seller/create-listing-button';
 import { SellerConnectBanner } from '@/components/seller/seller-connect-banner';
-import { SellerVerificationBanner } from '@/components/seller/seller-verification-banner';
 import { SellerDashboardCards } from '@/components/seller/seller-dashboard-cards';
+import { SellerDashboardSummary } from '@/components/seller/seller-dashboard-summary';
+import { SellerVerificationBanner } from '@/components/seller/seller-verification-banner';
 import { useSellerDashboardStats } from '@/hooks/use-seller-dashboard-stats';
-import { useUserProfile } from '@/hooks/use-user-profile';
-import { useAuth } from '@/hooks/use-auth';
+import { useSellerProfileData } from '@/hooks/use-seller-profile-data';
+import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
 export default function SellerDashboardPage() {
-  const { user } = useAuth();
-  const { profile, loading: profileLoading, error } = useUserProfile();
+  const { profile, verification, listingsSummary, loading: profileLoading, error } =
+    useSellerProfileData();
   const { stats, loading: statsLoading } = useSellerDashboardStats();
 
   return (
@@ -28,19 +25,18 @@ export default function SellerDashboardPage() {
         }
       />
       {profileLoading && (
-        <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading profile…</p>
+        <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading…</p>
       )}
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
       <SellerConnectBanner className="mb-6" />
       <SellerVerificationBanner className="mb-6" />
-      <p className="mb-4 text-sm">
-        <Link
-          href="/seller/profile"
-          className="font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
-        >
-          Open seller profile →
-        </Link>
-      </p>
+      {profile && verification && !profileLoading && (
+        <SellerDashboardSummary
+          profile={profile}
+          verification={verification}
+          listingsSummary={listingsSummary}
+        />
+      )}
       <SellerDashboardCards stats={stats} loading={statsLoading} />
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <DashboardCard title="Listing performance">
@@ -67,11 +63,6 @@ export default function SellerDashboardPage() {
           </DashboardCard>
         )}
       </div>
-      {!profile && user && !profileLoading && (
-        <p className="mt-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-          Signed in as {user.email}
-        </p>
-      )}
       <p className="mt-4 text-sm">
         <CreateListingButton label="Create a new listing" />
       </p>

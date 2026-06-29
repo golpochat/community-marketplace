@@ -23,7 +23,10 @@ export type UserAuditEventType =
   | 'user_unbanned'
   | 'settings_updated'
   | 'deletion_requested'
-  | 'avatar_uploaded';
+  | 'avatar_uploaded'
+  | 'store_banner_uploaded'
+  | 'phone_change_otp_sent'
+  | 'phone_changed';
 
 export interface UserLocation {
   latitude?: number;
@@ -53,6 +56,7 @@ export interface UserProfileDetails {
   phone?: string;
   dateOfBirth?: string;
   gender?: UserGender;
+  storeBannerUrl?: string;
 }
 
 export interface UserProfile extends User, UserProfileDetails {

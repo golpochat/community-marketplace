@@ -93,7 +93,7 @@ export function StoreDetailsSection({
       ) : null}
 
       {hasHours ? (
-        <CollapsiblePanel title="Opening hours" defaultOpen={false}>
+        <CollapsiblePanel title="Opening hours" defaultOpen>
           <StoreOpeningHoursPanel openingHours={openingHours} />
         </CollapsiblePanel>
       ) : null}

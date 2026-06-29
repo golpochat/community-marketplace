@@ -13,6 +13,7 @@ import { NavCategoriesDropdown } from '@/components/layout/nav-categories-dropdo
 import { UserMenuDropdown } from '@/components/layout/user-menu-dropdown';
 import { NotificationBell } from '@/components/shared/notification-bell';
 import { useAuth } from '@/hooks/use-auth';
+import { useUserProfile } from '@/hooks/use-user-profile';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 import { getUserNavLinks } from '@/lib/user-nav-routes';
 import { authService } from '@/services/auth.service';
@@ -57,10 +58,18 @@ function HeaderNavLink({
 export function Header() {
   const pathname = usePathname();
   const { user, session, isAuthenticated, clearUser, dashboardPath } = useAuth();
+  const { profile } = useUserProfile();
   const hasAuthState = isAuthenticated || !!user;
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = user && dashboardPath ? getUserNavLinks(user.role, dashboardPath) : null;
+  const menuUser = user
+    ? {
+        ...user,
+        displayName: profile?.displayName ?? user.displayName,
+        avatarUrl: profile?.avatarUrl ?? user.avatarUrl,
+      }
+    : null;
   const sellHref = getSellHref(hasAuthState, navLinks?.sellItem);
   const buyActive = isBuyRoute(pathname);
   const sellActive = isSellRoute(pathname);
@@ -115,7 +124,7 @@ export function Header() {
           </div>
 
           <div className="hidden shrink-0 items-center gap-3 md:flex">
-            {hasAuthState && user && navLinks ? (
+            {hasAuthState && user && navLinks && menuUser ? (
               <>
                 <Link href={sellHref} aria-current={sellActive ? 'page' : undefined}>
                   <Button className="h-10 rounded-md px-4 text-[15px] font-semibold transition-all duration-200">
@@ -123,7 +132,7 @@ export function Header() {
                   </Button>
                 </Link>
                 {user.role && <NotificationBell href={notificationsHref} role={user.role} />}
-                <UserMenuDropdown user={user} links={navLinks} onSignOut={handleSignOut} />
+                <UserMenuDropdown user={menuUser} links={navLinks} onSignOut={handleSignOut} />
               </>
             ) : (
               <>

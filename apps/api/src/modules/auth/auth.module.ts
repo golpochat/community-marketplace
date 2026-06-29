@@ -6,6 +6,8 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthAuditService } from './services/auth-audit.service';
 import { AuthSecurityService } from './services/auth-security.service';
+import { AuthActivationListener } from './listeners/auth-activation.listener';
+import { ActivationEmailService } from './services/activation-email.service';
 import { EmailActivationService } from './services/email-activation.service';
 import { JwtAuthService } from './services/jwt-auth.service';
 import { OtpService } from './services/otp.service';
@@ -26,6 +28,8 @@ import { SessionService } from './services/session.service';
     OtpService,
     JwtAuthService,
     EmailActivationService,
+    ActivationEmailService,
+    AuthActivationListener,
     PhoneVerificationService,
     SessionService,
     AuthAuditService,

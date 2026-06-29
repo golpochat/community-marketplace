@@ -11,6 +11,22 @@
   --brand-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --brand-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --brand-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  /* Storefront hero: base 220px (h-44 + 25%), scales up to 280px on wide screens */
+  --storefront-banner-height: clamp(13.75rem, 20vw, 17.5rem);
+  --storefront-logo-overlap: 3.5rem;
+}
+
+/** Fixed-height hero strip — height from CSS variable so it always applies. */
+.storefront-hero-banner {
+  width: 100%;
+  height: var(--storefront-banner-height);
+  min-height: var(--storefront-banner-height);
+  max-height: var(--storefront-banner-height);
+  flex-shrink: 0;
+}
+
+.storefront-logo-overlap {
+  margin-top: calc(-1 * var(--storefront-logo-overlap));
 }
 
 .text-h1 {

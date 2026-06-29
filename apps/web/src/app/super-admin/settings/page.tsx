@@ -1,7 +1,5 @@
-'use client';
-
-import { SuperAdminSettingsPage } from '@/components/dashboard/admin-resource-pages';
+import { StaffSettingsPage } from '@/components/dashboard/staff-settings-page';
 
 export default function Page() {
-  return <SuperAdminSettingsPage />;
+  return <StaffSettingsPage />;
 }

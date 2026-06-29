@@ -9,6 +9,7 @@ import { buildDevUploadUrl, isR2Configured } from '../../../libs/asset-url.lib';
 
 export type R2AssetCategory =
   | 'user-avatars'
+  | 'store-banners'
   | 'listing-images'
   | 'verification-documents'
   | 'dispute-evidence'
@@ -16,6 +17,7 @@ export type R2AssetCategory =
 
 const CATEGORY_PREFIX: Record<R2AssetCategory, string> = {
   'user-avatars': 'user-avatars',
+  'store-banners': 'store-banners',
   'listing-images': 'listing-images',
   'verification-documents': 'verification-documents',
   'dispute-evidence': 'dispute-evidence',
@@ -120,6 +122,19 @@ export class R2StorageService {
     });
   }
 
+  async createStoreBannerUploadUrl(
+    userId: string,
+    contentType: string,
+    fileName?: string,
+  ): Promise<AvatarUploadUrlResponse> {
+    return this.createSignedUploadUrl({
+      category: 'store-banners',
+      ownerId: userId,
+      contentType,
+      fileName,
+    });
+  }
+
   async createVerificationDocumentUploadUrl(
     userId: string,
     contentType: string,
@@ -152,7 +167,9 @@ export class R2StorageService {
 
   verifyKeyBelongsToUser(key: string, userId: string): boolean {
     return (
-      key.startsWith(`user-avatars/${userId}/`) || key.startsWith(`avatars/${userId}/`)
+      key.startsWith(`user-avatars/${userId}/`) ||
+      key.startsWith(`avatars/${userId}/`) ||
+      key.startsWith(`store-banners/${userId}/`)
     );
   }
 

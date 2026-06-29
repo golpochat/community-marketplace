@@ -24,7 +24,9 @@ export interface VerificationNudgeState {
   verifyLabel: string;
 }
 
-const VERIFY_HREF = '/seller/profile?tab=verification';
+import { SELLER_ROUTES } from '@/lib/seller-routes';
+
+const VERIFY_HREF = SELLER_ROUTES.verification;
 
 export function resolveNudgeTier(
   count: number,

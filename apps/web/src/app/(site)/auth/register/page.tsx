@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 import { RegisterForm } from '@/components/auth/register-form';
 
@@ -9,7 +10,9 @@ export default function RegisterPage() {
     <div className="rounded-xl border border-gray-200 bg-white p-8 shadow-sm">
       <h1 className="text-2xl font-semibold text-gray-900">Create account</h1>
       <p className="mt-2 text-sm text-gray-600">Join your local community marketplace</p>
-      <RegisterForm />
+      <Suspense fallback={<p className="mt-6 text-sm text-gray-600">Loading...</p>}>
+        <RegisterForm />
+      </Suspense>
       <p className="mt-6 text-center text-sm text-gray-600">
         Already have an account?{' '}
         <Link href="/auth/login" className="font-medium text-primary hover:text-primary/90">

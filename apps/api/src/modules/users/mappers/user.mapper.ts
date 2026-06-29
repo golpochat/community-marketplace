@@ -59,6 +59,7 @@ export function mapProfileDetails(
             label: profile.location ?? undefined,
           }
         : undefined,
+    storeBannerUrl: profile.storeBannerUrl ?? undefined,
   };
 }
 

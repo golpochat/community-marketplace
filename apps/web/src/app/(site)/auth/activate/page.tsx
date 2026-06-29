@@ -2,13 +2,12 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
-import type { EmailActivationResponse } from '@community-marketplace/types';
 import { Button } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
-import { apiClient } from '@/lib/api-client';
-import { WEB_API_ROUTES } from '@/lib/api-routes';
+import { authService } from '@/services/auth.service';
 
 export default function ActivateEmailPage() {
   return (
@@ -20,51 +19,52 @@ export default function ActivateEmailPage() {
 
 function ActivateEmailContent() {
   const router = useRouter();
-  const { setAuth } = useAuth();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const { setAuth } = useAuth();
   const [message, setMessage] = useState('Activating your account...');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const token = searchParams.get('token');
     if (!token) {
-      setError('Missing activation token.');
+      setError('This activation link is missing a token. Please use the link from your email.');
       return;
     }
 
-    apiClient<EmailActivationResponse>(WEB_API_ROUTES.public.auth.activate, {
-      method: 'POST',
-      body: JSON.stringify({ token }),
-    })
+    authService
+      .activateAccount(token)
       .then((response) => {
-        const { data } = response;
-        if (data.login) {
-          setAuth(data.login);
-          router.push(data.login.redirectPath);
+        if (response.login) {
+          setAuth(response.login);
+          router.push(response.login.redirectPath);
           return;
         }
 
         setMessage(
-          data.activated
-            ? `Email ${data.email} activated. You can sign in now.`
-            : `Email ${data.email} was already activated.`,
+          response.activated
+            ? `Your account for ${response.email} is now active. You can sign in.`
+            : `Your account for ${response.email} was already activated. You can sign in.`,
         );
       })
       .catch((err: Error) => {
         setError(err.message);
       });
-  }, [token, router, setAuth]);
+  }, [searchParams, router, setAuth]);
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-md py-16 text-center">
+        <p className="text-red-600">{error}</p>
+        <Button className="mt-6" asChild>
+          <Link href="/auth/login">Go to sign in</Link>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-md py-16 text-center">
-      {error ? (
-        <p className="text-red-600">{error}</p>
-      ) : (
-        <p className="text-gray-700">{message}</p>
-      )}
-      <Button className="mt-6" onClick={() => router.push('/auth/login')}>
-        Go to sign in
-      </Button>
+      <p className="text-gray-700">{message}</p>
     </div>
   );
 }

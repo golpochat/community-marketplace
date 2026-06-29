@@ -18,6 +18,7 @@ interface AuthState {
   session: AuthSession | null;
   isAuthenticated: boolean;
   setAuth: (response: AuthResponse) => void;
+  updateUser: (partial: Partial<User>) => void;
   updateSessionTokens: (accessToken: string, refreshToken: string) => void;
   clearUser: () => void;
 }
@@ -41,6 +42,11 @@ export const useAuthStore = create<AuthState>()(
           },
           isAuthenticated: true,
         });
+      },
+      updateUser: (partial) => {
+        set((state) =>
+          state.user ? { user: { ...state.user, ...partial } } : state,
+        );
       },
       updateSessionTokens: (accessToken, refreshToken) => {
         set((state) => ({

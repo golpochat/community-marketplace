@@ -27,12 +27,14 @@
 
 ```mermaid
 flowchart TD
-  A[Enter phone] --> B[OTP send]
-  B --> C[OTP verify]
-  C --> D[Name + email]
-  D --> E[Activation email]
-  E --> F[Click link]
-  F --> G[Account created + optional auto-login]
+  A[Enter phone] --> B{Phone already registered?}
+  B -->|Yes| C[Sign in instead]
+  B -->|No| D[OTP send + verify]
+  D --> E[Enter email]
+  E --> F[Activation email]
+  F --> G[Click link]
+  G --> H[Set name + password]
+  H --> I[Account created + logged in]
 ```
 
 ## Edge cases
@@ -40,8 +42,8 @@ flowchart TD
 | Case | Behavior |
 |------|----------|
 | Expired OTP | 400 with retry message |
-| Already registered phone | OTP login flow instead |
-| Activation link reused | `already activated` response |
+| Already registered phone | Block OTP on register; prompt sign in |
+| Activation link reused | `already activated` response; sign in with password |
 | Invalid refresh token | 401, clear cookie |
 | Suspended user login | 403 |
 

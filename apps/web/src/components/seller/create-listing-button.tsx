@@ -8,6 +8,7 @@ import { SELLER_VERIFICATION_MESSAGES } from '@community-marketplace/types';
 
 import { SellerVerificationModal } from '@/components/seller/seller-verification-modal';
 import { useSellerListingGate } from '@/hooks/use-seller-listing-gate';
+import { SELLER_ROUTES } from '@/lib/seller-routes';
 
 interface CreateListingButtonProps {
   label?: string;
@@ -34,7 +35,7 @@ export function CreateListingButton({
       redirectOnVerificationRequired &&
       status?.sellerStatus === 'verification_required'
     ) {
-      router.push('/seller/profile?tab=verification');
+      router.push(SELLER_ROUTES.verification);
       return;
     }
 

@@ -52,6 +52,28 @@ export class UsersController {
     return this.usersService.confirmAvatar(user.id, user.id, parsed.publicUrl);
   }
 
+  @Post('me/store-banner/upload-url')
+  createStoreBannerUploadUrl(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    const parsed = avatarUploadRequestSchema.parse(body);
+    return this.usersService.createStoreBannerUploadUrl(user.id, parsed);
+  }
+
+  @Patch('me/store-banner')
+  confirmStoreBanner(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    const parsed = confirmAvatarSchema.parse(body);
+    return this.usersService.confirmStoreBanner(user.id, user.id, parsed.publicUrl);
+  }
+
+  @Post('me/phone/send-otp')
+  sendPhoneChangeOtp(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.usersService.sendPhoneChangeOtp(user.id, body);
+  }
+
+  @Post('me/phone/verify')
+  confirmPhoneChange(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.usersService.confirmPhoneChange(user.id, body);
+  }
+
   @Get('me/permissions')
   getMyPermissions(@CurrentUser() user: AuthenticatedUser) {
     return this.usersService.getEffectivePermissions(user);

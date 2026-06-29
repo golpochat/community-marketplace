@@ -381,6 +381,7 @@ enum OtpPurpose {
   register
   password_reset
   seller_verify
+  phone_change
 }
 
 enum SellerStatus {
@@ -564,6 +565,7 @@ model UserProfile {
   businessName          String?   @map("business_name")
   businessWebsite         String?   @map("business_website")
   businessLogoUrl         String?   @map("business_logo_url")
+  storeBannerUrl          String?   @map("store_banner_url")
   onboardingDismissedAt DateTime? @map("onboarding_dismissed_at")
   createdAt   DateTime    @default(now()) @map("created_at")
   updatedAt   DateTime    @updatedAt @map("updated_at")
@@ -705,13 +707,22 @@ model AuthLoginAudit {
 }
 
 /// Staged registration data between OTP verification and email activation.
+enum RegistrationAccountType {
+  buyer
+  seller
+
+  @@map("RegistrationAccountType")
+}
+
 model PendingRegistration {
-  id        String   @id @default(uuid())
-  email     String   @unique @db.VarChar(255)
-  phone     String   @unique @db.VarChar(20)
-  name      String   @db.VarChar(100)
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
+  id           String                   @id @default(uuid())
+  email        String                   @unique @db.VarChar(255)
+  phone        String                   @unique @db.VarChar(20)
+  name         String                   @db.VarChar(100)
+  accountType  RegistrationAccountType  @default(buyer) @map("account_type")
+  passwordHash String?                  @map("password_hash")
+  expiresAt    DateTime                 @map("expires_at")
+  createdAt    DateTime                 @default(now()) @map("created_at")
 
   @@index([expiresAt])
   @@map("pending_registrations")

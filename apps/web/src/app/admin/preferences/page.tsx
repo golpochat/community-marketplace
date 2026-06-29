@@ -1,0 +1,7 @@
+import { redirect } from 'next/navigation';
+
+import { ADMIN_ROUTES } from '@/lib/admin-routes';
+
+export default function Page() {
+  redirect(ADMIN_ROUTES.settings);
+}

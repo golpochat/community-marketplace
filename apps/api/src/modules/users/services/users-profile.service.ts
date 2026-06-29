@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
@@ -51,18 +52,18 @@ export class UsersProfileService {
     }
 
     if (parsed.phone) {
-      const existingPhone = await this.prisma.userProfile.findUnique({
-        where: { phone: parsed.phone },
-      });
-      if (existingPhone && existingPhone.userId !== targetUserId) {
-        throw new ConflictException('Phone number is already in use');
+      const user = await this.findUserOrThrow(targetUserId);
+      const currentPhone = user.profile?.phone ?? null;
+      if (parsed.phone !== currentPhone) {
+        throw new BadRequestException(
+          'Use the phone change flow to update your phone number.',
+        );
       }
     }
 
     const profileData: Prisma.UserProfileUpdateInput = {
       ...(parsed.bio !== undefined ? { bio: parsed.bio } : {}),
       ...(parsed.address !== undefined ? { address: parsed.address } : {}),
-      ...(parsed.phone !== undefined ? { phone: parsed.phone } : {}),
       ...(parsed.dateOfBirth !== undefined
         ? { dateOfBirth: new Date(parsed.dateOfBirth) }
         : {}),
@@ -89,11 +90,10 @@ export class UsersProfileService {
       const existingProfile = await tx.userProfile.findUnique({ where: { userId: targetUserId } });
       if (existingProfile) {
         await tx.userProfile.update({ where: { userId: targetUserId }, data: profileData });
-      } else if (Object.keys(profileData).length > 0 || parsed.phone) {
+      } else if (Object.keys(profileData).length > 0) {
         await tx.userProfile.create({
           data: {
             userId: targetUserId,
-            phone: parsed.phone,
             ...this.unwrapProfileCreate(profileData),
           },
         });
@@ -132,6 +132,20 @@ export class UsersProfileService {
       data: { avatarUrl },
     });
     await this.audit.record('avatar_uploaded', actorId, userId, { avatarUrl });
+    return this.getProfile(userId);
+  }
+
+  async setStoreBannerUrl(
+    actorId: string,
+    userId: string,
+    storeBannerUrl: string,
+  ): Promise<UserProfile> {
+    await this.prisma.userProfile.upsert({
+      where: { userId },
+      create: { userId, storeBannerUrl },
+      update: { storeBannerUrl },
+    });
+    await this.audit.record('store_banner_uploaded', actorId, userId, { storeBannerUrl });
     return this.getProfile(userId);
   }
 

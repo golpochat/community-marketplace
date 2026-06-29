@@ -2,17 +2,27 @@
 
 import Link from 'next/link';
 
-import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
-
 import { BuyerDashboardCards } from '@/components/buyer/buyer-dashboard-cards';
+import { BuyerDashboardSummary } from '@/components/buyer/buyer-dashboard-summary';
 import { useBuyerDashboardStats } from '@/hooks/use-buyer-dashboard-stats';
 import { useUserProfile } from '@/hooks/use-user-profile';
+import { BUYER_ROUTES } from '@/lib/buyer-routes';
+import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
+import { useEffect, useState } from 'react';
+
+import type { BuyerTrustProfile } from '@community-marketplace/types';
+import { trustService } from '@/services/trust.service';
 import { useAuth } from '@/hooks/use-auth';
 
 export default function BuyerDashboardPage() {
   const { user } = useAuth();
   const { profile, loading: profileLoading, error } = useUserProfile();
   const { stats, loading: statsLoading } = useBuyerDashboardStats();
+  const [trust, setTrust] = useState<BuyerTrustProfile | null>(null);
+
+  useEffect(() => {
+    void trustService.getMyBuyerTrust().then(setTrust).catch(() => setTrust(null));
+  }, []);
 
   return (
     <>
@@ -25,9 +35,12 @@ export default function BuyerDashboardPage() {
         }
       />
       {profileLoading && (
-        <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading profile…</p>
+        <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading…</p>
       )}
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {profile && !profileLoading && (
+        <BuyerDashboardSummary profile={profile} trust={trust} />
+      )}
       <BuyerDashboardCards stats={stats} loading={statsLoading} />
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <DashboardCard title="Inbox summary">
@@ -43,10 +56,26 @@ export default function BuyerDashboardPage() {
           </dl>
         </DashboardCard>
         {profile && (
-          <DashboardCard title="Account">
-            <div className="space-y-1 text-sm text-[hsl(var(--dashboard-main-fg))]">
-              <p>Email: {profile.email}</p>
-              <p>Status: {profile.status}</p>
+          <DashboardCard title="Quick links">
+            <div className="space-y-2 text-sm">
+              <Link
+                href={BUYER_ROUTES.purchases}
+                className="block font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+              >
+                View purchases
+              </Link>
+              <Link
+                href={BUYER_ROUTES.favorites}
+                className="block font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+              >
+                Saved items
+              </Link>
+              <Link
+                href={BUYER_ROUTES.wallet}
+                className="block font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+              >
+                SellNearby Credit
+              </Link>
             </div>
           </DashboardCard>
         )}

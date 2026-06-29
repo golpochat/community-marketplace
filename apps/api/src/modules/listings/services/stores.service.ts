@@ -61,6 +61,7 @@ export class StoresService {
     const locationLabel = seller.profile?.location ?? undefined;
     const logoUrl =
       seller.profile?.businessLogoUrl ?? seller.avatarUrl ?? undefined;
+    const bannerUrl = seller.profile?.storeBannerUrl ?? undefined;
     const contact = buildStoreContact({
       email: seller.email,
       phone: seller.profile?.phone,
@@ -80,6 +81,7 @@ export class StoresService {
       name: getStoreDisplayName(seller),
       description: seller.profile?.bio?.trim() || 'No store description yet.',
       logoUrl,
+      bannerUrl,
       location: locationLabel,
       memberSince: seller.createdAt.toISOString(),
       verified,

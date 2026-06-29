@@ -5,7 +5,7 @@
   "description": "Community Marketplace public web application",
   "scripts": {
     "predev": "node scripts/clean-pwa-sw.mjs",
-    "dev": "next dev --port 3000",
+    "dev": "node scripts/dev.mjs",
     "build": "next build",
     "start": "next start --port 3000",
     "clean": "rimraf .next out tsconfig.tsbuildinfo && node scripts/clean-pwa-sw.mjs",

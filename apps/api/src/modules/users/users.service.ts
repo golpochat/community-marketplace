@@ -10,6 +10,7 @@ import { mapUser, userProfileInclude } from './mappers/user.mapper';
 import { R2StorageService } from './services/r2-storage.service';
 import { UserAuditService } from './services/user-audit.service';
 import { UsersAdminService } from './services/users-admin.service';
+import { UsersPhoneService } from './services/users-phone.service';
 import { UsersProfileService } from './services/users-profile.service';
 import { UsersSettingsService } from './services/users-settings.service';
 import { UsersVerificationService } from './services/users-verification.service';
@@ -20,6 +21,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly apiUtils: ApiUtilsService,
     private readonly profileService: UsersProfileService,
+    private readonly phoneService: UsersPhoneService,
     private readonly settingsService: UsersSettingsService,
     private readonly verificationService: UsersVerificationService,
     private readonly adminService: UsersAdminService,
@@ -74,6 +76,15 @@ export class UsersService {
     );
   }
 
+  async createStoreBannerUploadUrl(userId: string, dto: unknown) {
+    const parsed = dto as { contentType: string; fileName?: string };
+    return this.storageService.createStoreBannerUploadUrl(
+      userId,
+      parsed.contentType,
+      parsed.fileName,
+    );
+  }
+
   async createVerificationDocumentUploadUrl(userId: string, dto: unknown) {
     const parsed = dto as { contentType: string; fileName?: string };
     return this.storageService.createVerificationDocumentUploadUrl(
@@ -85,6 +96,19 @@ export class UsersService {
 
   async confirmAvatar(actorId: string, userId: string, publicUrl: string) {
     return this.profileService.setAvatarUrl(actorId, userId, publicUrl);
+  }
+
+  async confirmStoreBanner(actorId: string, userId: string, publicUrl: string) {
+    return this.profileService.setStoreBannerUrl(actorId, userId, publicUrl);
+  }
+
+  sendPhoneChangeOtp(userId: string, dto: unknown) {
+    return this.phoneService.sendChangeOtp(userId, dto);
+  }
+
+  async confirmPhoneChange(userId: string, dto: unknown) {
+    await this.phoneService.confirmChange(userId, dto);
+    return this.getProfile(userId);
   }
 
   submitSellerVerification(userId: string, dto: unknown) {

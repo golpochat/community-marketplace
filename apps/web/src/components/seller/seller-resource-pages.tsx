@@ -861,7 +861,7 @@ export function SellerCreateListingPage() {
         setCreateNudge(resolveVerificationNudge(status));
 
         if (blocked && status.sellerStatus === "verification_required") {
-          router.replace("/seller/profile?tab=verification");
+          router.replace("/seller/verification");
         }
       })
       .catch(() => undefined);

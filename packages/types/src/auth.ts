@@ -3,7 +3,14 @@ import type { User } from './user';
 
 export type OtpChannel = 'email' | 'phone';
 
-export type OtpPurpose = 'login' | 'register' | 'password_reset' | 'seller_verify';
+export type OtpPurpose =
+  | 'login'
+  | 'register'
+  | 'password_reset'
+  | 'seller_verify'
+  | 'phone_change';
+
+export type RegistrationAccountType = 'buyer' | 'seller';
 
 export type LoginAppTarget = 'web' | 'admin';
 
@@ -28,9 +35,9 @@ export interface AuthPayload {
 
 /** Signed JWT payload for email activation (user created on activation) */
 export interface ActivationTokenPayload {
-  name: string;
   email: string;
   phone: string;
+  accountType: RegistrationAccountType;
   type: 'email_activation';
   iat: number;
   exp: number;
@@ -97,6 +104,12 @@ export interface CompleteRegistrationResponse {
   email: string;
   activationExpiresIn: number;
   message: string;
+}
+
+export interface ActivationPreviewResponse {
+  email: string;
+  accountType: RegistrationAccountType;
+  alreadyActivated: boolean;
 }
 
 export interface EmailActivationResponse {

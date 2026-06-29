@@ -36,6 +36,8 @@ interface ProfileSettingsFormProps {
   title?: string;
   description?: string;
   defaultTab?: ProfileTab;
+  /** When set, renders a single section without tab navigation. */
+  mode?: 'tabs' | 'profile-only' | 'preferences-only';
   loadProfile?: () => Promise<UserProfile>;
   saveProfile?: (body: Record<string, unknown>) => Promise<UserProfile>;
   notificationRole?: 'BUYER' | 'SELLER';
@@ -275,6 +277,7 @@ function ProfileSettingsFormContent({
   title = 'Settings',
   description = 'Manage your profile and preferences.',
   defaultTab = 'profile',
+  mode = 'tabs',
   loadProfile,
   saveProfile,
   notificationRole = 'BUYER',
@@ -297,21 +300,28 @@ function ProfileSettingsFormContent({
   const [message, setMessage] = useState<string | null>(null);
   const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
   const urlTab = parseProfileTab(searchParams.get('tab'));
-  const [activeTab, setActiveTab] = useState<ProfileTab>(urlTab ?? defaultTab);
+  const fixedTab =
+    mode === 'profile-only' ? 'profile' : mode === 'preferences-only' ? 'preferences' : null;
+  const [activeTab, setActiveTab] = useState<ProfileTab>(fixedTab ?? urlTab ?? defaultTab);
 
   useEffect(() => {
+    if (fixedTab) {
+      setActiveTab(fixedTab);
+      return;
+    }
     const next = parseProfileTab(searchParams.get('tab'));
     if (next) setActiveTab(next);
-  }, [searchParams]);
+  }, [searchParams, fixedTab]);
 
   const handleTabChange = useCallback(
     (tab: ProfileTab) => {
+      if (fixedTab) return;
       setActiveTab(tab);
       const params = new URLSearchParams(searchParams.toString());
       params.set('tab', tab);
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     },
-    [pathname, router, searchParams],
+    [fixedTab, pathname, router, searchParams],
   );
 
   const load = useCallback(async () => {
@@ -394,14 +404,16 @@ function ProfileSettingsFormContent({
       {error && <ErrorState message={error} />}
       {!loading && profile && (
         <Card className="overflow-hidden">
-          <Tabs
-            items={PROFILE_TABS}
-            activeId={activeTab}
-            onChange={(id) => handleTabChange(id as ProfileTab)}
-            className="border-[hsl(var(--dashboard-sidebar-border))]"
-          />
+          {mode === 'tabs' && (
+            <Tabs
+              items={PROFILE_TABS}
+              activeId={activeTab}
+              onChange={(id) => handleTabChange(id as ProfileTab)}
+              className="border-[hsl(var(--dashboard-sidebar-border))]"
+            />
+          )}
 
-          <div className="mt-6">
+          <div className={mode === 'tabs' ? 'mt-6' : undefined}>
             {activeTab === 'profile' && (
               <form onSubmit={(e) => void handleSave(e)} className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2 md:gap-6">

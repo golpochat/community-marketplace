@@ -82,7 +82,12 @@ export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
   { id: 'overview', label: 'Overview', href: '/super-admin/dashboard', icon: 'crown', exact: true },
 
   { id: 'section-governance', label: 'Governance', sectionHeader: true },
-  { id: 'settings', label: 'Settings', href: '/super-admin/settings', icon: 'settings' },
+  {
+    id: 'platform-settings',
+    label: 'Platform settings',
+    href: '/super-admin/platform-settings',
+    icon: 'settings',
+  },
   { id: 'rbac', label: 'Roles & Permissions', href: '/super-admin/rbac', icon: 'user-cog' },
   { id: 'admins', label: 'Admins', href: '/super-admin/admins', icon: 'key' },
   { id: 'audit-log', label: 'Audit Log', href: '/super-admin/audit-log', icon: 'scroll' },
@@ -117,6 +122,9 @@ export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
   { id: 'monetization', label: 'Monetization', href: '/super-admin/monetization', icon: 'landmark' },
   { id: 'search', label: 'Search', href: '/super-admin/search', icon: 'search' },
   { id: 'analytics', label: 'Analytics', href: '/super-admin/analytics', icon: 'bar-chart' },
+
+  { id: 'section-personal', label: 'Personal', sectionHeader: true },
+  { id: 'notifications', label: 'Notifications', href: '/super-admin/notifications', icon: 'bell' },
 ];
 
 export const ADMIN_SIDEBAR: SidebarNavItem[] = [
@@ -171,8 +179,8 @@ export const SELLER_SIDEBAR: SidebarNavItem[] = [
   { id: 'earnings', label: 'Earnings', href: '/seller/earnings', icon: 'wallet' },
   { id: 'share-analytics', label: 'Share Analytics', href: '/seller/analytics/shares', icon: 'bar-chart' },
   { id: 'chat', label: 'Chat', href: '/seller/chat', icon: 'message-circle' },
-  { id: 'profile', label: 'Profile', href: '/seller/profile', icon: 'user-cog' },
-  { id: 'verification', label: 'Verification', href: '/seller/profile?tab=verification', icon: 'medal' },
+  { id: 'storefront', label: 'Storefront', href: '/seller/storefront', icon: 'eye' },
+  { id: 'verification', label: 'Verification', href: '/seller/verification', icon: 'medal' },
   { id: 'notifications', label: 'Notifications', href: '/seller/notifications', icon: 'bell' },
 ];
 
@@ -184,6 +192,5 @@ export const BUYER_SIDEBAR: SidebarNavItem[] = [
   { id: 'wallet', label: 'SellNearby Credit', href: '/buyer/wallet', icon: 'wallet' },
   { id: 'disputes', label: 'Disputes', href: '/buyer/disputes', icon: 'scale' },
   { id: 'chat', label: 'Chat', href: '/buyer/chat', icon: 'message-circle' },
-  { id: 'profile', label: 'Profile', href: '/buyer/profile', icon: 'user-cog' },
   { id: 'notifications', label: 'Notifications', href: '/buyer/notifications', icon: 'bell' },
 ];

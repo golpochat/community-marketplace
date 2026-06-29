@@ -7,6 +7,7 @@ const ALLOWED_KEY_PREFIXES = [
   'listings/',
   'user-avatars/',
   'avatars/',
+  'store-banners/',
   'verification-documents/',
   'system-assets/',
   'chat-attachments/',

@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { StaffSettingsPage } from '@/components/dashboard/staff-settings-page';
 
 export default function Page() {
-  redirect('/admin/profile?tab=preferences');
+  return <StaffSettingsPage />;
 }

@@ -3,6 +3,7 @@ import {
   getRoleFromRequest,
   isDashboardPath,
   resolveDashboardRedirect,
+  resolveGuestAuthRedirect,
   resolveSuperAdminAdminNamespaceRedirect,
 } from '@/lib/route-guards';
 import { getDashboardRouteByRole } from '@community-marketplace/ui-dashboard';
@@ -12,6 +13,11 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const role = getRoleFromRequest(request.headers.get('cookie'));
+
+  const guestAuthRedirect = resolveGuestAuthRedirect(pathname, role);
+  if (guestAuthRedirect) {
+    return NextResponse.redirect(new URL(guestAuthRedirect, request.url));
+  }
 
   const superAdminNamespaceRedirect = resolveSuperAdminAdminNamespaceRedirect(pathname, role);
   if (superAdminNamespaceRedirect) {
@@ -40,6 +46,9 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/auth/login',
+    '/auth/register',
+    '/auth/activate',
     '/dashboard/:path*',
     '/seller/:path*',
     '/buyer/:path*',

@@ -1,39 +1,41 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-import type { BuyerTrustProfile } from '@community-marketplace/types';
+import { BuyerProfilePage } from '@/components/buyer/profile/buyer-profile-page';
+import { BUYER_ROUTES, resolveBuyerProfileRedirect } from '@/lib/buyer-routes';
 
-import { ProfileSettingsForm } from '@/components/dashboard/profile-settings-form';
-import { BuyerProfileTrustSection } from '@/components/trust/buyer-profile-trust-section';
-import { buyerService } from '@/services/marketplace.service';
-import { trustService } from '@/services/trust.service';
-
-export default function Page() {
-  const [trust, setTrust] = useState<BuyerTrustProfile | null>(null);
+function BuyerProfileRoute() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab');
 
   useEffect(() => {
-    void trustService.getMyBuyerTrust().then(setTrust).catch(() => setTrust(null));
-  }, []);
+    if (!tab) return;
+    const destination = resolveBuyerProfileRedirect(tab);
+    if (destination !== BUYER_ROUTES.profile || tab !== 'profile') {
+      router.replace(destination);
+    }
+  }, [router, tab]);
 
+  if (tab && tab !== 'profile') {
+    return (
+      <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Redirecting…</p>
+    );
+  }
+
+  return <BuyerProfilePage />;
+}
+
+export default function Page() {
   return (
-    <div className="space-y-6">
-      <ProfileSettingsForm
-        title="Profile"
-        description="Manage your account details."
-        defaultTab="profile"
-        loadProfile={() => buyerService.getProfile()}
-        saveProfile={(body) => buyerService.updateProfile(body)}
-      />
-      <BuyerProfileTrustSection
-        visibleToSeller
-        phoneVerified={trust?.phoneVerified}
-        completedTransactions={trust?.completedTransactions}
-        isCommunityMember={trust?.isCommunityMember}
-        averageRating={trust?.averageRating}
-        reviewCount={trust?.reviewCount}
-        memberSince={trust?.memberSince}
-      />
-    </div>
+    <Suspense
+      fallback={
+        <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading…</p>
+      }
+    >
+      <BuyerProfileRoute />
+    </Suspense>
   );
 }

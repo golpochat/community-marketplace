@@ -60,6 +60,7 @@ export type {
 export type {
   OtpChannel,
   OtpPurpose,
+  RegistrationAccountType,
   LoginAppTarget,
   AuthEventType,
   AuthPayload,
@@ -73,6 +74,7 @@ export type {
   OtpSentResponse,
   OtpVerifiedResponse,
   CompleteRegistrationResponse,
+  ActivationPreviewResponse,
   EmailActivationResponse,
 } from './auth';
 export {

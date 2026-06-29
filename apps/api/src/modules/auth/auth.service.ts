@@ -17,6 +17,8 @@ import {
 import type { LoginResponse, RbacRole, User } from '@community-marketplace/types';
 
 import {
+  activateEmailSchema,
+  activationPreviewSchema,
   completeRegistrationSchema,
   loginSchema,
   logoutSchema,
@@ -31,6 +33,8 @@ import { EventBusService } from '../../events/event-bus.service';
 import type {
 
   ActivateEmailDto,
+
+  ActivationPreviewDto,
 
   CompleteRegistrationDto,
 
@@ -172,7 +176,13 @@ export class AuthService {
 
 
 
-  sendOtp(dto: SendOtpDto, context: SessionContext) {
+  async sendOtp(dto: SendOtpDto, context: SessionContext) {
+
+    if (dto.channel === 'phone' && dto.purpose === 'register' && dto.phone) {
+
+      await this.assertPhoneAvailableForRegistration(dto.phone);
+
+    }
 
     return this.otpService.sendOtp(dto, context);
 
@@ -200,7 +210,7 @@ export class AuthService {
 
         expiresInSeconds,
 
-        message: 'Phone verified. Complete registration with your name and email.',
+        message: 'Phone verified. Enter your details to finish signing up.',
 
       };
 
@@ -292,7 +302,11 @@ export class AuthService {
 
       const pending = await this.prisma.pendingRegistration.findUnique({ where: { phone: phonePayload.phone } });
 
-      if (pending && pending.email !== parsed.email) {
+      if (pending && pending.expiresAt < new Date()) {
+
+        await this.prisma.pendingRegistration.delete({ where: { phone: phonePayload.phone } });
+
+      } else if (pending && pending.email !== parsed.email) {
 
         throw new ConflictException('Phone number is already pending registration');
 
@@ -304,11 +318,15 @@ export class AuthService {
 
     await this.emailActivationService.stageRegistration({
 
-      name: parsed.name,
-
       email: parsed.email,
 
       phone: phonePayload.phone,
+
+      name: parsed.name,
+
+      password: parsed.password,
+
+      accountType: parsed.accountType,
 
     });
 
@@ -316,11 +334,15 @@ export class AuthService {
 
     const activationToken = this.emailActivationService.createActivationToken({
 
-      name: parsed.name,
-
       email: parsed.email,
 
       phone: phonePayload.phone,
+
+      name: parsed.name,
+
+      password: parsed.password,
+
+      accountType: parsed.accountType,
 
     });
 
@@ -339,6 +361,8 @@ export class AuthService {
         email: parsed.email,
 
         phone: phonePayload.phone,
+
+        name: parsed.name,
 
         activationToken,
 
@@ -378,7 +402,19 @@ export class AuthService {
 
 
 
+  async activationPreview(dto: ActivationPreviewDto) {
+
+    activationPreviewSchema.parse(dto);
+
+    return this.emailActivationService.previewActivation(dto.token);
+
+  }
+
+
+
   async activateEmail(dto: ActivateEmailDto, context: SessionContext) {
+
+    activateEmailSchema.parse(dto);
 
     const result = await this.emailActivationService.activate(dto.token);
 
@@ -647,6 +683,40 @@ export class AuthService {
 
 
     return profile.user;
+
+  }
+
+
+
+  private async assertPhoneAvailableForRegistration(phone: string) {
+
+    const existingProfile = await this.prisma.userProfile.findUnique({ where: { phone } });
+
+    if (existingProfile) {
+
+      throw new ConflictException('This phone number is already registered. Sign in instead.');
+
+    }
+
+
+
+    const pending = await this.prisma.pendingRegistration.findUnique({ where: { phone } });
+
+    if (pending && pending.expiresAt >= new Date()) {
+
+      throw new ConflictException(
+
+        'This phone number is already pending registration. Check your email or try again later.',
+
+      );
+
+    }
+
+    if (pending && pending.expiresAt < new Date()) {
+
+      await this.prisma.pendingRegistration.delete({ where: { phone } });
+
+    }
 
   }
 

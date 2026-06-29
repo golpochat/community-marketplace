@@ -4,6 +4,8 @@ import Link from 'next/link';
 
 import { SELLER_VERIFICATION_MESSAGES } from '@community-marketplace/types';
 
+import { SELLER_ROUTES } from '@/lib/seller-routes';
+
 export interface VerificationModalProps {
   open: boolean;
   message?: string;
@@ -43,7 +45,7 @@ export function VerificationModal({
             </button>
           ) : null}
           <Link
-            href="/seller/profile?tab=verification"
+            href={SELLER_ROUTES.verification}
             className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
           >
             Verify Now

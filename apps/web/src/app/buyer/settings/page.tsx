@@ -1,5 +1,10 @@
-import { redirect } from 'next/navigation';
+import { UserSettingsForm } from '@/components/dashboard/user-settings-form';
 
 export default function Page() {
-  redirect('/buyer/profile?tab=preferences');
+  return (
+    <UserSettingsForm
+      title="Settings"
+      description="Notification, privacy, and communication preferences."
+    />
+  );
 }
