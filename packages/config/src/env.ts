@@ -30,6 +30,7 @@ export const apiEnvSchema = baseEnvSchema.extend({
   OTEL_SERVICE_NAME: z.string().default('community-marketplace-api'),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_CONNECT_CHARGE_MODEL: z.enum(['destination', 'separate']).default('destination'),
   SENDGRID_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().email().optional(),
   FCM_PROJECT_ID: z.string().optional(),

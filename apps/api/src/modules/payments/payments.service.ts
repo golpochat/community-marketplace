@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
 import type {
+  CheckoutSessionResponse,
+  OrderSettlementResult,
   Payment,
   PaymentDispute,
   PaymentIntentResponse,
@@ -13,18 +15,22 @@ import type {
   ApproveRefundInput,
   ConfirmPaymentInput,
   ConnectOnboardInput,
+  CreateCheckoutSessionInput,
   CreatePaymentIntentInput,
   DisputeEvidenceInput,
   RequestRefundInput,
+  SettleOrderInput,
 } from '@community-marketplace/validation';
 
 import type { ManualPayoutInput, PaymentAdminFiltersInput } from './dto/payments.dto';
+import { PaymentsCheckoutService } from './services/payments-checkout.service';
 import { PaymentsCrudService } from './services/payments-crud.service';
 import { PaymentsDisputesService } from './services/payments-disputes.service';
 import { PaymentsIntentsService } from './services/payments-intents.service';
 import { PaymentsLedgerService } from './services/payments-ledger.service';
 import { PaymentsPayoutsService } from './services/payments-payouts.service';
 import { PaymentsRefundsService } from './services/payments-refunds.service';
+import { PaymentsSettlementService } from './services/payments-settlement.service';
 import { StripeConnectService } from './services/stripe-connect.service';
 
 @Injectable()
@@ -32,12 +38,37 @@ export class PaymentsService {
   constructor(
     private readonly crud: PaymentsCrudService,
     private readonly intents: PaymentsIntentsService,
+    private readonly checkout: PaymentsCheckoutService,
+    private readonly settlement: PaymentsSettlementService,
     private readonly refunds: PaymentsRefundsService,
     private readonly disputes: PaymentsDisputesService,
     private readonly payouts: PaymentsPayoutsService,
     private readonly ledger: PaymentsLedgerService,
     private readonly stripeConnect: StripeConnectService,
   ) {}
+
+  createCheckoutSession(
+    buyerId: string,
+    dto: CreateCheckoutSessionInput,
+  ): Promise<CheckoutSessionResponse> {
+    return this.checkout.createCheckoutSession(buyerId, dto);
+  }
+
+  settleOrder(
+    actorId: string,
+    dto: SettleOrderInput,
+    options?: { isAdmin?: boolean },
+  ): Promise<OrderSettlementResult> {
+    return this.settlement.settleOrder(actorId, dto, options);
+  }
+
+  listPendingSettlements(sellerId: string) {
+    return this.settlement.listPendingSettlements(sellerId);
+  }
+
+  createConnectDashboardLink(userId: string) {
+    return this.stripeConnect.createDashboardLoginLink(userId);
+  }
 
   createPaymentIntent(
     buyerId: string,

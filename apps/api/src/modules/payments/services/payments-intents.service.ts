@@ -17,6 +17,7 @@ import { EventBusService } from '../../../events/event-bus.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { mapPayment } from '../mappers/payment.mapper';
 import { PlatformFeeService } from '../../monetization/services/platform-fee.service';
+import { buildPaymentIntentParams } from '../lib/stripe-charge.lib';
 import { PaymentsAuditService } from './payments-audit.service';
 import { PaymentCompletionService } from './payment-completion.service';
 import { PaymentsFraudService } from './payments-fraud.service';
@@ -61,17 +62,19 @@ export class PaymentsIntentsService {
     let clientSecret: string;
 
     if (stripe) {
-      const intent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100),
-        currency: currency.toLowerCase(),
-        application_fee_amount: Math.round(platformFee * 100),
-        transfer_data: { destination: connectAccount.stripeAccountId },
-        metadata: {
-          listingId: listing.id,
-          buyerId,
-          sellerId: listing.sellerId,
-        },
-      });
+      const intent = await stripe.paymentIntents.create(
+        buildPaymentIntentParams({
+          amountCents: Math.round(amount * 100),
+          currency,
+          platformFeeCents: Math.round(platformFee * 100),
+          connectAccountId: connectAccount.stripeAccountId,
+          metadata: {
+            listingId: listing.id,
+            buyerId,
+            sellerId: listing.sellerId,
+          },
+        }),
+      );
       providerPaymentId = intent.id;
       clientSecret = intent.client_secret ?? '';
     } else {

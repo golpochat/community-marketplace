@@ -13,6 +13,8 @@ import {
   BuyerListingReportsController,
 } from './buyer-favorites.controller';
 import { BuyerNotificationsController } from './buyer-notifications.controller';
+import { BuyerCheckoutController } from './buyer-checkout.controller';
+import { OrderPaymentsController } from './order-payments.controller';
 import { BuyerPaymentsController } from './buyer-payments.controller';
 import { BuyerProfileController } from './buyer-profile.controller';
 import { BuyerReviewsController } from './buyer-reviews.controller';
@@ -25,6 +27,8 @@ import { BuyerTrustService } from './buyer-trust.service';
   imports: [PaymentsModule, UsersModule, ListingsModule, ChatModule, NotificationsModule, SearchModule, ModerationModule],
   controllers: [
     BuyerPaymentsController,
+    BuyerCheckoutController,
+    OrderPaymentsController,
     BuyerNotificationsController,
     BuyerSearchController,
     BuyerReviewsController,

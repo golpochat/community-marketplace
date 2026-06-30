@@ -36,6 +36,9 @@ export class PaymentsWebhooksService {
     });
 
     switch (event.type) {
+      case 'checkout.session.completed':
+        await this.onCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+        break;
       case 'payment_intent.succeeded':
         await this.onPaymentSucceeded(event.data.object as Stripe.PaymentIntent);
         break;
@@ -49,10 +52,18 @@ export class PaymentsWebhooksService {
         await this.onDisputeCreated(event.data.object as Stripe.Dispute);
         break;
       case 'payout.paid':
-        await this.onPayoutEvent(event.data.object as Stripe.Payout, 'paid');
+        await this.onPayoutEvent(
+          event.data.object as Stripe.Payout,
+          'paid',
+          event.account ?? undefined,
+        );
         break;
       case 'payout.failed':
-        await this.onPayoutEvent(event.data.object as Stripe.Payout, 'failed');
+        await this.onPayoutEvent(
+          event.data.object as Stripe.Payout,
+          'failed',
+          event.account ?? undefined,
+        );
         break;
       case 'account.updated':
         await this.onAccountUpdated(event.data.object as Stripe.Account);
@@ -62,6 +73,46 @@ export class PaymentsWebhooksService {
     }
 
     return { duplicate: false };
+  }
+
+  private async onCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+    const paymentId = session.metadata?.paymentId;
+    const paymentIntentId =
+      typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id;
+
+    let payment =
+      paymentId != null
+        ? await this.prisma.payment.findUnique({ where: { id: paymentId } })
+        : null;
+
+    if (!payment && paymentIntentId) {
+      payment = await this.prisma.payment.findFirst({
+        where: { providerPaymentId: paymentIntentId },
+      });
+    }
+
+    if (!payment) {
+      this.logger.warn(`checkout.session.completed with no matching payment: ${session.id}`);
+      return;
+    }
+
+    if (paymentIntentId && payment.providerPaymentId !== paymentIntentId) {
+      await this.prisma.payment.update({
+        where: { id: payment.id },
+        data: { providerPaymentId: paymentIntentId },
+      });
+    }
+
+    if (payment.status !== 'succeeded') {
+      await this.completion.finalizeSuccessfulPayment(payment.id, paymentIntentId);
+    }
+
+    await this.audit.record('payment_confirmed', undefined, payment.id, {
+      checkoutSessionId: session.id,
+      source: 'checkout.session.completed',
+    });
   }
 
   private async onPaymentSucceeded(intent: Stripe.PaymentIntent) {
@@ -145,9 +196,14 @@ export class PaymentsWebhooksService {
     );
   }
 
-  private async onPayoutEvent(payout: Stripe.Payout, status: 'paid' | 'failed') {
+  private async onPayoutEvent(
+    payout: Stripe.Payout,
+    status: 'paid' | 'failed',
+    connectedAccountId?: string,
+  ) {
     const stripeAccountId =
-      typeof payout.destination === 'string' ? payout.destination : undefined;
+      connectedAccountId ??
+      (typeof payout.destination === 'string' ? payout.destination : undefined);
     if (!stripeAccountId) return;
 
     try {

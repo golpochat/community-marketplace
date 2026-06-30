@@ -12,6 +12,7 @@ import {
 import { MapPin } from 'lucide-react';
 
 import { ChatButton } from '@/components/listings/chat-button';
+import { BuyNowButton } from '@/components/listings/buy-now-button';
 import { BuyerProtectionBanner } from '@/components/listings/buyer-protection-banner';
 import { BoostedBadge } from '@/components/listings/boosted-badge';
 import { FeaturedBadge } from '@/components/listings/featured-badge';
@@ -124,6 +125,7 @@ export function ListingDetailSidebar({
 
         {!hideActions && (
           <div className="space-y-3 border-t border-gray-100 pt-4">
+            <BuyNowButton listing={listing} />
             <ChatButton listingId={listing.id} sellerId={listing.sellerId} />
             <div className="flex flex-wrap gap-2">
               <SaveButton listingId={listing.id} initialSaved={initialSaved} />

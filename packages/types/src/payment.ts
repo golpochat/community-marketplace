@@ -39,6 +39,7 @@ export type PaymentAuditEventType =
   | 'payout_created'
   | 'payout_paid'
   | 'payout_failed'
+  | 'seller_settlement'
   | 'connect_onboarded';
 
 export interface Payment {
@@ -63,6 +64,21 @@ export interface Payment {
 export interface PaymentIntentResponse {
   payment: Payment;
   clientSecret: string;
+}
+
+export interface CheckoutSessionResponse {
+  payment: Payment;
+  sessionId: string;
+  checkoutUrl: string;
+}
+
+export interface OrderSettlementResult {
+  paymentId: string;
+  status: 'settled' | 'already_settled';
+  transferId?: string;
+  netAmount: number;
+  currency: string;
+  message?: string;
 }
 
 export interface StripeConnectAccount {

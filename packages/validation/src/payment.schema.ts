@@ -57,6 +57,16 @@ export const createPaymentIntentSchema = z.object({
   method: paymentMethodSchema.default('card'),
 });
 
+export const createCheckoutSessionSchema = z.object({
+  listingId: uuidSchema,
+  successUrl: z.string().url().optional(),
+  cancelUrl: z.string().url().optional(),
+});
+
+export const settleOrderSchema = z.object({
+  paymentId: uuidSchema,
+});
+
 export const confirmPaymentSchema = z.object({
   paymentId: uuidSchema,
 });
@@ -98,6 +108,8 @@ export const manualPayoutSchema = z.object({
 
 export type PaymentInput = z.infer<typeof paymentSchema>;
 export type CreatePaymentIntentInput = z.infer<typeof createPaymentIntentSchema>;
+export type CreateCheckoutSessionInput = z.infer<typeof createCheckoutSessionSchema>;
+export type SettleOrderInput = z.infer<typeof settleOrderSchema>;
 export type ConfirmPaymentInput = z.infer<typeof confirmPaymentSchema>;
 export type ConnectOnboardInput = z.infer<typeof connectOnboardSchema>;
 export type RequestRefundInput = z.infer<typeof requestRefundSchema>;

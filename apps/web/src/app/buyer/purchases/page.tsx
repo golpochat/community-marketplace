@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import type { ListingSummary, Payment, PaymentIntentResponse, PendingReviewItem, CashbackEstimate } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
@@ -15,6 +16,7 @@ import { buyerService } from '@/services/marketplace.service';
 import { monetizationService } from '@/services/monetization.service';
 import { paymentsService } from '@/services/payments.service';
 import { trustService } from '@/services/trust.service';
+import { LoadingState } from '@/components/LoadingState';
 
 interface PayableListing {
   id: string;
@@ -34,12 +36,22 @@ function formatPaymentError(message: string): string {
 }
 
 export default function BuyerPurchasesPage() {
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <BuyerPurchasesContent />
+    </Suspense>
+  );
+}
+
+function BuyerPurchasesContent() {
+  const searchParams = useSearchParams();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [historyTotal, setHistoryTotal] = useState(0);
   const [payableListings, setPayableListings] = useState<PayableListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
   const [selectedListingId, setSelectedListingId] = useState('');
   const [intent, setIntent] = useState<PaymentIntentResponse | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -107,6 +119,15 @@ export default function BuyerPurchasesPage() {
   }, [loadPendingReviews]);
 
   useEffect(() => {
+    if (searchParams.get('checkout') === 'success') {
+      setCheckoutMessage('Payment successful. Your purchase will appear in history shortly.');
+      void loadHistory();
+    } else if (searchParams.get('checkout') === 'cancelled') {
+      setCheckoutMessage('Checkout was cancelled. You can try again when ready.');
+    }
+  }, [searchParams, loadHistory]);
+
+  useEffect(() => {
     if (!selectedListingId) {
       setCashbackEstimate(null);
       return;
@@ -163,6 +184,11 @@ export default function BuyerPurchasesPage() {
       <PageHeader title="Purchases" description="Initiate and track your purchases." />
 
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {checkoutMessage && (
+        <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
+          {checkoutMessage}
+        </p>
+      )}
 
       {visiblePendingReview && (
         <div className="mb-6">

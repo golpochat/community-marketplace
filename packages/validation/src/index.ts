@@ -245,6 +245,8 @@ export {
   refundStatusSchema,
   paymentSchema,
   createPaymentIntentSchema,
+  createCheckoutSessionSchema,
+  settleOrderSchema,
   confirmPaymentSchema,
   connectOnboardSchema,
   requestRefundSchema,
@@ -259,6 +261,8 @@ export {
   type DisputeEvidenceInput,
   type PaymentInput,
   type CreatePaymentIntentInput,
+  type CreateCheckoutSessionInput,
+  type SettleOrderInput,
 } from './payment.schema';
 
 export {

@@ -104,6 +104,12 @@ export class PaymentsRefundsService {
     let providerRefundId: string | undefined;
 
     if (stripe && refund.payment.providerPaymentId) {
+      const intent = await stripe.paymentIntents.retrieve(refund.payment.providerPaymentId);
+      const transferId = intent.metadata?.transfer_id;
+      if (transferId) {
+        await stripe.transfers.createReversal(transferId);
+      }
+
       const stripeRefund = await stripe.refunds.create({
         payment_intent: refund.payment.providerPaymentId,
       });

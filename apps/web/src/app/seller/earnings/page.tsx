@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-import type { Payout, SellerEarningsSummary, SellerPlatformFeeInfo, StripeConnectAccount } from '@community-marketplace/types';
+import type { Payment, Payout, SellerEarningsSummary, SellerPlatformFeeInfo, StripeConnectAccount } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
@@ -15,11 +15,22 @@ function SellerEarningsContent() {
   const searchParams = useSearchParams();
   const [summary, setSummary] = useState<SellerEarningsSummary | null>(null);
   const [payouts, setPayouts] = useState<Payout[]>([]);
+  const [sellerPayments, setSellerPayments] = useState<Payment[]>([]);
+  const [pendingTransfers, setPendingTransfers] = useState<
+    Array<{
+      paymentId: string;
+      listingId: string;
+      netAmount: number;
+      currency: string;
+      createdAt: string;
+    }>
+  >([]);
   const [connect, setConnect] = useState<StripeConnectAccount | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [connectSetupError, setConnectSetupError] = useState<string | null>(null);
   const [onboarding, setOnboarding] = useState(false);
+  const [openingDashboard, setOpeningDashboard] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [platformFee, setPlatformFee] = useState<SellerPlatformFeeInfo | null>(null);
 
@@ -27,14 +38,19 @@ function SellerEarningsContent() {
     setLoading(true);
     setError(null);
     try {
-      const [summaryData, payoutResponse, connectData, feeInfo] = await Promise.all([
+      const [summaryData, payoutResponse, connectData, feeInfo, paymentsResponse, pending] =
+        await Promise.all([
         paymentsService.getEarningsSummary(),
         paymentsService.getPayoutHistory(),
         paymentsService.getConnectStatus(),
         monetizationService.getSellerPlatformFee().catch(() => null),
+        paymentsService.getSellerPayments(1, 10).catch(() => ({ data: [] as Payment[] })),
+        paymentsService.getPendingTransfers().catch(() => []),
       ]);
       setSummary(summaryData);
       setPayouts(payoutResponse.data ?? []);
+      setSellerPayments(paymentsResponse.data ?? []);
+      setPendingTransfers(pending);
       setConnect(connectData);
       setPlatformFee(feeInfo);
     } catch (err) {
@@ -76,6 +92,19 @@ function SellerEarningsContent() {
       }
     } finally {
       setOnboarding(false);
+    }
+  }
+
+  async function handleOpenDashboard() {
+    setOpeningDashboard(true);
+    setError(null);
+    try {
+      const { url } = await paymentsService.getConnectDashboardLink();
+      window.location.href = url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to open Stripe dashboard');
+    } finally {
+      setOpeningDashboard(false);
     }
   }
 
@@ -179,6 +208,16 @@ function SellerEarningsContent() {
                   {onboarding ? 'Redirecting…' : connect ? 'Continue Stripe onboarding' : 'Connect with Stripe'}
                 </button>
               )}
+              {isReady && (
+                <button
+                  type="button"
+                  onClick={() => void handleOpenDashboard()}
+                  disabled={openingDashboard}
+                  className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+                >
+                  {openingDashboard ? 'Opening…' : 'Open Stripe Express dashboard'}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => void load()}
@@ -220,6 +259,44 @@ function SellerEarningsContent() {
                     <span>{formatCurrency(payout.amount, payout.currency)}</span>
                     <span className="capitalize text-[hsl(var(--dashboard-sidebar-muted))]">
                       {payout.status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </DashboardCard>
+
+          {pendingTransfers.length > 0 && (
+            <DashboardCard title="Upcoming transfers (separate charge mode)">
+              <ul className="space-y-2">
+                {pendingTransfers.map((transfer) => (
+                  <li
+                    key={transfer.paymentId}
+                    className="flex items-center justify-between rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
+                  >
+                    <span>{formatCurrency(transfer.netAmount, transfer.currency)}</span>
+                    <span className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                      Awaiting settlement
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </DashboardCard>
+          )}
+
+          <DashboardCard title="Payment history">
+            {sellerPayments.length === 0 ? (
+              <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No payments yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {sellerPayments.map((payment) => (
+                  <li
+                    key={payment.id}
+                    className="flex items-center justify-between rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
+                  >
+                    <span>{formatCurrency(payment.amount, payment.currency)}</span>
+                    <span className="capitalize text-[hsl(var(--dashboard-sidebar-muted))]">
+                      {payment.status}
                     </span>
                   </li>
                 ))}

@@ -217,6 +217,7 @@ export class StripeConnectService {
   async syncAccountFromStripe(userId: string, stripeAccountId: string) {
     if (!this.stripe) return;
 
+    this.logger.log('StripeConnectService', 'accounts.retrieve', { stripeAccountId });
     const stripeAccount = await this.stripe.accounts.retrieve(stripeAccountId);
     await this.prisma.stripeConnectAccount.update({
       where: { userId },
@@ -228,6 +229,27 @@ export class StripeConnectService {
           (stripeAccount.details_submitted ?? false),
       },
     });
+  }
+
+  async createDashboardLoginLink(userId: string): Promise<{ url: string }> {
+    const row = await this.prisma.stripeConnectAccount.findUnique({
+      where: { userId },
+    });
+    if (!row) throw new NotFoundException('Connect account not found');
+
+    if (!this.stripe) {
+      return { url: this.defaultReturnUrl() };
+    }
+
+    try {
+      this.logger.log('StripeConnectService', 'accounts.createLoginLink', {
+        stripeAccountId: row.stripeAccountId,
+      });
+      const link = await this.stripe.accounts.createLoginLink(row.stripeAccountId);
+      return { url: link.url };
+    } catch (error) {
+      this.mapStripeError(error);
+    }
   }
 
   getStripeClient(): Stripe | null {

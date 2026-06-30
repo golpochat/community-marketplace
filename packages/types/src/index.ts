@@ -190,6 +190,8 @@ export type {
   PaymentAuditEventType,
   Payment,
   PaymentIntentResponse,
+  CheckoutSessionResponse,
+  OrderSettlementResult,
   StripeConnectAccount,
   Payout,
   LedgerEntry,

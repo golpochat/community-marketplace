@@ -11,6 +11,7 @@ import { UsersModule } from '../users/users.module';
 import { ShareModule } from '../share/share.module';
 import { SellerChatController } from './seller-chat.controller';
 import { SellerEarningsController } from './seller-earnings.controller';
+import { SellerStripeController } from './seller-stripe.controller';
 import { SellerListingsController } from './seller-listings.controller';
 import { SellerNotificationsController } from './seller-notifications.controller';
 import { SellerProfileController } from './seller-profile.controller';
@@ -41,6 +42,7 @@ import { SellerVerificationModule } from './seller-verification.module';
   controllers: [
     SellerListingsController,
     SellerEarningsController,
+    SellerStripeController,
     SellerNotificationsController,
     SellerSearchController,
     SellerProfileController,

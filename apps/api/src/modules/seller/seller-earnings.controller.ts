@@ -72,4 +72,16 @@ export class SellerEarningsController {
   connectStatus(@CurrentUser() user: AuthenticatedUser) {
     return this.paymentsService.getConnectAccount(user.id);
   }
+
+  @RequirePermissions(PERMISSIONS.RECEIVE_PAYMENT)
+  @Post('connect/dashboard')
+  connectDashboard(@CurrentUser() user: AuthenticatedUser) {
+    return this.paymentsService.createConnectDashboardLink(user.id);
+  }
+
+  @RequirePermissions(PERMISSIONS.VIEW_PAYMENTS)
+  @Get('transfers/pending')
+  pendingTransfers(@CurrentUser() user: AuthenticatedUser) {
+    return this.paymentsService.listPendingSettlements(user.id);
+  }
 }
