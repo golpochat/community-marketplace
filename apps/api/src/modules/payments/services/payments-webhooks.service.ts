@@ -26,14 +26,13 @@ export class PaymentsWebhooksService {
   ) {}
 
   async handleEvent(event: Stripe.Event) {
-    const processed = await this.prisma.processedStripeEvent.findUnique({
-      where: { stripeEventId: event.id },
-    });
-    if (processed) return { duplicate: true };
-
-    await this.prisma.processedStripeEvent.create({
+    const claimed = await this.prisma.processedStripeEvent.createMany({
       data: { stripeEventId: event.id, eventType: event.type },
+      skipDuplicates: true,
     });
+    if (claimed.count === 0) {
+      return { duplicate: true };
+    }
 
     switch (event.type) {
       case 'checkout.session.completed':
@@ -47,6 +46,9 @@ export class PaymentsWebhooksService {
         break;
       case 'charge.refunded':
         await this.onChargeRefunded(event.data.object as Stripe.Charge);
+        break;
+      case 'refund.created':
+        await this.onRefundCreated(event.data.object as Stripe.Refund);
         break;
       case 'charge.dispute.created':
         await this.onDisputeCreated(event.data.object as Stripe.Dispute);
@@ -147,6 +149,36 @@ export class PaymentsWebhooksService {
     }
 
     await this.platformPurchases.handlePaymentIntentFailed(intent.id);
+  }
+
+  private async onRefundCreated(refund: Stripe.Refund) {
+    const paymentIntentId =
+      typeof refund.payment_intent === 'string'
+        ? refund.payment_intent
+        : refund.payment_intent?.id;
+    if (!paymentIntentId) return;
+
+    const payment = await this.prisma.payment.findFirst({
+      where: { providerPaymentId: paymentIntentId },
+    });
+    if (!payment) return;
+
+    await this.prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: 'refunded',
+        providerRefundId: refund.id,
+      },
+    });
+
+    await this.audit.record('payment_refunded', undefined, payment.id, {
+      source: 'refund.created',
+    });
+    this.eventBus.publish({
+      type: 'payment.refunded',
+      payload: { paymentId: payment.id, listingId: payment.listingId },
+      timestamp: new Date(),
+    });
   }
 
   private async onChargeRefunded(charge: Stripe.Charge) {

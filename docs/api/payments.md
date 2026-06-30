@@ -169,13 +169,46 @@ Content-Type: application/json
 
 | Event | Action |
 |-------|--------|
+| `checkout.session.completed` | Finalize payment from Stripe Checkout (Buy now flow), mark listing `sold` |
 | `payment_intent.succeeded` | Mark payment `succeeded`, credit seller ledger, debit buyer ledger, mark listing `sold`, chat system message |
 | `payment_intent.payment_failed` | Mark payment `failed`, chat system message |
-| `charge.refunded` | Mark payment `refunded` |
+| `refund.created` | Mark payment `refunded` (preferred; replaces legacy `charge.refunded`) |
+| `charge.refunded` | Mark payment `refunded` (legacy; still handled if enabled) |
 | `charge.dispute.created` | Create dispute, mark payment `disputed`, notify seller |
-| `payout.paid` | Record payout, ledger debit |
-| `payout.failed` | Record failed payout |
-| `account.updated` | Sync Connect account flags |
+| `transfer.created` | Platform → seller Connect transfer (destination charges); optional audit |
+| `payout.paid` | Record seller bank payout, ledger debit (**Connected accounts** scope) |
+| `payout.failed` | Record failed seller bank payout (**Connected accounts** scope) |
+| `account.updated` | Sync Connect onboarding / KYC flags (`charges_enabled`, `payouts_enabled`) |
+
+### Stripe Dashboard event selection
+
+Stripe’s UI splits events by **scope** and **category**. Use two destinations (same URL is fine) if needed.
+
+#### Destination 1 — **Your account** (platform)
+
+| Stripe category | Event |
+|-----------------|-------|
+| Account | `account.updated` |
+| Charge | `charge.dispute.created` |
+| Checkout | `checkout.session.completed` |
+| Payment Intent | `payment_intent.succeeded` |
+| Payment Intent | `payment_intent.payment_failed` |
+| Refund | `refund.created` |
+| Transfer | `transfer.created` |
+
+> **Note:** `charge.refunded` is legacy. Stripe now lists refunds under the **Refund** category as `refund.created`.
+
+#### Destination 2 — **Connected accounts** (seller Express accounts)
+
+| Stripe category | Event |
+|-----------------|-------|
+| Payout | `payout.paid` |
+| Payout | `payout.failed` |
+
+> Payout events fire on the **seller’s** Connect account when Stripe pays out to their bank. They do **not** appear under “Your account” — create a second event destination with **Events from → Connected accounts**.
+
+Endpoint URL (both destinations): `https://api.sellnearby.ie/api/payments/webhooks/stripe`  
+Local: `stripe listen --forward-to localhost:4000/api/payments/webhooks/stripe` (add `--forward-connect-to` for connected-account events).
 
 Events are deduplicated via `ProcessedStripeEvent`.
 

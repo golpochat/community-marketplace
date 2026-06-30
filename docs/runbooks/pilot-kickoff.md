@@ -129,7 +129,8 @@ Do in this order; test each before moving on.
 
 - [ ] Stripe Connect enabled on platform account
 - [ ] Webhook endpoint: `https://api.<env>/api/payments/webhooks/stripe`
-- [ ] Events: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`
+- [ ] Events — **Your account:** `checkout.session.completed`, `payment_intent.succeeded`, `payment_intent.payment_failed`, `refund.created`, `charge.dispute.created`, `account.updated`, `transfer.created`
+- [ ] Events — **Connected accounts:** `payout.paid`, `payout.failed`
 - [ ] Seller Connect onboarding completes on staging
 - [ ] Test purchase end-to-end (Stripe test card `4242…`)
 

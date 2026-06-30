@@ -307,6 +307,8 @@ Copy the `whsec_...` signing secret from the CLI output into `apps/api/.env` as 
 
 Webhook endpoint: `POST http://localhost:4000/api/payments/webhooks/stripe`
 
+Handled events: `checkout.session.completed`, `payment_intent.succeeded`, `payment_intent.payment_failed`, `refund.created`, `charge.refunded` (legacy), `charge.dispute.created`, `transfer.created`, `payout.paid`, `payout.failed` (connected accounts), `account.updated`.
+
 ---
 
 ## Security reminder
