@@ -70,6 +70,37 @@ export const authService = {
     return response.data;
   },
 
+  async previewAdminInvitation(token: string) {
+    const response = await apiClient<{
+      email: string;
+      displayName: string;
+      roleName: string;
+      expired: boolean;
+      alreadyAccepted: boolean;
+    }>(WEB_API_ROUTES.public.auth.adminInvitePreview, {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+    if (!response.data) {
+      throw new Error('Invalid invitation');
+    }
+    return response.data;
+  },
+
+  async acceptAdminInvitation(token: string, password: string) {
+    const response = await apiClient<import('@community-marketplace/types').AdminInvitationAcceptResponse>(
+      WEB_API_ROUTES.public.auth.adminInviteAccept,
+      {
+        method: 'POST',
+        body: JSON.stringify({ token, password }),
+      },
+    );
+    if (!response.data) {
+      throw new Error('Failed to accept invitation');
+    }
+    return response.data;
+  },
+
   async refresh(refreshToken?: string): Promise<LoginResponse> {
     const response = await apiClient<LoginResponse>(WEB_API_ROUTES.public.auth.refresh, {
       method: 'POST',

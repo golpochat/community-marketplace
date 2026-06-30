@@ -119,6 +119,21 @@ export interface EmailActivationResponse {
   login?: LoginResponse;
 }
 
+export interface AdminInvitationPreviewResponse {
+  email: string;
+  displayName: string;
+  roleCode: string;
+  roleName: string;
+  expired: boolean;
+  alreadyAccepted: boolean;
+}
+
+export interface AdminInvitationAcceptResponse {
+  email: string;
+  userId: string;
+  login: LoginResponse;
+}
+
 const LOGIN_REDIRECT_PATHS: Record<RbacRole, string> = {
   SUPER_ADMIN: '/super-admin/dashboard',
   ADMIN: '/admin/dashboard',
@@ -135,6 +150,14 @@ const LOGIN_APP_TARGETS: Record<RbacRole, LoginAppTarget> = {
 
 export function getLoginRedirectPath(role: RbacRole): string {
   return LOGIN_REDIRECT_PATHS[role];
+}
+
+/** Redirect path for panel operators (ADMIN + custom level-2 roles). */
+export function getPanelLoginRedirectPath(roleCode: string): string {
+  if (roleCode === 'SUPER_ADMIN') return '/super-admin/dashboard';
+  if (roleCode === 'SELLER') return '/seller/dashboard';
+  if (roleCode === 'BUYER') return '/buyer/dashboard';
+  return '/admin/dashboard';
 }
 
 export function getLoginAppTarget(role: RbacRole): LoginAppTarget {

@@ -1,0 +1,160 @@
+'use client';
+
+import { Suspense, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+
+import { Button, Input, Label } from '@community-marketplace/ui';
+
+import { useAuth } from '@/hooks/use-auth';
+import { authService } from '@/services/auth.service';
+
+export default function AdminInviteAcceptPage() {
+  return (
+    <Suspense
+      fallback={
+        <p className="mx-auto max-w-md py-16 text-center text-gray-700">Loading invitation…</p>
+      }
+    >
+      <AdminInviteAcceptContent />
+    </Suspense>
+  );
+}
+
+function AdminInviteAcceptContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { setAuth } = useAuth();
+  const token = searchParams.get('token');
+
+  const [preview, setPreview] = useState<{
+    email: string;
+    displayName: string;
+    roleName: string;
+    expired: boolean;
+    alreadyAccepted: boolean;
+  } | null>(null);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!token) {
+      setError('This invitation link is missing a token. Please use the link from your email.');
+      setLoading(false);
+      return;
+    }
+
+    authService
+      .previewAdminInvitation(token)
+      .then(setPreview)
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!token) return;
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const result = await authService.acceptAdminInvitation(token, password);
+      setAuth(result.login);
+      router.push(result.login.redirectPath);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to complete setup');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-md py-16 text-center">
+        <p className="text-gray-700">Loading invitation…</p>
+      </div>
+    );
+  }
+
+  if (error && !preview) {
+    return (
+      <div className="mx-auto max-w-md py-16 text-center">
+        <p className="text-red-600">{error}</p>
+        <Button className="mt-6" asChild>
+          <Link href="/auth/login">Go to sign in</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (preview?.alreadyAccepted) {
+    return (
+      <div className="mx-auto max-w-md py-16 text-center">
+        <p className="text-gray-700">This invitation has already been accepted.</p>
+        <Button className="mt-6" asChild>
+          <Link href="/auth/login">Go to sign in</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  if (preview?.expired) {
+    return (
+      <div className="mx-auto max-w-md py-16 text-center">
+        <p className="text-red-600">This invitation has expired. Ask your super admin to send a new one.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-md py-16 px-4">
+      <h1 className="text-2xl font-bold text-gray-900">Complete your setup</h1>
+      <p className="mt-2 text-sm text-gray-600">
+        {preview?.displayName ? `Hello ${preview.displayName}, ` : ''}
+        you&apos;ve been invited as <strong>{preview?.roleName}</strong> ({preview?.email}).
+      </p>
+      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="confirm-password">Confirm password</Label>
+          <Input
+            id="confirm-password"
+            type="password"
+            required
+            minLength={8}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
+          />
+        </div>
+        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        <Button type="submit" className="w-full" disabled={submitting}>
+          {submitting ? 'Setting up…' : 'Complete setup'}
+        </Button>
+      </form>
+    </div>
+  );
+}

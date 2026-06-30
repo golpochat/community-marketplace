@@ -251,9 +251,8 @@ export class RbacManagementService {
 
   async listPermissions(actor: AuthenticatedUser, scopeId?: string) {
     await this.scopePolicy.assertCanListRbacCatalog(actor);
-    await this.ensureMemoryStore();
 
-    const permissions = [...this.memoryPermissions.values()];
+    const permissions = await this.getPermissionsCatalog();
     const codes = permissions.map((p) => p.code);
     const allowedCodes = await this.scopePolicy.filterPermissionCodesForActor(actor, codes, scopeId);
 
@@ -390,13 +389,14 @@ export class RbacManagementService {
     const role = await this.getRoleById(roleId);
     const permissions = await Promise.all(dto.permissionIds.map((id) => this.getPermissionById(id)));
     const codes = permissions.map((p) => p.code);
+    const permissionIds = await this.resolvePermissionIdsForPersist(permissions);
 
     await this.scopePolicy.assertCanModifyRolePermissions(actor, role.code, codes);
-    await this.persistRolePermissionSync(roleId, dto.permissionIds);
+    await this.persistRolePermissionSync(roleId, permissionIds);
 
     return {
       roleId,
-      permissionIds: dto.permissionIds,
+      permissionIds,
       syncedBy: actor.id,
       syncedAt: toIsoString(),
     };
@@ -750,27 +750,107 @@ export class RbacManagementService {
   }
 
   private async getPermissionById(permissionId: string): Promise<StoredPermission> {
-    await this.ensureMemoryStore();
-    const fromMemory = this.memoryPermissions.get(permissionId);
-    if (fromMemory) return fromMemory;
+    const resolved = await this.resolvePermissionRecord(permissionId);
+    if (resolved) return resolved;
+
+    throw new NotFoundException(`Permission ${permissionId} not found`);
+  }
+
+  private async resolvePermissionRecord(permissionId: string): Promise<StoredPermission | null> {
+    const codeFromLegacyId = permissionId.startsWith('perm-')
+      ? (permissionId.slice(5) as PermissionCode)
+      : null;
 
     try {
-      const row = await this.prisma.permission.findUnique({ where: { id: permissionId } });
-      if (row) {
-        return {
-          id: row.id,
-          code: row.code as PermissionCode,
-          name: row.name,
-          resource: row.resource,
-          action: row.action,
-          isSystem: row.isSystem,
-        };
+      if (codeFromLegacyId) {
+        const byCode = await this.prisma.permission.findUnique({ where: { code: codeFromLegacyId } });
+        if (byCode) return this.mapPrismaPermission(byCode);
+      }
+
+      const byId = await this.prisma.permission.findUnique({ where: { id: permissionId } });
+      if (byId) return this.mapPrismaPermission(byId);
+    } catch {
+      // fallback to memory store below
+    }
+
+    await this.ensureMemoryStore();
+    const fromMemory = this.memoryPermissions.get(permissionId);
+    if (!fromMemory) return null;
+
+    if (fromMemory.id.startsWith('perm-')) {
+      try {
+        const byCode = await this.prisma.permission.findUnique({ where: { code: fromMemory.code } });
+        if (byCode) return this.mapPrismaPermission(byCode);
+      } catch {
+        // use memory
+      }
+    }
+
+    return fromMemory;
+  }
+
+  private async getPermissionsCatalog(): Promise<StoredPermission[]> {
+    try {
+      const rows = await this.prisma.permission.findMany({ orderBy: { code: 'asc' } });
+      if (rows.length) {
+        return rows.map((row) => this.mapPrismaPermission(row));
       }
     } catch {
       // fallback
     }
 
-    throw new NotFoundException(`Permission ${permissionId} not found`);
+    await this.ensureMemoryStore();
+    const seen = new Set<string>();
+    const catalog: StoredPermission[] = [];
+    for (const permission of this.memoryPermissions.values()) {
+      if (seen.has(permission.code)) continue;
+      seen.add(permission.code);
+      catalog.push(permission);
+    }
+    return catalog.sort((a, b) => a.code.localeCompare(b.code));
+  }
+
+  private mapPrismaPermission(row: {
+    id: string;
+    code: string;
+    name: string;
+    resource: string;
+    action: string;
+    isSystem: boolean;
+  }): StoredPermission {
+    return {
+      id: row.id,
+      code: row.code as PermissionCode,
+      name: row.name,
+      resource: row.resource,
+      action: row.action,
+      isSystem: row.isSystem,
+    };
+  }
+
+  private async resolvePermissionIdsForPersist(permissions: StoredPermission[]): Promise<string[]> {
+    const ids: string[] = [];
+
+    for (const permission of permissions) {
+      if (!permission.id.startsWith('perm-')) {
+        ids.push(permission.id);
+        continue;
+      }
+
+      try {
+        const row = await this.prisma.permission.findUnique({ where: { code: permission.code } });
+        if (row) {
+          ids.push(row.id);
+          continue;
+        }
+      } catch {
+        // memory fallback
+      }
+
+      ids.push(permission.id);
+    }
+
+    return ids;
   }
 
   private async getPermissionsByIds(ids: string[]): Promise<StoredPermission[]> {

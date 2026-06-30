@@ -96,6 +96,8 @@ export const WEB_API_ROUTES = {
       activate: '/auth/activate',
       activatePreview: '/auth/activate/preview',
       activateResend: '/auth/activate/resend',
+      adminInvitePreview: '/auth/admin-invite/preview',
+      adminInviteAccept: '/auth/admin-invite/accept',
     },
   },
   users: {

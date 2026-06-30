@@ -30,6 +30,7 @@ import type { PaginatedResult } from '@community-marketplace/types';
 
 import { apiClient } from '@/lib/api-client';
 import { adminApiPath, adminRoutesForRole, type AdminApiRole } from '@/lib/admin-api-routes';
+import { API_NAMESPACES } from '@/lib/rbac-routes';
 import { normalizePaginated } from '@/lib/normalize-api-response';
 
 const EMPTY_STATS: AdminDashboardStats = {
@@ -314,6 +315,50 @@ export const adminService = {
       },
     );
     return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
+  },
+
+  async listInviteableRoles(): Promise<AdminInviteableRoleRow[]> {
+    const response = await apiClient<AdminInviteableRoleRow[]>(
+      `${API_NAMESPACES.SUPER_ADMIN}/invitations/inviteable-roles`,
+    );
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
+  async listAdminInvitations(): Promise<AdminInvitationRow[]> {
+    const response = await apiClient<AdminInvitationRow[]>(
+      `${API_NAMESPACES.SUPER_ADMIN}/invitations`,
+    );
+    return Array.isArray(response.data) ? response.data : [];
+  },
+
+  async createAdminInvitation(input: CreateAdminInvitationInput): Promise<AdminInvitationRow> {
+    const response = await apiClient<AdminInvitationRow>(
+      `${API_NAMESPACES.SUPER_ADMIN}/invitations`,
+      {
+        method: 'POST',
+        body: JSON.stringify(input),
+      },
+    );
+    if (!response.data) {
+      throw new Error('Failed to create invitation');
+    }
+    return response.data;
+  },
+
+  async resendAdminInvitation(id: string): Promise<{ message: string }> {
+    const response = await apiClient<{ message: string }>(
+      `${API_NAMESPACES.SUPER_ADMIN}/invitations/${id}/resend`,
+      { method: 'POST' },
+    );
+    return response.data ?? { message: 'Invitation resent' };
+  },
+
+  async revokeAdminInvitation(id: string): Promise<{ revoked: boolean }> {
+    const response = await apiClient<{ revoked: boolean }>(
+      `${API_NAMESPACES.SUPER_ADMIN}/invitations/${id}`,
+      { method: 'DELETE' },
+    );
+    return response.data ?? { revoked: true };
   },
 
   async getRoleMatrix(role: AdminApiRole): Promise<Record<RbacRole, string[]>> {
@@ -691,4 +736,28 @@ export interface CreateAdminRoleInput {
   code?: string;
   description?: string;
   template?: RbacRoleTemplateId;
+}
+
+export interface AdminInviteableRoleRow {
+  id: string;
+  code: string;
+  name: string;
+  isSystem: boolean;
+}
+
+export interface AdminInvitationRow {
+  id: string;
+  email: string;
+  displayName: string;
+  roleId: string;
+  roleCode: string;
+  roleName: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface CreateAdminInvitationInput {
+  email: string;
+  displayName: string;
+  roleId: string;
 }

@@ -62,7 +62,7 @@ export class UpdateCustomRoleDto {
 
 export class SyncRolePermissionsDto {
   @IsArray()
-  @IsUUID('4', { each: true })
+  @IsString({ each: true })
   permissionIds!: string[];
 }
 

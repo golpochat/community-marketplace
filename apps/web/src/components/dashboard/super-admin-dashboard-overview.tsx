@@ -81,6 +81,15 @@ export function SuperAdminDashboardOverview({ stats }: SuperAdminDashboardOvervi
           </p>
         </Link>
         <Link
+          href="/super-admin/invitations"
+          className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-main-bg))] p-4 transition-colors hover:bg-[hsl(var(--dashboard-sidebar-active)/0.3)]"
+        >
+          <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">Invitations</p>
+          <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+            Invite level-2 panel operators by role.
+          </p>
+        </Link>
+        <Link
           href="/super-admin/admins"
           className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-main-bg))] p-4 transition-colors hover:bg-[hsl(var(--dashboard-sidebar-active)/0.3)]"
         >

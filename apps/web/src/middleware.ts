@@ -49,6 +49,7 @@ export const config = {
     '/auth/login',
     '/auth/register',
     '/auth/activate',
+    '/admin/invite/accept',
     '/dashboard/:path*',
     '/seller/:path*',
     '/buyer/:path*',

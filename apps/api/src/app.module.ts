@@ -11,6 +11,7 @@ import { DatabaseModule } from './database/database.module';
 import { EventsModule } from './events/events.module';
 import { JobsModule } from './jobs/jobs.module';
 import { LibsModule } from './libs/libs.module';
+import { AdminInvitationsModule } from './modules/admin-invitations/admin-invitations.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BuyerModule } from './modules/buyer/buyer.module';
@@ -53,6 +54,7 @@ import { UtilsModule } from './utils/utils.module';
     SearchModule,
     ModerationModule,
     AdminModule,
+    AdminInvitationsModule,
     SuperAdminModule,
     SellerModule,
     BuyerModule,

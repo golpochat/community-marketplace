@@ -14,6 +14,7 @@ export const GUEST_ONLY_AUTH_PATHS = [
   WEB_APP_ROUTES.login,
   WEB_APP_ROUTES.register,
   '/auth/activate',
+  '/admin/invite/accept',
 ] as const;
 
 export function isGuestOnlyAuthPath(pathname: string): boolean {
@@ -42,6 +43,9 @@ export const LEGACY_DASHBOARD_REDIRECTS: Record<string, string> = {
 };
 
 export function isDashboardPath(pathname: string): boolean {
+  if (pathname === '/admin/invite/accept' || pathname.startsWith('/admin/invite/')) {
+    return false;
+  }
   return DASHBOARD_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
@@ -51,6 +55,7 @@ export function resolveSuperAdminAdminNamespaceRedirect(
   role: RbacRole | null,
 ): string | null {
   if (role !== 'SUPER_ADMIN') return null;
+  if (pathname.startsWith('/admin/invite')) return null;
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
     return `/super-admin${pathname.slice('/admin'.length)}`;
   }

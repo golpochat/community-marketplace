@@ -878,7 +878,7 @@ export function SuperAdminAdminsPage() {
   return (
     <DashboardPageShell
       title="Admins"
-      description="Create and manage administrator accounts."
+      description="Pending invitations are on the Invitations page. Active panel operators are listed below."
       loading={loading}
       error={error}
       empty={!loading && !error && rows.length === 0}

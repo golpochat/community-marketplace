@@ -89,6 +89,7 @@ export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
     icon: 'settings',
   },
   { id: 'rbac', label: 'Roles & Permissions', href: '/super-admin/rbac', icon: 'user-cog' },
+  { id: 'invitations', label: 'Invitations', href: '/super-admin/invitations', icon: 'mail' },
   { id: 'admins', label: 'Admins', href: '/super-admin/admins', icon: 'key' },
   { id: 'audit-log', label: 'Audit Log', href: '/super-admin/audit-log', icon: 'scroll' },
 
