@@ -127,7 +127,7 @@ export type {
   AdminSellerVerificationRow,
   AdminSellerVerificationDetail,
 } from './seller-verification';
-export { SELLER_VERIFICATION_MESSAGES } from './seller-verification';
+export { SELLER_VERIFICATION_MESSAGES, isSellerVerified } from './seller-verification';
 export type { NearbyArea, UserGeoLocation, ReverseGeocodeResult } from './location';
 export type {
   ListingStatusActorType,

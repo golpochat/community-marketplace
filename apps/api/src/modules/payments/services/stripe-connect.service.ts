@@ -12,6 +12,7 @@ import type { ConnectOnboardInput } from '@community-marketplace/validation';
 import { PrismaService } from '../../../database/prisma.service';
 import { LoggerLib } from '../../../libs/logger.lib';
 import { mapConnectAccount } from '../mappers/payment.mapper';
+import { PaymentsAccessService } from './payments-access.service';
 import { PaymentsAuditService } from './payments-audit.service';
 
 @Injectable()
@@ -20,6 +21,7 @@ export class StripeConnectService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly access: PaymentsAccessService,
     private readonly audit: PaymentsAuditService,
     private readonly logger: LoggerLib,
   ) {
@@ -85,6 +87,8 @@ export class StripeConnectService {
     userId: string,
     dto: ConnectOnboardInput,
   ): Promise<StripeConnectAccount> {
+    await this.access.assertSellerVerifiedForConnect(userId);
+
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { email: true, displayName: true },
@@ -157,6 +161,8 @@ export class StripeConnectService {
     userId: string,
     dto: ConnectOnboardInput,
   ): Promise<StripeConnectAccount> {
+    await this.access.assertSellerVerifiedForConnect(userId);
+
     const row = await this.prisma.stripeConnectAccount.findUnique({
       where: { userId },
     });
@@ -183,6 +189,15 @@ export class StripeConnectService {
   }
 
   async getAccount(userId: string): Promise<StripeConnectAccount | null> {
+    await this.access.assertSellerVerifiedForConnect(userId);
+    return this.getAccountRecord(userId);
+  }
+
+  async getAccountForAdmin(userId: string): Promise<StripeConnectAccount | null> {
+    return this.getAccountRecord(userId);
+  }
+
+  private async getAccountRecord(userId: string): Promise<StripeConnectAccount | null> {
     const row = await this.prisma.stripeConnectAccount.findUnique({
       where: { userId },
     });
@@ -199,12 +214,9 @@ export class StripeConnectService {
     return this.mapDevConnectRow(row);
   }
 
-  async getAccountForAdmin(userId: string): Promise<StripeConnectAccount | null> {
-    return this.getAccount(userId);
-  }
-
   async assertSellerCanReceivePayments(sellerId: string) {
-    const account = await this.getAccount(sellerId);
+    await this.access.assertSellerVerifiedForConnect(sellerId);
+    const account = await this.getAccountRecord(sellerId);
     if (!account) {
       throw new BadRequestException('Seller has not completed Stripe Connect onboarding');
     }
@@ -232,6 +244,8 @@ export class StripeConnectService {
   }
 
   async createDashboardLoginLink(userId: string): Promise<{ url: string }> {
+    await this.access.assertSellerVerifiedForConnect(userId);
+
     const row = await this.prisma.stripeConnectAccount.findUnique({
       where: { userId },
     });

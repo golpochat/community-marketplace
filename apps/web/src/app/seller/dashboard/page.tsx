@@ -49,8 +49,8 @@ export default function SellerDashboardPage() {
         </p>
       ) : null}
 
-      <SellerConnectBanner className="mb-4 sm:mb-6" />
       <SellerVerificationBanner className="mb-4 sm:mb-6" />
+      <SellerConnectBanner className="mb-4 sm:mb-6" />
 
       {loading ? (
         <SellerDashboardSkeleton />

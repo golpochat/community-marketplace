@@ -128,4 +128,10 @@ export const SELLER_VERIFICATION_MESSAGES = {
   REACTIVATED: 'Your seller account has been reactivated.',
   FORCE_REVERIFY: 'Your account requires re-verification.',
   MAX_UNVERIFIED: 'You have reached the maximum number of unverified listings.',
+  STRIPE_REQUIRES_VERIFICATION:
+    'Complete seller verification before setting up Stripe payouts.',
 } as const;
+
+export function isSellerVerified(status: SellerStatus | null | undefined): boolean {
+  return status === 'verified';
+}

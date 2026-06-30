@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import type { SellerVerificationStatus } from '@community-marketplace/types';
-import { SELLER_VERIFICATION_MESSAGES } from '@community-marketplace/types';
+import { isSellerVerified, SELLER_VERIFICATION_MESSAGES } from '@community-marketplace/types';
 
 import { sellerVerificationService } from '@/services/seller-verification.service';
 
@@ -34,6 +34,8 @@ export function isDuplicateListingBlocked(status: SellerVerificationStatus | nul
 export function isSellerSuspended(status: SellerVerificationStatus | null): boolean {
   return status?.sellerStatus === 'suspended';
 }
+
+export { isSellerVerified };
 
 export function listingGateTooltip(status: SellerVerificationStatus | null): string {
   if (!status) return SELLER_VERIFICATION_MESSAGES.BLOCK_VERIFICATION_REQUIRED;

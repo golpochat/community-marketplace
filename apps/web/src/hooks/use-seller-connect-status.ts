@@ -6,12 +6,20 @@ import type { StripeConnectAccount } from '@community-marketplace/types';
 
 import { paymentsService } from '@/services/payments.service';
 
-export function useSellerConnectStatus() {
+export function useSellerConnectStatus(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true;
   const [connect, setConnect] = useState<StripeConnectAccount | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (!enabled) {
+      setConnect(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -23,7 +31,7 @@ export function useSellerConnectStatus() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     void load();

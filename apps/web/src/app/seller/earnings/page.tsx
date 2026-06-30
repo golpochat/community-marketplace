@@ -8,8 +8,12 @@ import { formatCurrency } from '@community-marketplace/utils';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { LoadingState } from '@/components/LoadingState';
+import { SellerStripeVerificationGate } from '@/components/seller/seller-stripe-verification-gate';
+import { isSellerVerified } from '@community-marketplace/types';
+import type { SellerVerificationStatus } from '@community-marketplace/types';
 import { monetizationService } from '@/services/monetization.service';
 import { paymentsService } from '@/services/payments.service';
+import { sellerVerificationService } from '@/services/seller-verification.service';
 
 function SellerEarningsContent() {
   const searchParams = useSearchParams();
@@ -26,6 +30,7 @@ function SellerEarningsContent() {
     }>
   >([]);
   const [connect, setConnect] = useState<StripeConnectAccount | null>(null);
+  const [verification, setVerification] = useState<SellerVerificationStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [connectSetupError, setConnectSetupError] = useState<string | null>(null);
@@ -38,11 +43,15 @@ function SellerEarningsContent() {
     setLoading(true);
     setError(null);
     try {
+      const verificationData = await sellerVerificationService.getStatus();
+      setVerification(verificationData);
+      const sellerVerified = isSellerVerified(verificationData.sellerStatus);
+
       const [summaryData, payoutResponse, connectData, feeInfo, paymentsResponse, pending] =
         await Promise.all([
         paymentsService.getEarningsSummary(),
         paymentsService.getPayoutHistory(),
-        paymentsService.getConnectStatus(),
+        sellerVerified ? paymentsService.getConnectStatus() : Promise.resolve(null),
         monetizationService.getSellerPlatformFee().catch(() => null),
         paymentsService.getSellerPayments(1, 10).catch(() => ({ data: [] as Payment[] })),
         paymentsService.getPendingTransfers().catch(() => []),
@@ -71,6 +80,8 @@ function SellerEarningsContent() {
   }, [searchParams]);
 
   async function handleOnboard() {
+    if (!isSellerVerified(verification?.sellerStatus)) return;
+
     setOnboarding(true);
     setError(null);
     setConnectSetupError(null);
@@ -96,6 +107,8 @@ function SellerEarningsContent() {
   }
 
   async function handleOpenDashboard() {
+    if (!isSellerVerified(verification?.sellerStatus)) return;
+
     setOpeningDashboard(true);
     setError(null);
     try {
@@ -110,15 +123,24 @@ function SellerEarningsContent() {
 
   const needsStripeConnectSetup = Boolean(connectSetupError);
 
+  const sellerVerified = isSellerVerified(verification?.sellerStatus);
+
   const isReady = Boolean(
-    connect?.onboardingComplete && connect.chargesEnabled && connect.payoutsEnabled,
+    sellerVerified &&
+      connect?.onboardingComplete &&
+      connect.chargesEnabled &&
+      connect.payoutsEnabled,
   );
 
   return (
     <>
       <PageHeader
         title="Earnings"
-        description="Connect your bank account and track payouts from sales."
+        description={
+          sellerVerified
+            ? 'Connect your bank account and track payouts from sales.'
+            : 'Track earnings and complete seller verification before setting up payouts.'
+        }
       />
 
       {message && (
@@ -152,6 +174,10 @@ function SellerEarningsContent() {
             </DashboardCard>
           )}
           <DashboardCard title="Stripe Connect (required to get paid)">
+            {!sellerVerified ? (
+              <SellerStripeVerificationGate />
+            ) : (
+              <>
             <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               Irish sellers onboard with Stripe Express. Buyers cannot pay for your listings until
               charges and payouts are enabled. In test mode, use Stripe&apos;s test business details.
@@ -226,6 +252,8 @@ function SellerEarningsContent() {
                 Refresh status
               </button>
             </div>
+              </>
+            )}
           </DashboardCard>
 
           {summary && (

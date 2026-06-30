@@ -2,16 +2,23 @@
 
 import Link from 'next/link';
 
+import { isSellerVerified } from '@community-marketplace/types';
+
 import { useSellerConnectStatus } from '@/hooks/use-seller-connect-status';
+import { useSellerListingGate } from '@/hooks/use-seller-listing-gate';
 
 interface SellerConnectBannerProps {
   className?: string;
 }
 
 export function SellerConnectBanner({ className }: SellerConnectBannerProps) {
-  const { connect, loading, isReady } = useSellerConnectStatus();
+  const { status, loading: verificationLoading } = useSellerListingGate();
+  const sellerVerified = isSellerVerified(status?.sellerStatus);
+  const { connect, loading: connectLoading, isReady } = useSellerConnectStatus({
+    enabled: sellerVerified,
+  });
 
-  if (loading || isReady) return null;
+  if (verificationLoading || !sellerVerified || connectLoading || isReady) return null;
 
   return (
     <div
