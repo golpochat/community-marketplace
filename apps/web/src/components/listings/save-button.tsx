@@ -12,9 +12,15 @@ interface SaveButtonProps {
   listingId: string;
   initialSaved?: boolean;
   size?: 'default' | 'sm' | 'icon';
+  className?: string;
 }
 
-export function SaveButton({ listingId, initialSaved = false, size = 'default' }: SaveButtonProps) {
+export function SaveButton({
+  listingId,
+  initialSaved = false,
+  size = 'default',
+  className,
+}: SaveButtonProps) {
   const { isAuthenticated, user } = useAuth();
   const [saved, setSaved] = useState(initialSaved);
   const [loading, setLoading] = useState(false);
@@ -44,7 +50,7 @@ export function SaveButton({ listingId, initialSaved = false, size = 'default' }
   if (!isAuthenticated) {
     return (
       <Link href={`/auth/login?redirect=/listings/${listingId}`}>
-        <Button variant="secondary" size={size === 'icon' ? 'sm' : size}>
+        <Button variant="outline" size={size === 'icon' ? 'sm' : size} className={className}>
           Save
         </Button>
       </Link>
@@ -56,16 +62,17 @@ export function SaveButton({ listingId, initialSaved = false, size = 'default' }
   }
 
   return (
-    <div className="inline-flex flex-col items-start gap-1">
+    <>
       <Button
-        variant="secondary"
+        variant="outline"
         size={size === 'icon' ? 'sm' : size}
+        className={className}
         onClick={() => void handleToggle()}
         disabled={loading}
       >
         {loading ? 'Saving…' : saved ? 'Saved ♥' : 'Save'}
       </Button>
-      {error && <span className="text-xs text-red-600">{error}</span>}
-    </div>
+      {error && <span className="sr-only">{error}</span>}
+    </>
   );
 }

@@ -18,7 +18,7 @@ export function DocumentPreview({
 
   if (!url) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+      <div className="rounded-lg border border-dashed border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
         No {label.toLowerCase()} uploaded
       </div>
     );
@@ -27,9 +27,9 @@ export function DocumentPreview({
   const showImage = isImageUrl(url) && !failed;
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
+    <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-sm font-medium text-slate-900">{label}</p>
+        <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">{label}</p>
         <a
           href={url}
           target="_blank"
@@ -41,9 +41,9 @@ export function DocumentPreview({
         </a>
       </div>
       {showImage ? (
-        <div className="relative overflow-hidden rounded-md bg-slate-100">
+        <div className="relative overflow-hidden rounded-md bg-[hsl(var(--dashboard-sidebar-active)/0.5)]">
           {loading ? (
-            <div className="h-48 animate-pulse bg-slate-200" aria-hidden />
+            <div className="h-48 animate-pulse bg-[hsl(var(--dashboard-sidebar-active)/0.6)]" aria-hidden />
           ) : null}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

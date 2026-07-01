@@ -14,8 +14,8 @@ export function SellerProfileTrustSection({ seller, memberSince }: SellerProfile
   if (!seller && !memberSince) return null;
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-brand-sm">
-      <h2 className="text-lg font-semibold text-gray-900">Seller reputation</h2>
+    <section className="rounded-xl border border-border bg-card p-5 shadow-brand-sm">
+      <h2 className="text-lg font-semibold text-foreground">Seller reputation</h2>
       <div className="mt-4 space-y-3">
         <SellerRatingDisplay
           averageRating={seller?.averageRating}
@@ -33,17 +33,17 @@ export function SellerProfileTrustSection({ seller, memberSince }: SellerProfile
           isBusiness={seller?.isBusiness}
         />
         {typeof seller?.activeListingCount === 'number' && (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {seller.activeListingCount} active listing{seller.activeListingCount === 1 ? '' : 's'}
           </p>
         )}
         {typeof seller?.soldCount === 'number' && seller.soldCount > 0 && (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {seller.soldCount} successful sale{seller.soldCount === 1 ? '' : 's'}
           </p>
         )}
         {typeof seller?.responseRate === 'number' && (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Responds to {seller.responseRate}% of messages
             {typeof seller.responseTimeMinutes === 'number' && seller.responseTimeMinutes > 0
               ? ` · typically within ${seller.responseTimeMinutes} min`

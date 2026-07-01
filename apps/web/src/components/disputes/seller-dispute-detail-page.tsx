@@ -40,7 +40,7 @@ export function SellerDisputeDetailPage({ disputeId }: { disputeId: string }) {
   if (loading) {
     return (
       <DashboardPageShell title="Dispute" description="Loading…">
-        <p className="text-sm text-gray-500">Loading dispute…</p>
+        <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading dispute…</p>
       </DashboardPageShell>
     );
   }
@@ -48,7 +48,7 @@ export function SellerDisputeDetailPage({ disputeId }: { disputeId: string }) {
   if (error || !dispute) {
     return (
       <DashboardPageShell title="Dispute" description="Unable to load dispute.">
-        <p className="text-sm text-red-600">{error ?? 'Dispute not found'}</p>
+        <p className="text-sm text-destructive">{error ?? 'Dispute not found'}</p>
         <Link href="/seller/disputes" className="mt-4 inline-block text-sm text-blue-600 hover:underline">
           Back to disputes
         </Link>
@@ -73,18 +73,18 @@ export function SellerDisputeDetailPage({ disputeId }: { disputeId: string }) {
           <Card title="Buyer claim">
             <dl className="grid gap-3 text-sm">
               <div>
-                <dt className="text-gray-500">Status</dt>
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Status</dt>
                 <dd className="mt-1">
                   <DisputeStatusBadge status={dispute.disputeStatus} />
                 </dd>
               </div>
               <div>
-                <dt className="text-gray-500">Reason</dt>
-                <dd className="mt-1 text-gray-900">{DISPUTE_REASON_LABELS[dispute.reason]}</dd>
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Reason</dt>
+                <dd className="mt-1 text-[hsl(var(--dashboard-main-fg))]">{DISPUTE_REASON_LABELS[dispute.reason]}</dd>
               </div>
               <div>
-                <dt className="text-gray-500">Description</dt>
-                <dd className="mt-1 whitespace-pre-wrap text-gray-900">{dispute.description}</dd>
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Description</dt>
+                <dd className="mt-1 whitespace-pre-wrap text-[hsl(var(--dashboard-main-fg))]">{dispute.description}</dd>
               </div>
             </dl>
           </Card>

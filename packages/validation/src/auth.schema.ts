@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+import {
+  IRISH_MOBILE_VALIDATION_MESSAGE,
+  normalizeIrishPhoneToE164,
+} from './irish-phone';
+
 import { emailSchema, passwordSchema } from './common.schema';
 
 export const otpPurposeSchema = z.enum([
@@ -15,7 +20,17 @@ export const otpChannelSchema = z.enum(['email', 'phone']);
 export const phoneSchema = z
   .string()
   .trim()
-  .regex(/^\+[1-9]\d{7,14}$/, 'Phone must be in E.164 format (e.g. +14155552671)');
+  .transform((value, ctx) => {
+    const e164 = normalizeIrishPhoneToE164(value);
+    if (!e164) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: IRISH_MOBILE_VALIDATION_MESSAGE,
+      });
+      return z.NEVER;
+    }
+    return e164;
+  });
 
 export const displayNameSchema = z.string().trim().min(1).max(100);
 

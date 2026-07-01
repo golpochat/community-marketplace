@@ -57,7 +57,7 @@ export function VehicleListingMeta({
   return (
     <div className={isList ? 'space-y-2' : 'space-y-1.5'}>
       {items.length > 0 && (
-        <p className={isList ? 'text-sm text-gray-600' : 'line-clamp-2 text-xs text-gray-600'}>
+        <p className={isList ? 'text-sm text-muted-foreground' : 'line-clamp-2 text-xs text-muted-foreground'}>
           {items.join(' · ')}
         </p>
       )}

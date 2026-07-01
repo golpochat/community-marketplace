@@ -18,7 +18,7 @@ export default function PrivacyPage() {
         Notification preferences can be updated in your account settings. Push alerts are limited to
         a few per day by default.
       </p>
-      <p className="mt-4 text-sm text-gray-500">
+      <p className="mt-4 text-sm text-muted-foreground">
         Full privacy documentation will be expanded as features launch.
       </p>
     </ContentPageShell>

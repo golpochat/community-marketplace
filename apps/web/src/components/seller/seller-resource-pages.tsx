@@ -20,6 +20,10 @@ import {
   resolveListingListedAt,
 } from "@community-marketplace/utils";
 import {
+  IRISH_MOBILE_VALIDATION_MESSAGE,
+  normalizeIrishPhoneToE164,
+} from "@community-marketplace/validation";
+import {
   Card,
   formatExpiredAgo,
   formatExpiresIn,
@@ -32,6 +36,7 @@ import {
   DataTable,
 } from "@/components/dashboard/async-resource";
 import { ListingPriceDisplay } from "@/components/listings/listing-price-display";
+import { IrishMobilePrefixTooltip } from "@/components/forms/irish-mobile-prefix-tooltip";
 import { listingImageVariantUrl } from "@/lib/listing-image-url";
 import {
   DEFAULT_RENEW_PACKAGE,
@@ -172,7 +177,7 @@ function SellerListingThumb({ listing }: { listing: Listing }) {
 
   if (!src) {
     return (
-      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-gray-100 text-[10px] text-gray-400">
+      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[10px] text-[hsl(var(--dashboard-sidebar-muted))]">
         —
       </div>
     );
@@ -326,7 +331,7 @@ export function SellerListingsPage() {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+            className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
             aria-label="Filter by status"
           >
             {STATUS_FILTER_OPTIONS.map((option) => (
@@ -338,9 +343,9 @@ export function SellerListingsPage() {
           <CreateListingButton label="Create listing" />
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <table className="min-w-full divide-y divide-[hsl(var(--dashboard-sidebar-border))] text-sm">
             <thead>
-              <tr className="text-left text-gray-700">
+              <tr className="text-left text-[hsl(var(--dashboard-main-fg))]">
                 <th className="px-3 py-2 font-medium">Photo</th>
                 <th className="px-3 py-2 font-medium">Title</th>
                 <th className="px-3 py-2 font-medium">Price</th>
@@ -350,13 +355,13 @@ export function SellerListingsPage() {
                 <th className="px-3 py-2 font-medium">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[hsl(var(--dashboard-sidebar-border))]">
               {listings.map((listing) => (
                 <tr key={listing.id}>
                   <td className="px-3 py-2">
                     <SellerListingThumb listing={listing} />
                   </td>
-                  <td className="max-w-xs px-3 py-2 font-medium text-gray-900">
+                  <td className="max-w-xs px-3 py-2 font-medium text-[hsl(var(--dashboard-main-fg))]">
                     <div className="flex flex-wrap items-center gap-2">
                       <TruncatedText text={listing.title} />
                       <FeaturedBadge
@@ -366,7 +371,7 @@ export function SellerListingsPage() {
                       <BoostedBadge boostedUntil={listing.boostedUntil} />
                     </div>
                   </td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-[hsl(var(--dashboard-main-fg))]">
                     <ListingPriceDisplay
                       price={listing.price}
                       originalPrice={listing.originalPrice}
@@ -381,23 +386,23 @@ export function SellerListingsPage() {
                     {(listing.status === "active" ||
                       listing.status === "paused") &&
                       listing.expiresAt && (
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                           {formatExpiresIn(listing.expiresAt)}
                         </p>
                       )}
                     {listing.status === "expired" && listing.expiresAt && (
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                         {formatExpiredAgo(listing.expiresAt)}
                       </p>
                     )}
                     {listing.status === "removed" && listing.removalReason && (
-                      <p className="mt-1 text-xs text-red-600">
+                      <p className="mt-1 text-xs text-destructive">
                         {listing.removalReason}
                       </p>
                     )}
                     {listing.status === "rejected" &&
                       listing.rejectionReason && (
-                        <p className="mt-1 text-xs text-red-600">
+                        <p className="mt-1 text-xs text-destructive">
                           {listing.rejectionReason}
                         </p>
                       )}
@@ -410,12 +415,12 @@ export function SellerListingsPage() {
                         </p>
                       )}
                     {listing.status === "suspended_seller" && (
-                      <p className="mt-1 text-xs text-red-600">
+                      <p className="mt-1 text-xs text-destructive">
                         Unavailable while your seller account is suspended.
                       </p>
                     )}
                   </td>
-                  <td className="px-3 py-2 text-xs text-gray-500">
+                  <td className="px-3 py-2 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                     <p>
                       {formatListedAgo(
                         resolveListingListedAt(
@@ -437,7 +442,7 @@ export function SellerListingsPage() {
                       {formatUpdatedAgo(listing.updatedAt)}
                     </p>
                   </td>
-                  <td className="px-3 py-2 text-gray-700">
+                  <td className="px-3 py-2 text-[hsl(var(--dashboard-main-fg))]">
                     {listing.viewCount}
                   </td>
                   <td className="px-3 py-2">
@@ -576,6 +581,7 @@ export function SellerVerificationPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [phone, setPhone] = useState("");
+  const [normalizedPhone, setNormalizedPhone] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [files, setFiles] = useState<{
@@ -612,13 +618,19 @@ export function SellerVerificationPage() {
       setError("Enter your phone number.");
       return;
     }
+    const e164 = normalizeIrishPhoneToE164(phone);
+    if (!e164) {
+      setError(IRISH_MOBILE_VALIDATION_MESSAGE);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       await sellerVerificationService.phone({
         action: "send_otp",
-        phone: phone.trim(),
+        phone: e164,
       });
+      setNormalizedPhone(e164);
       setOtpSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send OTP");
@@ -629,12 +641,17 @@ export function SellerVerificationPage() {
 
   async function handleVerifyOtp(event: React.FormEvent) {
     event.preventDefault();
+    const e164 = normalizedPhone || normalizeIrishPhoneToE164(phone);
+    if (!e164) {
+      setError(IRISH_MOBILE_VALIDATION_MESSAGE);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       await sellerVerificationService.phone({
         action: "verify_otp",
-        phone: phone.trim(),
+        phone: e164,
         code: otpCode.trim(),
       });
       await load();
@@ -663,11 +680,12 @@ export function SellerVerificationPage() {
           : Promise.resolve(undefined),
       ]);
 
+      const phoneE164 = normalizedPhone || normalizeIrishPhoneToE164(phone);
       await sellerVerificationService.submit({
         idDocumentPath,
         selfiePath,
         ...(addressDocumentPath ? { addressDocumentPath } : {}),
-        ...(phone.trim() ? { phoneNumber: phone.trim() } : {}),
+        ...(phoneE164 ? { phoneNumber: phoneE164 } : {}),
       });
       setFiles({});
       await load();
@@ -728,7 +746,7 @@ export function SellerVerificationPage() {
             {status.verificationRejectedReason && (
               <div className="flex justify-between gap-4">
                 <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Rejection reason</dt>
-                <dd className="text-right text-red-700">
+                <dd className="text-right text-destructive">
                   {status.verificationRejectedReason}
                 </dd>
               </div>
@@ -753,12 +771,19 @@ export function SellerVerificationPage() {
             <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               Verify your phone number with a one-time code.
             </p>
+            <div className="flex items-center gap-1.5">
+              <label htmlFor="seller-resource-phone" className="text-sm font-medium">
+                Mobile number
+              </label>
+              <IrishMobilePrefixTooltip />
+            </div>
             <input
+              id="seller-resource-phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+353..."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              placeholder="087 123 4567"
+              className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
             />
             {!otpSent ? (
               <button
@@ -777,7 +802,7 @@ export function SellerVerificationPage() {
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value)}
                   placeholder="Enter OTP code"
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                 />
                 <button
                   type="submit"
@@ -1027,12 +1052,12 @@ export function SellerCreateListingPage() {
         </p>
       )}
       {categoriesError && (
-        <p className="mb-4 text-sm text-red-600">{categoriesError}</p>
+        <p className="mb-4 text-sm text-destructive">{categoriesError}</p>
       )}
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
       {success && <p className="mb-4 text-sm text-green-700">{success}</p>}
       {submitting && (
-        <p className="mb-4 text-sm text-gray-700">Saving draft…</p>
+        <p className="mb-4 text-sm text-[hsl(var(--dashboard-main-fg))]">Saving draft…</p>
       )}
       <Card>
         <ListingFormRouter
@@ -1302,7 +1327,7 @@ export function SellerEditListingPage({
       error={error}
     >
       {submitting && (
-        <p className="mb-4 text-sm text-gray-700">Saving changes…</p>
+        <p className="mb-4 text-sm text-[hsl(var(--dashboard-main-fg))]">Saving changes…</p>
       )}
       {showDuplicatedBanner && listingStatus === "draft" && (
         <div className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
@@ -1338,10 +1363,10 @@ export function SellerEditListingPage({
           listingStatus === "under_investigation") &&
         (moderationNotes || (review?.messages.length ?? 0) > 0) && (
           <Card className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
               Admin review feedback
             </h2>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               {listingStatus === "pending_review" || listingStatus === "flagged"
                 ? "Your listing is awaiting admin review. Reply below if you need to clarify anything."
                 : listingStatus === "under_investigation"

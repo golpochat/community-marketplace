@@ -29,9 +29,9 @@ export function ListingDetailUnavailable({
       </Link>
 
       <div className={`mt-8 ${LISTING_DETAIL_GRID_CLASS}`}>
-        <div className="order-1 min-w-0 rounded-xl border border-gray-200 bg-gray-50 px-6 py-12 text-center lg:order-none">
-          <h1 className="text-xl font-semibold text-gray-900">{listing.title}</h1>
-          <p className="mt-4 text-gray-600">{message}</p>
+        <div className="order-1 min-w-0 rounded-xl border border-border bg-muted/50 px-6 py-12 text-center lg:order-none">
+          <h1 className="text-xl font-semibold text-foreground">{listing.title}</h1>
+          <p className="mt-4 text-muted-foreground">{message}</p>
         </div>
 
         <aside className="order-2 min-w-0 lg:order-none">

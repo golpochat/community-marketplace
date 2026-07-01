@@ -11,8 +11,8 @@ export const metadata = {
 export default function OfflinePage() {
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center px-4 py-16 text-center">
-      <h1 className="text-2xl font-bold text-gray-900">You&apos;re offline</h1>
-      <p className="mt-3 text-sm text-gray-600">
+      <h1 className="text-2xl font-bold text-foreground">You&apos;re offline</h1>
+      <p className="mt-3 text-sm text-muted-foreground">
         SellNearby needs an internet connection to load listings and messages. Check your
         connection, then try again.
       </p>

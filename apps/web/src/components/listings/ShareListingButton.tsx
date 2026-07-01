@@ -55,7 +55,7 @@ export function ShareListingButton({
         <button
           type="button"
           onClick={handleClick}
-          className={`relative z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-white hover:text-primary ${className ?? ''}`}
+          className={`relative z-20 flex h-8 w-8 items-center justify-center rounded-full bg-card/90 text-foreground shadow-sm ring-1 ring-border transition-colors duration-150 hover:bg-card hover:text-primary ${className ?? ''}`}
           aria-label="Share listing"
         >
           <ShareIcon className="h-4 w-4" />

@@ -45,7 +45,7 @@ interface BrowseFilterSidebarProps {
 }
 
 function FilterLabel({ children }: { children: React.ReactNode }) {
-  return <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">{children}</span>;
+  return <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">{children}</span>;
 }
 
 function FilterSection({
@@ -58,8 +58,8 @@ function FilterSection({
   className?: string;
 }) {
   return (
-    <section className={cn('border-b border-gray-100 pb-3', className)}>
-      <h3 className="mb-2 text-sm font-semibold text-gray-900">{title}</h3>
+    <section className={cn('border-b border-border pb-3', className)}>
+      <h3 className="mb-2 text-sm font-semibold text-foreground">{title}</h3>
       <div className="space-y-2">{children}</div>
     </section>
   );
@@ -101,7 +101,7 @@ export function BrowseFilterSidebar({
       <FilterSection title="Search">
         <div className="relative">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           <Input

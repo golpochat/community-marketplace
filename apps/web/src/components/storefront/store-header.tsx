@@ -29,7 +29,7 @@ export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
     : null;
 
   return (
-    <header className="border-b border-gray-200 bg-white">
+    <header className="border-b border-border bg-card">
       <StoreBanner bannerUrl={store.bannerUrl} name={store.name} />
 
       <div className={STOREFRONT_CONTAINER_CLASS}>
@@ -43,7 +43,7 @@ export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
               />
               <div className="min-w-0 space-y-2 pb-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                     {store.name}
                   </h1>
                   <StoreVerificationLabel
@@ -52,12 +52,12 @@ export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
                   />
                 </div>
                 {store.tagline ? (
-                  <p className="max-w-xl text-sm text-gray-600 sm:text-base">{store.tagline}</p>
+                  <p className="max-w-xl text-sm text-muted-foreground sm:text-base">{store.tagline}</p>
                 ) : null}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                   {joinedLabel ? <span>Joined {joinedLabel}</span> : null}
                   {store.location ? (
-                    <span className="inline-flex items-center gap-1 text-gray-600">
+                    <span className="inline-flex items-center gap-1 text-muted-foreground">
                       <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-600" aria-hidden />
                       {store.location}
                     </span>
@@ -90,7 +90,7 @@ export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 p-3 shadow-lg backdrop-blur-sm lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 p-3 shadow-lg backdrop-blur-sm lg:hidden">
         <StoreContactButton
           sellerId={store.sellerId}
           listingId={store.contactListingId}

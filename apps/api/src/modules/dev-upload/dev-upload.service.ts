@@ -10,6 +10,8 @@ const ALLOWED_KEY_PREFIXES = [
   'store-banners/',
   'verification-documents/',
   'system-assets/',
+  'payment-receipts/',
+  'platform-invoices/',
   'chat-attachments/',
   'chat/',
 ] as const;
@@ -65,6 +67,8 @@ export class DevUploadService {
         return 'image/webp';
       case '.pdf':
         return 'application/pdf';
+      case '.html':
+        return 'text/html; charset=utf-8';
       default:
         return 'application/octet-stream';
     }

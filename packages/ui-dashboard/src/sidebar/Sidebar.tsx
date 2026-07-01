@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 
 import { cn } from '@community-marketplace/ui';
@@ -17,6 +18,10 @@ export interface SidebarProps {
   role: RbacRole;
   brand?: string;
   brandAbbr?: string;
+  /** Expanded sidebar brand lockup (e.g. horizontal logo). */
+  brandLogo?: ReactNode;
+  /** Collapsed sidebar mark (e.g. icon-only logo). Falls back to brandLogo. */
+  brandLogoCollapsed?: ReactNode;
   mobile?: boolean;
   items?: SidebarNavItem[];
 }
@@ -25,6 +30,8 @@ export function Sidebar({
   role,
   brand = 'SellNearby.ie',
   brandAbbr,
+  brandLogo,
+  brandLogoCollapsed,
   mobile = false,
   items,
 }: SidebarProps) {
@@ -36,27 +43,43 @@ export function Sidebar({
   const isCollapsed = mobile ? false : collapsed;
 
   const abbr = brandAbbr ?? brand.replace(/\..*$/, '').slice(0, 2).toUpperCase();
+  const collapsedLogo = brandLogoCollapsed ?? brandLogo;
 
   return (
     <aside
       className={cn(
-        'flex shrink-0 flex-col border-r border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-bg))] text-[hsl(var(--dashboard-sidebar-fg))] transition-[width] duration-200',
+        'flex shrink-0 flex-col border-r border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-bg))] text-[hsl(var(--dashboard-sidebar-fg))] transition-[width] duration-200 ease-in-out',
         mobile ? 'h-full w-64' : 'hidden md:flex',
         !mobile && (isCollapsed ? 'w-[4.5rem]' : 'w-64'),
       )}
     >
       <div
         className={cn(
-          'border-b border-[hsl(var(--dashboard-sidebar-border))] py-5',
-          isCollapsed ? 'px-3 text-center' : 'px-6',
+          'flex flex-col border-b border-[hsl(var(--dashboard-sidebar-border))]',
+          isCollapsed ? 'items-center px-2 py-4' : 'px-4 py-5',
         )}
       >
-        <p className={cn('font-semibold tracking-tight', isCollapsed ? 'text-sm' : 'text-lg')}>
-          {isCollapsed ? abbr : brand}
-        </p>
-        {!isCollapsed ? (
-          <p className="mt-0.5 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{theme.label} Dashboard</p>
-        ) : null}
+        {isCollapsed ? (
+          collapsedLogo ? (
+            <div className="flex justify-center">{collapsedLogo}</div>
+          ) : (
+            <p className="text-sm font-semibold tracking-tight">{abbr}</p>
+          )
+        ) : brandLogo ? (
+          <>
+            {brandLogo}
+            <p className="mt-2 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              {theme.label} Dashboard
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-lg font-semibold tracking-tight">{brand}</p>
+            <p className="mt-0.5 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              {theme.label} Dashboard
+            </p>
+          </>
+        )}
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {navItems.map((item) => {

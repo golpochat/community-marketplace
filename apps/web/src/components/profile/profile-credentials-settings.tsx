@@ -64,7 +64,7 @@ export function ProfileCredentialsSettings({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      {error && <p className="text-sm text-red-600 lg:col-span-2">{error}</p>}
+      {error && <p className="text-sm text-destructive lg:col-span-2">{error}</p>}
       {message && <p className="text-sm text-emerald-700 lg:col-span-2">{message}</p>}
 
       <Card title="Login & contact">
@@ -80,7 +80,7 @@ export function ProfileCredentialsSettings({
               value={profile.email}
               readOnly
               disabled
-              className="bg-gray-50 text-gray-600"
+              className="bg-muted/50 text-muted-foreground"
             />
             {emailNote && (
               <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{emailNote}</p>
@@ -130,7 +130,7 @@ export function ProfileCredentialsSettings({
             type="button"
             onClick={() => void handleDeactivate()}
             disabled={deactivating}
-            className="mt-4 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+            className="mt-4 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
           >
             {deactivating ? 'Submitting…' : 'Request account deactivation'}
           </button>

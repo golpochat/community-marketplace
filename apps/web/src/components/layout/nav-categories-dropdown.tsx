@@ -59,7 +59,7 @@ export function NavCategoriesDropdown({ className, onNavigate }: NavCategoriesDr
       <button
         type="button"
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-[15px] font-medium text-gray-700 transition-all duration-200 hover:text-primary',
+          'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[15px] font-medium text-foreground/80 transition-colors duration-150 hover:text-primary',
           open && 'text-primary',
         )}
         aria-expanded={open}
@@ -75,7 +75,7 @@ export function NavCategoriesDropdown({ className, onNavigate }: NavCategoriesDr
 
       {open && (
         <div
-          className="absolute left-0 top-full z-50 mt-2 w-[min(100vw-2rem,520px)] rounded-xl border border-gray-200 bg-white p-4 shadow-lg"
+          className="absolute left-0 top-full z-50 mt-2 w-[min(100vw-2rem,520px)] rounded-xl border border-border bg-popover p-4 shadow-lg"
           role="menu"
           onMouseEnter={openMenu}
           onMouseLeave={scheduleClose}
@@ -97,7 +97,7 @@ export function NavCategoriesDropdown({ className, onNavigate }: NavCategoriesDr
                   <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                     <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
                   </span>
-                  <span className="text-sm font-medium leading-tight text-gray-800">
+                  <span className="text-sm font-medium leading-tight text-foreground">
                     {category.name}
                   </span>
                 </Link>
@@ -108,7 +108,7 @@ export function NavCategoriesDropdown({ className, onNavigate }: NavCategoriesDr
           {hasMore && (
             <Link
               href="/listings"
-              className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/5"
+              className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-2.5 text-sm font-medium text-primary transition-colors duration-150 hover:bg-primary/5"
               onClick={() => {
                 setOpen(false);
                 onNavigate?.();

@@ -13,13 +13,13 @@ interface NotificationItemProps {
 export function NotificationItem({ notification, onMarkRead }: NotificationItemProps) {
   const content = (
     <div className="flex gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-lg">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-lg">
         <NotificationIconByType type={notification.type} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-medium text-gray-900">{notification.title}</p>
-        <p className="mt-0.5 text-sm text-gray-600">{notification.message ?? notification.body}</p>
-        <p className="mt-1 text-xs text-gray-400">{formatDateTime(notification.createdAt)}</p>
+        <p className="font-medium text-foreground">{notification.title}</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">{notification.message ?? notification.body}</p>
+        <p className="mt-1 text-xs text-muted-foreground/70">{formatDateTime(notification.createdAt)}</p>
       </div>
       {!notification.read && onMarkRead && (
         <button
@@ -37,14 +37,14 @@ export function NotificationItem({ notification, onMarkRead }: NotificationItemP
   );
 
   const className = `block rounded-lg border px-4 py-3 transition-colors ${
-    notification.read ? 'border-gray-200 bg-white' : 'border-primary/20 bg-primary/5'
+    notification.read ? 'border-border bg-card' : 'border-primary/20 bg-primary/5'
   }`;
 
   if (notification.actionUrl) {
     return (
       <Link
         href={notification.actionUrl}
-        className={`${className} hover:bg-gray-50`}
+        className={`${className} hover:bg-muted/50`}
         onClick={() => {
           if (!notification.read && onMarkRead) {
             onMarkRead(notification.id);

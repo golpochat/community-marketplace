@@ -281,6 +281,7 @@ enum PlatformPurchaseType {
   store_slot_2
   store_slot_3
   store_bundle_3
+  buyer_statement
 }
 
 enum PlatformPurchaseStatus {
@@ -1145,6 +1146,10 @@ model Payment {
   providerPaymentId  String?       @map("provider_payment_id")
   providerRefundId   String?       @map("provider_refund_id")
   clientSecret       String?       @map("client_secret")
+  receiptNumber      String?       @unique @map("receipt_number")
+  buyerReceiptKey    String?       @map("buyer_receipt_key")
+  sellerReceiptKey   String?       @map("seller_receipt_key")
+  receiptGeneratedAt DateTime?     @map("receipt_generated_at")
   createdAt          DateTime      @default(now()) @map("created_at")
   updatedAt          DateTime      @updatedAt @map("updated_at")
 
@@ -1199,6 +1204,9 @@ model PlatformPurchase {
   clientSecret      String?                @map("client_secret")
   metadata          Json?
   fulfilledAt       DateTime?              @map("fulfilled_at")
+  receiptNumber     String?                @unique @map("receipt_number")
+  receiptKey        String?                @map("receipt_key")
+  receiptGeneratedAt DateTime?             @map("receipt_generated_at")
   createdAt         DateTime               @default(now()) @map("created_at")
   updatedAt         DateTime               @updatedAt @map("updated_at")
 

@@ -36,17 +36,17 @@ export function ListingPackageDialog({
         role="dialog"
         aria-modal
         aria-labelledby="package-dialog-title"
-        className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
+        className="w-full max-w-md rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] p-6 shadow-lg"
       >
-        <h2 id="package-dialog-title" className="text-lg font-semibold text-gray-900">
+        <h2 id="package-dialog-title" className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
           {title}
         </h2>
-        <p className="mt-1 text-sm text-gray-600">Choose how long your listing stays live.</p>
+        <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Choose how long your listing stays live.</p>
         <div className="mt-4 space-y-2">
           {options.map((option) => (
             <label
               key={option.value}
-              className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 px-3 py-2 hover:bg-gray-50"
+              className="flex cursor-pointer items-start gap-3 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
             >
               <input
                 type="radio"
@@ -57,8 +57,8 @@ export function ListingPackageDialog({
                 className="mt-1"
               />
               <span>
-                <span className="block text-sm font-medium text-gray-900">{option.label}</span>
-                <span className="block text-xs text-gray-500">{option.description}</span>
+                <span className="block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">{option.label}</span>
+                <span className="block text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{option.description}</span>
               </span>
             </label>
           ))}
@@ -67,7 +67,7 @@ export function ListingPackageDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
           >
             Cancel
           </button>

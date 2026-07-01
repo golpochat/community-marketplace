@@ -4,10 +4,10 @@ import { MessageSquare, ShieldCheck } from 'lucide-react';
 export function ListingTrustCues({ className }: { className?: string }) {
   return (
     <div className={className}>
-      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+      <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
         Buyer protection
       </p>
-      <p className="mb-3 text-sm text-gray-600">We verify sellers to keep your community safe.</p>
+      <p className="mb-3 text-sm text-muted-foreground">We verify sellers to keep your community safe.</p>
       <div className="flex flex-wrap gap-2">
         <ListingBadge tone="outline" className="font-normal">
           <ShieldCheck className="h-3 w-3" aria-hidden />

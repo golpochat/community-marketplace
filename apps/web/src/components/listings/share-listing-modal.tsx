@@ -35,15 +35,15 @@ function CollapsibleSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-t border-gray-100 pt-3">
+    <div className="border-t border-border pt-3">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center justify-between text-sm font-medium text-gray-900"
+        className="flex w-full items-center justify-between text-sm font-medium text-foreground"
         aria-expanded={open}
       >
         {label}
-        <ChevronDown className={cn('h-4 w-4 text-gray-500 transition-transform', open && 'rotate-180')} />
+        <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', open && 'rotate-180')} />
       </button>
       {open && <div className="mt-3">{children}</div>}
     </div>
@@ -63,10 +63,10 @@ function PlatformButton({
     <button
       type="button"
       onClick={onActivate}
-      className="flex flex-col items-center gap-1.5 rounded-lg border border-gray-200 bg-white p-3 text-center transition-colors hover:border-primary/30 hover:bg-primary/5"
+      className="flex flex-col items-center gap-1.5 rounded-lg border border-border bg-card p-3 text-center transition-colors duration-150 hover:border-primary/30 hover:bg-primary/5"
     >
       <Icon className="h-5 w-5 text-primary" aria-hidden />
-      <span className="text-xs font-medium text-gray-700">{action.label}</span>
+      <span className="text-xs font-medium text-foreground">{action.label}</span>
     </button>
   );
 }
@@ -180,25 +180,25 @@ export function ShareListingModal({ listingId, title, open, onClose }: ShareList
         onClick={onClose}
       />
       <div
-        className="relative z-[101] flex max-h-[90vh] w-full flex-col rounded-t-2xl bg-white shadow-xl sm:max-w-sm sm:rounded-xl"
+        className="relative z-[101] flex max-h-[90vh] w-full flex-col rounded-t-2xl bg-card shadow-xl sm:max-w-sm sm:rounded-xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="share-listing-title"
       >
-        <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-4 py-4 sm:px-5">
+        <div className="flex items-start justify-between gap-3 border-b border-border px-4 py-4 sm:px-5">
           <div className="min-w-0">
-            <h2 id="share-listing-title" className="text-base font-semibold text-gray-900">
+            <h2 id="share-listing-title" className="text-base font-semibold text-foreground">
               Share listing
             </h2>
-            <p className="mt-0.5 line-clamp-1 text-sm text-gray-600">{title}</p>
+            <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{title}</p>
             {subtitle && subtitle !== title && (
-              <p className="mt-1 line-clamp-2 text-xs text-gray-500">{subtitle}</p>
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{subtitle}</p>
             )}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-150 hover:bg-muted hover:text-foreground"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -206,13 +206,13 @@ export function ShareListingModal({ listingId, title, open, onClose }: ShareList
         </div>
 
         <div className="overflow-y-auto px-4 py-4 sm:px-5">
-          {loading && <p className="text-sm text-gray-500">Preparing share link…</p>}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {loading && <p className="text-sm text-muted-foreground">Preparing share link…</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           {!loading && !error && shortUrl && links && (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
-                <span className="min-w-0 flex-1 truncate text-xs text-gray-600">{shortUrl}</span>
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-2">
+                <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{shortUrl}</span>
                 <Button type="button" size="sm" variant="outline" onClick={() => void copyLink()}>
                   {copied ? 'Copied' : 'Copy'}
                 </Button>
@@ -255,7 +255,7 @@ export function ShareListingModal({ listingId, title, open, onClose }: ShareList
                 open={showPreview}
                 onToggle={() => setShowPreview((value) => !value)}
               >
-                <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700 whitespace-pre-wrap">
+                <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm text-foreground whitespace-pre-wrap">
                   {shareText}
                 </div>
               </CollapsibleSection>

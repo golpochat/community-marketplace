@@ -130,8 +130,8 @@ export function AdminSellerVerificationPage({
 
       return [
         <div key={`${item.userId}-name`} className="min-w-0">
-          <p className="font-medium text-slate-900">{item.sellerName ?? '—'}</p>
-          <p className="text-xs text-slate-500">{item.email}</p>
+          <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">{item.sellerName ?? '—'}</p>
+          <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{item.email}</p>
           {item.priority && (
             <span className="mt-1 inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-900">
               Priority
@@ -345,22 +345,22 @@ export function AdminSellerVerificationPage({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search name or email"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm md:col-span-2"
             />
             <input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
             />
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
             />
           </div>
-          <div className="mb-4 flex items-center justify-between gap-3 text-sm text-slate-600">
+          <div className="mb-4 flex items-center justify-between gap-3 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
             <label className="flex items-center gap-2">
               Rows per page
               <select
@@ -369,7 +369,7 @@ export function AdminSellerVerificationPage({
                   setPageSize(Number(e.target.value));
                   setPage(1);
                 }}
-                className="rounded-md border border-slate-300 px-2 py-1"
+                className="rounded-md border border-[hsl(var(--dashboard-sidebar-border))] px-2 py-1"
               >
                 <option value={10}>10</option>
                 <option value={20}>20</option>
@@ -378,7 +378,7 @@ export function AdminSellerVerificationPage({
             <button
               type="button"
               onClick={() => void reload()}
-              className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-1.5 font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
             >
               Apply filters
             </button>

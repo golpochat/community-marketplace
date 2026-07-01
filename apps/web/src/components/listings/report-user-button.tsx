@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 import { MODERATION_REPORT_REASONS } from '@community-marketplace/types';
-import { Button, Select } from '@community-marketplace/ui';
+import { Button, Label, Select } from '@community-marketplace/ui';
 
 import { Modal } from '@/components/shared/modal';
 import { useAuth } from '@/hooks/use-auth';
@@ -59,7 +59,7 @@ export function ReportUserButton({
 
   if (!isAuthenticated) {
     return (
-      <Link href="/auth/login" className="text-xs text-gray-500 hover:text-primary">
+      <Link href="/auth/login" className="text-xs text-muted-foreground hover:text-primary">
         Report user
       </Link>
     );
@@ -71,7 +71,7 @@ export function ReportUserButton({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="text-xs text-gray-500 hover:text-red-600"
+          className="text-xs text-muted-foreground hover:text-destructive"
         >
           Report user
         </button>
@@ -81,7 +81,7 @@ export function ReportUserButton({
         </Button>
       )}
       {success && (
-        <span className="text-xs text-green-700">Report submitted. Thank you.</span>
+        <span className="text-xs text-accent">Report submitted. Thank you.</span>
       )}
       <Modal
         open={open}
@@ -91,12 +91,10 @@ export function ReportUserButton({
         confirmLabel={loading ? 'Submitting…' : 'Submit report'}
         onConfirm={() => void handleReport()}
       >
-        {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
         <div className="space-y-3">
-          <div>
-            <label htmlFor="report-user-reason" className="mb-1 block text-sm font-medium text-gray-700">
-              Reason
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="report-user-reason">Reason</Label>
             <Select
               id="report-user-reason"
               value={reason}
@@ -111,19 +109,14 @@ export function ReportUserButton({
               ))}
             </Select>
           </div>
-          <div>
-            <label
-              htmlFor="report-user-description"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              Details (optional)
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="report-user-description">Details (optional)</Label>
             <textarea
               id="report-user-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors duration-150 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="What happened?"
             />
           </div>

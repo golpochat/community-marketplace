@@ -23,14 +23,14 @@ const BULLETS = [
 
 export function FounderStorySection() {
   return (
-    <section className="bg-white py-14">
+    <section className="surface-band py-14">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 lg:grid-cols-[1fr_1.1fr] lg:items-center">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-primary">Why this exists</p>
-          <h2 className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">
+          <h2 className="mt-2 text-2xl font-bold text-foreground sm:text-3xl">
             Built for our local community
           </h2>
-          <p className="mt-4 text-gray-600 leading-relaxed">
+          <p className="mt-4 text-muted-foreground leading-relaxed">
             Hi, I&apos;m Sujan. I built this for our local community so we can buy and sell safely
             without scams. I personally moderate listings to keep the marketplace honest, local, and
             human.
@@ -43,14 +43,14 @@ export function FounderStorySection() {
           {BULLETS.map((item) => (
             <li
               key={item.title}
-              className="flex gap-4 rounded-xl border border-gray-200 bg-[hsl(var(--brand-neutral))] p-4"
+              className="surface-section flex gap-4 p-4"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <item.icon className="h-5 w-5" aria-hidden />
               </span>
               <div>
-                <p className="font-semibold text-gray-900">{item.title}</p>
-                <p className="mt-1 text-sm text-gray-600">{item.text}</p>
+                <p className="font-semibold text-foreground">{item.title}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{item.text}</p>
               </div>
             </li>
           ))}
@@ -65,7 +65,7 @@ export function FounderCallout() {
     <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
       <div className="flex items-start gap-3">
         <Users className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
-        <p className="text-sm text-gray-700 leading-relaxed">
+        <p className="text-sm text-foreground leading-relaxed">
           Hi, I&apos;m <strong>Sujan</strong>. I personally moderate this marketplace to keep it safe
           for our community. If something feels off, report it — I review every flag.
         </p>

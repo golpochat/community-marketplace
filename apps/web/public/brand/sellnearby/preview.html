@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SellNearby — Logo Variations</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, system-ui, sans-serif;
+      background: #F1F2F6;
+      color: #2F3542;
+      padding: 2rem;
+      line-height: 1.5;
+    }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    p.sub { color: #6B7280; margin-bottom: 2rem; }
+    h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6B7280;
+      margin: 2rem 0 1rem;
+      border-bottom: 1px solid #E5E7EB;
+      padding-bottom: 0.5rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .card.dark { background: #2F3542; border-color: #3d4450; }
+    .preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100px;
+      padding: 0.5rem;
+    }
+    .preview img { max-width: 100%; height: auto; max-height: 96px; }
+    .preview.tall img { max-height: 140px; }
+    .preview.icon img { max-height: 72px; max-width: 72px; }
+    .name { font-size: 0.8125rem; font-weight: 600; }
+    .use { font-size: 0.75rem; color: #6B7280; }
+    .card.dark .use { color: #9CA3AF; }
+    .card.dark .name { color: #fff; }
+  </style>
+</head>
+<body>
+  <h1>SellNearby Logo Variations</h1>
+  <p class="sub">Generated from <code>scripts/brand/sellnearby-shared.svg.js</code> — primary #3A6DFF</p>
+
+  <h2>Icon marks</h2>
+  <div class="grid">
+    <div class="card"><div class="preview icon"><img src="svg/icon-mark.svg" alt="" /></div><div class="name">icon-mark</div><div class="use">General use, soft shadow</div></div>
+    <div class="card"><div class="preview icon"><img src="svg/icon-mark-subtle.svg" alt="" /></div><div class="name">icon-mark-subtle</div><div class="use">Cards, subtle placement</div></div>
+    <div class="card"><div class="preview icon"><img src="svg/icon-mark-inverse.svg" alt="" /></div><div class="name">icon-mark-inverse</div><div class="use">Badges, avatars</div></div>
+    <div class="card"><div class="preview icon"><img src="svg/icon-app-rounded.svg" alt="" /></div><div class="name">icon-app-rounded</div><div class="use">PWA, app stores</div></div>
+  </div>
+
+  <h2>Horizontal lockups</h2>
+  <div class="grid">
+    <div class="card"><div class="preview"><img src="svg/logo-horizontal-full.svg" alt="" /></div><div class="name">logo-horizontal-full</div><div class="use">Marketing, footer</div></div>
+    <div class="card"><div class="preview"><img src="svg/logo-horizontal-compact.svg" alt="" /></div><div class="name">logo-horizontal-compact</div><div class="use">Navbar (default)</div></div>
+    <div class="card"><div class="preview"><img src="svg/logo-horizontal-minimal.svg" alt="" /></div><div class="name">logo-horizontal-minimal</div><div class="use">Mobile header</div></div>
+    <div class="card dark"><div class="preview"><img src="svg/logo-dark-mode-compact.svg" alt="" /></div><div class="name">logo-dark-mode-compact</div><div class="use">Dark header</div></div>
+    <div class="card"><div class="preview"><img src="svg/logo-wordmark-only.svg" alt="" /></div><div class="name">logo-wordmark-only</div><div class="use">Text only</div></div>
+    <div class="card dark"><div class="preview"><img src="svg/logo-wordmark-only-dark.svg" alt="" /></div><div class="name">logo-wordmark-only-dark</div><div class="use">Dark text only</div></div>
+  </div>
+
+  <h2>Stacked lockups</h2>
+  <div class="grid">
+    <div class="card"><div class="preview tall"><img src="svg/logo-stacked.svg" alt="" /></div><div class="name">logo-stacked</div><div class="use">Splash, about</div></div>
+    <div class="card"><div class="preview tall"><img src="svg/logo-auth.svg" alt="" /></div><div class="name">logo-auth</div><div class="use">Login, signup</div></div>
+    <div class="card dark"><div class="preview tall"><img src="svg/logo-stacked-dark-mode.svg" alt="" /></div><div class="name">logo-stacked-dark-mode</div><div class="use">Dark splash</div></div>
+  </div>
+
+  <h2>Monochrome</h2>
+  <div class="grid">
+    <div class="card dark"><div class="preview"><img src="svg/logo-monochrome-white.svg" alt="" /></div><div class="name">logo-monochrome-white</div><div class="use">Dark overlays</div></div>
+    <div class="card"><div class="preview"><img src="svg/logo-monochrome-black.svg" alt="" /></div><div class="name">logo-monochrome-black</div><div class="use">Print, light overlays</div></div>
+  </div>
+</body>
+</html>

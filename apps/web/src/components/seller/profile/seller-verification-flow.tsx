@@ -8,7 +8,10 @@ import type {
   SellerVerificationStatus,
 } from '@community-marketplace/types';
 import { SELLER_VERIFICATION_MESSAGES } from '@community-marketplace/types';
+import { IRISH_MOBILE_VALIDATION_MESSAGE, normalizeIrishPhoneToE164 } from '@community-marketplace/validation';
 import { Card } from '@community-marketplace/ui-dashboard';
+
+import { IrishMobilePrefixTooltip } from '@/components/forms/irish-mobile-prefix-tooltip';
 
 import { VerificationProgressBar } from '@/components/seller/verification';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
@@ -49,12 +52,12 @@ function FilePreview({ file, label }: { file?: File; label: string }) {
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-gray-700">{label}</p>
+      <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">{label}</p>
       {preview ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={preview} alt="" className="max-h-40 rounded-lg border object-contain" />
       ) : (
-        <div className="flex h-28 items-center justify-center rounded-lg border border-dashed border-gray-300 text-xs text-gray-400">
+        <div className="flex h-28 items-center justify-center rounded-lg border border-dashed border-[hsl(var(--dashboard-sidebar-border))] text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
           No file selected
         </div>
       )}
@@ -110,7 +113,7 @@ function FastTrackCard({
         <>
           <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
             Verification is free. Want faster review? Fast-track for{' '}
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-[hsl(var(--dashboard-main-fg))]">
               €{fastTrack.price.toFixed(2)}
             </span>{' '}
             (24-hour priority queue). Standard review takes 3–5 business days.
@@ -118,7 +121,7 @@ function FastTrackCard({
           {fastTrack.reason && (
             <p className="mt-2 text-sm text-amber-700">{fastTrack.reason}</p>
           )}
-          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
           {intent ? (
             <div className="mt-4">
               <BoostCheckoutPanel
@@ -159,6 +162,7 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [phone, setPhone] = useState('');
+  const [normalizedPhone, setNormalizedPhone] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [files, setFiles] = useState<{
@@ -201,13 +205,19 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
       setError('Enter your phone number.');
       return;
     }
+    const e164 = normalizeIrishPhoneToE164(phone);
+    if (!e164) {
+      setError(IRISH_MOBILE_VALIDATION_MESSAGE);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       await sellerVerificationService.phone({
         action: 'send_otp',
-        phone: phone.trim(),
+        phone: e164,
       });
+      setNormalizedPhone(e164);
       setOtpSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send OTP');
@@ -218,12 +228,17 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
 
   async function handleVerifyOtp(event: React.FormEvent) {
     event.preventDefault();
+    const e164 = normalizedPhone || normalizeIrishPhoneToE164(phone);
+    if (!e164) {
+      setError(IRISH_MOBILE_VALIDATION_MESSAGE);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       await sellerVerificationService.phone({
         action: 'verify_otp',
-        phone: phone.trim(),
+        phone: e164,
         code: otpCode.trim(),
       });
       await load();
@@ -252,11 +267,12 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
           : Promise.resolve(undefined),
       ]);
 
+      const phoneE164 = normalizedPhone || normalizeIrishPhoneToE164(phone);
       await sellerVerificationService.submit({
         idDocumentPath,
         selfiePath,
         ...(addressDocumentPath ? { addressDocumentPath } : {}),
-        ...(phone.trim() ? { phoneNumber: phone.trim() } : {}),
+        ...(phoneE164 ? { phoneNumber: phoneE164 } : {}),
       });
       setFiles({});
       await load();
@@ -273,12 +289,12 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
   }
 
   if (!status) {
-    return <p className="text-sm text-red-600">{error ?? 'Unable to load verification status.'}</p>;
+    return <p className="text-sm text-destructive">{error ?? 'Unable to load verification status.'}</p>;
   }
 
   return (
     <div className="space-y-6">
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       {status.sellerStatus !== 'verified' && (
         <VerificationProgressBar
@@ -299,7 +315,7 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
               className={`rounded-full px-3 py-1 text-xs font-medium ${
                 index <= step
                   ? 'bg-[hsl(var(--dashboard-accent))] text-white'
-                  : 'bg-gray-100 text-gray-500'
+                  : 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-sidebar-muted))]'
               }`}
             >
               {item.id}. {item.label}
@@ -350,23 +366,30 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
         )}
 
         {status.verificationRejectedReason && (
-          <p className="mb-4 text-sm text-red-700">{status.verificationRejectedReason}</p>
+          <p className="mb-4 text-sm text-destructive">{status.verificationRejectedReason}</p>
         )}
 
         {status.sellerStatus !== 'verified' && status.sellerStatus !== 'under_review' && (
           <>
             {(step === 0 || !status.phoneVerified) && (
-              <div className="space-y-4 border-t border-gray-100 pt-4">
+              <div className="space-y-4 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-4">
                 <h3 className="text-sm font-semibold">Step 1 — Phone verification</h3>
                 <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
                   Enter your phone number and the one-time code we send you.
                 </p>
+                <div className="flex items-center gap-1.5">
+                  <label htmlFor="seller-verify-phone" className="text-sm font-medium">
+                    Mobile number
+                  </label>
+                  <IrishMobilePrefixTooltip />
+                </div>
                 <input
+                  id="seller-verify-phone"
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+353 …"
-                  className="w-full max-w-sm rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                  placeholder="087 123 4567"
+                  className="w-full max-w-sm rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                   disabled={status.phoneVerified}
                 />
                 {!status.phoneVerified && !otpSent && (
@@ -387,7 +410,7 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value)}
                       placeholder="Enter OTP"
-                      className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                     />
                     <button
                       type="submit"
@@ -407,13 +430,13 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
             {canSubmitDocs && (
               <form
                 onSubmit={(e) => void handleSubmitDocuments(e)}
-                className="space-y-6 border-t border-gray-100 pt-4"
+                className="space-y-6 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-4"
               >
                 <div>
                   <h3 className="text-sm font-semibold">Step 2 — ID upload</h3>
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
                     <div>
-                      <label className="mb-2 block text-sm text-gray-700">Government ID</label>
+                      <label className="mb-2 block text-sm text-[hsl(var(--dashboard-main-fg))]">Government ID</label>
                       <input
                         type="file"
                         accept="image/*"
@@ -428,7 +451,7 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
                       <FilePreview file={files.idDocument} label="ID preview" />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm text-gray-700">Selfie with ID</label>
+                      <label className="mb-2 block text-sm text-[hsl(var(--dashboard-main-fg))]">Selfie with ID</label>
                       <input
                         type="file"
                         accept="image/*"

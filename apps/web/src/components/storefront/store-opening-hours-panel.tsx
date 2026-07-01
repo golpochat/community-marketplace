@@ -70,11 +70,11 @@ export function StoreOpeningHoursPanel({ openingHours }: StoreOpeningHoursPanelP
         <Clock className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden />
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-brand-700">Open today</p>
-          <p className="text-sm font-semibold text-gray-900">{todayLabel}</p>
+          <p className="text-sm font-semibold text-foreground">{todayLabel}</p>
         </div>
       </div>
 
-      <ul className="divide-y divide-gray-100">
+      <ul className="divide-y divide-border">
         {WEEKDAY_ORDER.map((day) => {
           const hours = openingHours.schedule[day];
           if (!hours) return null;
@@ -85,11 +85,11 @@ export function StoreOpeningHoursPanel({ openingHours }: StoreOpeningHoursPanelP
               key={day}
               className={cn(
                 'flex items-center justify-between gap-3 py-2 text-sm',
-                isToday && 'font-medium text-gray-900',
+                isToday && 'font-medium text-foreground',
               )}
             >
-              <span className={isToday ? 'text-gray-900' : 'text-gray-600'}>{WEEKDAY_LABELS[day]}</span>
-              <span className={isToday ? 'text-gray-900' : 'text-gray-700'}>
+              <span className={isToday ? 'text-foreground' : 'text-muted-foreground'}>{WEEKDAY_LABELS[day]}</span>
+              <span className={isToday ? 'text-foreground' : 'text-foreground'}>
                 {formatDayHours(day, hours)}
               </span>
             </li>
@@ -98,7 +98,7 @@ export function StoreOpeningHoursPanel({ openingHours }: StoreOpeningHoursPanelP
       </ul>
 
       {openingHours.note ? (
-        <p className="text-xs leading-relaxed text-gray-500">{openingHours.note}</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">{openingHours.note}</p>
       ) : null}
     </div>
   );

@@ -49,9 +49,9 @@ export function ListingReviewThread({
 
   return (
     <div className="space-y-4">
-      <div className="max-h-56 space-y-3 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-3">
+      <div className="max-h-56 space-y-3 overflow-y-auto rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-3">
         {messages.length === 0 ? (
-          <p className="text-sm text-gray-500">No review messages yet.</p>
+          <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No review messages yet.</p>
         ) : (
           messages.map((message) => {
             const isMine = currentUserId ? message.senderId === currentUserId : false;
@@ -59,10 +59,10 @@ export function ListingReviewThread({
               <div
                 key={message.id}
                 className={`rounded-lg px-3 py-2 text-sm ${
-                  isMine ? 'ml-8 bg-blue-100 text-blue-950' : 'mr-8 bg-white text-gray-800'
+                  isMine ? 'ml-8 bg-blue-100 text-blue-950' : 'mr-8 bg-[hsl(var(--dashboard-topbar-bg))] text-[hsl(var(--dashboard-main-fg))]'
                 }`}
               >
-                <p className="text-xs font-medium text-gray-500">
+                <p className="text-xs font-medium text-[hsl(var(--dashboard-sidebar-muted))]">
                   {senderLabel(message)} · {new Date(message.createdAt).toLocaleString()}
                 </p>
                 <p className="mt-1 whitespace-pre-wrap">{message.content}</p>
@@ -79,9 +79,9 @@ export function ListingReviewThread({
           placeholder={placeholder}
           rows={3}
           disabled={disabled || sending}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
+          className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm disabled:opacity-50"
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="button" size="sm" disabled={disabled || sending || !content.trim()} onClick={() => void handleSend()}>
           {sending ? 'Sending…' : sendLabel}
         </Button>

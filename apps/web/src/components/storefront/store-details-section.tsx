@@ -31,20 +31,20 @@ function CollapsiblePanel({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="overflow-hidden rounded-brand-md border border-gray-200 bg-white shadow-brand-sm">
+    <div className="overflow-hidden rounded-brand-md border border-border bg-card shadow-brand-sm">
       <button
         type="button"
         className="flex w-full items-center justify-between px-4 py-3.5 text-left lg:pointer-events-none lg:cursor-default"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
       >
-        <span className="text-sm font-semibold text-gray-900">{title}</span>
+        <span className="text-sm font-semibold text-foreground">{title}</span>
         <ChevronDown
-          className={`h-5 w-5 text-gray-400 transition-transform lg:hidden ${open ? 'rotate-180' : ''}`}
+          className={`h-5 w-5 text-muted-foreground/70 transition-transform lg:hidden ${open ? 'rotate-180' : ''}`}
           aria-hidden
         />
       </button>
-      <div className={`border-t border-gray-100 px-4 pb-4 pt-3 ${open ? 'block' : 'hidden lg:block'}`}>
+      <div className={`border-t border-border px-4 pb-4 pt-3 ${open ? 'block' : 'hidden lg:block'}`}>
         {children}
       </div>
     </div>
@@ -100,14 +100,14 @@ export function StoreDetailsSection({
 
       <CollapsiblePanel title="About this store">
         {hasDescription ? (
-          <p className="text-sm leading-relaxed text-gray-700">{description}</p>
+          <p className="text-sm leading-relaxed text-foreground">{description}</p>
         ) : (
-          <p className="text-sm italic text-gray-500">
+          <p className="text-sm italic text-muted-foreground">
             This seller has not added a store description yet.
           </p>
         )}
         {joinedYear ? (
-          <p className="mt-3 text-xs font-medium text-gray-500">Selling since {joinedYear}</p>
+          <p className="mt-3 text-xs font-medium text-muted-foreground">Selling since {joinedYear}</p>
         ) : null}
       </CollapsiblePanel>
 
@@ -118,9 +118,9 @@ export function StoreDetailsSection({
       ) : null}
 
       {analytics.totalViews > 0 ? (
-        <div className="rounded-brand-md border border-gray-200 bg-white px-4 py-3 text-center shadow-brand-sm">
-          <p className="text-2xl font-bold text-gray-900">{analytics.totalViews.toLocaleString()}</p>
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Store views</p>
+        <div className="rounded-brand-md border border-border bg-card px-4 py-3 text-center shadow-brand-sm">
+          <p className="text-2xl font-bold text-foreground">{analytics.totalViews.toLocaleString()}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Store views</p>
         </div>
       ) : null}
     </div>

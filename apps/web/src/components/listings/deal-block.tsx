@@ -80,13 +80,7 @@ export function DealBlock({
   const droppedDays = priceDroppedAt ? daysSince(priceDroppedAt) : null;
 
   return (
-    <div
-      className={cn(
-        'space-y-1',
-        variant === 'detail' && 'rounded-brand-md border border-orange-100 bg-orange-50/50 p-4',
-        className,
-      )}
-    >
+    <div className={cn('space-y-2', className)}>
       {showBadge && (
         <div className="flex flex-wrap items-center gap-2">
           <ListingBadge tone="sale">
@@ -109,7 +103,7 @@ export function DealBlock({
         </span>
         <span
           className={cn(
-            'text-gray-400 line-through',
+            'text-muted-foreground/70 line-through',
             variant === 'detail' && 'text-lg',
             variant === 'card' && 'text-sm',
             variant === 'inline' && 'text-xs',
@@ -134,7 +128,7 @@ export function DealBlock({
       )}
 
       {droppedDays != null && droppedDays > 0 && variant === 'detail' && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           Price dropped {droppedDays} day{droppedDays === 1 ? '' : 's'} ago
         </p>
       )}

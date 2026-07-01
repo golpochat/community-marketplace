@@ -3,7 +3,9 @@
 import { useState } from 'react';
 
 import { Button, Input, Label } from '@community-marketplace/ui';
+import { IRISH_MOBILE_VALIDATION_MESSAGE } from '@community-marketplace/validation';
 
+import { IrishMobileFieldLabel } from '@/components/forms/irish-mobile-field-label';
 import { formatIrishPhoneHint, normalizeIrishPhoneToE164 } from '@/lib/phone';
 import { userService } from '@/services/user.service';
 
@@ -47,7 +49,7 @@ export function PhoneChangePanel({
 
     const e164 = normalizeIrishPhoneToE164(newPhone);
     if (!e164) {
-      setError('Enter a valid Irish mobile number (e.g. 087 100 0002 or +353 87 100 0002).');
+      setError(IRISH_MOBILE_VALIDATION_MESSAGE);
       return;
     }
 
@@ -88,7 +90,7 @@ export function PhoneChangePanel({
         value={currentPhone}
         readOnly
         disabled
-        className="bg-gray-50 text-gray-600"
+        className="bg-[hsl(var(--dashboard-sidebar-active)/0.35)] text-[hsl(var(--dashboard-sidebar-muted))]"
       />
 
       {!phoneVerified && onOpenVerification && (
@@ -114,18 +116,20 @@ export function PhoneChangePanel({
           Change number
         </button>
       ) : (
-        <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-4">
-          <p className="text-sm text-gray-700">
+        <div className="mt-3 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-4">
+          <p className="text-sm text-[hsl(var(--dashboard-main-fg))]">
             Enter your new Irish mobile number. We&apos;ll send a verification code to confirm it.
           </p>
 
-          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+          {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
           {message && <p className="mt-2 text-sm text-emerald-700">{message}</p>}
 
           {step === 'idle' ? (
             <div className="mt-3 space-y-3">
               <div>
-                <Label htmlFor="seller-new-phone">New mobile number</Label>
+                <IrishMobileFieldLabel htmlFor="seller-new-phone" className="flex items-center gap-1.5">
+                  New mobile number
+                </IrishMobileFieldLabel>
                 <Input
                   id="seller-new-phone"
                   value={newPhone}
@@ -136,7 +140,7 @@ export function PhoneChangePanel({
                       void handleSendOtp();
                     }
                   }}
-                  placeholder="087 100 0002"
+                  placeholder="087 123 4567"
                   autoComplete="tel"
                 />
               </div>

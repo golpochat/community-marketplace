@@ -11,26 +11,26 @@ interface StoreDescriptionProps {
 
 export function StoreDescription({ description, memberSince, analytics }: StoreDescriptionProps) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="text-lg font-semibold text-gray-900">About this store</h2>
-      <p className="mt-3 text-gray-700">{description}</p>
-      <p className="mt-4 text-sm text-gray-500">Member since {memberSince}</p>
+    <div className="rounded-xl border border-border bg-card p-6">
+      <h2 className="text-lg font-semibold text-foreground">About this store</h2>
+      <p className="mt-3 text-foreground">{description}</p>
+      <p className="mt-4 text-sm text-muted-foreground">Member since {memberSince}</p>
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <div className="text-center">
-          <p className="text-2xl font-bold text-gray-900">{analytics.totalViews}</p>
-          <p className="text-xs text-gray-500">Views</p>
+          <p className="text-2xl font-bold text-foreground">{analytics.totalViews}</p>
+          <p className="text-xs text-muted-foreground">Views</p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold text-gray-900">{analytics.totalSales}</p>
-          <p className="text-xs text-gray-500">Sales</p>
+          <p className="text-2xl font-bold text-foreground">{analytics.totalSales}</p>
+          <p className="text-xs text-muted-foreground">Sales</p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold text-gray-900">{analytics.averageRating}</p>
-          <p className="text-xs text-gray-500">Rating</p>
+          <p className="text-2xl font-bold text-foreground">{analytics.averageRating}</p>
+          <p className="text-xs text-muted-foreground">Rating</p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold text-gray-900">{analytics.reviewCount}</p>
-          <p className="text-xs text-gray-500">Reviews</p>
+          <p className="text-2xl font-bold text-foreground">{analytics.reviewCount}</p>
+          <p className="text-xs text-muted-foreground">Reviews</p>
         </div>
       </div>
     </div>

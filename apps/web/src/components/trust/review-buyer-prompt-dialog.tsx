@@ -102,11 +102,11 @@ export function ReviewBuyerPromptDialog({
 
   return (
 
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-brand-sm">
+    <div className="rounded-xl border border-border bg-card p-5 shadow-brand-sm">
 
-      <h3 className="text-base font-semibold text-gray-900">Rate this buyer</h3>
+      <h3 className="text-base font-semibold text-foreground">Rate this buyer</h3>
 
-      <p className="mt-1 text-sm text-gray-600">
+      <p className="mt-1 text-sm text-muted-foreground">
 
         How was your experience{buyerName ? ` with ${buyerName}` : ''}?
 
@@ -126,7 +126,7 @@ export function ReviewBuyerPromptDialog({
 
             onClick={() => setRating(value)}
 
-            className="rounded p-1 transition-colors hover:bg-gray-50"
+            className="rounded p-1 transition-colors hover:bg-muted/50"
 
             aria-label={`${value} star${value === 1 ? '' : 's'}`}
 
@@ -134,7 +134,7 @@ export function ReviewBuyerPromptDialog({
 
             <Star
 
-              className={`h-7 w-7 ${value <= rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`}
+              className={`h-7 w-7 ${value <= rating ? 'fill-amber-400 text-amber-400' : 'text-muted-foreground/40'}`}
 
               aria-hidden
 
@@ -170,7 +170,7 @@ export function ReviewBuyerPromptDialog({
 
 
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
 
 
 

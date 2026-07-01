@@ -57,6 +57,9 @@ export interface Payment {
   providerPaymentId?: string;
   providerRefundId?: string;
   clientSecret?: string;
+  receiptNumber?: string;
+  receiptAvailable?: boolean;
+  listingTitle?: string;
   createdAt: string;
   updatedAt: string;
 }

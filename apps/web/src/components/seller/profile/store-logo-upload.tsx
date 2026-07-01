@@ -61,7 +61,7 @@ export function StoreLogoUpload({ logoUrl, storeName, storeId, onUpdated }: Stor
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-gray-700">Store logo</p>
+      <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Store logo</p>
       <div className="flex items-center gap-4">
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -71,7 +71,7 @@ export function StoreLogoUpload({ logoUrl, storeName, storeId, onUpdated }: Stor
             className="h-16 w-16 rounded-lg border object-cover"
           />
         ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-sm font-medium text-gray-400">
+          <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] text-sm font-medium text-[hsl(var(--dashboard-sidebar-muted))]">
             {initials}
           </div>
         )}
@@ -97,7 +97,7 @@ export function StoreLogoUpload({ logoUrl, storeName, storeId, onUpdated }: Stor
           </p>
         </div>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }

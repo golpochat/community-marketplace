@@ -72,7 +72,7 @@ export function ListingCard({
         />
       </Link>
 
-      {footer && <div className="border-t border-gray-100 px-4 py-3">{footer}</div>}
+      {footer && <div className="border-t border-border px-4 py-3">{footer}</div>}
     </article>
   );
 }

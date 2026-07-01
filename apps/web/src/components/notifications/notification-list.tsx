@@ -32,7 +32,7 @@ export function NotificationList({
         className={
           variant === 'dashboard'
             ? 'text-sm text-[hsl(var(--dashboard-sidebar-muted))]'
-            : 'text-sm text-gray-500'
+            : 'text-sm text-muted-foreground'
         }
       >
         Loading notifications...

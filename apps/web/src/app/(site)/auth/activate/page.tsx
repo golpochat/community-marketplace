@@ -11,7 +11,7 @@ import { authService } from '@/services/auth.service';
 
 export default function ActivateEmailPage() {
   return (
-    <Suspense fallback={<p className="mx-auto max-w-md py-16 text-center text-gray-700">Activating your account...</p>}>
+    <Suspense fallback={<p className="mx-auto max-w-md py-16 text-center text-muted-foreground">Activating your account...</p>}>
       <ActivateEmailContent />
     </Suspense>
   );
@@ -54,7 +54,7 @@ function ActivateEmailContent() {
   if (error) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <p className="text-red-600">{error}</p>
+        <p className="text-destructive">{error}</p>
         <Button className="mt-6" asChild>
           <Link href="/auth/login">Go to sign in</Link>
         </Button>
@@ -64,7 +64,7 @@ function ActivateEmailContent() {
 
   return (
     <div className="mx-auto max-w-md py-16 text-center">
-      <p className="text-gray-700">{message}</p>
+      <p className="text-muted-foreground">{message}</p>
     </div>
   );
 }

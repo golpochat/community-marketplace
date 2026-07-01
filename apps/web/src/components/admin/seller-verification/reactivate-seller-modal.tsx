@@ -23,14 +23,14 @@ export function ReactivateSellerModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-slate-900">Reactivate Seller – {sellerName}</h3>
-        <p className="mt-2 text-sm text-slate-600">
+      <div className="w-full max-w-lg rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] p-6 shadow-xl">
+        <h3 className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">Reactivate Seller – {sellerName}</h3>
+        <p className="mt-2 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           Restores listing and messaging access. Status returns to verified or unverified based on
           the seller&apos;s state before suspension.
         </p>
         <div className="mt-4">
-          <label htmlFor="reactivate-reason" className="mb-1 block text-sm font-medium text-slate-700">
+          <label htmlFor="reactivate-reason" className="mb-1 block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
             Reason
           </label>
           <textarea
@@ -38,7 +38,7 @@ export function ReactivateSellerModal({
             rows={3}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
             placeholder="Explain why this seller is being reactivated"
           />
         </div>
@@ -47,7 +47,7 @@ export function ReactivateSellerModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
           >
             Cancel
           </button>

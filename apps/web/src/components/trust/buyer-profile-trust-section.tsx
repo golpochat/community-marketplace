@@ -22,10 +22,10 @@ export function BuyerProfileTrustSection({
   visibleToSeller = false,
 }: BuyerProfileTrustSectionProps) {
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-brand-sm">
-      <h2 className="text-lg font-semibold text-gray-900">Trust profile</h2>
+    <section className="rounded-xl border border-border bg-card p-5 shadow-brand-sm">
+      <h2 className="text-lg font-semibold text-foreground">Trust profile</h2>
       {visibleToSeller && (
-        <p className="mt-1 text-xs text-gray-500">Visible to sellers only</p>
+        <p className="mt-1 text-xs text-muted-foreground">Visible to sellers only</p>
       )}
       <div className="mt-4 space-y-3">
         <BuyerTrustBadges
@@ -36,7 +36,7 @@ export function BuyerProfileTrustSection({
           reviewCount={reviewCount}
         />
         {memberSince && (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Member since{' '}
             {new Date(memberSince).toLocaleDateString(undefined, {
               month: 'long',
@@ -45,7 +45,7 @@ export function BuyerProfileTrustSection({
           </p>
         )}
         {typeof completedTransactions === 'number' && completedTransactions > 0 && (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {completedTransactions} completed transaction{completedTransactions === 1 ? '' : 's'}
           </p>
         )}

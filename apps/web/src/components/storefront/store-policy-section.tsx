@@ -18,8 +18,8 @@ export function StorePolicySection({ policies, embedded = false }: StorePolicySe
     <dl className="space-y-3">
       {items.map((item) => (
         <div key={item.label}>
-          <dt className="text-sm font-medium text-gray-900">{item.label}</dt>
-          <dd className="mt-1 text-sm text-gray-600">{item.value}</dd>
+          <dt className="text-sm font-medium text-foreground">{item.label}</dt>
+          <dd className="mt-1 text-sm text-muted-foreground">{item.value}</dd>
         </div>
       ))}
     </dl>
@@ -28,8 +28,8 @@ export function StorePolicySection({ policies, embedded = false }: StorePolicySe
   if (embedded) return content;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="text-lg font-semibold text-gray-900">Store policies</h2>
+    <div className="rounded-xl border border-border bg-card p-6">
+      <h2 className="text-lg font-semibold text-foreground">Store policies</h2>
       <div className="mt-4">{content}</div>
     </div>
   );

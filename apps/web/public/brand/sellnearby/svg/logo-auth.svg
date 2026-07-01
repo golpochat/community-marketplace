@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 320" fill="none" role="img" aria-label="SellNearby">
+  <g transform="translate(52, 0) scale(0.48)">
+  <defs><filter id="soft-shadow" x="-25%" y="-25%" width="150%" height="150%">
+         <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#0F766E" flood-opacity="0.12"/>
+       </filter></defs>
+  <g filter="url(#soft-shadow)"><circle cx="256" cy="272" r="34" fill="#F97316"/>
+  <path d="M 208.5 238.7 A 58 58 0 0 1 303.5 238.7" stroke="#0D9488" stroke-width="26" stroke-linecap="round" fill="none"/>
+  <path d="M 173.8 218.6 A 98 98 0 0 1 338.2 218.6" stroke="#0D9488" stroke-width="26" stroke-linecap="round" fill="none"/>
+  <path d="M 137.7 200.9 A 138 138 0 0 1 374.3 200.9" stroke="#0D9488" stroke-width="26" stroke-linecap="round" fill="none"/>
+  <path d="M198 368 L256 328 L314 368 L314 398 L198 398 Z" fill="#0F766E"/>
+  <rect x="218" y="378" width="76" height="18" rx="4" fill="#0D9488"/></g>
+</g>
+  <g class="wordmark">
+  <text x="180" y="280" text-anchor="middle" font-family="Inter, Poppins, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="56" font-weight="700" letter-spacing="-0.02em">
+    <tspan fill="#1C1917">Sell</tspan><tspan fill="#0D9488">Nearby</tspan>
+  </text>
+</g>
+</svg>

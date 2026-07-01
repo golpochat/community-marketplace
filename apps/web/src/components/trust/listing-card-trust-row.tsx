@@ -9,7 +9,7 @@ interface ListingCardTrustRowProps {
 
 export function ListingCardTrustRow({ className }: ListingCardTrustRowProps) {
   return (
-    <div className={cn('flex flex-wrap items-center gap-2 text-[11px] text-gray-400', className)}>
+    <div className={cn('flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground/70', className)}>
       <span className="inline-flex items-center gap-1">
         <ShieldCheck className="h-3 w-3" aria-hidden />
         Safe marketplace

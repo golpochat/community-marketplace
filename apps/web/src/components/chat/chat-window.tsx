@@ -60,13 +60,13 @@ export function ChatWindow({
   );
 
   return (
-    <div className="flex h-[min(32rem,70vh)] flex-col rounded-xl border border-gray-200 bg-white shadow-sm md:h-[32rem]">
-      <div className="border-b border-gray-200 px-4 py-3">
+    <div className="flex h-[min(32rem,70vh)] flex-col rounded-xl border border-border bg-card shadow-sm md:h-[32rem]">
+      <div className="border-b border-border px-4 py-3">
         {header ?? (
           <div className="flex flex-wrap items-start justify-between gap-2">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-foreground">
                   {participant?.displayName ?? 'User'}
                 </p>
                 {participant && (
@@ -87,13 +87,13 @@ export function ChatWindow({
                 <button
                   type="button"
                   onClick={onBlockConversation}
-                  className="text-xs font-medium text-red-600 hover:text-red-700"
+                  className="text-xs font-medium text-destructive hover:text-destructive"
                 >
                   Block
                 </button>
               )}
               {isBlocked && (
-                <span className="text-xs font-medium text-red-600">Conversation blocked</span>
+                <span className="text-xs font-medium text-destructive">Conversation blocked</span>
               )}
             </div>
           </div>
@@ -109,7 +109,7 @@ export function ChatWindow({
                 <button
                   type="button"
                   onClick={() => onReportMessage(msg.id)}
-                  className="ml-2 mt-0.5 text-xs text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-600"
+                  className="ml-2 mt-0.5 text-xs text-muted-foreground/70 opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
                 >
                   Report
                 </button>
@@ -120,7 +120,7 @@ export function ChatWindow({
       </div>
       <form
         onSubmit={handleSend}
-        className={cn('flex gap-2 border-t border-gray-200 p-3 sm:p-4')}
+        className={cn('flex gap-2 border-t border-border p-3 sm:p-4')}
       >
         <input
           ref={fileInputRef}
@@ -145,7 +145,7 @@ export function ChatWindow({
           type="button"
           disabled={isBlocked || uploading}
           onClick={() => fileInputRef.current?.click()}
-          className="min-h-[44px] shrink-0 rounded-lg border border-gray-300 px-3 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+          className="min-h-[44px] shrink-0 rounded-lg border border-border px-3 text-sm text-muted-foreground hover:bg-muted/50 disabled:opacity-50"
           aria-label="Attach image"
         >
           Attach
@@ -159,7 +159,7 @@ export function ChatWindow({
             onTyping?.();
           }}
           placeholder={isBlocked ? 'Conversation blocked' : 'Type a message...'}
-          className="min-h-[44px] flex-1 rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-gray-50 sm:text-sm"
+          className="min-h-[44px] flex-1 rounded-lg border border-border px-3 py-2 text-base focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:bg-muted/50 sm:text-sm"
         />
         <Button type="submit" className="min-h-[44px] shrink-0" disabled={isBlocked || uploading}>
           {uploading ? '…' : 'Send'}

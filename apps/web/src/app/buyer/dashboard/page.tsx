@@ -37,7 +37,7 @@ export default function BuyerDashboardPage() {
       {profileLoading && (
         <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading…</p>
       )}
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
       {profile && !profileLoading && (
         <BuyerDashboardSummary profile={profile} trust={trust} />
       )}

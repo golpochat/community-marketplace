@@ -221,6 +221,8 @@ export type {
   FastTrackStatusResponse,
   FastTrackIntentResponse,
   StoreSlotIntentResponse,
+  BuyerStatementIntentResponse,
+  BuyerStatementStatusResponse,
   StoreSlotCatalogOption,
   StoreSlotCatalogResponse,
   SellerPlatformFeeInfo,

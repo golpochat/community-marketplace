@@ -108,15 +108,15 @@ export function ListingSpecsSection({ listing }: ListingSpecsSectionProps) {
   if (rows.length === 0 && !sellerNotes) return null;
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
-      <h2 className="text-base font-semibold text-gray-900">Vehicle details</h2>
+    <section className="surface-section p-4">
+      <h2 className="text-base font-semibold text-foreground">Vehicle details</h2>
 
       {rows.length > 0 && (
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
           {rows.map((row) => (
             <div key={row.label}>
-              <dt className="text-xs text-gray-500">{row.label}</dt>
-              <dd className="mt-0.5 text-sm font-medium text-gray-900">
+              <dt className="text-xs text-muted-foreground">{row.label}</dt>
+              <dd className="mt-0.5 text-sm font-medium text-foreground">
                 {row.label === 'Condition' ? (
                   <ListingBadge tone="condition" className="capitalize font-medium">
                     {row.value}
@@ -131,9 +131,9 @@ export function ListingSpecsSection({ listing }: ListingSpecsSectionProps) {
       )}
 
       {sellerNotes && (
-        <div className={rows.length > 0 ? 'mt-4 border-t border-gray-100 pt-4' : 'mt-3'}>
-          <h3 className="text-xs font-medium uppercase tracking-wide text-gray-500">Seller notes</h3>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{sellerNotes}</p>
+        <div className={rows.length > 0 ? 'mt-4 border-t border-border pt-4' : 'mt-3'}>
+          <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Seller notes</h3>
+          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{sellerNotes}</p>
         </div>
       )}
     </section>
@@ -151,8 +151,8 @@ export function ListingDescriptionBlock({ listing }: ListingSpecsSectionProps) {
   if (!description && !conditionLabel) return null;
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
-      <h2 className="text-base font-semibold text-gray-900">Description</h2>
+    <section className="surface-section p-4">
+      <h2 className="text-base font-semibold text-foreground">Description</h2>
       {conditionLabel && (
         <div className="mt-3">
           <ListingBadge tone="condition" className="capitalize">
@@ -161,7 +161,7 @@ export function ListingDescriptionBlock({ listing }: ListingSpecsSectionProps) {
         </div>
       )}
       {description && (
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{description}</p>
+        <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-foreground">{description}</p>
       )}
     </section>
   );

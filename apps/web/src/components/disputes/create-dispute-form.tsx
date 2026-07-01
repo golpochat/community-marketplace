@@ -46,16 +46,16 @@ export function CreateDisputeForm({
   return (
     <Card title="Open a dispute">
       <form onSubmit={handleSubmit} className="space-y-4">
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
         <div>
-          <label htmlFor="dispute-reason" className="mb-1 block text-sm font-medium text-gray-900">
+          <label htmlFor="dispute-reason" className="mb-1 block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
             Reason
           </label>
           <select
             id="dispute-reason"
             value={reason}
             onChange={(e) => setReason(e.target.value as DisputeReason)}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
             required
           >
             {DISPUTE_REASONS.map((value) => (
@@ -68,7 +68,7 @@ export function CreateDisputeForm({
         <div>
           <label
             htmlFor="dispute-description"
-            className="mb-1 block text-sm font-medium text-gray-900"
+            className="mb-1 block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]"
           >
             Description
           </label>
@@ -80,7 +80,7 @@ export function CreateDisputeForm({
             minLength={10}
             maxLength={5000}
             placeholder="Describe the issue in detail…"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
             required
           />
         </div>

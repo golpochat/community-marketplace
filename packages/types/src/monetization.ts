@@ -11,7 +11,8 @@ export type PlatformPurchaseType =
   | 'fast_track_verification'
   | 'store_slot_2'
   | 'store_slot_3'
-  | 'store_bundle_3';
+  | 'store_bundle_3'
+  | 'buyer_statement';
 
 export type PlatformPurchaseStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
@@ -35,6 +36,7 @@ export interface PlatformPricingConfig {
     store_slot_2?: PlatformSkuConfig;
     store_slot_3?: PlatformSkuConfig;
     store_bundle_3?: PlatformSkuConfig;
+    buyer_statement?: PlatformSkuConfig;
     priority_message?: PlatformSkuConfig;
     early_cashback_unlock?: PlatformSkuConfig;
   };
@@ -78,6 +80,8 @@ export interface PlatformPurchase {
   categoryId?: string;
   providerPaymentId?: string;
   fulfilledAt?: string;
+  receiptNumber?: string;
+  invoiceAvailable?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -100,6 +104,25 @@ export interface FastTrackIntentResponse {
 export interface StoreSlotIntentResponse {
   purchase: PlatformPurchase;
   clientSecret: string;
+}
+
+export interface BuyerStatementIntentResponse {
+  purchase: PlatformPurchase;
+  clientSecret: string;
+}
+
+export interface BuyerStatementStatusResponse {
+  year: number;
+  month: number;
+  periodLabel: string;
+  unlocked: boolean;
+  price: number;
+  currency: string;
+  pendingPurchase?: {
+    id: string;
+    amount: number;
+    currency: string;
+  };
 }
 
 export interface StoreSlotCatalogOption {

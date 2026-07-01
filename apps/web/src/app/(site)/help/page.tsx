@@ -22,13 +22,13 @@ const FAQ = [
 export default function HelpPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-3xl font-bold text-gray-900">Help centre</h1>
-      <p className="mt-2 text-gray-600">Find answers to common questions about buying and selling.</p>
+      <h1 className="text-3xl font-bold text-foreground">Help centre</h1>
+      <p className="mt-2 text-muted-foreground">Find answers to common questions about buying and selling.</p>
       <dl className="mt-10 space-y-8">
         {FAQ.map((item) => (
           <div key={item.q}>
-            <dt className="text-lg font-semibold text-gray-900">{item.q}</dt>
-            <dd className="mt-2 text-gray-600">{item.a}</dd>
+            <dt className="text-lg font-semibold text-foreground">{item.q}</dt>
+            <dd className="mt-2 text-muted-foreground">{item.a}</dd>
           </div>
         ))}
       </dl>

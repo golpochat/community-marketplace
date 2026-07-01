@@ -17,7 +17,7 @@ export function EmptyState({ title, description, action, className, variant = 'd
         'flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-16 text-center',
         isDashboard
           ? 'border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)]'
-          : 'border-gray-200 bg-gray-50',
+          : 'border-border bg-muted/50',
         className,
       )}
     >
@@ -26,7 +26,7 @@ export function EmptyState({ title, description, action, className, variant = 'd
           'mb-4 flex h-16 w-16 items-center justify-center rounded-full text-2xl',
           isDashboard
             ? 'bg-[hsl(var(--dashboard-sidebar-active))] text-[hsl(var(--dashboard-sidebar-muted))]'
-            : 'bg-gray-200 text-gray-700',
+            : 'bg-muted text-foreground',
         )}
       >
         ∅
@@ -34,7 +34,7 @@ export function EmptyState({ title, description, action, className, variant = 'd
       <h3
         className={cn(
           'text-lg font-semibold',
-          isDashboard ? 'text-[hsl(var(--dashboard-main-fg))]' : 'text-gray-900',
+          isDashboard ? 'text-[hsl(var(--dashboard-main-fg))]' : 'text-foreground',
         )}
       >
         {title}
@@ -43,7 +43,7 @@ export function EmptyState({ title, description, action, className, variant = 'd
         <p
           className={cn(
             'mt-2 max-w-sm text-sm',
-            isDashboard ? 'text-[hsl(var(--dashboard-sidebar-muted))]' : 'text-gray-700',
+            isDashboard ? 'text-[hsl(var(--dashboard-sidebar-muted))]' : 'text-muted-foreground',
           )}
         >
           {description}

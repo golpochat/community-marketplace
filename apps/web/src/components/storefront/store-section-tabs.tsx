@@ -22,7 +22,7 @@ export function StoreSectionTabs({ sections, activeSectionId, onChange }: StoreS
       items={items}
       activeId={activeSectionId}
       onChange={onChange}
-      className="border-gray-200"
+      className="border-border"
     />
   );
 }

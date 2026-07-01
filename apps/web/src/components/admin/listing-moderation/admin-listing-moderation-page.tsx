@@ -34,7 +34,7 @@ function ListingThumb({ listing }: { listing: Listing }) {
 
   if (!src) {
     return (
-      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-gray-100 text-[10px] text-gray-400">
+      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[10px] text-[hsl(var(--dashboard-sidebar-muted))]">
         —
       </div>
     );
@@ -199,7 +199,7 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
               className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
                 queue === tab.id
                   ? 'bg-brand-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.7)]'
               }`}
             >
               {tab.label}

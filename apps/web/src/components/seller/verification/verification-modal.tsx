@@ -29,17 +29,17 @@ export function VerificationModal({
       aria-modal="true"
       aria-labelledby="verification-modal-title"
     >
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <h2 id="verification-modal-title" className="text-lg font-semibold text-gray-900">
+      <div className="w-full max-w-md rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] p-6 shadow-xl">
+        <h2 id="verification-modal-title" className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
           Verification required
         </h2>
-        <p className="mt-2 text-sm text-gray-600">{message}</p>
+        <p className="mt-2 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">{message}</p>
         <div className="mt-6 flex flex-wrap justify-end gap-3">
           {dismissible && onClose ? (
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
             >
               Close
             </button>

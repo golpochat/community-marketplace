@@ -50,6 +50,7 @@ export const config = {
     '/auth/register',
     '/auth/activate',
     '/admin/invite/accept',
+    '/dashboard',
     '/dashboard/:path*',
     '/seller/:path*',
     '/buyer/:path*',

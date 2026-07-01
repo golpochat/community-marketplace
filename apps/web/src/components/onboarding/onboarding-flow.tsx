@@ -41,30 +41,30 @@ export function OnboardingFlow() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10">
-      <div className="rounded-xl border border-primary/20 bg-white p-6 shadow-brand-sm">
+      <div className="rounded-xl border border-primary/20 bg-card p-6 shadow-brand-sm">
         <p className="text-sm font-semibold uppercase tracking-wide text-primary">Welcome</p>
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">
+        <h1 className="mt-2 text-2xl font-bold text-foreground">
           {user?.displayName ? `Hi ${user.displayName.split(' ')[0]},` : 'Hi there,'} let&apos;s get
           you started
         </h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm text-muted-foreground">
           Your phone number is verified to protect the community. Complete these quick steps — or skip
           and come back anytime.
         </p>
 
         <ol className="mt-6 space-y-4">
           {STEPS.map((step, index) => (
-            <li key={step.id} className="flex gap-3 rounded-lg border border-gray-100 p-4">
+            <li key={step.id} className="flex gap-3 rounded-lg border border-border p-4">
               <span className="mt-0.5 text-primary">
                 {index === 0 ? (
                   <CheckCircle2 className="h-5 w-5" aria-hidden />
                 ) : (
-                  <Circle className="h-5 w-5 text-gray-300" aria-hidden />
+                  <Circle className="h-5 w-5 text-muted-foreground/40" aria-hidden />
                 )}
               </span>
               <div className="flex-1">
-                <p className="font-medium text-gray-900">{step.title}</p>
-                <p className="text-sm text-gray-600">{step.description}</p>
+                <p className="font-medium text-foreground">{step.title}</p>
+                <p className="text-sm text-muted-foreground">{step.description}</p>
                 {step.id === 'location' && (
                   <Input
                     className="mt-2"
@@ -83,8 +83,8 @@ export function OnboardingFlow() {
           ))}
         </ol>
 
-        <div className="mt-6 rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
-          <p className="font-medium text-gray-900">Community checklist</p>
+        <div className="mt-6 rounded-lg bg-muted/50 p-4 text-sm text-foreground">
+          <p className="font-medium text-foreground">Community checklist</p>
           <ul className="mt-2 space-y-1">
             <li>☐ Add first listing</li>
             <li>☐ Save a listing</li>

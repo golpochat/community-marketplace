@@ -9,6 +9,7 @@ export type AdminApiRole = 'SUPER_ADMIN' | 'ADMIN';
 const SUPER_ADMIN_ADMIN_NAMESPACE_PATHS = new Set([
   '/payments',
   '/monetization',
+  '/finance',
   '/users/verifications/pending',
   '/users/suspend',
   '/users/ban',
@@ -40,6 +41,7 @@ function superAdminUsesAdminNamespace(path: string): boolean {
     path.startsWith('/chat') ||
     path.startsWith('/moderation') ||
     path.startsWith('/monetization') ||
+    path.startsWith('/finance') ||
     path.startsWith('/disputes') ||
     path.startsWith('/fraud')
   );

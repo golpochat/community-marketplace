@@ -43,15 +43,15 @@ export function ListingQrCode({ shortUrl, title, onQrShare, compact = false }: L
   }, [shortUrl, title]);
 
   return (
-    <div className={compact ? 'space-y-3' : 'rounded-lg border border-gray-200 bg-gray-50 p-4'}>
-      {!compact && <p className="text-sm font-medium text-gray-900">Scan to open listing</p>}
+    <div className={compact ? 'space-y-3' : 'rounded-lg border border-border bg-muted/50 p-4'}>
+      {!compact && <p className="text-sm font-medium text-foreground">Scan to open listing</p>}
       <div
         ref={canvasRef}
-        className={`inline-block rounded-lg bg-white ${compact ? 'p-2 shadow-sm ring-1 ring-gray-200' : 'p-3 shadow-sm'}`}
+        className={`inline-block rounded-lg bg-card ${compact ? 'p-2 shadow-sm ring-1 ring-border' : 'p-3 shadow-sm'}`}
       >
         <QRCodeCanvas value={shortUrl} size={compact ? 128 : 160} level="M" includeMargin />
       </div>
-      {!compact && <p className="mt-2 break-all text-xs text-gray-500">{shortUrl}</p>}
+      {!compact && <p className="mt-2 break-all text-xs text-muted-foreground">{shortUrl}</p>}
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="outline" size="sm" onClick={downloadPng}>
           Download PNG

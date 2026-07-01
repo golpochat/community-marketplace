@@ -17,7 +17,7 @@ export default function TermsPage() {
         The platform connects local buyers and sellers. We do not guarantee transactions, hold
         payments, or provide legal protection beyond moderation and reporting tools.
       </p>
-      <p className="mt-4 text-sm text-gray-500">
+      <p className="mt-4 text-sm text-muted-foreground">
         Full legal terms will be published as the platform grows. Contact us with questions.
       </p>
     </ContentPageShell>

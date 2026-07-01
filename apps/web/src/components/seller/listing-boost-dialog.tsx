@@ -79,19 +79,19 @@ export function ListingBoostDialog({
         role="dialog"
         aria-modal
         aria-labelledby="boost-dialog-title"
-        className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
+        className="w-full max-w-md rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] p-6 shadow-lg"
       >
-        <h2 id="boost-dialog-title" className="text-lg font-semibold text-gray-900">
+        <h2 id="boost-dialog-title" className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
           Boost listing
         </h2>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           Get higher search ranking and a Boosted badge for your listing.
         </p>
 
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
 
         {loading && !catalog && !intent && (
-          <p className="mt-4 text-sm text-gray-500">Loading boost options…</p>
+          <p className="mt-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading boost options…</p>
         )}
 
         {catalog && !intent && (
@@ -102,15 +102,15 @@ export function ListingBoostDialog({
                 type="button"
                 disabled={!option.eligible || loading}
                 onClick={() => void startCheckout(option.packageType)}
-                className="flex w-full items-start justify-between rounded-lg border border-gray-200 px-3 py-3 text-left hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-start justify-between rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-3 text-left hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span>
-                  <span className="block text-sm font-medium text-gray-900">{option.label}</span>
-                  <span className="block text-xs text-gray-500">
+                  <span className="block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">{option.label}</span>
+                  <span className="block text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                     {option.durationDays} days · ranking bump + Boosted badge
                   </span>
                 </span>
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">
                   €{option.price.toFixed(2)}
                 </span>
               </button>
@@ -141,7 +141,7 @@ export function ListingBoostDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
           >
             Close
           </button>

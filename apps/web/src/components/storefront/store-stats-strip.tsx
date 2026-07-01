@@ -19,14 +19,14 @@ function StatCard({
   detail?: string;
 }) {
   return (
-    <div className="flex min-w-0 items-start gap-3 rounded-brand-md border border-gray-200 bg-white px-4 py-3 shadow-brand-sm">
+    <div className="flex min-w-0 items-start gap-3 rounded-brand-md border border-border bg-card px-4 py-3 shadow-brand-sm">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
-        <p className="mt-0.5 truncate text-lg font-bold text-gray-900">{value}</p>
-        {detail ? <p className="truncate text-xs text-gray-500">{detail}</p> : null}
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="mt-0.5 truncate text-lg font-bold text-foreground">{value}</p>
+        {detail ? <p className="truncate text-xs text-muted-foreground">{detail}</p> : null}
       </div>
     </div>
   );

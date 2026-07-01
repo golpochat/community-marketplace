@@ -1,3 +1,4 @@
+export * from './invoice';
 export * from './brand';
 export * from './constants';
 export * from './email-layout';

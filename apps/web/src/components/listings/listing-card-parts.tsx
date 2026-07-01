@@ -97,7 +97,7 @@ export function ListingCardImage({
   return (
     <div
       className={cn(
-        'relative shrink-0 overflow-hidden bg-gray-100',
+        'relative shrink-0 overflow-hidden bg-muted',
         isList
           ? 'aspect-video w-full sm:aspect-auto sm:h-44 sm:w-60'
           : isCompact
@@ -115,7 +115,7 @@ export function ListingCardImage({
       ) : (
         <div
           className={cn(
-            'flex h-full items-center justify-center text-sm text-gray-400',
+            'flex h-full items-center justify-center text-sm text-muted-foreground',
             isList && 'min-h-[140px]',
           )}
         >
@@ -187,7 +187,7 @@ export function ListingCardContent({
     >
       <h2
         className={cn(
-          'font-semibold leading-snug text-gray-900',
+          'font-semibold leading-snug text-foreground',
           isCompact ? 'line-clamp-1 text-sm' : isList ? 'line-clamp-2 text-base sm:text-lg' : 'line-clamp-2 text-sm sm:text-base',
         )}
       >
@@ -215,7 +215,7 @@ export function ListingCardContent({
       <div className={cn('mt-auto space-y-1.5', !isCompact && 'space-y-2')}>
         <div
           className={cn(
-            'flex flex-wrap items-center gap-2 text-gray-600',
+            'flex flex-wrap items-center gap-2 text-muted-foreground',
             isList ? 'text-sm' : 'text-xs',
           )}
         >
@@ -232,7 +232,7 @@ export function ListingCardContent({
           <BoostedBadge boostedUntil={listing.boostedUntil} />
         </div>
 
-        <p className="text-xs text-gray-400">{listedLabel}</p>
+        <p className="text-xs text-muted-foreground/70">{listedLabel}</p>
 
         {showTrust && !isCompact && (
           <ListingCardTrustStrip listing={listing} />
@@ -253,7 +253,7 @@ export function ListingCardTrustStrip({ listing }: { listing: ListingSummary }) 
   if (!hasRating && !hasBadges) return null;
 
   return (
-    <div className="space-y-1.5 border-t border-gray-100 pt-2">
+    <div className="space-y-1.5 border-t border-border pt-2">
       {hasRating && (
         <SellerRatingDisplay
           averageRating={listing.sellerRating}
@@ -275,7 +275,7 @@ export function ListingCardTrustStrip({ listing }: { listing: ListingSummary }) 
 export function listingCardShellClass(layout: ListingCardLayout, className?: string) {
   const isList = layout === 'list';
   return cn(
-    'group relative overflow-hidden rounded-brand-md border border-gray-200 bg-white shadow-brand-sm transition-all duration-200 hover:shadow-brand-md',
+    'group relative overflow-hidden rounded-brand-md border border-border bg-card shadow-brand-sm transition-all duration-200 hover:shadow-brand-md',
     isList ? '' : 'flex h-full flex-col',
     !isList && 'hover:-translate-y-0.5',
     className,

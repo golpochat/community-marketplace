@@ -79,7 +79,7 @@ export function SellerStoreSlotPanel({ onUpdated }: SellerStoreSlotPanelProps) {
         You are using {catalog.storeCount} of {catalog.storeSlotLimit} storefront slot
         {catalog.storeSlotLimit === 1 ? '' : 's'}. Purchase an unlock to add another shop brand.
       </p>
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
       {intent ? (
         <div className="mt-4">
           <BoostCheckoutPanel
@@ -108,10 +108,10 @@ export function SellerStoreSlotPanel({ onUpdated }: SellerStoreSlotPanelProps) {
           {eligibleOptions.map((option) => (
             <li
               key={option.sku}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-3"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-3"
             >
               <div>
-                <p className="text-sm font-medium text-gray-900">{option.label}</p>
+                <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">{option.label}</p>
                 <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                   Unlocks up to {catalog.storeSlotLimit + option.slotsGranted} storefront
                   {catalog.storeSlotLimit + option.slotsGranted === 1 ? '' : 's'}

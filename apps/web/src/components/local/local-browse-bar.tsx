@@ -84,11 +84,11 @@ export function LocalBrowseBar({ filters, onFiltersChange }: LocalBrowseBarProps
 
   if (!isLocalMode && location && !locationLoading) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
+      <div className="surface-section p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">Browse near you</h2>
-            <p className="text-xs text-gray-600">
+            <h2 className="text-sm font-semibold text-foreground">Browse near you</h2>
+            <p className="text-xs text-muted-foreground">
               {location.label ?? 'Show listings in your local area'}
             </p>
           </div>
@@ -128,11 +128,11 @@ export function LocalBrowseBar({ filters, onFiltersChange }: LocalBrowseBarProps
         }}
       />
 
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm">
+      <div className="surface-section p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">Local listings</h2>
-            <p className="text-xs text-gray-600">
+            <h2 className="text-sm font-semibold text-foreground">Local listings</h2>
+            <p className="text-xs text-muted-foreground">
               {location?.label ?? `Within ${radiusKm} km of your area`}
             </p>
           </div>

@@ -229,7 +229,7 @@ export function ChatPageClient({
   const threadHeader =
     role === 'SELLER' && buyerTrust ? (
       <div className="space-y-2">
-        <p className="text-sm font-medium text-gray-900">
+        <p className="text-sm font-medium text-foreground">
           {activeInboxItem?.participant.displayName ?? 'Buyer'}
         </p>
         <BuyerTrustBadges
@@ -246,7 +246,7 @@ export function ChatPageClient({
   return (
     <>
       {threadError && (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        <p className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">
           {threadError}
         </p>
       )}

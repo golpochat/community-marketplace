@@ -9,6 +9,7 @@ import type {
 import { PLATFORM_COUNTRY_CODE } from '@community-marketplace/config';
 
 import { apiClient } from '@/lib/api-client';
+import { downloadAuthenticatedFile } from '@/lib/download-file';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
 
 export const paymentsService = {
@@ -129,5 +130,23 @@ export const paymentsService = {
       }>
     >(WEB_API_ROUTES.seller.earningsPendingTransfers);
     return response.data ?? [];
+  },
+
+  async downloadBuyerReceipt(paymentId: string, receiptNumber?: string) {
+    const fallback = receiptNumber ? `receipt-${receiptNumber}.pdf` : `receipt-${paymentId}.pdf`;
+    await downloadAuthenticatedFile(
+      `${WEB_API_ROUTES.buyer.payments}/${paymentId}/receipt`,
+      fallback,
+    );
+  },
+
+  async downloadSellerReceipt(paymentId: string, receiptNumber?: string) {
+    const fallback = receiptNumber
+      ? `sales-record-${receiptNumber}.pdf`
+      : `sales-record-${paymentId}.pdf`;
+    await downloadAuthenticatedFile(
+      `${WEB_API_ROUTES.seller.earningsPayments}/${paymentId}/receipt`,
+      fallback,
+    );
   },
 };

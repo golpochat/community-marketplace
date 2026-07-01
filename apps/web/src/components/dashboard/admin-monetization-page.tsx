@@ -106,7 +106,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
             <DashboardCard title="Platform fees & cashback">
               <form onSubmit={(e) => void handleSave(e)} className="grid gap-4 sm:grid-cols-2">
                 <label className="text-sm">
-                  <span className="mb-1 block font-medium text-gray-700">Default platform fee %</span>
+                  <span className="mb-1 block font-medium text-[hsl(var(--dashboard-main-fg))]">Default platform fee %</span>
                   <input
                     type="number"
                     min={3}
@@ -116,11 +116,11 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                     onChange={(e) =>
                       setSettings({ ...settings, defaultPlatformFeePercent: Number(e.target.value) })
                     }
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                   />
                 </label>
                 <label className="text-sm">
-                  <span className="mb-1 block font-medium text-gray-700">Verified seller fee %</span>
+                  <span className="mb-1 block font-medium text-[hsl(var(--dashboard-main-fg))]">Verified seller fee %</span>
                   <input
                     type="number"
                     min={3}
@@ -133,11 +133,11 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                         verifiedSellerFeePercent: Number(e.target.value),
                       })
                     }
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                   />
                 </label>
                 <label className="text-sm">
-                  <span className="mb-1 block font-medium text-gray-700">Cashback %</span>
+                  <span className="mb-1 block font-medium text-[hsl(var(--dashboard-main-fg))]">Cashback %</span>
                   <input
                     type="number"
                     min={0}
@@ -147,11 +147,11 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                     onChange={(e) =>
                       setSettings({ ...settings, cashbackPercent: Number(e.target.value) })
                     }
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                   />
                 </label>
                 <label className="text-sm">
-                  <span className="mb-1 block font-medium text-gray-700">Cooling days</span>
+                  <span className="mb-1 block font-medium text-[hsl(var(--dashboard-main-fg))]">Cooling days</span>
                   <input
                     type="number"
                     min={1}
@@ -160,7 +160,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                     onChange={(e) =>
                       setSettings({ ...settings, coolingDays: Number(e.target.value) })
                     }
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                   />
                 </label>
                 <label className="flex items-center gap-2 text-sm sm:col-span-2">
@@ -186,7 +186,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
             <DashboardCard title="Listing boosts">
               <form onSubmit={(e) => void handleSave(e)} className="grid gap-4 sm:grid-cols-2">
                 <label className="text-sm">
-                  <span className="mb-1 block font-medium text-gray-700">7-day boost price (€)</span>
+                  <span className="mb-1 block font-medium text-[hsl(var(--dashboard-main-fg))]">7-day boost price (€)</span>
                   <input
                     type="number"
                     min={0}
@@ -207,11 +207,11 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                         },
                       })
                     }
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                   />
                 </label>
                 <label className="text-sm">
-                  <span className="mb-1 block font-medium text-gray-700">30-day boost price (€)</span>
+                  <span className="mb-1 block font-medium text-[hsl(var(--dashboard-main-fg))]">30-day boost price (€)</span>
                   <input
                     type="number"
                     min={0}
@@ -232,7 +232,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                         },
                       })
                     }
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                   />
                 </label>
                 <label className="flex items-center gap-2 text-sm sm:col-span-2">
@@ -258,7 +258,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
             <DashboardCard title="Featured listings">
               <form onSubmit={(e) => void handleSave(e)} className="grid gap-4 sm:grid-cols-2">
                 <label className="text-sm">
-                  <span className="mb-1 block font-medium text-gray-700">Homepage featured price (€)</span>
+                  <span className="mb-1 block font-medium text-[hsl(var(--dashboard-main-fg))]">Homepage featured price (€)</span>
                   <input
                     type="number"
                     min={0}
@@ -279,11 +279,11 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                         },
                       })
                     }
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                   />
                 </label>
                 <label className="text-sm">
-                  <span className="mb-1 block font-medium text-gray-700">Category featured price (€)</span>
+                  <span className="mb-1 block font-medium text-[hsl(var(--dashboard-main-fg))]">Category featured price (€)</span>
                   <input
                     type="number"
                     min={0}
@@ -304,7 +304,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                         },
                       })
                     }
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                   />
                 </label>
                 <label className="flex items-center gap-2 text-sm sm:col-span-2">
@@ -328,7 +328,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
             </DashboardCard>
 
             <DashboardCard title="Per-seller fee override">
-              <p className="mb-3 text-xs text-gray-600">
+              <p className="mb-3 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                 Set a custom platform fee for a seller (3–15%). Leave blank and clear to revert to default.
               </p>
               <div className="flex flex-col gap-3 sm:flex-row">
@@ -336,7 +336,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                   value={sellerUserId}
                   onChange={(e) => setSellerUserId(e.target.value)}
                   placeholder="Seller user ID"
-                  className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  className="flex-1 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                 />
                 <input
                   type="number"
@@ -346,13 +346,13 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                   value={sellerFee}
                   onChange={(e) => setSellerFee(e.target.value)}
                   placeholder="Fee %"
-                  className="w-32 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                  className="w-32 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                 />
                 <button
                   type="button"
                   disabled={saving || !sellerUserId}
                   onClick={() => void handleSellerFeeOverride(false)}
-                  className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+                  className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)] disabled:opacity-50"
                 >
                   Set override
                 </button>
@@ -360,7 +360,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                   type="button"
                   disabled={saving || !sellerUserId}
                   onClick={() => void handleSellerFeeOverride(true)}
-                  className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+                  className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)] disabled:opacity-50"
                 >
                   Clear
                 </button>

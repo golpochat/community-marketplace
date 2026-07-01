@@ -60,12 +60,12 @@ export function StoreBannerUpload({ bannerUrl, storeId, onUpdated }: StoreBanner
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-gray-700">Storefront hero banner</p>
-      <div className={`relative overflow-hidden rounded-lg border border-gray-200 bg-gray-50 ${STOREFRONT_HERO_BANNER_CLASS}`}>
+      <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Storefront hero banner</p>
+      <div className={`relative overflow-hidden rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] ${STOREFRONT_HERO_BANNER_CLASS}`}>
           {bannerUrl ? (
             <StoreBannerPhoto src={bannerUrl} />
           ) : (
-            <div className="flex h-full items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-brand-50 text-sm text-gray-400">
+            <div className="flex h-full items-center justify-center bg-gradient-to-br from-[hsl(var(--dashboard-sidebar-active)/0.5)] via-[hsl(var(--dashboard-sidebar-active)/0.35)] to-primary/5 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               No banner yet
             </div>
           )}
@@ -93,7 +93,7 @@ export function StoreBannerUpload({ bannerUrl, storeId, onUpdated }: StoreBanner
           your square logo, not here.
         </p>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }

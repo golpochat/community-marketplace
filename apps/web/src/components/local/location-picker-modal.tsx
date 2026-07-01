@@ -30,15 +30,15 @@ export function LocationPickerModal({ open, onSelect, onRetryGps }: LocationPick
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-brand-lg">
-        <h2 className="text-lg font-semibold text-gray-900">Choose your area</h2>
-        <p className="mt-1 text-sm text-gray-600">
+      <div className="w-full max-w-md rounded-xl bg-card p-6 shadow-brand-lg">
+        <h2 className="text-lg font-semibold text-foreground">Choose your area</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           We use your area to show nearby listings and local community buttons.
         </p>
 
         <div className="mt-4 space-y-3">
           <div>
-            <label htmlFor="county-select" className="text-sm font-medium text-gray-700">
+            <label htmlFor="county-select" className="text-sm font-medium text-foreground">
               County
             </label>
             <select
@@ -48,7 +48,7 @@ export function LocationPickerModal({ open, onSelect, onRetryGps }: LocationPick
                 setCountyName(e.target.value);
                 setPlaceName('');
               }}
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm"
             >
               <option value="">Select county…</option>
               {IRELAND_COUNTIES.map((entry) => (
@@ -60,7 +60,7 @@ export function LocationPickerModal({ open, onSelect, onRetryGps }: LocationPick
           </div>
 
           <div>
-            <label htmlFor="place-select" className="text-sm font-medium text-gray-700">
+            <label htmlFor="place-select" className="text-sm font-medium text-foreground">
               Town / suburb
             </label>
             <select
@@ -68,7 +68,7 @@ export function LocationPickerModal({ open, onSelect, onRetryGps }: LocationPick
               value={placeName}
               disabled={!county}
               onChange={(e) => setPlaceName(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:bg-gray-50"
+              className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm disabled:bg-muted/50"
             >
               <option value="">Select town…</option>
               {county?.places.map((entry) => (

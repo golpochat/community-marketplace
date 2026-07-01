@@ -30,3 +30,21 @@ export type { SelectProps } from './components/select';
 export { BarChart } from './components/bar-chart';
 export { ToastProvider, useToast } from './components/toast';
 export type { ToastMessage, ToastVariant } from './components/toast';
+
+export {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from './components/breadcrumb';
+
+export {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuPortal,
+} from './components/dropdown-menu';
+export type { DropdownMenuProps, DropdownMenuItemProps } from './components/dropdown-menu';

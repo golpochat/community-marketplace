@@ -1,6 +1,8 @@
 import type {
   BoostCatalogResponse,
   BoostIntentResponse,
+  BuyerStatementIntentResponse,
+  BuyerStatementStatusResponse,
   BuyerWalletSummary,
   CashbackEstimate,
   CashbackGrant,
@@ -26,7 +28,42 @@ import type { PaginatedResult } from '@community-marketplace/types';
 import { apiClient } from '@/lib/api-client';
 import { adminApiPath, type AdminApiRole } from '@/lib/admin-api-routes';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
+import { downloadAuthenticatedFile } from '@/lib/download-file';
 import { normalizePaginated } from '@/lib/normalize-api-response';
+
+export type StatementExportFormat = 'pdf' | 'csv' | 'xlsx';
+
+export interface AdminFinanceReportFilters {
+  dateFrom: string;
+  dateTo: string;
+  categories?: Array<'buyer' | 'seller' | 'platform_service' | 'marketplace_fee'>;
+  search?: string;
+}
+
+function buildAdminFinanceQuery(filters: AdminFinanceReportFilters): string {
+  const params = new URLSearchParams({
+    dateFrom: filters.dateFrom,
+    dateTo: filters.dateTo,
+  });
+  if (filters.categories?.length) {
+    params.set('categories', filters.categories.join(','));
+  }
+  if (filters.search?.trim()) {
+    params.set('search', filters.search.trim());
+  }
+  return params.toString();
+}
+
+function statementPathSuffix(format: StatementExportFormat): string {
+  if (format === 'pdf') return '';
+  return format === 'csv' ? '/csv' : '/xlsx';
+}
+
+function statementFallbackFilename(prefix: string, year: number, month: number, format: StatementExportFormat): string {
+  const ym = `${year}-${String(month).padStart(2, '0')}`;
+  const ext = format === 'pdf' ? 'pdf' : format === 'csv' ? 'csv' : 'xlsx';
+  return `${prefix}-${ym}.${ext}`;
+}
 
 export const monetizationService = {
   async getBuyerWallet(): Promise<BuyerWalletSummary> {
@@ -138,6 +175,62 @@ export const monetizationService = {
     return response.data!;
   },
 
+  async getSellerPurchases(page = 1, limit = 20) {
+    return apiClient<PlatformPurchase[]>(WEB_API_ROUTES.seller.earningsPurchases, {
+      params: { page: String(page), limit: String(limit) },
+    });
+  },
+
+  async downloadSellerInvoice(purchaseId: string, receiptNumber?: string) {
+    const fallback = receiptNumber
+      ? `invoice-${receiptNumber}.pdf`
+      : `invoice-${purchaseId}.pdf`;
+    await downloadAuthenticatedFile(
+      `${WEB_API_ROUTES.seller.earningsPurchases}/${purchaseId}/invoice`,
+      fallback,
+    );
+  },
+
+  async downloadSellerStatement(year: number, month: number, format: StatementExportFormat = 'pdf') {
+    await downloadAuthenticatedFile(
+      `${WEB_API_ROUTES.seller.earningsStatement}${statementPathSuffix(format)}?year=${year}&month=${month}`,
+      statementFallbackFilename('seller-statement', year, month, format),
+    );
+  },
+
+  async getBuyerStatementStatus(year: number, month: number): Promise<BuyerStatementStatusResponse> {
+    const response = await apiClient<BuyerStatementStatusResponse>(
+      `${WEB_API_ROUTES.buyer.statementsStatus}?year=${year}&month=${month}`,
+    );
+    return response.data!;
+  },
+
+  async createBuyerStatementIntent(year: number, month: number): Promise<BuyerStatementIntentResponse> {
+    const response = await apiClient<BuyerStatementIntentResponse>(
+      WEB_API_ROUTES.buyer.statementsIntent,
+      {
+        method: 'POST',
+        body: JSON.stringify({ year, month }),
+      },
+    );
+    return response.data!;
+  },
+
+  async confirmBuyerStatement(purchaseId: string): Promise<PlatformPurchase> {
+    const response = await apiClient<PlatformPurchase>(WEB_API_ROUTES.buyer.statementsConfirm, {
+      method: 'POST',
+      body: JSON.stringify({ purchaseId }),
+    });
+    return response.data!;
+  },
+
+  async downloadBuyerStatement(year: number, month: number, format: StatementExportFormat = 'pdf') {
+    await downloadAuthenticatedFile(
+      `${WEB_API_ROUTES.buyer.statementsDownload}${statementPathSuffix(format)}?year=${year}&month=${month}`,
+      statementFallbackFilename('buyer-statement', year, month, format),
+    );
+  },
+
   async getMonetizationSettings(role: AdminApiRole): Promise<MonetizationSettings> {
     const response = await apiClient<MonetizationSettings>(
       adminApiPath(role, '/monetization/settings'),
@@ -201,5 +294,39 @@ export const monetizationService = {
       `${adminApiPath(role, '/monetization/wallet-transactions')}?${query.toString()}`,
     );
     return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
+  },
+
+  async getFinanceReportSummary(role: AdminApiRole, filters: AdminFinanceReportFilters) {
+    const response = await apiClient<{
+      records: Array<{
+        type: 'buyer_purchase' | 'seller_sale' | 'platform_service' | 'marketplace_fee';
+        typeLabel: string;
+        date: string;
+        reference: string;
+        party: string;
+        partyEmail: string;
+        description: string;
+        amount: number;
+        currency: string;
+      }>;
+      summary: {
+        totalRevenueGross: number;
+        currency: string;
+      };
+    }>(`${adminApiPath(role, '/finance/report/summary')}?${buildAdminFinanceQuery(filters)}`);
+    return response.data!;
+  },
+
+  async downloadFinanceReport(
+    role: AdminApiRole,
+    filters: AdminFinanceReportFilters,
+    format: StatementExportFormat,
+  ) {
+    const query = buildAdminFinanceQuery(filters);
+    const ext = format === 'xlsx' ? 'xlsx' : format;
+    await downloadAuthenticatedFile(
+      `${adminApiPath(role, `/finance/report/${format}`)}?${query}`,
+      `finance-report-${filters.dateFrom}_${filters.dateTo}.${ext}`,
+    );
   },
 };

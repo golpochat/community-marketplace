@@ -5,8 +5,11 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
 import type { RegistrationAccountType } from '@community-marketplace/types';
-import { Button, PasswordInput } from '@community-marketplace/ui';
+import { IRISH_MOBILE_VALIDATION_MESSAGE } from '@community-marketplace/validation';
+import { Button, Input, Label, PasswordInput, cn } from '@community-marketplace/ui';
 
+import { IrishMobileFieldLabel } from '@/components/forms/irish-mobile-field-label';
+import { InfoTooltip } from '@/components/forms/info-tooltip';
 import { authService } from '@/services/auth.service';
 import { formatIrishPhoneHint, normalizeIrishPhoneToE164 } from '@/lib/phone';
 
@@ -15,19 +18,36 @@ type Step = 'phone' | 'otp' | 'details' | 'done';
 const ACCOUNT_OPTIONS: Array<{
   value: RegistrationAccountType;
   label: string;
-  description: string;
+  tooltip: string;
 }> = [
   {
     value: 'buyer',
     label: 'I want to buy locally',
-    description: 'Browse listings, message sellers, and purchase items near you.',
+    tooltip: 'Browse listings, message sellers, and purchase items near you.',
   },
   {
     value: 'seller',
     label: 'I want to sell on SellNearby',
-    description: 'Create listings and receive payments. Verification required before selling.',
+    tooltip:
+      'Create listings and message buyers. You can publish a limited number of listings before identity verification. Stripe payouts require seller verification.',
   },
 ];
+
+function FormError({ message }: { message: string }) {
+  return (
+    <p className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+      {message}
+    </p>
+  );
+}
+
+function FormSuccess({ message }: { message: string }) {
+  return (
+    <p className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-sm text-foreground">
+      {message}
+    </p>
+  );
+}
 
 export function RegisterForm() {
   const searchParams = useSearchParams();
@@ -61,7 +81,7 @@ export function RegisterForm() {
 
     const e164 = normalizeIrishPhoneToE164(phone);
     if (!e164) {
-      setError('Enter a valid Irish mobile number (e.g. 087 100 0002 or +353 87 100 0002).');
+      setError(IRISH_MOBILE_VALIDATION_MESSAGE);
       return;
     }
 
@@ -123,14 +143,17 @@ export function RegisterForm() {
   if (step === 'phone') {
     return (
       <form onSubmit={handleSendOtp} className="mt-6 space-y-4">
-        {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>}
+        {error && <FormError message={error} />}
 
         <fieldset className="space-y-2">
-          <legend className="text-sm font-medium text-gray-700">Account type</legend>
+          <legend className="text-sm font-medium text-foreground">Account type</legend>
           {ACCOUNT_OPTIONS.map((option) => (
             <label
               key={option.value}
-              className="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 px-3 py-3 hover:bg-gray-50 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50/40"
+              className={cn(
+                'flex cursor-pointer items-start gap-3 rounded-lg border border-border px-3 py-3 transition-colors duration-150',
+                'hover:bg-muted/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5',
+              )}
             >
               <input
                 type="radio"
@@ -138,33 +161,29 @@ export function RegisterForm() {
                 value={option.value}
                 checked={accountType === option.value}
                 onChange={() => setAccountType(option.value)}
-                className="mt-1"
+                className="mt-1 accent-primary"
               />
-              <span>
-                <span className="block text-sm font-medium text-gray-900">{option.label}</span>
-                <span className="block text-xs text-gray-500">{option.description}</span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-sm font-medium text-foreground">{option.label}</span>
+                <InfoTooltip ariaLabel={`About: ${option.label}`} wide>
+                  {option.tooltip}
+                </InfoTooltip>
               </span>
             </label>
           ))}
         </fieldset>
 
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-            Irish mobile number
-          </label>
-          <input
+        <div className="space-y-2">
+          <IrishMobileFieldLabel htmlFor="phone" />
+          <Input
             id="phone"
             type="tel"
             required
             autoComplete="tel"
-            placeholder="087 100 0002 or +353 87 100 0002"
+            placeholder="087 123 4567 or +353 87 123 4567"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
-          <p className="mt-1 text-xs text-gray-500">
-            Use a valid Irish number with or without the +353 country code.
-          </p>
         </div>
 
         <Button type="submit" disabled={loading || !accountType} className="w-full">
@@ -177,16 +196,14 @@ export function RegisterForm() {
   if (step === 'otp') {
     return (
       <form onSubmit={handleVerifyOtp} className="mt-6 space-y-4">
-        {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>}
-        <p className="text-sm text-gray-600">
+        {error && <FormError message={error} />}
+        <p className="text-sm text-muted-foreground">
           Enter the 6-digit code sent to{' '}
           {normalizedPhone ? formatIrishPhoneHint(normalizedPhone) : phone}
         </p>
-        <div>
-          <label htmlFor="code" className="block text-sm font-medium text-gray-700">
-            Verification code
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="code">Verification code</Label>
+          <Input
             id="code"
             type="text"
             inputMode="numeric"
@@ -194,7 +211,6 @@ export function RegisterForm() {
             required
             value={code}
             onChange={(e) => setCode(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </div>
         <Button type="submit" disabled={loading} className="w-full">
@@ -207,46 +223,40 @@ export function RegisterForm() {
   if (step === 'details') {
     return (
       <form onSubmit={handleCompleteRegistration} className="mt-6 space-y-4">
-        {error && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</p>}
-        <p className="text-sm text-gray-600">
+        {error && <FormError message={error} />}
+        <p className="text-sm text-muted-foreground">
           Last step — enter your details to create your{' '}
           {accountType === 'seller' ? 'seller' : 'buyer'} account.
         </p>
 
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+        <div className="space-y-2">
+          <Label htmlFor="name">
             {accountType === 'seller' ? 'Store name or your name' : 'Full name'}
-          </label>
-          <input
+          </Label>
+          <Input
             id="name"
             type="text"
             required
             autoComplete="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email address
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="email">Email address</Label>
+          <Input
             id="email"
             type="email"
             required
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
         </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-            Password
-          </label>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
           <PasswordInput
             id="password"
             required
@@ -254,9 +264,8 @@ export function RegisterForm() {
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 h-10 rounded-lg border-gray-300 text-sm focus:border-brand-500 focus:ring-brand-500"
           />
-          <p className="mt-1 text-xs text-gray-500">Use at least 8 characters.</p>
+          <p className="text-xs text-muted-foreground">Use at least 8 characters.</p>
         </div>
 
         <Button type="submit" disabled={loading} className="w-full">
@@ -268,20 +277,17 @@ export function RegisterForm() {
 
   return (
     <div className="mt-6 space-y-4">
-      {success && <p className="rounded-lg bg-green-50 p-3 text-sm text-green-700">{success}</p>}
-      <p className="text-sm text-gray-600">
-        We sent an activation link to <span className="font-medium text-gray-900">{email}</span>.
+      {success && <FormSuccess message={success} />}
+      <p className="text-sm text-muted-foreground">
+        We sent an activation link to <span className="font-medium text-foreground">{email}</span>.
         Open the email and click the link — you&apos;ll be signed in automatically.
       </p>
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-muted-foreground">
         The link expires in 24 hours. Didn&apos;t receive it? Check your spam folder.
       </p>
-      <Link
-        href="/auth/login"
-        className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-      >
-        Go to sign in
-      </Link>
+      <Button variant="outline" className="w-full" asChild>
+        <Link href="/auth/login">Go to sign in</Link>
+      </Button>
     </div>
   );
 }

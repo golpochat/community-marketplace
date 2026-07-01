@@ -28,7 +28,7 @@ export function ListingDetailHeader({ listing }: ListingDetailHeaderProps) {
   return (
     <header className="space-y-3">
       <div className="flex flex-wrap items-start gap-2">
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{listing.title}</h1>
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{listing.title}</h1>
         {showHybrid && (
           <ListingBadge tone="success" className="mt-1 capitalize">
             Hybrid model
@@ -41,7 +41,7 @@ export function ListingDetailHeader({ listing }: ListingDetailHeaderProps) {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
         <span>{formatJustListedLabel(listedAt)}</span>
         <ListingDetailStats
           viewCount={listing.viewCount}
@@ -53,7 +53,7 @@ export function ListingDetailHeader({ listing }: ListingDetailHeaderProps) {
         <div>
           {categoryHref ? (
             <Link href={categoryHref}>
-              <ListingBadge tone="outline" className="hover:bg-gray-50">
+              <ListingBadge tone="outline" className="hover:bg-muted">
                 {listing.category.name}
               </ListingBadge>
             </Link>

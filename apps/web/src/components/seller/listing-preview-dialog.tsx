@@ -78,14 +78,14 @@ export function ListingPreviewDialog({
       aria-modal="true"
       aria-labelledby="listing-preview-title"
     >
-      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white shadow-xl">
-        <div className="border-b border-gray-200 px-6 py-4">
+      <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] shadow-xl">
+        <div className="border-b border-[hsl(var(--dashboard-sidebar-border))] px-6 py-4">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-amber-700">
                 Preview — not published yet
               </p>
-              <h2 id="listing-preview-title" className="mt-1 text-xl font-semibold text-gray-900">
+              <h2 id="listing-preview-title" className="mt-1 text-xl font-semibold text-[hsl(var(--dashboard-main-fg))]">
                 {data.title || 'Untitled listing'}
               </h2>
             </div>
@@ -97,7 +97,7 @@ export function ListingPreviewDialog({
 
         <div className="space-y-6 px-6 py-6">
           {coverUrl ? (
-            <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.5)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={coverUrl} alt={data.title || 'Cover'} className="h-full w-full object-cover" />
               {pricingMeta?.hasSaleBadge && pricingMeta.originalPrice != null && (
@@ -109,7 +109,7 @@ export function ListingPreviewDialog({
               )}
             </div>
           ) : (
-            <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-gray-50 text-sm text-gray-500">
+            <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               No photos selected
             </div>
           )}
@@ -126,7 +126,7 @@ export function ListingPreviewDialog({
                       key={url}
                       src={url}
                       alt={`${data.title || 'Listing'} preview ${index + 2}`}
-                      className="h-48 w-full rounded-lg border border-gray-200 object-cover"
+                      className="h-48 w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] object-cover"
                     />
                   ))}
                 </div>
@@ -145,26 +145,26 @@ export function ListingPreviewDialog({
                 size="detail"
               />
             ) : (
-              <p className="text-3xl font-bold text-gray-900">
+              <p className="text-3xl font-bold text-[hsl(var(--dashboard-main-fg))]">
                 {formatCurrency(0, 'EUR')}
               </p>
             )}
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               {categoryName ?? 'Category'} · {conditionLabel(data.condition)} · {data.location || 'Location'}
             </p>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Description</h3>
-            <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+            <h3 className="text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">Description</h3>
+            <p className="mt-2 whitespace-pre-wrap text-sm text-[hsl(var(--dashboard-main-fg))]">
               {data.description || 'No description provided.'}
             </p>
           </div>
 
           {deliverySelections.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-900">Delivery</h3>
-              <ul className="mt-2 space-y-1 text-sm text-gray-700">
+              <h3 className="text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">Delivery</h3>
+              <ul className="mt-2 space-y-1 text-sm text-[hsl(var(--dashboard-main-fg))]">
                 {deliverySelections.map((option) => (
                   <li key={`${option.deliveryOptionId}-${option.customLabel ?? option.label}`}>
                     {option.label}

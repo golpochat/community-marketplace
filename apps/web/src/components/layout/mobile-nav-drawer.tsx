@@ -70,13 +70,13 @@ export function MobileNavDrawer({
         aria-label="Close menu"
         onClick={onClose}
       />
-      <div className="absolute inset-y-0 left-0 flex w-[min(100vw,320px)] flex-col bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4">
+      <div className="absolute inset-y-0 left-0 flex w-[min(100vw,320px)] flex-col border-r border-border bg-background shadow-xl">
+        <div className="flex items-center justify-between border-b border-border px-4 py-4">
           <Logo size="nav" />
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 text-gray-500 hover:bg-gray-100"
+            className="rounded-lg p-2 text-muted-foreground transition-colors duration-150 hover:bg-muted"
             aria-label="Close navigation"
           >
             <X className="h-5 w-5" />
@@ -84,7 +84,7 @@ export function MobileNavDrawer({
         </div>
 
         <nav className="flex-1 overflow-y-auto px-4 py-4" aria-label="Mobile navigation">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Categories
           </p>
           <div className="grid grid-cols-2 gap-2">
@@ -94,7 +94,7 @@ export function MobileNavDrawer({
                 <Link
                   key={category.id}
                   href={`/listings?categoryId=${category.id}`}
-                  className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-3 text-sm font-medium text-gray-700 hover:border-primary/30 hover:bg-primary/5"
+                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-3 text-sm font-medium text-foreground hover:border-primary/30 hover:bg-primary/5"
                   onClick={onClose}
                 >
                   <Icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={1.75} aria-hidden />
@@ -112,12 +112,12 @@ export function MobileNavDrawer({
             View all categories
           </Link>
 
-          <div className="my-4 border-t border-gray-100" />
+          <div className="my-4 border-t border-border" />
 
           <div className="space-y-1">
             <Link
               href={WEB_APP_ROUTES.listings}
-              className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-gray-800 hover:bg-gray-50"
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-foreground hover:bg-muted"
               onClick={onClose}
             >
               <ShoppingBag className="h-5 w-5 text-primary" aria-hidden />
@@ -125,7 +125,7 @@ export function MobileNavDrawer({
             </Link>
             <Link
               href={sellHref}
-              className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-gray-800 hover:bg-gray-50"
+              className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-foreground hover:bg-muted"
               onClick={onClose}
             >
               <Store className="h-5 w-5 text-primary" aria-hidden />
@@ -133,12 +133,12 @@ export function MobileNavDrawer({
             </Link>
           </div>
 
-          <div className="my-4 border-t border-gray-100" />
+          <div className="my-4 border-t border-border" />
 
           {isAuthenticated && navLinks ? (
             <div className="space-y-1">
               {userDisplayName && (
-                <p className="px-3 py-2 text-sm font-semibold text-gray-900">{userDisplayName}</p>
+                <p className="px-3 py-2 text-sm font-semibold text-foreground">{userDisplayName}</p>
               )}
               <MobileNavLink href={navLinks.dashboard} icon={LayoutDashboard} label="Dashboard" onClose={onClose} />
               <MobileNavLink href={navLinks.myListings} icon={List} label="My Listings" onClose={onClose} />
@@ -177,7 +177,7 @@ export function MobileNavDrawer({
         </nav>
 
         {isAuthenticated && (
-          <div className="border-t border-gray-100 p-4">
+          <div className="border-t border-border p-4">
             <Link href={sellHref} onClick={onClose}>
               <Button className="h-11 w-full text-[15px] font-semibold">Sell an item</Button>
             </Link>
@@ -203,10 +203,10 @@ function MobileNavLink({
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-gray-800 hover:bg-gray-50"
+      className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-foreground hover:bg-muted"
       onClick={onClose}
     >
-      <Icon className="h-5 w-5 text-gray-500" aria-hidden />
+      <Icon className="h-5 w-5 text-muted-foreground" aria-hidden />
       {label}
     </Link>
   );

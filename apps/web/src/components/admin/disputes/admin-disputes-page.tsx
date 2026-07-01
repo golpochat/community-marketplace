@@ -139,7 +139,7 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
             className={`rounded-full px-3 py-1 text-sm ${
               queue === tab.id
                 ? 'bg-[hsl(var(--dashboard-accent))] text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.7)]'
             }`}
           >
             {tab.label}
@@ -150,7 +150,7 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
       <div className="grid gap-6 xl:grid-cols-2">
         <Card title="Queue">
           {!loading && rows.length === 0 ? (
-            <p className="text-sm text-gray-500">No disputes in this queue.</p>
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No disputes in this queue.</p>
           ) : (
             <DataTable
               columns={['Listing', 'Buyer', 'Seller', 'Reason', 'Status', 'Opened', '']}
@@ -167,24 +167,24 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
 
         <Card title={detail ? 'Decision panel' : 'Select a dispute'}>
           {!selectedId ? (
-            <p className="text-sm text-gray-500">Select a dispute from the queue to review evidence.</p>
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Select a dispute from the queue to review evidence.</p>
           ) : detailLoading ? (
-            <p className="text-sm text-gray-500">Loading dispute…</p>
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading dispute…</p>
           ) : detail ? (
             <div className="space-y-4">
-              {actionError ? <p className="text-sm text-red-600">{actionError}</p> : null}
+              {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
               <div className="flex flex-wrap items-center gap-2">
                 <DisputeStatusBadge status={detail.disputeStatus} />
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
                   {DISPUTE_REASON_LABELS[detail.reason]}
                 </span>
               </div>
-              <p className="whitespace-pre-wrap text-sm text-gray-800">{detail.description}</p>
+              <p className="whitespace-pre-wrap text-sm text-[hsl(var(--dashboard-main-fg))]">{detail.description}</p>
 
               <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-900">Evidence</p>
+                <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Evidence</p>
                 {(detail.evidence ?? []).length === 0 ? (
-                  <p className="text-sm text-gray-500">No evidence uploaded yet.</p>
+                  <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No evidence uploaded yet.</p>
                 ) : (
                   (detail.evidence ?? []).map((item) => (
                     <DocumentPreview
@@ -199,13 +199,13 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
               <DisputeTimeline events={detail.timeline ?? []} />
 
               {!isResolved ? (
-                <div className="space-y-3 border-t border-gray-200 pt-4">
+                <div className="space-y-3 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-4">
                   <textarea
                     value={resolutionNotes}
                     onChange={(e) => setResolutionNotes(e.target.value)}
                     rows={3}
                     placeholder="Resolution notes (required to resolve)…"
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                    className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
                   />
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -216,7 +216,7 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
                           adminService.requestDisputeEvidence(role, detail.id),
                         )
                       }
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+                      className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)] disabled:opacity-50"
                     >
                       Request evidence
                     </button>
@@ -226,7 +226,7 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
                       onClick={() =>
                         void runAction(() => adminService.markDisputeUnderReview(role, detail.id))
                       }
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+                      className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)] disabled:opacity-50"
                     >
                       Mark under review
                     </button>
@@ -271,21 +271,21 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
                           }),
                         )
                       }
-                      className="rounded-lg bg-gray-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+                      className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
                     >
                       Close
                     </button>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
                   Resolved {detail.resolvedAt ? formatListedAgo(detail.resolvedAt) : ''}.
                   {detail.resolutionNotes ? ` ${detail.resolutionNotes}` : ''}
                 </p>
               )}
             </div>
           ) : (
-            <p className="text-sm text-red-600">Could not load dispute.</p>
+            <p className="text-sm text-destructive">Could not load dispute.</p>
           )}
         </Card>
       </div>

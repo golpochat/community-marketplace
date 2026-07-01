@@ -1,12 +1,14 @@
 'use client';
 
-import { APP_BRAND_ABBR, APP_SHORT_NAME } from '@community-marketplace/config';
+import { APP_SHORT_NAME } from '@community-marketplace/config';
 import type { RbacRole } from '@community-marketplace/types';
 import {
   DashboardLayout as UIDashboardLayout,
+  getDashboardRouteByRole,
   type DashboardThemeProp,
 } from '@community-marketplace/ui-dashboard';
 
+import { Logo } from '@/components/brand/logo';
 import { NotificationBell } from '@/components/shared/notification-bell';
 import { useAuth } from '@/hooks/use-auth';
 import { useUserProfile } from '@/hooks/use-user-profile';
@@ -68,7 +70,12 @@ export default function DashboardLayout({ role, theme, children }: WebDashboardL
       role={role}
       theme={theme}
       brand={APP_SHORT_NAME}
-      brandAbbr={APP_BRAND_ABBR}
+      brandLogo={
+        <Logo variant="light" size="footer" href={getDashboardRouteByRole(role)} />
+      }
+      brandLogoCollapsed={
+        <Logo variant="icon" size="icon" href={getDashboardRouteByRole(role)} />
+      }
       user={{
         name: profile?.displayName ?? user?.displayName,
         email: user?.email,

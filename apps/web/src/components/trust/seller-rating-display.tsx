@@ -20,14 +20,14 @@ export function SellerRatingDisplay({
     return (
       <p
         className={cn(
-          'inline-flex items-center gap-1 text-gray-600',
+          'inline-flex items-center gap-1 text-muted-foreground',
           size === 'sm' ? 'text-xs' : 'text-sm',
           className,
         )}
       >
         <Star className={cn('fill-amber-400 text-amber-400', size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4')} aria-hidden />
-        <span className="font-medium text-gray-800">{averageRating.toFixed(1)}</span>
-        <span className="text-gray-500">
+        <span className="font-medium text-foreground">{averageRating.toFixed(1)}</span>
+        <span className="text-muted-foreground">
           ({reviewCount} review{reviewCount === 1 ? '' : 's'})
         </span>
       </p>
@@ -35,7 +35,7 @@ export function SellerRatingDisplay({
   }
 
   return (
-    <p className={cn('text-gray-400', size === 'sm' ? 'text-xs' : 'text-sm', className)}>
+    <p className={cn('text-muted-foreground/70', size === 'sm' ? 'text-xs' : 'text-sm', className)}>
       No reviews yet
     </p>
   );

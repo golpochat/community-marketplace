@@ -9,7 +9,7 @@ const STATUS_STYLES: Record<MarketplaceDisputeStatus, string> = {
   under_review: 'bg-blue-100 text-blue-900',
   resolved_buyer_favored: 'bg-emerald-100 text-emerald-900',
   resolved_seller_favored: 'bg-emerald-100 text-emerald-900',
-  closed: 'bg-gray-100 text-gray-700',
+  closed: 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-main-fg))]',
 };
 
 export function DisputeStatusBadge({ status }: { status: MarketplaceDisputeStatus }) {

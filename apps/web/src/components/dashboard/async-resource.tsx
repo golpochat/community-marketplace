@@ -80,7 +80,7 @@ export function DataTable({ columns, rows }: DataTableProps) {
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-[hsl(var(--dashboard-sidebar-border))] bg-white">
+        <tbody className="divide-y divide-[hsl(var(--dashboard-sidebar-border))] bg-card">
           {rows.map((row, index) => (
             <tr key={index}>
               {row.map((cell, cellIndex) => (

@@ -180,7 +180,7 @@ function RbacRolesPanel({
               <Label htmlFor="rbac-new-template">Template</Label>
               <select
                 id="rbac-new-template"
-                className="mt-1 w-full rounded-md border border-[hsl(var(--dashboard-sidebar-border))] bg-white px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-md border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm"
                 value={newTemplate}
                 onChange={(e) =>
                   onNewTemplateChange(e.target.value as CreateAdminRoleInput['template'])
@@ -470,13 +470,13 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
   }
 
   if (loading) {
-    return <p className="text-sm text-gray-500">Loading roles and permissions…</p>;
+    return <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading roles and permissions…</p>;
   }
 
   return (
     <div className="space-y-4">
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </div>
       ) : null}
@@ -523,12 +523,12 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
 
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-3">
-                  <label className="text-sm text-gray-600" htmlFor="rbac-role-select">
+                  <label className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]" htmlFor="rbac-role-select">
                     Role
                   </label>
                   <select
                     id="rbac-role-select"
-                    className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                    className="rounded-md border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm"
                     value={selectedRoleId ?? ''}
                     onChange={(e) => setSelectedRoleId(e.target.value || null)}
                   >
@@ -564,11 +564,11 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
               </div>
 
               {!selectedRole ? (
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
                   Choose a role from the dropdown or switch to the Roles tab.
                 </p>
               ) : loadingPerms ? (
-                <p className="text-sm text-gray-500">Loading permissions…</p>
+                <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading permissions…</p>
               ) : (
                 <div className="space-y-4">
                   {selectedRole.isSystem && isPrivilegedRole(selectedRole.code) ? (
@@ -600,10 +600,10 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
                         <section key={scopeId}>
                           <div className="mb-3 flex items-center justify-between gap-3">
                             <div>
-                              <h3 className="text-sm font-semibold text-gray-900">{scope.label}</h3>
-                              <p className="text-xs text-gray-500">{scope.description}</p>
+                              <h3 className="text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">{scope.label}</h3>
+                              <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{scope.description}</p>
                             </div>
-                            <label className="flex items-center gap-2 text-xs text-gray-600">
+                            <label className="flex items-center gap-2 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                               <input
                                 type="checkbox"
                                 checked={allChecked}
@@ -619,7 +619,7 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
                             {scopePermissions.map((permission) => (
                               <label
                                 key={permission.id}
-                                className="flex cursor-pointer items-start gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
+                                className="flex cursor-pointer items-start gap-2 rounded-md border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
                               >
                                 <input
                                   type="checkbox"
@@ -628,8 +628,8 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
                                   onChange={() => togglePermission(permission.code)}
                                 />
                                 <span>
-                                  <span className="font-medium text-gray-900">{permission.name}</span>
-                                  <span className="block text-xs text-gray-500">{permission.code}</span>
+                                  <span className="font-medium text-[hsl(var(--dashboard-main-fg))]">{permission.name}</span>
+                                  <span className="block text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{permission.code}</span>
                                 </span>
                               </label>
                             ))}
@@ -641,12 +641,12 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
 
                   {activeScopeTab === 'other' && permissionsByScope.unscoped.length > 0 ? (
                     <section>
-                      <h3 className="mb-3 text-sm font-semibold text-gray-900">Other permissions</h3>
+                      <h3 className="mb-3 text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">Other permissions</h3>
                       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {permissionsByScope.unscoped.map((permission) => (
                           <label
                             key={permission.id}
-                            className="flex cursor-pointer items-start gap-2 rounded-md border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50"
+                            className="flex cursor-pointer items-start gap-2 rounded-md border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
                           >
                             <input
                               type="checkbox"
@@ -655,8 +655,8 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
                               onChange={() => togglePermission(permission.code)}
                             />
                             <span>
-                              <span className="font-medium text-gray-900">{permission.name}</span>
-                              <span className="block text-xs text-gray-500">{permission.code}</span>
+                              <span className="font-medium text-[hsl(var(--dashboard-main-fg))]">{permission.name}</span>
+                              <span className="block text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{permission.code}</span>
                             </span>
                           </label>
                         ))}

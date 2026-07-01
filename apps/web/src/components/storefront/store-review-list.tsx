@@ -15,7 +15,7 @@ function ReviewStars({ rating }: { rating: number }) {
         <Star
           key={index}
           className={`h-3.5 w-3.5 ${
-            index < rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200'
+            index < rating ? 'fill-amber-400 text-amber-400' : 'text-muted'
           }`}
           aria-hidden
         />
@@ -39,14 +39,14 @@ export function StoreReviewList({ reviews }: StoreReviewListProps) {
       {reviews.map((review) => (
         <li
           key={review.id}
-          className="rounded-brand-md border border-gray-200 bg-white p-4 shadow-brand-sm"
+          className="rounded-brand-md border border-border bg-card p-4 shadow-brand-sm"
         >
           <div className="flex items-start justify-between gap-3">
-            <p className="font-semibold text-gray-900">{review.reviewerName}</p>
+            <p className="font-semibold text-foreground">{review.reviewerName}</p>
             <ReviewStars rating={review.rating} />
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-gray-700">{review.comment}</p>
-          <p className="mt-3 text-xs text-gray-400">{formatDateTime(review.createdAt)}</p>
+          <p className="mt-2 text-sm leading-relaxed text-foreground">{review.comment}</p>
+          <p className="mt-3 text-xs text-muted-foreground/70">{formatDateTime(review.createdAt)}</p>
         </li>
       ))}
     </ul>

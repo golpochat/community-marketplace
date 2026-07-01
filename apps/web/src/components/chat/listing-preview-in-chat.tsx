@@ -11,7 +11,7 @@ export function ListingPreviewInChat({ preview }: ListingPreviewInChatProps) {
   return (
     <Link
       href={`/listings/${preview.id}`}
-      className="flex gap-3 rounded-lg border border-gray-200 bg-gray-50 p-2 hover:bg-gray-100"
+      className="flex gap-3 rounded-lg border border-border bg-muted/50 p-2 hover:bg-muted"
     >
       {preview.imageUrl && (
         // eslint-disable-next-line @next/next/no-img-element
@@ -22,8 +22,8 @@ export function ListingPreviewInChat({ preview }: ListingPreviewInChatProps) {
         />
       )}
       <div className="min-w-0">
-        <p className="truncate text-xs font-medium text-gray-900">{preview.title}</p>
-        <p className="text-xs text-gray-600">{formatCurrency(preview.price, preview.currency)}</p>
+        <p className="truncate text-xs font-medium text-foreground">{preview.title}</p>
+        <p className="text-xs text-muted-foreground">{formatCurrency(preview.price, preview.currency)}</p>
       </div>
     </Link>
   );

@@ -2,17 +2,26 @@
  * Canonical SellNearby brand tokens for email and server-rendered content.
  * Web UI uses CSS variables in apps/web/src/app/globals.css — keep primary hex in sync.
  */
+export const BRAND_MARK = 'beacon' as const;
+
+export type BrandMark = typeof BRAND_MARK;
+
 export const BRAND_COLORS = {
-  /** Matches --brand-primary (225 100% 61%) */
-  primary: '#3366FF',
-  primaryDark: '#2952CC',
-  textPrimary: '#111827',
-  textMuted: '#6B7280',
-  textFooter: '#9CA3AF',
-  surfacePage: '#F3F4F6',
+  /** Teal primary — local beacon mark (#0D9488) */
+  primary: '#0D9488',
+  primaryLight: '#2DD4BF',
+  primaryDark: '#0F766E',
+  /** Warm coral — CTAs & wordmark accent (#F97316) */
+  accent: '#F97316',
+  accentDark: '#EA580C',
+  trust: '#16A34A',
+  textPrimary: '#1C1917',
+  textMuted: '#78716C',
+  textFooter: '#A8A29E',
+  surfacePage: '#FAFAFA',
   surfaceCard: '#FFFFFF',
-  surfaceFooter: '#F9FAFB',
-  borderSubtle: '#E5E7EB',
+  surfaceFooter: '#0F766E',
+  borderSubtle: '#E4E4E7',
   white: '#FFFFFF',
 } as const;
 

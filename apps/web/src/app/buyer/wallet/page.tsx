@@ -36,17 +36,17 @@ export default function BuyerWalletPage() {
         title="SellNearby Credit"
         description="Earn cashback when you pay by card. Credits unlock after the cooling period."
       />
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
       {loading && (
         <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading wallet…</p>
       )}
       {wallet && (
         <div className="space-y-6">
           <DashboardCard title="Available balance">
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-3xl font-bold text-[hsl(var(--dashboard-main-fg))]">
               {formatCurrency(wallet.balance, 'EUR')}
             </p>
-            <p className="mt-3 text-sm text-gray-600">
+            <p className="mt-3 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               SellNearby Credit is building up in your wallet. Spending credits at checkout is
               coming soon.
             </p>
@@ -54,16 +54,16 @@ export default function BuyerWalletPage() {
 
           <DashboardCard title="Pending unlocks">
             {wallet.pendingUnlocks.length === 0 ? (
-              <p className="text-sm text-gray-600">No pending cashback.</p>
+              <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No pending cashback.</p>
             ) : (
               <ul className="space-y-2 text-sm">
                 {wallet.pendingUnlocks.map((item) => (
                   <li
                     key={item.grantId}
-                    className="flex justify-between rounded-lg border border-gray-200 px-3 py-2"
+                    className="flex justify-between rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2"
                   >
                     <span>{formatCurrency(item.amount, 'EUR')}</span>
-                    <span className="text-gray-600">
+                    <span className="text-[hsl(var(--dashboard-sidebar-muted))]">
                       Unlocks {new Date(item.unlockAt).toLocaleDateString()}
                     </span>
                   </li>
@@ -74,13 +74,13 @@ export default function BuyerWalletPage() {
 
           <DashboardCard title="Recent activity">
             {wallet.recentTransactions.length === 0 ? (
-              <p className="text-sm text-gray-600">No credit activity yet.</p>
+              <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No credit activity yet.</p>
             ) : (
               <ul className="space-y-2 text-sm">
                 {wallet.recentTransactions.map((tx) => (
                   <li
                     key={tx.id}
-                    className="flex justify-between rounded-lg border border-gray-200 px-3 py-2"
+                    className="flex justify-between rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2"
                   >
                     <span className="capitalize">{tx.type.replace('_', ' ')}</span>
                     <span>
@@ -93,7 +93,7 @@ export default function BuyerWalletPage() {
             )}
           </DashboardCard>
 
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
             Pay by card on purchases to earn {wallet.cashbackPercent}% SellNearby Credit. Credits
             unlock after {wallet.coolingDays} days if the purchase is not refunded. Credits expire
             after 6 months.

@@ -34,15 +34,15 @@ export function PricingPreviewModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] p-6 shadow-xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="pricing-preview-title"
       >
-        <h2 id="pricing-preview-title" className="text-lg font-semibold text-gray-900">
+        <h2 id="pricing-preview-title" className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
           Preview pricing
         </h2>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           Review how prices will appear for <strong>{preview.listingTitle}</strong>.
         </p>
 
@@ -62,18 +62,18 @@ export function PricingPreviewModal({
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <div>
-            <h3 className="text-sm font-medium text-gray-900">Current (live)</h3>
-            <div className="mt-2 text-sm text-gray-700">
+            <h3 className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Current (live)</h3>
+            <div className="mt-2 text-sm text-[hsl(var(--dashboard-main-fg))]">
               <p>{formatPrice(preview.current.price, currency)}</p>
               {preview.current.originalPrice != null && (
-                <p className="text-gray-500 line-through">
+                <p className="text-[hsl(var(--dashboard-sidebar-muted))] line-through">
                   Was {formatPrice(preview.current.originalPrice, currency)}
                 </p>
               )}
             </div>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-gray-900">Proposed</h3>
+            <h3 className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Proposed</h3>
             <div className="mt-2">
               <ListingPriceDisplay
                 price={preview.proposed.price}
@@ -93,13 +93,13 @@ export function PricingPreviewModal({
           </div>
         </div>
 
-        <div className="mt-6 space-y-4 rounded-lg border border-gray-200 p-4">
+        <div className="mt-6 space-y-4 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] p-4">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
               Listing card preview
             </p>
-            <div className="mt-2 rounded-lg border border-gray-100 bg-gray-50 p-3">
-              <p className="line-clamp-1 text-sm font-semibold text-gray-900">
+            <div className="mt-2 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-3">
+              <p className="line-clamp-1 text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">
                 {preview.listingTitle}
               </p>
               <ListingPriceDisplay
@@ -113,10 +113,10 @@ export function PricingPreviewModal({
             </div>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+            <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
               Detail page preview
             </p>
-            <div className="mt-2 rounded-lg border border-gray-100 bg-gray-50 p-3">
+            <div className="mt-2 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-3">
               <ListingPriceDisplay
                 price={preview.proposed.price}
                 originalPrice={preview.proposed.originalPrice}
@@ -131,11 +131,11 @@ export function PricingPreviewModal({
             preview.proposed.originalPrice != null &&
             preview.proposed.discountPercent != null && (
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
                   Featured image badge preview
                 </p>
-                <div className="relative mt-2 aspect-[4/3] overflow-hidden rounded-lg border border-gray-100 bg-gray-200">
-                  <div className="flex h-full items-center justify-center text-sm text-gray-500">
+                <div className="relative mt-2 aspect-[4/3] overflow-hidden rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.6)]">
+                  <div className="flex h-full items-center justify-center text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
                     Cover photo
                   </div>
                   <SaleBadgeOverlay

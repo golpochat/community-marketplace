@@ -20,10 +20,10 @@ function DistributionBar({ count, max }: { count: number; max: number }) {
   const width = max > 0 ? Math.round((count / max) * 100) : 0;
   return (
     <div className="flex items-center gap-3">
-      <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-[hsl(var(--dashboard-sidebar-active)/0.5)]">
         <div className="h-full rounded-full bg-indigo-500" style={{ width: `${width}%` }} />
       </div>
-      <span className="w-8 text-right text-sm font-medium text-gray-900">{count}</span>
+      <span className="w-8 text-right text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">{count}</span>
     </div>
   );
 }
@@ -84,7 +84,7 @@ export function AdminAnalyticsPage({ role }: { role: AdminServiceRole }) {
       {analytics && (
         <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               Last {days} days · updated {formatListedAgo(analytics.generatedAt)}
             </p>
             <div className="flex gap-2">
@@ -96,7 +96,7 @@ export function AdminAnalyticsPage({ role }: { role: AdminServiceRole }) {
                   className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                     days === option
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.7)]'
                   }`}
                 >
                   {option}d
@@ -118,12 +118,12 @@ export function AdminAnalyticsPage({ role }: { role: AdminServiceRole }) {
           <div className="grid gap-4 lg:grid-cols-2">
             <Card title="Report reasons">
               {analytics.reasonDistribution.length === 0 ? (
-                <p className="text-sm text-gray-500">No reports in this period.</p>
+                <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No reports in this period.</p>
               ) : (
                 <ul className="space-y-3">
                   {analytics.reasonDistribution.map((item) => (
                     <li key={item.reason}>
-                      <p className="mb-1 text-sm capitalize text-gray-700">
+                      <p className="mb-1 text-sm capitalize text-[hsl(var(--dashboard-main-fg))]">
                         {formatReason(item.reason)}
                       </p>
                       <DistributionBar count={item.count} max={maxReasonCount} />
@@ -135,19 +135,19 @@ export function AdminAnalyticsPage({ role }: { role: AdminServiceRole }) {
 
             <Card title="Appeal outcomes">
               {totalAppeals === 0 ? (
-                <p className="text-sm text-gray-500">No appeals in this period.</p>
+                <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No appeals in this period.</p>
               ) : (
                 <dl className="space-y-3 text-sm">
                   <div className="flex justify-between">
-                    <dt className="text-gray-600">Pending</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Pending</dt>
                     <dd className="font-medium text-amber-700">{analytics.appealOutcomes.pending}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-gray-600">Approved</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Approved</dt>
                     <dd className="font-medium text-emerald-700">{analytics.appealOutcomes.approved}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-gray-600">Rejected</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Rejected</dt>
                     <dd className="font-medium text-red-700">{analytics.appealOutcomes.rejected}</dd>
                   </div>
                 </dl>
@@ -158,7 +158,7 @@ export function AdminAnalyticsPage({ role }: { role: AdminServiceRole }) {
           <div className="grid gap-4 lg:grid-cols-2">
             <Card title="Most reported users">
               {analytics.mostReportedUsers.length === 0 ? (
-                <p className="text-sm text-gray-500">No user reports in this period.</p>
+                <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No user reports in this period.</p>
               ) : (
                 <DataTable
                   columns={['User', 'Reports']}
@@ -172,7 +172,7 @@ export function AdminAnalyticsPage({ role }: { role: AdminServiceRole }) {
 
             <Card title="Most reported listings">
               {analytics.mostReportedListings.length === 0 ? (
-                <p className="text-sm text-gray-500">No listing reports in this period.</p>
+                <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No listing reports in this period.</p>
               ) : (
                 <DataTable
                   columns={['Listing', 'Reports']}
@@ -187,13 +187,13 @@ export function AdminAnalyticsPage({ role }: { role: AdminServiceRole }) {
 
           <Card title="Content removals">
             <dl className="grid gap-4 sm:grid-cols-2">
-              <div className="flex justify-between rounded-lg bg-gray-50 px-4 py-3 text-sm">
-                <dt className="text-gray-600">Listings removed</dt>
-                <dd className="font-medium text-gray-900">{analytics.actionStats.deleteListings}</dd>
+              <div className="flex justify-between rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.35)] px-4 py-3 text-sm">
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Listings removed</dt>
+                <dd className="font-medium text-[hsl(var(--dashboard-main-fg))]">{analytics.actionStats.deleteListings}</dd>
               </div>
-              <div className="flex justify-between rounded-lg bg-gray-50 px-4 py-3 text-sm">
-                <dt className="text-gray-600">Messages removed</dt>
-                <dd className="font-medium text-gray-900">{analytics.actionStats.deleteMessages}</dd>
+              <div className="flex justify-between rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.35)] px-4 py-3 text-sm">
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Messages removed</dt>
+                <dd className="font-medium text-[hsl(var(--dashboard-main-fg))]">{analytics.actionStats.deleteMessages}</dd>
               </div>
             </dl>
           </Card>

@@ -53,6 +53,7 @@ export const DEFAULT_PLATFORM_PRICING: PlatformPricingConfig = {
     store_slot_2: { amount: 4.99, enabled: true },
     store_slot_3: { amount: 4.99, enabled: true },
     store_bundle_3: { amount: 7.99, enabled: true },
+    buyer_statement: { amount: 0.99, enabled: true },
     priority_message: { amount: 0.49, enabled: false },
     early_cashback_unlock: { amount: 0.99, enabled: false },
   },
@@ -95,6 +96,9 @@ export function mapPlatformPurchase(row: {
   packageType: string | null;
   providerPaymentId: string | null;
   fulfilledAt: Date | null;
+  receiptNumber?: string | null;
+  receiptKey?: string | null;
+  receiptGeneratedAt?: Date | null;
   metadata: Prisma.JsonValue | null;
   createdAt: Date;
   updatedAt: Date;
@@ -120,6 +124,8 @@ export function mapPlatformPurchase(row: {
     categoryId: typeof metadata.categoryId === 'string' ? metadata.categoryId : undefined,
     providerPaymentId: row.providerPaymentId ?? undefined,
     fulfilledAt: row.fulfilledAt?.toISOString(),
+    receiptNumber: row.receiptNumber ?? undefined,
+    invoiceAvailable: Boolean(row.receiptGeneratedAt && row.receiptKey),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

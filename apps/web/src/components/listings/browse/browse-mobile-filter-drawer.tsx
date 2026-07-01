@@ -37,13 +37,13 @@ export function BrowseMobileFilterDrawer({
 
       {open && typeof document !== 'undefined'
         ? createPortal(
-            <div className="fixed inset-0 z-50 flex flex-col bg-white lg:hidden">
-              <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4">
-                <h2 className="text-base font-semibold text-gray-900">Filters</h2>
+            <div className="fixed inset-0 z-50 flex flex-col bg-background lg:hidden">
+              <div className="flex items-center justify-between border-b border-border px-4 py-4">
+                <h2 className="text-base font-semibold text-foreground">Filters</h2>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="rounded-full p-2 text-gray-500 hover:bg-gray-100"
+                  className="rounded-lg p-2 text-muted-foreground transition-colors duration-150 hover:bg-muted"
                   aria-label="Close filters"
                 >
                   <X className="h-5 w-5" />
@@ -58,7 +58,7 @@ export function BrowseMobileFilterDrawer({
                 />
               </div>
 
-              <div className="flex gap-3 border-t border-gray-100 p-4">
+              <div className="flex gap-3 border-t border-border p-4">
                 <Button
                   type="button"
                   variant="outline"

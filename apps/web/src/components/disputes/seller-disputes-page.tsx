@@ -62,7 +62,7 @@ export function SellerDisputesPage() {
             >
               Previous
             </button>
-            <span className="px-2 py-1 text-sm text-gray-600">
+            <span className="px-2 py-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               Page {page} of {totalPages} ({meta?.total ?? 0} total)
             </span>
             <button

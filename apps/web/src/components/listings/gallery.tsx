@@ -52,7 +52,7 @@ interface AspectMediaFrameProps {
 
 function AspectMediaFrame({ children, className }: AspectMediaFrameProps) {
   return (
-    <div className={cn('relative aspect-video w-full overflow-hidden bg-gray-100', className)}>
+    <div className={cn('relative aspect-video w-full overflow-hidden bg-muted', className)}>
       {children}
     </div>
   );
@@ -220,7 +220,7 @@ export function Gallery({ images, title }: GalleryProps) {
 
   if (slides.length === 0) {
     return (
-      <AspectMediaFrame className="flex items-center justify-center rounded-xl text-gray-400">
+      <AspectMediaFrame className="flex items-center justify-center rounded-xl text-muted-foreground">
         No images
       </AspectMediaFrame>
     );

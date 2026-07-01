@@ -22,8 +22,8 @@ function ContactRow({
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
-        <div className="mt-0.5 text-sm text-gray-800">{children}</div>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        <div className="mt-0.5 text-sm text-foreground">{children}</div>
       </div>
     </div>
   );
@@ -47,10 +47,10 @@ export function StoreContactSection({ contact }: StoreContactSectionProps) {
         <ContactRow icon={<MapPin className="h-4 w-4" />} label="Address">
           <div>
             {contact.city ? (
-              <p className="text-base font-bold text-gray-900">{contact.city}</p>
+              <p className="text-base font-bold text-foreground">{contact.city}</p>
             ) : null}
             {contact.addressLine ? (
-              <p className={contact.city ? 'mt-0.5 text-gray-600' : 'font-medium text-gray-900'}>
+              <p className={contact.city ? 'mt-0.5 text-muted-foreground' : 'font-medium text-foreground'}>
                 {contact.addressLine}
               </p>
             ) : null}

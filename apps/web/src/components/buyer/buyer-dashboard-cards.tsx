@@ -28,16 +28,12 @@ export function BuyerDashboardCards({ stats, loading }: BuyerDashboardCardsProps
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {CARDS.map((card) => (
         <Link key={card.href} href={card.href} className="block">
-          <DashboardCard className="border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
-            <p className="text-sm font-medium text-gray-700">
-              {card.title}
-            </p>
-            <p className="mt-2 text-2xl font-bold text-gray-900">
+          <DashboardCard className="transition-shadow duration-150 hover:shadow-md">
+            <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">{card.title}</p>
+            <p className="mt-2 text-2xl font-bold tabular-nums text-[hsl(var(--dashboard-main-fg))]">
               {loading ? '…' : String(stats[card.key])}
             </p>
-            <p className="mt-1 text-xs text-gray-700">
-              {card.description}
-            </p>
+            <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{card.description}</p>
           </DashboardCard>
         </Link>
       ))}

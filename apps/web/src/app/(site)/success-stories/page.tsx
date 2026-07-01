@@ -35,15 +35,15 @@ export default function SuccessStoriesPage() {
         {STORIES.map((story) => (
           <figure
             key={story.quote}
-            className="rounded-xl border border-gray-200 bg-white p-5 shadow-brand-sm"
+            className="rounded-xl border border-border bg-card p-5 shadow-brand-sm"
           >
             <p className="text-xs font-semibold uppercase tracking-wide text-primary">{story.tag}</p>
-            <blockquote className="mt-2 text-gray-800">&ldquo;{story.quote}&rdquo;</blockquote>
-            <figcaption className="mt-3 text-sm text-gray-500">{story.area} Community</figcaption>
+            <blockquote className="mt-2 text-foreground">&ldquo;{story.quote}&rdquo;</blockquote>
+            <figcaption className="mt-3 text-sm text-muted-foreground">{story.area} Community</figcaption>
           </figure>
         ))}
       </div>
-      <p className="mt-8 text-gray-600">
+      <p className="mt-8 text-muted-foreground">
         Have your own story? Sell or buy locally and help build a safer community marketplace for
         everyone.
       </p>

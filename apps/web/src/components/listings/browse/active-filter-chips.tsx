@@ -23,11 +23,11 @@ function Chip({ chip }: { chip: ActiveFilterChip }) {
     <button
       type="button"
       onClick={chip.onRemove}
-      className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-[13px] font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50"
+      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-[13px] font-medium text-foreground transition-colors duration-150 hover:border-border hover:bg-muted"
       aria-label={`Remove filter ${chip.label}`}
     >
       {chip.label}
-      <X className="h-3.5 w-3.5 text-gray-400" aria-hidden />
+      <X className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
     </button>
   );
 }
@@ -45,7 +45,7 @@ export function ActiveFilterChips({
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2',
+        'flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2',
         className,
       )}
       aria-label="Active filters"

@@ -30,7 +30,7 @@ import { StoreBannerUpload } from './store-banner-upload';
 import { StoreLogoUpload } from './store-logo-upload';
 
 const TEXTAREA_CLASSES =
-  'flex min-h-[5rem] w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]';
+  'flex min-h-[5rem] w-full resize-y rounded-md border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] placeholder:text-[hsl(var(--dashboard-sidebar-muted))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]';
 
 const TAB_LABEL_MAX = 16;
 
@@ -184,7 +184,7 @@ export function SellerStorefrontSettings({
   if (!stores.length) {
     return (
       <div className="max-w-2xl space-y-6">
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
         {message && <p className="text-sm text-emerald-700">{message}</p>}
         <Card title="Create your storefront">
           <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
@@ -242,7 +242,7 @@ export function SellerStorefrontSettings({
 
   return (
     <div className="max-w-2xl space-y-6">
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
       {message && <p className="text-sm text-emerald-700">{message}</p>}
 
       <Card title="Storefronts">
@@ -273,10 +273,10 @@ export function SellerStorefrontSettings({
           )}
         </div>
 
-        <div className="mt-6 border-t border-gray-100 pt-6">
+        <div className="mt-6 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-6">
           {showCreateForm && canAddStore ? (
             <div className="space-y-4">
-              <p className="text-sm font-medium text-gray-900">New storefront</p>
+              <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">New storefront</p>
               <div>
                 <Label htmlFor="add-store-name">Store name</Label>
                 <Input
@@ -334,8 +334,8 @@ export function SellerStorefrontSettings({
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
                     {activeStore.isPrimary ? 'Primary storefront' : 'Storefront'}
-                    <span className="mx-1.5 text-gray-300">·</span>
-                    <span className="text-gray-900">{activeStore.name}</span>
+                    <span className="mx-1.5 text-[hsl(var(--dashboard-sidebar-muted))]">·</span>
+                    <span className="text-[hsl(var(--dashboard-main-fg))]">{activeStore.name}</span>
                   </p>
                   <Link
                     href={getPublicStorefrontPath(activeStore.slug)}

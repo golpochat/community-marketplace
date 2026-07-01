@@ -30,9 +30,9 @@ export function AdminSellerVerificationGuard({ children }: { children: React.Rea
         error="Insufficient permissions"
         empty={false}
       >
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           You do not have permission to access this module. Contact a super admin if you need{' '}
-          <code className="rounded bg-slate-100 px-1">review_seller_verification</code>.
+          <code className="rounded bg-[hsl(var(--dashboard-sidebar-active)/0.5)] px-1">review_seller_verification</code>.
         </p>
       </DashboardPageShell>
     );

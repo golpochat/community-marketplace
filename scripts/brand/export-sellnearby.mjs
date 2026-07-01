@@ -26,7 +26,14 @@ const require = createRequire(path.join(ROOT, 'apps/web/package.json'));
 
 const sharp = require('sharp');
 
-import { BRAND, LOGO_RASTER_SIZES, LOGO_VARIANTS, iconMarkSvg, resolveTheme } from './sellnearby-shared.svg.js';
+import {
+  BRAND,
+  LOGO_RASTER_SIZES,
+  LOGO_VARIANTS,
+  iconAppRoundedSvg,
+  iconMarkSvg,
+  resolveTheme,
+} from './sellnearby-shared.svg.js';
 
 
 
@@ -140,15 +147,14 @@ async function main() {
 
   await mkdir(ICONS_DIR, { recursive: true });
 
+  const iconAppSvg = iconAppRoundedSvg();
   await writeFile(path.join(ICONS_DIR, 'icon.svg'), iconSvgFlat.trim() + '\n', 'utf8');
+  await writeFile(path.join(ICONS_DIR, 'icon-app.svg'), iconAppSvg.trim() + '\n', 'utf8');
 
-  await rasterize(iconSvgFlat, 512, 512, path.join(ICONS_DIR, 'icon-512.png'), 'png');
-
-  await rasterize(iconSvgFlat, 192, 192, path.join(ICONS_DIR, 'icon-192.png'), 'png');
-
+  await rasterize(iconAppSvg, 512, 512, path.join(ICONS_DIR, 'icon-512.png'), 'png');
+  await rasterize(iconAppSvg, 192, 192, path.join(ICONS_DIR, 'icon-192.png'), 'png');
   await rasterize(iconSvgFlat, 32, 32, path.join(ICONS_DIR, 'favicon-32.png'), 'png');
-
-  await rasterize(iconSvgFlat, 180, 180, path.join(ICONS_DIR, 'apple-touch-icon.png'), 'png');
+  await rasterize(iconAppSvg, 180, 180, path.join(ICONS_DIR, 'apple-touch-icon.png'), 'png');
 
 
 

@@ -41,7 +41,7 @@ export function DisputeEvidenceUpload({
   return (
     <Card title="Upload evidence">
       <form onSubmit={handleSubmit} className="space-y-3">
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
         {success ? (
           <p className="text-sm text-emerald-700">Evidence uploaded successfully.</p>
         ) : null}
@@ -49,19 +49,19 @@ export function DisputeEvidenceUpload({
           type="file"
           accept="image/*,video/*"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="block w-full text-sm text-gray-700"
+          className="block w-full text-sm text-[hsl(var(--dashboard-main-fg))]"
         />
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={2}
           placeholder="Optional description…"
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
         />
         <button
           type="submit"
           disabled={!file || uploading}
-          className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-50"
+          className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)] disabled:opacity-50"
         >
           {uploading ? 'Uploading…' : 'Upload'}
         </button>

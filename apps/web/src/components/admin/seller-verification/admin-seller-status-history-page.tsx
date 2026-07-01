@@ -62,7 +62,7 @@ export function AdminSellerStatusHistoryPage({ role }: { role: AdminServiceRole 
           }}
         >
           <div className="min-w-[16rem] flex-1">
-            <label htmlFor="history-seller-id" className="mb-1 block text-sm font-medium text-slate-700">
+            <label htmlFor="history-seller-id" className="mb-1 block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
               Seller user ID
             </label>
             <input
@@ -71,7 +71,7 @@ export function AdminSellerStatusHistoryPage({ role }: { role: AdminServiceRole 
               value={userId}
               onChange={(e) => setUserId(e.target.value)}
               placeholder="Paste seller user ID"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
             />
           </div>
           <button
@@ -83,7 +83,7 @@ export function AdminSellerStatusHistoryPage({ role }: { role: AdminServiceRole 
         </form>
 
         {!searchUserId ? (
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
             Enter a seller user ID to view their verification status change history. You can copy
             the ID from any row in the verification queues.
           </p>
@@ -93,7 +93,7 @@ export function AdminSellerStatusHistoryPage({ role }: { role: AdminServiceRole 
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-500">
+                <tr className="border-b border-[hsl(var(--dashboard-sidebar-border))] text-[hsl(var(--dashboard-sidebar-muted))]">
                   <th className="px-3 py-2 font-medium">Old status</th>
                   <th className="px-3 py-2 font-medium">New status</th>
                   <th className="px-3 py-2 font-medium">Changed by</th>
@@ -103,18 +103,18 @@ export function AdminSellerStatusHistoryPage({ role }: { role: AdminServiceRole 
               </thead>
               <tbody>
                 {data.map((row) => (
-                  <tr key={row.id} className="border-b border-slate-100">
+                  <tr key={row.id} className="border-b border-[hsl(var(--dashboard-sidebar-border))]">
                     <td className="px-3 py-2">
                       <SellerStatusBadge status={row.oldStatus} />
                     </td>
                     <td className="px-3 py-2">
                       <SellerStatusBadge status={row.newStatus} />
                     </td>
-                    <td className="px-3 py-2 text-slate-700">
+                    <td className="px-3 py-2 text-[hsl(var(--dashboard-main-fg))]">
                       {row.changedByName ?? (row.changedBy ? row.changedBy.slice(0, 8) : 'System')}
                     </td>
-                    <td className="px-3 py-2 text-slate-700">{row.reason ?? '—'}</td>
-                    <td className="px-3 py-2 text-slate-600">{formatDateTime(row.createdAt)}</td>
+                    <td className="px-3 py-2 text-[hsl(var(--dashboard-main-fg))]">{row.reason ?? '—'}</td>
+                    <td className="px-3 py-2 text-[hsl(var(--dashboard-sidebar-muted))]">{formatDateTime(row.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

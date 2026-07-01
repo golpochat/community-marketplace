@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 
 import { PERMISSIONS } from '@community-marketplace/types';
 import {
@@ -48,6 +49,20 @@ export class BuyerPaymentsController {
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20,
     );
+  }
+
+  @RequirePermissions(PERMISSIONS.VIEW_PAYMENTS)
+  @Get(':id/receipt')
+  async downloadReceipt(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Res() res: Response,
+  ) {
+    await this.access.assertCanViewPayment(id, user.id, user.role);
+    const file = await this.paymentsService.getBuyerReceiptFile(id, user.id);
+    res.setHeader('Content-Type', file.contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
+    res.send(file.buffer);
   }
 
   @RequirePermissions(PERMISSIONS.VIEW_PAYMENTS)

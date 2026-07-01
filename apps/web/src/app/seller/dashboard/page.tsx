@@ -44,7 +44,7 @@ export default function SellerDashboardPage() {
       />
 
       {error ? (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
         </p>
       ) : null}
@@ -108,7 +108,7 @@ export default function SellerDashboardPage() {
             <CreateListingButton
               label="Create a new listing"
               className="inline-flex w-full items-center justify-center rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2.5 text-sm font-medium text-white hover:opacity-90 sm:w-auto"
-              disabledClassName="inline-flex w-full cursor-not-allowed items-center justify-center rounded-lg bg-gray-300 px-4 py-2.5 text-sm font-medium text-gray-500 sm:w-auto"
+              disabledClassName="inline-flex w-full cursor-not-allowed items-center justify-center rounded-lg bg-muted px-4 py-2.5 text-sm font-medium text-muted-foreground sm:w-auto"
             />
           </div>
         </>

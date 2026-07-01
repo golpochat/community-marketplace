@@ -15,7 +15,7 @@ function CreateDisputePageContent() {
   if (!listingId) {
     return (
       <DashboardPageShell title="Open dispute" description="Missing listing information.">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           Open a dispute from your purchase history after a successful payment.
         </p>
       </DashboardPageShell>

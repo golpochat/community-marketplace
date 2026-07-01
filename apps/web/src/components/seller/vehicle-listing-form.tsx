@@ -166,7 +166,7 @@ interface VehicleListingFormProps {
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="mt-1 text-xs text-red-600">{message}</p>;
+  return <p className="mt-1 text-xs text-destructive">{message}</p>;
 }
 
 export function VehicleListingForm({
@@ -552,7 +552,7 @@ export function VehicleListingForm({
       />
 
       {validationError && (
-        <p className="mb-4 text-sm text-red-600">{validationError}</p>
+        <p className="mb-4 text-sm text-destructive">{validationError}</p>
       )}
 
       {step === 0 && (
@@ -606,7 +606,7 @@ export function VehicleListingForm({
           />
           {previewTitle && (
             <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-              Buyers will see: <span className="font-medium text-gray-900">{previewTitle}</span>
+              Buyers will see: <span className="font-medium text-[hsl(var(--dashboard-main-fg))]">{previewTitle}</span>
             </p>
           )}
         </div>
@@ -809,7 +809,7 @@ export function VehicleListingForm({
               onChange={(e) => update({ sellerNotes: e.target.value })}
               rows={5}
               disabled={disabled}
-              className="mt-1 w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-white px-3 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm"
               placeholder="Service history, extras, known issues…"
             />
           </div>
@@ -960,25 +960,25 @@ export function VehicleListingForm({
           <dl className="grid gap-2 sm:grid-cols-2">
             {(attrs.yearText || attrs.year != null) && (
               <>
-                <dt className="text-gray-500">Year</dt>
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Year</dt>
                 <dd>{attrs.yearText ?? attrs.year}</dd>
               </>
             )}
             {attrs.make && (
               <>
-                <dt className="text-gray-500">Make</dt>
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Make</dt>
                 <dd>{attrs.make}</dd>
               </>
             )}
             {attrs.model && (
               <>
-                <dt className="text-gray-500">Model</dt>
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Model</dt>
                 <dd>{attrs.model}</dd>
               </>
             )}
             {attrs.mileage != null && (
               <>
-                <dt className="text-gray-500">Mileage</dt>
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Mileage</dt>
                 <dd>
                   {attrs.mileage.toLocaleString()} {attrs.mileageUnit ?? "km"}
                 </dd>
@@ -986,13 +986,13 @@ export function VehicleListingForm({
             )}
             {attrs.fuelType && (
               <>
-                <dt className="text-gray-500">Fuel</dt>
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Fuel</dt>
                 <dd>{attrs.fuelType}</dd>
               </>
             )}
             {attrs.transmission && (
               <>
-                <dt className="text-gray-500">Transmission</dt>
+                <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Transmission</dt>
                 <dd>{attrs.transmission}</dd>
               </>
             )}
@@ -1003,9 +1003,9 @@ export function VehicleListingForm({
             </p>
           )}
           {reviewDeliveryLabel && (
-            <p className="text-gray-600">{reviewDeliveryLabel}</p>
+            <p className="text-[hsl(var(--dashboard-sidebar-muted))]">{reviewDeliveryLabel}</p>
           )}
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
             Description preview: {buildVehicleDescription(data, attrs).slice(0, 120)}
             …
           </p>

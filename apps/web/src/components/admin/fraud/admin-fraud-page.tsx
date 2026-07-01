@@ -29,7 +29,7 @@ type FraudTab = 'users' | 'listings' | 'signals';
 function RiskBadge({ score }: { score: number }) {
   const level = fraudRiskLevel(score);
   const styles = {
-    low: 'bg-gray-100 text-gray-700',
+    low: 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-main-fg))]',
     medium: 'bg-amber-100 text-amber-900',
     high: 'bg-orange-100 text-orange-900',
     critical: 'bg-red-100 text-red-900',
@@ -43,13 +43,13 @@ function RiskBadge({ score }: { score: number }) {
 }
 
 function BreakdownList({ items }: { items: FraudRiskBreakdownItem[] }) {
-  if (!items.length) return <p className="text-sm text-gray-500">No active signals.</p>;
+  if (!items.length) return <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No active signals.</p>;
   return (
     <ul className="space-y-2 text-sm">
       {items.map((item) => (
         <li key={item.signalType} className="flex justify-between gap-4">
-          <span className="text-gray-700">{item.label}</span>
-          <span className="font-medium text-gray-900">
+          <span className="text-[hsl(var(--dashboard-main-fg))]">{item.label}</span>
+          <span className="font-medium text-[hsl(var(--dashboard-main-fg))]">
             {item.count}× ({item.totalScore} pts)
           </span>
         </li>
@@ -178,7 +178,7 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
             className={`rounded-full px-3 py-1 text-sm ${
               tab === item.id
                 ? 'bg-[hsl(var(--dashboard-accent))] text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.7)]'
             }`}
           >
             {item.label}
@@ -234,30 +234,30 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
 
         <Card title={breakdown ? 'Risk breakdown & actions' : 'Select a seller'}>
           {!selectedUserId ? (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               Select a high-risk seller to view signal breakdown and take action.
             </p>
           ) : !breakdown ? (
-            <p className="text-sm text-gray-500">Loading breakdown…</p>
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading breakdown…</p>
           ) : (
             <div className="space-y-4">
-              {actionError ? <p className="text-sm text-red-600">{actionError}</p> : null}
+              {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
               <div className="flex flex-wrap items-center gap-2">
-                <p className="font-medium text-gray-900">
+                <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">
                   {breakdown.displayName ?? breakdown.email}
                 </p>
                 <RiskBadge score={breakdown.riskScore} />
               </div>
 
               <div>
-                <p className="mb-2 text-sm font-medium text-gray-900">Signal breakdown</p>
+                <p className="mb-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Signal breakdown</p>
                 <BreakdownList items={breakdown.breakdown} />
               </div>
 
               {signals.length > 0 ? (
                 <div>
-                  <p className="mb-2 text-sm font-medium text-gray-900">Recent signals</p>
-                  <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-gray-600">
+                  <p className="mb-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Recent signals</p>
+                  <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                     {signals.slice(0, 10).map((s) => (
                       <li key={s.id}>
                         {FRAUD_SIGNAL_LABELS[s.signalType]}: {s.signalValue}
@@ -267,7 +267,7 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
                 </div>
               ) : null}
 
-              <div className="flex flex-wrap gap-2 border-t border-gray-200 pt-4">
+              <div className="flex flex-wrap gap-2 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-4">
                 <button
                   type="button"
                   disabled={acting}
@@ -276,7 +276,7 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
                       adminFraudService.markSafe(role, { userId: selectedUserId }),
                     )
                   }
-                  className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+                  className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm font-medium hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)] disabled:opacity-50"
                 >
                   Mark safe
                 </button>
@@ -340,7 +340,7 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
                       adminService.removeListing(role, listingId.trim(), reason),
                     );
                   }}
-                  className="rounded-lg bg-gray-700 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
                 >
                   Remove listing
                 </button>

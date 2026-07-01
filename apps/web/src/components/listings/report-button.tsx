@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 import { MODERATION_REPORT_REASONS } from '@community-marketplace/types';
-import { Button, Select } from '@community-marketplace/ui';
+import { Button, Label, Select } from '@community-marketplace/ui';
 
 import { Modal } from '@/components/shared/modal';
 import { useAuth } from '@/hooks/use-auth';
@@ -12,6 +12,7 @@ import { buyerService } from '@/services/marketplace.service';
 
 interface ReportButtonProps {
   listingId: string;
+  className?: string;
 }
 
 const REASON_LABELS: Record<(typeof MODERATION_REPORT_REASONS)[number], string> = {
@@ -23,7 +24,7 @@ const REASON_LABELS: Record<(typeof MODERATION_REPORT_REASONS)[number], string> 
   fake_listing: 'Fake listing',
 };
 
-export function ReportButton({ listingId }: ReportButtonProps) {
+export function ReportButton({ listingId, className }: ReportButtonProps) {
   const { isAuthenticated, user } = useAuth();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<(typeof MODERATION_REPORT_REASONS)[number]>('fake_listing');
@@ -56,7 +57,7 @@ export function ReportButton({ listingId }: ReportButtonProps) {
   if (!isAuthenticated) {
     return (
       <Link href={`/auth/login?redirect=/listings/${listingId}`}>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" className={className}>
           Report listing
         </Button>
       </Link>
@@ -65,12 +66,10 @@ export function ReportButton({ listingId }: ReportButtonProps) {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+      <Button variant="outline" className={className} onClick={() => setOpen(true)}>
         Report listing
       </Button>
-      {success && (
-        <span className="text-xs text-green-700">Report submitted. Thank you.</span>
-      )}
+      {success && <span className="sr-only">Report submitted. Thank you.</span>}
       <Modal
         open={open}
         onOpenChange={setOpen}
@@ -79,12 +78,10 @@ export function ReportButton({ listingId }: ReportButtonProps) {
         confirmLabel={loading ? 'Submitting…' : 'Submit report'}
         onConfirm={() => void handleReport()}
       >
-        {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
         <div className="space-y-3">
-          <div>
-            <label htmlFor="report-reason" className="mb-1 block text-sm font-medium text-gray-700">
-              Reason
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="report-reason">Reason</Label>
             <Select
               id="report-reason"
               value={reason}
@@ -99,19 +96,14 @@ export function ReportButton({ listingId }: ReportButtonProps) {
               ))}
             </Select>
           </div>
-          <div>
-            <label
-              htmlFor="report-description"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
-              Details (optional)
-            </label>
+          <div className="space-y-2">
+            <Label htmlFor="report-description">Details (optional)</Label>
             <textarea
               id="report-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors duration-150 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               placeholder="Additional context for moderators…"
             />
           </div>

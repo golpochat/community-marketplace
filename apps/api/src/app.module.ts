@@ -21,6 +21,7 @@ import { HealthModule } from './modules/health/health.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
 import { ListingsModule } from './modules/listings/listings.module';
 import { MonetizationModule } from './modules/monetization/monetization.module';
+import { StatementsModule } from './modules/statements/statements.module';
 import { ModerationModule } from './modules/moderation/moderation.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PaymentsModule } from './modules/payments/payments.module';
@@ -50,6 +51,7 @@ import { UtilsModule } from './utils/utils.module';
     ChatModule,
     PaymentsModule,
     MonetizationModule,
+    StatementsModule,
     NotificationsModule,
     SearchModule,
     ModerationModule,

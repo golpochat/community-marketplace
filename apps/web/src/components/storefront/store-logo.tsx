@@ -13,7 +13,7 @@ export function StoreLogo({ logoUrl, name, className = '' }: StoreLogoProps) {
 
   return (
     <div
-      className={`relative z-10 shrink-0 overflow-hidden rounded-full border-4 border-white bg-white shadow-md ${STOREFRONT_LOGO_SIZE_CLASS} ${className}`}
+      className={`relative z-10 shrink-0 overflow-hidden rounded-full border-4 border-white bg-card shadow-md ${STOREFRONT_LOGO_SIZE_CLASS} ${className}`}
     >
       {logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element

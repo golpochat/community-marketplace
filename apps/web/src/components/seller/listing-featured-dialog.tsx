@@ -33,6 +33,8 @@ export function ListingFeaturedDialog({
 }: ListingFeaturedDialogProps) {
   const [catalog, setCatalog] = useState<FeaturedCatalogResponse | null>(null);
   const [intent, setIntent] = useState<FeaturedIntentResponse | null>(null);
+  const [completedPurchaseId, setCompletedPurchaseId] = useState<string | null>(null);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,6 +42,7 @@ export function ListingFeaturedDialog({
     if (!open) {
       setCatalog(null);
       setIntent(null);
+      setCompletedPurchaseId(null);
       setError(null);
       return;
     }
@@ -72,9 +75,16 @@ export function ListingFeaturedDialog({
     setLoading(true);
     setError(null);
     try {
+      const categoryId = catalog?.listing?.categoryId;
+      if (placement === 'category' && !categoryId) {
+        setError('This listing has no category. Edit the listing and choose a category first.');
+        return;
+      }
+
       const response = await monetizationService.createFeaturedIntent({
         listingId,
         placement,
+        ...(placement === 'category' ? { categoryId: categoryId! } : {}),
       });
       setIntent(response);
     } catch (err) {
@@ -90,25 +100,50 @@ export function ListingFeaturedDialog({
         role="dialog"
         aria-modal
         aria-labelledby="featured-dialog-title"
-        className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg"
+        className="w-full max-w-md rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] p-6 shadow-lg"
       >
-        <h2 id="featured-dialog-title" className="text-lg font-semibold text-gray-900">
+        <h2 id="featured-dialog-title" className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
           Feature listing
         </h2>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           Get premium placement on the homepage or in your category for 24 hours.
         </p>
 
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
 
         {loading && !catalog && !intent && (
-          <p className="mt-4 text-sm text-gray-500">Loading featured options…</p>
+          <p className="mt-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading featured options…</p>
         )}
 
-        {catalog && !intent && (
+        {completedPurchaseId && (
+          <div className="mt-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+            <p className="font-medium">Payment successful — your listing is now featured.</p>
+            <p className="mt-1 text-green-800">
+              Your PDF invoice was emailed to you. You can also download it below.
+            </p>
+            <button
+              type="button"
+              disabled={downloadingInvoice}
+              onClick={() => {
+                setDownloadingInvoice(true);
+                void monetizationService
+                  .downloadSellerInvoice(completedPurchaseId)
+                  .catch((err) => {
+                    setError(err instanceof Error ? err.message : 'Failed to download invoice');
+                  })
+                  .finally(() => setDownloadingInvoice(false));
+              }}
+              className="mt-3 rounded-md border border-green-300 bg-white px-3 py-1.5 text-xs font-medium text-green-900 hover:bg-green-100 disabled:opacity-50"
+            >
+              {downloadingInvoice ? 'Downloading…' : 'Download invoice'}
+            </button>
+          </div>
+        )}
+
+        {catalog && !intent && !completedPurchaseId && (
           <div className="mt-4 space-y-2">
             {!catalog.featuredEnabled && (
-              <p className="text-sm text-gray-500">Featured listings are not available right now.</p>
+              <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Featured listings are not available right now.</p>
             )}
             {catalog.options.map((option) => (
               <button
@@ -116,21 +151,21 @@ export function ListingFeaturedDialog({
                 type="button"
                 disabled={!catalog.featuredEnabled || !option.eligible || loading}
                 onClick={() => void startCheckout(option.placement)}
-                className="flex w-full items-start justify-between rounded-lg border border-gray-200 px-3 py-3 text-left hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex w-full items-start justify-between rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-3 text-left hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <span>
-                  <span className="block text-sm font-medium text-gray-900">{option.label}</span>
-                  <span className="block text-xs text-gray-500">
+                  <span className="block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">{option.label}</span>
+                  <span className="block text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                     {option.durationHours}h · Featured badge + premium placement
                   </span>
-                  <span className="mt-1 block text-xs text-gray-500">
+                  <span className="mt-1 block text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                     {slotAvailabilityText(option)}
                   </span>
                   {option.reason && (
                     <span className="mt-1 block text-xs text-amber-700">{option.reason}</span>
                   )}
                 </span>
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">
                   €{option.price.toFixed(2)}
                 </span>
               </button>
@@ -147,15 +182,16 @@ export function ListingFeaturedDialog({
           </div>
         )}
 
-        {intent && (
+        {intent && !completedPurchaseId && (
           <div className="mt-4">
             <BoostCheckoutPanel
               intent={intent}
               confirmPurchase={monetizationService.confirmFeatured}
               confirmLabel="Pay and feature"
               onSuccess={() => {
+                setCompletedPurchaseId(intent.purchase.id);
+                setIntent(null);
                 onSuccess();
-                onClose();
               }}
             />
           </div>
@@ -165,7 +201,7 @@ export function ListingFeaturedDialog({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
           >
             Close
           </button>

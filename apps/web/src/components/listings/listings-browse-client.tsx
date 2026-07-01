@@ -99,15 +99,15 @@ export function ListingsBrowseClient() {
   return (
     <div className={SITE_PAGE_CLASS}>
       <header className="mb-6 space-y-1">
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Browse listings</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Browse listings</h1>
+        <p className="text-sm text-muted-foreground">
           Discover items from trusted sellers in your community
         </p>
       </header>
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <div className="hidden w-full shrink-0 lg:block lg:w-72 xl:w-80">
-          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-3 shadow-brand-sm">
+          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-border bg-card p-3 shadow-brand-sm">
             <BrowseFilterSidebar
               categories={categories}
               filters={filters}

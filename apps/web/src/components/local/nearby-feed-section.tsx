@@ -147,9 +147,9 @@ export function NearbyFeedSection({ initialListings = [] }: NearbyFeedSectionPro
 
   if (locationLoading && !location) {
     return (
-      <section className="py-12">
+      <section className="surface-band py-12">
         <div className="mx-auto max-w-6xl px-4">
-          <p className="text-sm text-gray-500">Finding listings near you…</p>
+          <p className="text-sm text-muted-foreground">Finding listings near you…</p>
         </div>
       </section>
     );
@@ -169,13 +169,13 @@ export function NearbyFeedSection({ initialListings = [] }: NearbyFeedSectionPro
         }}
       />
 
-      <section className="py-12">
+      <section className="surface-band py-12">
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Near you</h2>
-                <p className="mt-1 text-sm text-gray-600">
+                <h2 className="text-2xl font-bold text-foreground">Near you</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                   {locationLabel
                     ? `Newest listings near ${locationLabel}`
                     : `Newest listings within ${radiusKm} km of your area`}
@@ -204,10 +204,10 @@ export function NearbyFeedSection({ initialListings = [] }: NearbyFeedSectionPro
           </div>
 
           {feedLoading ? (
-            <p className="mt-8 text-sm text-gray-500">Loading local listings…</p>
+            <p className="mt-8 text-sm text-muted-foreground">Loading local listings…</p>
           ) : feedError ? (
             <div className="mt-8 rounded-xl border border-dashed border-amber-200 bg-amber-50 px-6 py-10 text-center">
-              <p className="text-sm font-medium text-gray-900">{feedError}</p>
+              <p className="text-sm font-medium text-foreground">{feedError}</p>
               {location && (
                 <Button
                   variant="outline"
@@ -221,9 +221,9 @@ export function NearbyFeedSection({ initialListings = [] }: NearbyFeedSectionPro
               )}
             </div>
           ) : listings.length === 0 ? (
-            <div className="mt-8 rounded-xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center">
-              <p className="text-sm font-medium text-gray-900">No listings nearby</p>
-              <p className="mt-1 text-sm text-gray-600">
+            <div className="mt-8 rounded-xl border border-dashed border-border bg-muted/50 px-6 py-10 text-center">
+              <p className="text-sm font-medium text-foreground">No listings nearby</p>
+              <p className="mt-1 text-sm text-muted-foreground">
                 We expanded the search to {EXPANDED_NEARBY_RADIUS_KM} km but found nothing in your area yet.
               </p>
               <Link href="/listings" className="mt-4 inline-block">

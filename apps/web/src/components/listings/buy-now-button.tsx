@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 import type { Listing } from '@community-marketplace/types';
+import { Button } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
@@ -58,17 +59,18 @@ export function BuyNowButton({ listing, className }: BuyNowButtonProps) {
 
   return (
     <div className={className}>
-      <button
+      <Button
         type="button"
-        onClick={() => void handleBuy()}
+        className="w-full font-semibold shadow-brand-sm"
+        size="default"
         disabled={loading}
-        className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-brand-sm hover:opacity-90 disabled:opacity-50"
+        onClick={() => void handleBuy()}
       >
         {loading ? 'Redirecting to checkout…' : 'Buy now'}
-      </button>
-      {error && <p className="mt-2 text-center text-xs text-red-600">{error}</p>}
+      </Button>
+      {error && <p className="mt-2 text-center text-xs text-destructive">{error}</p>}
       {!isAuthenticated && (
-        <p className="mt-2 text-center text-xs text-gray-500">
+        <p className="mt-2 text-center text-xs text-muted-foreground">
           <Link href={WEB_APP_ROUTES.login} className="font-medium text-primary hover:underline">
             Log in
           </Link>

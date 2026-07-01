@@ -13,7 +13,7 @@ import {
 } from '@community-marketplace/utils';
 
 const TEXTAREA_CLASSES =
-  'flex min-h-[4.5rem] w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]';
+  'flex min-h-[4.5rem] w-full resize-y rounded-md border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] placeholder:text-[hsl(var(--dashboard-sidebar-muted))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]';
 
 const WEEKDAYS: StoreWeekday[] = [
   'monday',
@@ -103,10 +103,10 @@ export function StorePublicDetailsForm({
   }
 
   return (
-    <div className="space-y-8 border-t border-gray-100 pt-6">
+    <div className="space-y-8 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-6">
       <section className="space-y-4">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Contact on your storefront</h3>
+          <h3 className="text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">Contact on your storefront</h3>
           <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
             Shown to buyers on this shop only. Your login email stays private unless you add it here.
           </p>
@@ -158,7 +158,7 @@ export function StorePublicDetailsForm({
               type="checkbox"
               checked={Boolean(contact.showPhone)}
               onChange={(e) => onContactChange({ ...contact, showPhone: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-[hsl(var(--dashboard-sidebar-border))]"
             />
             Show phone publicly
           </label>
@@ -167,7 +167,7 @@ export function StorePublicDetailsForm({
               type="checkbox"
               checked={Boolean(contact.showEmail)}
               onChange={(e) => onContactChange({ ...contact, showEmail: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-[hsl(var(--dashboard-sidebar-border))]"
             />
             Show email publicly
           </label>
@@ -176,7 +176,7 @@ export function StorePublicDetailsForm({
               type="checkbox"
               checked={contact.showAddress !== false}
               onChange={(e) => onContactChange({ ...contact, showAddress: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-[hsl(var(--dashboard-sidebar-border))]"
             />
             Show address publicly
           </label>
@@ -186,7 +186,7 @@ export function StorePublicDetailsForm({
       <section className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Opening hours</h3>
+            <h3 className="text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">Opening hours</h3>
             <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
               Standard hours are pre-filled. Adjust or mark days as closed.
             </p>
@@ -200,21 +200,21 @@ export function StorePublicDetailsForm({
             Reset to standard hours
           </Button>
         </div>
-        <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+        <ul className="divide-y divide-[hsl(var(--dashboard-sidebar-border))] rounded-lg border border-[hsl(var(--dashboard-sidebar-border))]">
           {WEEKDAYS.map((day) => {
             const hours = openingHours.schedule[day];
             const closed = Boolean(hours?.closed);
             return (
               <li key={day} className="flex flex-wrap items-center gap-3 px-3 py-2.5 text-sm">
-                <span className="w-24 font-medium text-gray-700">{WEEKDAY_LABELS[day]}</span>
-                <label className="flex items-center gap-2 text-gray-600">
+                <span className="w-24 font-medium text-[hsl(var(--dashboard-main-fg))]">{WEEKDAY_LABELS[day]}</span>
+                <label className="flex items-center gap-2 text-[hsl(var(--dashboard-sidebar-muted))]">
                   <input
                     type="checkbox"
                     checked={!closed}
                     onChange={(e) =>
                       updateDay(day, e.target.checked ? { closed: false } : { closed: true })
                     }
-                    className="h-4 w-4 rounded border-gray-300"
+                    className="h-4 w-4 rounded border-[hsl(var(--dashboard-sidebar-border))]"
                   />
                   Open
                 </label>
@@ -226,7 +226,7 @@ export function StorePublicDetailsForm({
                       onChange={(e) => updateDay(day, { open: e.target.value })}
                       className="w-[7.5rem]"
                     />
-                    <span className="text-gray-400">–</span>
+                    <span className="text-[hsl(var(--dashboard-sidebar-muted))]">–</span>
                     <Input
                       type="time"
                       value={hours?.close ?? '18:00'}
@@ -253,7 +253,7 @@ export function StorePublicDetailsForm({
       <section className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Seller policies</h3>
+            <h3 className="text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">Seller policies</h3>
             <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
               Buyer-facing policies for this storefront. Edit the template text to match how you sell.
             </p>

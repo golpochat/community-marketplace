@@ -108,9 +108,9 @@ export function VerificationReviewModal({
       aria-modal="true"
       aria-labelledby="verification-review-title"
     >
-      <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-white shadow-xl">
-        <div className="border-b border-slate-200 px-6 py-4">
-          <h2 id="verification-review-title" className="text-lg font-semibold text-slate-900">
+      <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] shadow-xl">
+        <div className="border-b border-[hsl(var(--dashboard-sidebar-border))] px-6 py-4">
+          <h2 id="verification-review-title" className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
             {isAlreadyVerified
               ? `Verified seller – ${sellerLabel}`
               : canDecide
@@ -122,15 +122,15 @@ export function VerificationReviewModal({
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {loading ? (
             <div className="space-y-4">
-              <div className="h-24 animate-pulse rounded-lg bg-slate-100" />
+              <div className="h-24 animate-pulse rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.5)]" />
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="h-48 animate-pulse rounded-lg bg-slate-100" />
-                <div className="h-48 animate-pulse rounded-lg bg-slate-100" />
+                <div className="h-48 animate-pulse rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.5)]" />
+                <div className="h-48 animate-pulse rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.5)]" />
               </div>
             </div>
           ) : null}
 
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
           {!loading && !error && detail ? (
             <div className="space-y-6">
@@ -141,38 +141,38 @@ export function VerificationReviewModal({
                 </p>
               ) : null}
               <section>
-                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
                   Seller information
                 </h3>
                 <dl className="grid gap-3 text-sm sm:grid-cols-2">
                   <div>
-                    <dt className="text-slate-500">Name</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Name</dt>
                     <dd className="font-medium">{detail.sellerName ?? '—'}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Email</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Email</dt>
                     <dd className="font-medium">{detail.email}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Phone</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Phone</dt>
                     <dd className="font-medium">{detail.phone ?? '—'}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Joined</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Joined</dt>
                     <dd className="font-medium">{formatDateTime(detail.joinedAt)}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Total listings</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Total listings</dt>
                     <dd className="font-medium">{detail.totalListings}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Seller status</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Seller status</dt>
                     <dd>
                       <SellerStatusBadge status={detail.sellerStatus} />
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Unverified listings used</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Unverified listings used</dt>
                     <dd className="font-medium">
                       {detail.unverifiedListingCount}/{detail.sellerLimit}
                     </dd>
@@ -182,7 +182,7 @@ export function VerificationReviewModal({
 
               {canViewDocuments ? (
                 <section>
-                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                  <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
                     Uploaded documents
                   </h3>
                   <div className="grid gap-4 md:grid-cols-2">
@@ -198,16 +198,16 @@ export function VerificationReviewModal({
               )}
 
               <section>
-                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
                   Verification details
                 </h3>
                 <dl className="grid gap-3 text-sm sm:grid-cols-2">
                   <div>
-                    <dt className="text-slate-500">Submitted at</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Submitted at</dt>
                     <dd>{detail.submittedAt ? formatDateTime(detail.submittedAt) : '—'}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-500">Verification requested at</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Verification requested at</dt>
                     <dd>
                       {detail.verificationRequestedAt
                         ? formatDateTime(detail.verificationRequestedAt)
@@ -216,17 +216,17 @@ export function VerificationReviewModal({
                   </div>
                   {detail.rejectionReason ? (
                     <div className="sm:col-span-2">
-                      <dt className="text-slate-500">Rejection reason</dt>
+                      <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Rejection reason</dt>
                       <dd className="text-red-700">{detail.rejectionReason}</dd>
                     </div>
                   ) : null}
                 </dl>
                 {detail.previousAttempts.length > 0 ? (
                   <div className="mt-4">
-                    <p className="mb-2 text-sm font-medium text-slate-700">Previous attempts</p>
-                    <ul className="space-y-2 text-sm text-slate-600">
+                    <p className="mb-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Previous attempts</p>
+                    <ul className="space-y-2 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
                       {detail.previousAttempts.map((attempt) => (
-                        <li key={attempt.id} className="rounded-md bg-slate-50 px-3 py-2">
+                        <li key={attempt.id} className="rounded-md bg-[hsl(var(--dashboard-sidebar-active)/0.35)] px-3 py-2">
                           {formatDateTime(attempt.createdAt)} — {attempt.status}
                           {attempt.rejectionReason ? ` (${attempt.rejectionReason})` : ''}
                         </li>
@@ -239,13 +239,13 @@ export function VerificationReviewModal({
           ) : null}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[hsl(var(--dashboard-sidebar-border))] px-6 py-4">
           <div className="flex flex-wrap gap-2">
             {detail ? (
               <button
                 type="button"
                 onClick={() => onViewHistory(detail.userId, detail.sellerName)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
               >
                 Status history
               </button>
@@ -281,7 +281,7 @@ export function VerificationReviewModal({
               <button
                 type="button"
                 onClick={() => onSetLimit(detail)}
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
               >
                 Set listing limit
               </button>
@@ -291,7 +291,7 @@ export function VerificationReviewModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
             >
               Close
             </button>

@@ -62,7 +62,7 @@ export function SellerCard({
         <div className="min-w-0 flex-1 space-y-1.5">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-semibold text-gray-900">{name}</p>
+              <p className="font-semibold text-foreground">{name}</p>
               {isVerified && (
                 <ListingBadge tone="verified" className="font-normal">
                   <BadgeCheck className="h-3 w-3" aria-hidden />
@@ -71,7 +71,7 @@ export function SellerCard({
               )}
             </div>
             {location && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 {location}
                 {communityLabel && (
                   <span className="text-primary"> · {communityLabel}</span>
@@ -98,7 +98,7 @@ export function SellerCard({
             isBusiness={seller?.isBusiness}
           />
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             {joined && <span>Member since {joined}</span>}
             {typeof activeCount === 'number' && listingsHref && (
               <Link
@@ -127,11 +127,10 @@ export function SellerCard({
             </a>
           )}
           {storeHref && (
-            <Link
-              href={storeHref}
-              className={`flex items-center justify-center rounded-md border border-gray-200 bg-white text-sm font-medium text-primary hover:bg-gray-50 ${compact ? 'h-9' : 'h-10'}`}
-            >
-              Visit store
+            <Link href={storeHref} className={storeHref ? '' : 'block'}>
+              <Button type="button" variant="outline" className="w-full" size={compact ? 'sm' : 'default'}>
+                Visit store
+              </Button>
             </Link>
           )}
         </div>

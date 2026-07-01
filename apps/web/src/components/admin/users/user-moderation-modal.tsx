@@ -77,22 +77,22 @@ export function UserModerationModal({
       aria-modal="true"
       aria-labelledby="user-moderation-title"
     >
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
-        <h3 id="user-moderation-title" className="text-lg font-semibold text-slate-900">
+      <div className="w-full max-w-lg rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] p-6 shadow-xl">
+        <h3 id="user-moderation-title" className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
           {isBan ? 'Ban user' : 'Suspend user'} — {label}
         </h3>
-        <p className="mt-1 text-sm text-slate-500">{userEmail}</p>
+        <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">{userEmail}</p>
 
         <div className="mt-4 space-y-4">
           <div>
-            <label htmlFor="user-mod-reason-type" className="mb-1 block text-sm font-medium text-slate-700">
+            <label htmlFor="user-mod-reason-type" className="mb-1 block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
               Reason
             </label>
             <select
               id="user-mod-reason-type"
               value={reasonType}
               onChange={(e) => setReasonType(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
+              className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
             >
               {REASON_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -103,7 +103,7 @@ export function UserModerationModal({
           </div>
 
           <div>
-            <label htmlFor="user-mod-reason-detail" className="mb-1 block text-sm font-medium text-slate-700">
+            <label htmlFor="user-mod-reason-detail" className="mb-1 block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
               Details {reasonType === 'Other' ? '(required)' : '(optional)'}
             </label>
             <textarea
@@ -112,20 +112,20 @@ export function UserModerationModal({
               value={reasonDetail}
               onChange={(e) => setReasonDetail(e.target.value)}
               placeholder="Add context for the audit log…"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
+              className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
             />
           </div>
 
           {isBan && (
             <div>
-              <label htmlFor="user-mod-ban-duration" className="mb-1 block text-sm font-medium text-slate-700">
+              <label htmlFor="user-mod-ban-duration" className="mb-1 block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
                 Ban duration
               </label>
               <select
                 id="user-mod-ban-duration"
                 value={banDuration}
                 onChange={(e) => setBanDuration(e.target.value as BanDuration)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
+                className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
               >
                 <option value="permanent">Permanent</option>
                 <option value="7_days">Temporary — 7 days</option>
@@ -140,7 +140,7 @@ export function UserModerationModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)] disabled:opacity-50"
           >
             Cancel
           </button>

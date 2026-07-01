@@ -1,9 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
-import { cn } from '@community-marketplace/ui';
+import {
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+} from '@community-marketplace/ui';
 import {
   ChevronDown,
   Heart,
@@ -11,8 +15,12 @@ import {
   List,
   LogOut,
   MessageSquare,
+  Moon,
   Settings,
+  Sun,
 } from 'lucide-react';
+
+import { useTheme } from '@/providers/theme-provider';
 
 import type { UserNavLinks } from '@/lib/user-nav-routes';
 
@@ -42,19 +50,7 @@ function getInitials(displayName?: string | null, email?: string | null): string
 }
 
 export function UserMenuDropdown({ user, links, onSignOut, className }: UserMenuDropdownProps) {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
+  const { theme, toggle } = useTheme();
   const displayName = user.displayName?.trim() || user.email || 'Account';
   const initials = getInitials(user.displayName, user.email);
 
@@ -69,73 +65,70 @@ export function UserMenuDropdown({ user, links, onSignOut, className }: UserMenu
   ];
 
   return (
-    <div ref={containerRef} className={cn('relative', className)}>
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 rounded-full p-0.5 transition-all duration-200 hover:ring-2 hover:ring-primary/20"
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-label="Account menu"
-      >
-        {user.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={user.avatarUrl}
-            alt=""
-            className="h-9 w-9 rounded-full object-cover"
-          />
-        ) : (
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-            {initials}
-          </span>
-        )}
-        <ChevronDown
-          className={cn(
-            'hidden h-4 w-4 text-gray-500 transition-transform duration-200 lg:block',
-            open && 'rotate-180',
-          )}
-          aria-hidden
-        />
-      </button>
-
-      {open ? (
-        <div
-          role="menu"
-          className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-lg"
+    <DropdownMenuPortal
+      className={className}
+      menuClassName="w-56 p-0"
+      trigger={
+        <button
+          type="button"
+          className="flex items-center gap-2 rounded-full p-0.5 transition-all duration-150 hover:ring-2 hover:ring-primary/20"
+          aria-label="Account menu"
         >
-          <div className="border-b border-gray-100 px-3 py-2.5">
-            <p className="truncate text-sm font-medium text-gray-900">{displayName}</p>
-            {user.email ? <p className="truncate text-xs text-gray-500">{user.email}</p> : null}
-          </div>
-          <div className="space-y-0.5 py-2">
-            {menuItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                role="menuitem"
-                className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:text-primary"
-                onClick={() => setOpen(false)}
-              >
-                <item.icon className="h-4 w-4 text-gray-500" aria-hidden />
-                {item.label}
-              </Link>
-            ))}
-            <button
-              type="button"
-              role="menuitem"
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-red-600 transition-all duration-200 hover:bg-red-50"
-              onClick={() => {
-                setOpen(false);
-                void onSignOut();
-              }}
-            >
-              <LogOut className="h-4 w-4" aria-hidden />
-              Sign Out
-            </button>
-          </div>
-        </div>
-      ) : null}
-    </div>
+          {user.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user.avatarUrl}
+              alt=""
+              className="h-9 w-9 rounded-full object-cover"
+            />
+          ) : (
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+              {initials}
+            </span>
+          )}
+          <ChevronDown
+            className="hidden h-4 w-4 text-muted-foreground lg:block"
+            aria-hidden
+          />
+        </button>
+      }
+    >
+      <DropdownMenuLabel className="border-b border-border">
+        <p className="truncate">{displayName}</p>
+        {user.email ? (
+          <p className="truncate text-xs font-normal text-muted-foreground">{user.email}</p>
+        ) : null}
+      </DropdownMenuLabel>
+      <div className="p-1.5">
+        {menuItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className="flex items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-muted hover:text-primary"
+          >
+            <item.icon className="h-4 w-4 text-muted-foreground" aria-hidden />
+            {item.label}
+          </Link>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="gap-3" onClick={toggle}>
+          {theme === 'dark' ? (
+            <Sun className="h-4 w-4 text-muted-foreground" aria-hidden />
+          ) : (
+            <Moon className="h-4 w-4 text-muted-foreground" aria-hidden />
+          )}
+          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          destructive
+          className="gap-3"
+          onClick={() => void onSignOut()}
+        >
+          <LogOut className="h-4 w-4" aria-hidden />
+          Sign Out
+        </DropdownMenuItem>
+      </div>
+    </DropdownMenuPortal>
   );
 }

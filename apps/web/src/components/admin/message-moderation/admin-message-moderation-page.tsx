@@ -177,30 +177,30 @@ export function AdminMessageModerationPage({
           role="dialog"
           aria-modal="true"
         >
-          <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-xl bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
-              <h3 className="text-lg font-semibold text-slate-900">Conversation history</h3>
+          <div className="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] shadow-xl">
+            <div className="flex items-center justify-between border-b border-[hsl(var(--dashboard-sidebar-border))] px-4 py-3">
+              <h3 className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">Conversation history</h3>
               <button
                 type="button"
                 onClick={() => {
                   setViewThreadId(null);
                   setThreadDetail(null);
                 }}
-                className="text-sm text-slate-600 hover:text-slate-900"
+                className="text-sm text-[hsl(var(--dashboard-sidebar-muted))] hover:text-[hsl(var(--dashboard-main-fg))]"
               >
                 Close
               </button>
             </div>
             <div className="flex-1 space-y-2 overflow-y-auto p-4">
               {!threadDetail ? (
-                <p className="text-sm text-slate-500">Loading…</p>
+                <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading…</p>
               ) : (
                 threadDetail.messages?.map((msg: { id: string; content: string; createdAt: string; senderId: string }) => (
-                  <div key={msg.id} className="rounded-lg bg-slate-50 px-3 py-2 text-sm">
-                    <p className="text-xs text-slate-500">
+                  <div key={msg.id} className="rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.35)] px-3 py-2 text-sm">
+                    <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                       {new Date(msg.createdAt).toLocaleString()} · {msg.senderId.slice(0, 8)}
                     </p>
-                    <p className="mt-1 text-slate-900">{msg.content}</p>
+                    <p className="mt-1 text-[hsl(var(--dashboard-main-fg))]">{msg.content}</p>
                   </div>
                 ))
               )}

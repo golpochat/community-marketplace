@@ -1,8 +1,10 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
   HttpException,
   HttpStatus,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -28,6 +30,8 @@ import type {
 } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../../database/prisma.service';
+import { EventBusService } from '../../../events/event-bus.service';
+import { LoggerLib } from '../../../libs/logger.lib';
 import { StripeConnectService } from '../../payments/services/stripe-connect.service';
 import {
   boostSkuKey,
@@ -50,6 +54,8 @@ import { FeaturedFulfillmentService } from './featured-fulfillment.service';
 import { PlatformSettingsService } from './platform-settings.service';
 import { StoreSlotCatalogService } from './store-slot-catalog.service';
 import { StoreSlotFulfillmentService } from './store-slot-fulfillment.service';
+import { PlatformPurchaseReceiptService } from './platform-purchase-receipt.service';
+import { BuyerStatementPurchaseService } from '../../statements/services/buyer-statement-purchase.service';
 import { slotsGrantedBySku, targetStoreSlotLimit } from '../lib/store-slot.lib';
 
 const DAILY_INTENT_LIMIT = 10;
@@ -67,6 +73,11 @@ export class PlatformPurchaseService {
     private readonly storeSlotCatalog: StoreSlotCatalogService,
     private readonly storeSlotFulfillment: StoreSlotFulfillmentService,
     private readonly stripeConnect: StripeConnectService,
+    private readonly purchaseReceipts: PlatformPurchaseReceiptService,
+    @Inject(forwardRef(() => BuyerStatementPurchaseService))
+    private readonly buyerStatementPurchases: BuyerStatementPurchaseService,
+    private readonly eventBus: EventBusService,
+    private readonly logger: LoggerLib,
   ) {}
 
   async createBoostIntent(
@@ -386,20 +397,55 @@ export class PlatformPurchaseService {
     });
     if (!purchase) return false;
 
+    let fulfilled = false;
     switch (purchase.type) {
       case 'listing_boost':
-        return this.boostFulfillment.fulfillListingBoost(purchase.id);
+        fulfilled = await this.boostFulfillment.fulfillListingBoost(purchase.id);
+        break;
       case 'featured_slot':
-        return this.featuredFulfillment.fulfillFeaturedSlot(purchase.id);
+        fulfilled = await this.featuredFulfillment.fulfillFeaturedSlot(purchase.id);
+        break;
       case 'fast_track_verification':
-        return this.fastTrackFulfillment.fulfillFastTrack(purchase.id);
+        fulfilled = await this.fastTrackFulfillment.fulfillFastTrack(purchase.id);
+        break;
       case 'store_slot_2':
       case 'store_slot_3':
       case 'store_bundle_3':
-        return this.storeSlotFulfillment.fulfillStoreSlot(purchase.id);
+        fulfilled = await this.storeSlotFulfillment.fulfillStoreSlot(purchase.id);
+        break;
+      case 'buyer_statement':
+        await this.buyerStatementPurchases.fulfillFromWebhook(purchase.id);
+        return true;
       default:
         return false;
     }
+
+    if (fulfilled) {
+      await this.afterPurchaseSucceeded(purchase.id);
+    }
+    return fulfilled;
+  }
+
+  async listSellerPurchases(sellerId: string, page = 1, limit = 20) {
+    const where = { userId: sellerId, status: 'succeeded' as const };
+    const [rows, total] = await Promise.all([
+      this.prisma.platformPurchase.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.platformPurchase.count({ where }),
+    ]);
+    return {
+      data: rows.map(mapPlatformPurchase),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async handlePaymentIntentFailed(providerPaymentId: string): Promise<boolean> {
@@ -423,7 +469,8 @@ export class PlatformPurchaseService {
       | 'fast_track_verification'
       | 'store_slot_2'
       | 'store_slot_3'
-      | 'store_bundle_3';
+      | 'store_bundle_3'
+      | 'buyer_statement';
     status?: 'pending' | 'succeeded' | 'failed' | 'refunded';
     userId?: string;
   }) {
@@ -483,7 +530,35 @@ export class PlatformPurchaseService {
     const row = await this.prisma.platformPurchase.findUniqueOrThrow({
       where: { id: purchase.id },
     });
+    if (row.status === 'succeeded') {
+      await this.afterPurchaseSucceeded(row.id);
+    }
     return mapPlatformPurchase(row);
+  }
+
+  private async afterPurchaseSucceeded(purchaseId: string) {
+    const purchase = await this.prisma.platformPurchase.findUnique({
+      where: { id: purchaseId },
+      select: { id: true, userId: true, type: true, status: true, receiptGeneratedAt: true },
+    });
+    if (!purchase || purchase.status !== 'succeeded') return;
+    if (purchase.type === 'buyer_statement') return;
+
+    if (!purchase.receiptGeneratedAt) {
+      this.eventBus.publish({
+        type: 'platform_purchase.succeeded',
+        payload: { purchaseId: purchase.id, userId: purchase.userId, type: purchase.type },
+        timestamp: new Date(),
+      });
+    }
+
+    void this.purchaseReceipts.generateForPurchase(purchaseId).catch((error) => {
+      this.logger.error(
+        'PlatformPurchaseService',
+        `Failed to generate invoice for purchase ${purchaseId}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+    });
   }
 
   private async createStripeIntent(

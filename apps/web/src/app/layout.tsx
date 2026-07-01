@@ -35,12 +35,15 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#3A6DFF',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#0D9488' },
+    { media: '(prefers-color-scheme: dark)', color: '#0F766E' },
+  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={PLATFORM_LOCALE}>
+    <html lang={PLATFORM_LOCALE} suppressHydrationWarning>
       <body className={`${inter.variable} font-sans`}>
         <ServiceWorkerRecovery />
         {process.env.NODE_ENV === 'development' ? (

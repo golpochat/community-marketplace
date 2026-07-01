@@ -29,15 +29,15 @@ export function DeliveryPreviewModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] p-6 shadow-xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="delivery-preview-title"
       >
-        <h2 id="delivery-preview-title" className="text-lg font-semibold text-gray-900">
+        <h2 id="delivery-preview-title" className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
           Preview delivery changes
         </h2>
-        <p className="mt-1 text-sm text-gray-600">
+        <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           Review what buyers will see for <strong>{preview.listingTitle}</strong>.
         </p>
 
@@ -57,9 +57,9 @@ export function DeliveryPreviewModal({
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <div>
-            <h3 className="text-sm font-medium text-gray-900">Current (live)</h3>
-            <ul className="mt-2 space-y-2 text-sm text-gray-700">
-              {preview.current.length === 0 && <li className="text-gray-500">None set</li>}
+            <h3 className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Current (live)</h3>
+            <ul className="mt-2 space-y-2 text-sm text-[hsl(var(--dashboard-main-fg))]">
+              {preview.current.length === 0 && <li className="text-[hsl(var(--dashboard-sidebar-muted))]">None set</li>}
               {preview.current.map((item) => (
                 <li key={`${item.deliveryOptionId}-${item.customLabel ?? item.label}`}>
                   {item.label} — {formatFee(item.price)}
@@ -68,8 +68,8 @@ export function DeliveryPreviewModal({
             </ul>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-gray-900">Proposed</h3>
-            <ul className="mt-2 space-y-2 text-sm text-gray-700">
+            <h3 className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Proposed</h3>
+            <ul className="mt-2 space-y-2 text-sm text-[hsl(var(--dashboard-main-fg))]">
               {preview.proposed.map((item) => (
                 <li key={`${item.deliveryOptionId}-${item.customLabel ?? item.label}`}>
                   {item.label} — {formatFee(item.price)}
@@ -82,8 +82,8 @@ export function DeliveryPreviewModal({
         {(preview.diff.added.length > 0 ||
           preview.diff.removed.length > 0 ||
           preview.diff.changed.length > 0) && (
-          <div className="mt-4 rounded-lg bg-gray-50 p-3 text-sm text-gray-700">
-            <p className="font-medium text-gray-900">Summary of changes</p>
+          <div className="mt-4 rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-3 text-sm text-[hsl(var(--dashboard-main-fg))]">
+            <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">Summary of changes</p>
             {preview.diff.added.length > 0 && (
               <p className="mt-1">Added: {preview.diff.added.map((i) => i.label).join(', ')}</p>
             )}

@@ -41,10 +41,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
+            role="status"
             className={cn(
-              'min-w-[280px] rounded-lg border bg-card p-4 shadow-lg',
-              t.variant === 'success' && 'border-green-200 bg-green-50 dark:bg-green-950',
-              t.variant === 'error' && 'border-red-200 bg-red-50 dark:bg-red-950',
+              'min-w-[280px] rounded-xl border bg-card p-4 shadow-lg transition-all duration-200 animate-in slide-in-from-bottom-2 fade-in',
+              t.variant === 'success' && 'border-brand-accent/30 bg-brand-accent/5',
+              t.variant === 'error' && 'border-destructive/30 bg-destructive/5',
             )}
           >
             <p className="text-sm font-medium">{t.title}</p>

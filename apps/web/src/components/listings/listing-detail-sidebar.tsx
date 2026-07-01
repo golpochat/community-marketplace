@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import type { Listing } from '@community-marketplace/types';
+import { cn } from '@community-marketplace/ui';
 import {
   formatListedAgo,
   formatLocationLabel,
@@ -41,20 +42,14 @@ function formatResponseTime(minutes?: number): string | undefined {
   return `Typically responds within ${hours} hr${hours === 1 ? '' : 's'}`;
 }
 
-function SidebarPanel({
+function SidebarSection({
   children,
   className,
 }: {
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <div
-      className={`rounded-xl border border-gray-200 bg-white p-4 shadow-brand-sm ${className ?? ''}`}
-    >
-      {children}
-    </div>
-  );
+  return <div className={cn('p-4', className)}>{children}</div>;
 }
 
 export function ListingDetailSidebar({
@@ -73,84 +68,98 @@ export function ListingDetailSidebar({
   const responseHint = formatResponseTime(seller?.responseTimeMinutes);
 
   return (
-    <aside className="space-y-3 lg:sticky lg:top-20 lg:self-start">
-      {!compact && <BuyerProtectionBanner />}
-      {!compact && <ListingCashbackCue listingId={listing.id} />}
-
-      <SidebarPanel>
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <ListingPriceDisplay
-            price={listing.price}
-            originalPrice={listing.originalPrice}
-            salePrice={listing.salePrice}
-            discountPercent={listing.discountPercent}
-            currency={listing.currency}
-            size="detail"
-            priceDroppedAt={listing.priceDroppedAt}
-          />
-          <div className="flex flex-wrap items-center gap-2">
-            <FeaturedBadge featuredUntil={listing.featuredUntil} isFeatured={listing.isFeatured} />
-            <BoostedBadge boostedUntil={listing.boostedUntil} />
-          </div>
-        </div>
-
-        <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
-          <div className="flex items-start gap-2 text-sm text-gray-700">
-            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-            <span>{formatLocationLabel(listing.location.label)}</span>
-          </div>
-
-          {deliveryOptions.length > 0 && (
-            <ListingDeliveryDisplay options={deliveryOptions} inline title="Delivery" />
-          )}
-        </div>
-      </SidebarPanel>
-
-      <SidebarPanel className="space-y-4">
-        <SellerCard
-          seller={seller}
-          sellerName={seller?.displayName?.trim() || 'Seller'}
-          sellerSlug={seller?.storeSlug}
-          verified={seller?.verified}
-          memberSince={seller?.memberSince}
-          location={listing.location.label}
-          showCallButton={!hideActions}
-          listingId={listing.id}
-          compact
-        />
-
-        {responseHint && (
-          <p className="border-t border-gray-100 pt-3 text-xs text-gray-600">{responseHint}</p>
+    <aside className="lg:sticky lg:top-20 lg:self-start">
+      <div className="surface-section overflow-hidden p-0">
+        {!compact && (
+          <SidebarSection className="space-y-3 border-b border-border bg-primary/[0.04]">
+            <BuyerProtectionBanner embedded />
+            <ListingCashbackCue listingId={listing.id} embedded />
+          </SidebarSection>
         )}
 
-        {!hideActions && (
-          <div className="space-y-3 border-t border-gray-100 pt-4">
-            <BuyNowButton listing={listing} />
-            <ChatButton listingId={listing.id} sellerId={listing.sellerId} />
-            <div className="flex flex-wrap gap-2">
-              <SaveButton listingId={listing.id} initialSaved={initialSaved} />
-              <ShareListingButton listingId={listing.id} title={listing.title} />
-              <ReportButton listingId={listing.id} />
+        <SidebarSection className="border-b border-border">
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <ListingPriceDisplay
+              price={listing.price}
+              originalPrice={listing.originalPrice}
+              salePrice={listing.salePrice}
+              discountPercent={listing.discountPercent}
+              currency={listing.currency}
+              size="detail"
+              priceDroppedAt={listing.priceDroppedAt}
+            />
+            <div className="flex flex-wrap items-center gap-2">
+              <FeaturedBadge featuredUntil={listing.featuredUntil} isFeatured={listing.isFeatured} />
+              <BoostedBadge boostedUntil={listing.boostedUntil} />
             </div>
-            {!isAuthenticated && (
-              <p className="text-center text-xs text-gray-500">
-                <Link href={WEB_APP_ROUTES.login} className="font-medium text-primary hover:underline">
-                  Log in
-                </Link>
-                {' to contact this seller.'}
-              </p>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            <div className="flex items-start gap-2 text-sm text-foreground">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+              <span>{formatLocationLabel(listing.location.label)}</span>
+            </div>
+
+            {deliveryOptions.length > 0 && (
+              <ListingDeliveryDisplay options={deliveryOptions} inline title="Delivery" />
             )}
           </div>
-        )}
-      </SidebarPanel>
+        </SidebarSection>
 
-      <SidebarPanel>
-        <div className="space-y-1 text-xs text-gray-500">
-          <p>{formatListedAgo(listedAt)}</p>
-          {showUpdated && <p>{formatUpdatedAgo(listing.updatedAt)}</p>}
-        </div>
-        {!compact && <ListingTrustCues className="mt-4 border-t border-gray-100 pt-4" />}
-      </SidebarPanel>
+        <SidebarSection className="space-y-4 border-b border-border">
+          <SellerCard
+            seller={seller}
+            sellerName={seller?.displayName?.trim() || 'Seller'}
+            sellerSlug={seller?.storeSlug}
+            verified={seller?.verified}
+            memberSince={seller?.memberSince}
+            location={listing.location.label}
+            showCallButton={!hideActions}
+            listingId={listing.id}
+            compact
+          />
+
+          {responseHint && (
+            <p className="text-xs text-muted-foreground">{responseHint}</p>
+          )}
+
+          {!hideActions && (
+            <div className="space-y-3 border-t border-border pt-4">
+              <BuyNowButton listing={listing} />
+              <ChatButton listingId={listing.id} sellerId={listing.sellerId} />
+              <div className="flex flex-wrap items-center gap-2">
+                <SaveButton
+                  listingId={listing.id}
+                  initialSaved={initialSaved}
+                  className="h-10"
+                />
+                <ShareListingButton
+                  listingId={listing.id}
+                  title={listing.title}
+                  className="h-10"
+                />
+                <ReportButton listingId={listing.id} className="h-10" />
+              </div>
+              {!isAuthenticated && (
+                <p className="text-center text-xs text-muted-foreground">
+                  <Link href={WEB_APP_ROUTES.login} className="font-medium text-primary hover:underline">
+                    Log in
+                  </Link>
+                  {' to contact this seller.'}
+                </p>
+              )}
+            </div>
+          )}
+        </SidebarSection>
+
+        <SidebarSection className="space-y-3">
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <p>{formatListedAgo(listedAt)}</p>
+            {showUpdated && <p>{formatUpdatedAgo(listing.updatedAt)}</p>}
+          </div>
+          {!compact && <ListingTrustCues className="border-t border-border pt-4" />}
+        </SidebarSection>
+      </div>
     </aside>
   );
 }

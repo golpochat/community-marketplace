@@ -60,23 +60,23 @@ export function StatusHistoryModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-white shadow-xl">
-        <div className="border-b border-slate-200 px-6 py-4">
-          <h3 className="text-lg font-semibold text-slate-900">
+      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] shadow-xl">
+        <div className="border-b border-[hsl(var(--dashboard-sidebar-border))] px-6 py-4">
+          <h3 className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
             Seller Status History – {sellerName ?? 'Seller'}
           </h3>
         </div>
         <div className="flex-1 overflow-y-auto px-6 py-4">
-          {loading ? <div className="h-32 animate-pulse rounded-lg bg-slate-100" /> : null}
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {loading ? <div className="h-32 animate-pulse rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.5)]" /> : null}
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
           {!loading && !error && rows.length === 0 ? (
-            <p className="text-sm text-slate-600">No status changes recorded for this seller.</p>
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No status changes recorded for this seller.</p>
           ) : null}
           {!loading && !error && rows.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-slate-500">
+                  <tr className="border-b border-[hsl(var(--dashboard-sidebar-border))] text-[hsl(var(--dashboard-sidebar-muted))]">
                     <th className="px-3 py-2 font-medium">Old status</th>
                     <th className="px-3 py-2 font-medium">New status</th>
                     <th className="px-3 py-2 font-medium">Changed by</th>
@@ -86,18 +86,18 @@ export function StatusHistoryModal({
                 </thead>
                 <tbody>
                   {rows.map((row) => (
-                    <tr key={row.id} className="border-b border-slate-100">
+                    <tr key={row.id} className="border-b border-[hsl(var(--dashboard-sidebar-border))]">
                       <td className="px-3 py-3">
                         <SellerStatusBadge status={row.oldStatus} />
                       </td>
                       <td className="px-3 py-3">
                         <SellerStatusBadge status={row.newStatus} />
                       </td>
-                      <td className="px-3 py-3 text-slate-700">
+                      <td className="px-3 py-3 text-[hsl(var(--dashboard-main-fg))]">
                         {row.changedByName ?? (row.changedBy ? row.changedBy.slice(0, 8) : 'System')}
                       </td>
-                      <td className="px-3 py-3 text-slate-700">{row.reason ?? '—'}</td>
-                      <td className="px-3 py-3 text-slate-700">{formatDateTime(row.createdAt)}</td>
+                      <td className="px-3 py-3 text-[hsl(var(--dashboard-main-fg))]">{row.reason ?? '—'}</td>
+                      <td className="px-3 py-3 text-[hsl(var(--dashboard-main-fg))]">{formatDateTime(row.createdAt)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -105,11 +105,11 @@ export function StatusHistoryModal({
             </div>
           ) : null}
         </div>
-        <div className="border-t border-slate-200 px-6 py-4 text-right">
+        <div className="border-t border-[hsl(var(--dashboard-sidebar-border))] px-6 py-4 text-right">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
           >
             Close
           </button>

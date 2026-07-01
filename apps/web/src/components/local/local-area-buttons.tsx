@@ -30,7 +30,7 @@ export function LocalAreaButtons({
   const chipClass = (active: boolean) =>
     cn(
       'shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
-      active ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
+      active ? 'bg-primary text-white' : 'bg-muted text-foreground hover:bg-muted',
       loading && 'opacity-60',
     );
 

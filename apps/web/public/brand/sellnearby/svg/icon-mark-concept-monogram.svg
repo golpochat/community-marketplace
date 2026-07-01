@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="SellNearby">
+  <defs><filter id="soft-shadow" x="-25%" y="-25%" width="150%" height="150%">
+         <feDropShadow dx="0" dy="6" stdDeviation="12" flood-color="#0F766E" flood-opacity="0.12"/>
+       </filter></defs>
+  <g filter="url(#soft-shadow)"><rect x="106" y="106" width="300" height="300" rx="88" fill="#0D9488"/>
+  <text x="256" y="310" font-family="Inter, Poppins, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="148" font-weight="800" letter-spacing="-0.04em" fill="#FFFFFF" text-anchor="middle">SN</text></g>
+</svg>

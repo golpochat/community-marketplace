@@ -10,8 +10,8 @@ export const metadata = { title: 'About' };
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="text-3xl font-bold text-gray-900">About {APP_NAME}</h1>
-      <p className="mt-4 text-lg text-gray-600">
+      <h1 className="text-3xl font-bold text-foreground">About {APP_NAME}</h1>
+      <p className="mt-4 text-lg text-muted-foreground">
         {APP_NAME} is Ireland&apos;s trusted community marketplace — built so neighbours can buy and
         sell safely without scams, long-distance hassle, or anonymous classifieds noise.
       </p>
@@ -20,13 +20,13 @@ export default function AboutPage() {
         <FounderCallout />
       </div>
 
-      <p className="mt-6 text-gray-600 leading-relaxed">
+      <p className="mt-6 text-muted-foreground leading-relaxed">
         Hi, I&apos;m Sujan. I personally moderate this marketplace to keep it safe for our
         community. We focus on local areas, verified sellers, and simple tools that work on your
         phone.
       </p>
 
-      <p className="mt-4 text-gray-600">
+      <p className="mt-4 text-muted-foreground">
         Read our{' '}
         <Link href="/safety" className="text-primary hover:underline">
           safety guide

@@ -36,9 +36,9 @@ export function SellerStatusHistoryPanel() {
   return (
     <Card title="Account status history">
       {loading ? (
-        <div className="h-24 animate-pulse rounded-lg bg-gray-100" />
+        <div className="h-24 animate-pulse rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.5)]" />
       ) : null}
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
       {!loading && !error && rows.length === 0 ? (
         <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           No status changes recorded yet.
@@ -49,7 +49,7 @@ export function SellerStatusHistoryPanel() {
           {rows.map((row) => (
             <li
               key={row.id}
-              className="rounded-lg border border-gray-200 px-4 py-3 text-sm"
+              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-3 text-sm"
             >
               <div className="flex flex-wrap items-center gap-2">
                 <SellerProfileStatusBadge status={row.newStatus} />
@@ -58,7 +58,7 @@ export function SellerStatusHistoryPanel() {
                 </span>
               </div>
               {row.reason ? (
-                <p className="mt-2 text-gray-700">{row.reason}</p>
+                <p className="mt-2 text-[hsl(var(--dashboard-main-fg))]">{row.reason}</p>
               ) : null}
             </li>
           ))}

@@ -24,6 +24,8 @@ export interface DashboardLayoutProps {
   onLogout: () => void | Promise<void>;
   brand?: string;
   brandAbbr?: string;
+  brandLogo?: ReactNode;
+  brandLogoCollapsed?: ReactNode;
   topbarTitle?: string;
   topbarActions?: ReactNode;
   footerCopyright?: string;
@@ -40,6 +42,8 @@ function DashboardLayoutFrame({
   onLogout,
   brand,
   brandAbbr,
+  brandLogo,
+  brandLogoCollapsed,
   topbarTitle,
   topbarActions,
   footerCopyright,
@@ -50,22 +54,37 @@ function DashboardLayoutFrame({
   return (
     <ThemeProvider role={role} theme={theme}>
       <div className="flex min-h-screen bg-[hsl(var(--dashboard-main-bg))] text-[hsl(var(--dashboard-main-fg))]">
-        <Sidebar role={role} brand={brand} brandAbbr={brandAbbr} items={sidebarItems} />
+        <Sidebar
+          role={role}
+          brand={brand}
+          brandAbbr={brandAbbr}
+          brandLogo={brandLogo}
+          brandLogoCollapsed={brandLogoCollapsed}
+          items={sidebarItems}
+        />
         {mobileOpen ? (
           <button
             type="button"
-            className="fixed inset-0 z-40 bg-black/40 md:hidden"
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] transition-opacity duration-200 md:hidden"
             aria-label="Close navigation menu"
             onClick={() => setMobileOpen(false)}
           />
         ) : null}
         <div
           className={cn(
-            'fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 md:hidden',
+            'fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 ease-in-out md:hidden',
             mobileOpen ? 'translate-x-0' : '-translate-x-full',
           )}
         >
-          <Sidebar role={role} brand={brand} brandAbbr={brandAbbr} mobile items={sidebarItems} />
+          <Sidebar
+            role={role}
+            brand={brand}
+            brandAbbr={brandAbbr}
+            brandLogo={brandLogo}
+            brandLogoCollapsed={brandLogoCollapsed}
+            mobile
+            items={sidebarItems}
+          />
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar

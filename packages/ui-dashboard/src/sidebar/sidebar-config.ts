@@ -121,6 +121,7 @@ export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
   { id: 'section-platform', label: 'Platform', sectionHeader: true },
   { id: 'payments', label: 'Payments', href: '/super-admin/payments', icon: 'landmark' },
   { id: 'monetization', label: 'Monetization', href: '/super-admin/monetization', icon: 'landmark' },
+  { id: 'finance', label: 'Financial reports', href: '/super-admin/finance', icon: 'bar-chart', permission: PERMISSIONS.MANAGE_PAYMENTS },
   { id: 'search', label: 'Search', href: '/super-admin/search', icon: 'search' },
   { id: 'analytics', label: 'Analytics', href: '/super-admin/analytics', icon: 'bar-chart' },
 
@@ -167,6 +168,7 @@ export const ADMIN_SIDEBAR: SidebarNavItem[] = [
   },
   { id: 'payments', label: 'Payments', href: '/admin/payments', icon: 'credit-card' },
   { id: 'monetization', label: 'Monetization', href: '/admin/monetization', icon: 'landmark' },
+  { id: 'finance', label: 'Financial reports', href: '/admin/finance', icon: 'bar-chart', permission: PERMISSIONS.MANAGE_PAYMENTS },
   { id: 'search', label: 'Search Tools', href: '/admin/search', icon: 'compass' },
   { id: 'notifications', label: 'Notifications', href: '/admin/notifications', icon: 'bell' },
 ];

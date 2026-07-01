@@ -13,7 +13,7 @@ export default function AdminInviteAcceptPage() {
   return (
     <Suspense
       fallback={
-        <p className="mx-auto max-w-md py-16 text-center text-gray-700">Loading invitation…</p>
+        <p className="mx-auto max-w-md py-16 text-center text-[hsl(var(--dashboard-main-fg))]">Loading invitation…</p>
       }
     >
       <AdminInviteAcceptContent />
@@ -83,7 +83,7 @@ function AdminInviteAcceptContent() {
   if (loading) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <p className="text-gray-700">Loading invitation…</p>
+        <p className="text-[hsl(var(--dashboard-main-fg))]">Loading invitation…</p>
       </div>
     );
   }
@@ -91,7 +91,7 @@ function AdminInviteAcceptContent() {
   if (error && !preview) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <p className="text-red-600">{error}</p>
+        <p className="text-destructive">{error}</p>
         <Button className="mt-6" asChild>
           <Link href="/auth/login">Go to sign in</Link>
         </Button>
@@ -102,7 +102,7 @@ function AdminInviteAcceptContent() {
   if (preview?.alreadyAccepted) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <p className="text-gray-700">This invitation has already been accepted.</p>
+        <p className="text-[hsl(var(--dashboard-main-fg))]">This invitation has already been accepted.</p>
         <Button className="mt-6" asChild>
           <Link href="/auth/login">Go to sign in</Link>
         </Button>
@@ -113,15 +113,15 @@ function AdminInviteAcceptContent() {
   if (preview?.expired) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
-        <p className="text-red-600">This invitation has expired. Ask your super admin to send a new one.</p>
+        <p className="text-destructive">This invitation has expired. Ask your super admin to send a new one.</p>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-md py-16 px-4">
-      <h1 className="text-2xl font-bold text-gray-900">Complete your setup</h1>
-      <p className="mt-2 text-sm text-gray-600">
+      <h1 className="text-2xl font-bold text-[hsl(var(--dashboard-main-fg))]">Complete your setup</h1>
+      <p className="mt-2 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
         {preview?.displayName ? `Hello ${preview.displayName}, ` : ''}
         you&apos;ve been invited as <strong>{preview?.roleName}</strong> ({preview?.email}).
       </p>
@@ -150,7 +150,7 @@ function AdminInviteAcceptContent() {
             autoComplete="new-password"
           />
         </div>
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? 'Setting up…' : 'Complete setup'}
         </Button>

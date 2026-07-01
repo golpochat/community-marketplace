@@ -4,15 +4,21 @@
   "description": "Buy and sell within your community in Ireland",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F1F2F6",
-  "theme_color": "#3A6DFF",
+  "background_color": "#FAFAFA",
+  "theme_color": "#0D9488",
   "orientation": "portrait-primary",
   "icons": [
+    {
+      "src": "/icons/icon-app.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
     {
       "src": "/icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "monochrome"
     },
     {
       "src": "/icons/icon-192.png",

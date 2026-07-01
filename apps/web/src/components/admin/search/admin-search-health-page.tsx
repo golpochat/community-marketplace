@@ -33,7 +33,7 @@ function IndexHealthBadge({ healthy }: { healthy: boolean }) {
   return (
     <span
       className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-        healthy ? 'bg-emerald-50 text-emerald-800' : 'bg-gray-100 text-gray-600'
+        healthy ? 'bg-emerald-50 text-emerald-800' : 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-sidebar-muted))]'
       }`}
     >
       {healthy ? 'Synced' : 'Offline'}
@@ -139,19 +139,19 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
 
         {!health?.healthy && (
           <Card title="Meilisearch is not running">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               Search is falling back to database queries. Start Meilisearch locally, then reindex
               your indexes.
             </p>
-            <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-gray-700">
+            <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-[hsl(var(--dashboard-main-fg))]">
               <li>
-                <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">
+                <code className="rounded bg-[hsl(var(--dashboard-sidebar-active)/0.5)] px-1.5 py-0.5 text-xs">
                   docker compose -f infra/docker/docker-compose.dev.yml up -d meilisearch
                 </code>
               </li>
               <li>
-                Set <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">MEILISEARCH_HOST=http://localhost:7700</code>{' '}
-                in <code className="rounded bg-gray-100 px-1.5 py-0.5 text-xs">apps/api/.env</code>
+                Set <code className="rounded bg-[hsl(var(--dashboard-sidebar-active)/0.5)] px-1.5 py-0.5 text-xs">MEILISEARCH_HOST=http://localhost:7700</code>{' '}
+                in <code className="rounded bg-[hsl(var(--dashboard-sidebar-active)/0.5)] px-1.5 py-0.5 text-xs">apps/api/.env</code>
               </li>
               <li>Restart the API, then use Reindex all below.</li>
             </ol>
@@ -162,7 +162,7 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <StatusBadge healthy={health?.healthy ?? false} />
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
                 {health?.healthy
                   ? 'Meilisearch is connected and serving search requests.'
                   : 'Meilisearch could not be reached.'}
@@ -187,7 +187,7 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
               </Button>
             </div>
           </div>
-          {actionError && <p className="mb-4 text-sm text-red-600">{actionError}</p>}
+          {actionError && <p className="mb-4 text-sm text-destructive">{actionError}</p>}
           <DataTable
             columns={['Index', 'Documents', 'Status', 'Last synced', 'Actions']}
             rows={indexes.map((idx) => {
@@ -217,8 +217,8 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
                   >
                     {reindexing === idx.indexName ? 'Reindexing…' : 'Reindex'}
                   </Button>
-                  {jobLabel && <span className="text-xs text-gray-500">{jobLabel}</span>}
-                  {job?.error && <span className="text-xs text-red-600">{job.error}</span>}
+                  {jobLabel && <span className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{jobLabel}</span>}
+                  {job?.error && <span className="text-xs text-destructive">{job.error}</span>}
                 </div>,
               ];
             })}

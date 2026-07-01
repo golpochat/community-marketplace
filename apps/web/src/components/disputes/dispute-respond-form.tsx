@@ -44,22 +44,22 @@ export function DisputeRespondForm({
   return (
     <Card title="Respond to dispute">
       <form onSubmit={handleSubmit} className="space-y-3">
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
         <textarea
           value={messageText}
           onChange={(e) => setMessageText(e.target.value)}
           rows={4}
           placeholder="Your response…"
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
           required
         />
         <div>
-          <p className="mb-1 text-xs text-gray-600">Optional supporting evidence</p>
+          <p className="mb-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">Optional supporting evidence</p>
           <input
             type="file"
             accept="image/*,video/*"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm text-gray-700"
+            className="block w-full text-sm text-[hsl(var(--dashboard-main-fg))]"
           />
         </div>
         {file ? (
@@ -67,7 +67,7 @@ export function DisputeRespondForm({
             value={evidenceDescription}
             onChange={(e) => setEvidenceDescription(e.target.value)}
             placeholder="Evidence description…"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
           />
         ) : null}
         <button

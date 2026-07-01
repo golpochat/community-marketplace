@@ -14,7 +14,7 @@ export function MessageBubble({ message, currentUserId }: MessageBubbleProps) {
   if (isSystem) {
     return (
       <div className="flex justify-center">
-        <p className="rounded-lg bg-gray-50 px-4 py-2 text-center text-xs italic text-gray-600">
+        <p className="rounded-lg bg-muted/50 px-4 py-2 text-center text-xs italic text-muted-foreground">
           {message.content}
         </p>
       </div>
@@ -25,7 +25,7 @@ export function MessageBubble({ message, currentUserId }: MessageBubbleProps) {
     <div className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
       <div
         className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm sm:max-w-xs ${
-          isMine ? 'bg-primary text-primary-foreground' : 'bg-gray-100 text-gray-900'
+          isMine ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
         }`}
       >
         {message.attachmentUrl && message.messageType === 'image' ? (

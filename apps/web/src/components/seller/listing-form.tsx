@@ -531,7 +531,7 @@ export function ListingForm({
       )}
 
       {priceReviewStatus === "rejected" && (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-900">
+        <p className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-red-900">
           Your last price change was rejected.
           {priceReviewNotes
             ? ` ${priceReviewNotes}`
@@ -547,7 +547,7 @@ export function ListingForm({
       )}
 
       {deliveryReviewStatus === "rejected" && (
-        <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-900">
+        <p className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-red-900">
           Your last delivery change was rejected.
           {deliveryReviewNotes
             ? ` ${deliveryReviewNotes}`
@@ -556,7 +556,7 @@ export function ListingForm({
       )}
 
       {validationError && (
-        <p className="mb-4 text-sm text-red-600">{validationError}</p>
+        <p className="mb-4 text-sm text-destructive">{validationError}</p>
       )}
 
       {step === 0 && (
@@ -587,7 +587,7 @@ export function ListingForm({
               maxLength={LISTING_DESCRIPTION_HARD_MAX}
               onChange={(e) => update({ description: e.target.value })}
               rows={5}
-              className="mt-1 w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-white px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
+              className="mt-1 w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
               placeholder="Describe your item (min. 10 characters)..."
             />
             <p
@@ -683,7 +683,7 @@ export function ListingForm({
           {data.originalPrice.trim() &&
             data.salePrice.trim() &&
             Number(data.salePrice) >= Number(data.originalPrice) && (
-              <p className="text-sm text-red-600">
+              <p className="text-sm text-destructive">
                 Sale price must be lower than original price.
               </p>
             )}
@@ -860,7 +860,7 @@ export function ListingForm({
                   : data.salePrice || "—"}
               {pricingSummary?.hasSaleBadge &&
                 pricingSummary.originalPrice != null && (
-                  <span className="ml-2 text-gray-500 line-through">
+                  <span className="ml-2 text-[hsl(var(--dashboard-sidebar-muted))] line-through">
                     {formatCurrency(pricingSummary.originalPrice, "EUR")}
                   </span>
                 )}

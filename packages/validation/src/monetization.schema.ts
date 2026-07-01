@@ -76,6 +76,97 @@ export const confirmStoreSlotSchema = z.object({
   purchaseId: uuidSchema,
 });
 
+export const statementPeriodQuerySchema = z.object({
+  year: z.coerce.number().int().min(2020).max(2100),
+  month: z.coerce.number().int().min(1).max(12),
+});
+
+export const adminFinanceUserStatementQuerySchema = statementPeriodQuerySchema.extend({
+  userId: uuidSchema,
+});
+
+const isoDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD date format');
+
+function parseOptionalUuidList(value: string | undefined): string[] {
+  if (!value?.trim()) return [];
+  return value
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function parseOptionalCategoryList(value: string | undefined): string[] {
+  if (!value?.trim()) return [];
+  return value
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+const financeRecordCategorySchema = z.enum([
+  'buyer',
+  'seller',
+  'platform_service',
+  'marketplace_fee',
+]);
+
+export const adminFinanceDateRangeQuerySchema = z
+  .object({
+    dateFrom: isoDateSchema,
+    dateTo: isoDateSchema,
+    categories: z.string().optional(),
+    search: z.string().max(200).optional(),
+  })
+  .transform((data) => ({
+    dateFrom: data.dateFrom,
+    dateTo: data.dateTo,
+    categories: parseOptionalCategoryList(data.categories),
+    search: data.search?.trim() ?? '',
+  }))
+  .superRefine((data, ctx) => {
+    if (data.dateFrom > data.dateTo) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'dateFrom must be on or before dateTo',
+        path: ['dateFrom'],
+      });
+    }
+    for (const category of data.categories) {
+      const parsed = financeRecordCategorySchema.safeParse(category);
+      if (!parsed.success) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Invalid category: ${category}`,
+          path: ['categories'],
+        });
+      }
+    }
+  });
+
+export const adminFinanceActivityStatementQuerySchema = z
+  .object({
+    dateFrom: isoDateSchema,
+    dateTo: isoDateSchema,
+    userId: uuidSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (data.dateFrom > data.dateTo) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'dateFrom must be on or before dateTo',
+        path: ['dateFrom'],
+      });
+    }
+  });
+
+export const createBuyerStatementIntentSchema = statementPeriodQuerySchema;
+
+export const confirmBuyerStatementSchema = z.object({
+  purchaseId: uuidSchema,
+});
+
 export const platformPurchasesAdminFiltersSchema = paginationSchema.extend({
   type: z
     .enum([
@@ -85,6 +176,7 @@ export const platformPurchasesAdminFiltersSchema = paginationSchema.extend({
       'store_slot_2',
       'store_slot_3',
       'store_bundle_3',
+      'buyer_statement',
     ])
     .optional(),
   status: z.enum(['pending', 'succeeded', 'failed', 'refunded']).optional(),
@@ -114,6 +206,16 @@ export type ConfirmFeaturedInput = z.infer<typeof confirmFeaturedSchema>;
 export type ConfirmFastTrackInput = z.infer<typeof confirmFastTrackSchema>;
 export type CreateStoreSlotIntentInput = z.infer<typeof createStoreSlotIntentSchema>;
 export type ConfirmStoreSlotInput = z.infer<typeof confirmStoreSlotSchema>;
+export type CreateBuyerStatementIntentInput = z.infer<typeof createBuyerStatementIntentSchema>;
+export type ConfirmBuyerStatementInput = z.infer<typeof confirmBuyerStatementSchema>;
+export type StatementPeriodQueryInput = z.infer<typeof statementPeriodQuerySchema>;
+export type AdminFinanceUserStatementQueryInput = z.infer<
+  typeof adminFinanceUserStatementQuerySchema
+>;
+export type AdminFinanceDateRangeQueryInput = z.infer<typeof adminFinanceDateRangeQuerySchema>;
+export type AdminFinanceActivityStatementQueryInput = z.infer<
+  typeof adminFinanceActivityStatementQuerySchema
+>;
 export type PlatformPurchasesAdminFiltersInput = z.infer<
   typeof platformPurchasesAdminFiltersSchema
 >;

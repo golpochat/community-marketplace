@@ -17,6 +17,9 @@ export class NotificationEventsListener implements OnModuleInit {
     this.eventBus.subscribe('chat.thread_created', (e) => void this.onThreadCreated(e.payload));
     this.eventBus.subscribe('chat.messages_read', (e) => void this.onMessagesRead(e.payload));
     this.eventBus.subscribe('payment.succeeded', (e) => void this.onPaymentSucceeded(e.payload));
+    this.eventBus.subscribe('platform_purchase.succeeded', (e) =>
+      void this.onPlatformPurchaseSucceeded(e.payload),
+    );
     this.eventBus.subscribe('payment.failed', (e) => void this.onPaymentFailed(e.payload));
     this.eventBus.subscribe('payment.refunded', (e) => void this.onPaymentRefunded(e.payload));
     this.eventBus.subscribe('payment.refund_requested', (e) =>
@@ -128,16 +131,48 @@ export class NotificationEventsListener implements OnModuleInit {
     const paymentId = payload.paymentId as string;
     const payment = await this.prisma.payment.findUnique({
       where: { id: paymentId },
-      select: { sellerId: true, listingId: true },
+      select: { buyerId: true, sellerId: true, listingId: true },
     });
     if (!payment) return;
 
+    await Promise.all([
+      this.dispatcher.dispatch({
+        userId: payment.buyerId,
+        type: 'payment_sent',
+        templateKey: 'payment_completed',
+        variables: {
+          title: 'Payment successful',
+          message: 'Your purchase is confirmed. Your receipt is in Purchases and was emailed to you.',
+        },
+        actionUrl: '/buyer/purchases',
+        channels: ['in_app', 'push'],
+      }),
+      this.dispatcher.dispatch({
+        userId: payment.sellerId,
+        type: 'payment_received',
+        templateKey: 'payment_received',
+        actionUrl: '/seller/earnings',
+        channels: ['in_app', 'push'],
+      }),
+    ]);
+  }
+
+  private async onPlatformPurchaseSucceeded(payload: Record<string, unknown>) {
+    const userId = payload.userId as string;
+    const purchaseId = payload.purchaseId as string;
+    if (!userId || !purchaseId) return;
+
     await this.dispatcher.dispatch({
-      userId: payment.sellerId,
-      type: 'payment_received',
-      templateKey: 'payment_received',
+      userId,
+      type: 'payment_sent',
+      templateKey: 'platform_purchase_completed',
+      variables: {
+        title: 'Payment confirmed',
+        message:
+          'Your platform payment was successful. Your invoice is in Earnings and was emailed to you.',
+      },
       actionUrl: '/seller/earnings',
-      channels: ['in_app', 'push', 'email'],
+      channels: ['in_app', 'push'],
     });
   }
 

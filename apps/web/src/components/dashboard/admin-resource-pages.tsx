@@ -269,7 +269,7 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
       <TruncatedText key={`title-${listing.id}`} text={listing.title} />,
       formatCurrency(listing.price, listing.currency),
       <ListingStatusBadge key={`status-${listing.id}`} status={listing.status} />,
-      <div key={`dates-${listing.id}`} className="space-y-0.5 text-xs text-gray-600">
+      <div key={`dates-${listing.id}`} className="space-y-0.5 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
         <div>Created: {formatDateTime(listing.createdAt)}</div>
         {listing.activatedAt && <div>Activated: {formatDateTime(listing.activatedAt)}</div>}
         <div>Updated: {formatDateTime(listing.updatedAt)}</div>
@@ -402,7 +402,7 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
               setPage(1);
             }}
             placeholder="Search title, description, seller…"
-            className="min-w-[220px] flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+            className="min-w-[220px] flex-1 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
             aria-label="Search listings"
           />
           <select
@@ -411,7 +411,7 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
               setCategoryFilter(e.target.value);
               setPage(1);
             }}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+            className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
             aria-label="Filter listings by category"
           >
             <option value="">All categories</option>
@@ -429,7 +429,7 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
               setPage(1);
             }}
             placeholder="Seller user ID"
-            className="min-w-[180px] rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+            className="min-w-[180px] rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
             aria-label="Filter listings by seller ID"
           />
           <select
@@ -438,7 +438,7 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
               setStatusFilter(e.target.value as ListingStatus | '');
               setPage(1);
             }}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700"
+            className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
             aria-label="Filter listings by status"
           >
             <option value="">All statuses</option>
@@ -785,7 +785,7 @@ export function AdminAuditLogPage({ role }: { role: AdminServiceRole }) {
       emptyTitle="No audit entries"
     >
       <Card title="Audit trail">
-        <pre className="max-h-96 overflow-auto rounded-lg bg-gray-50 p-4 text-xs text-gray-900">
+        <pre className="max-h-96 overflow-auto rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-4 text-xs text-[hsl(var(--dashboard-main-fg))]">
           {JSON.stringify(items, null, 2)}
         </pre>
       </Card>
@@ -805,11 +805,11 @@ export function AdminNotificationsPage({ role }: { role: AdminServiceRole }) {
 
   const rows = logs.map((log) => [
     <div key={`${log.id}-title`} className="min-w-0">
-      <p className="font-medium text-gray-900">
+      <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">
         {log.notificationTitle ?? 'System notification'}
       </p>
       {log.notificationType && (
-        <p className="text-xs text-gray-500">{formatNotificationTypeLabel(log.notificationType)}</p>
+        <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{formatNotificationTypeLabel(log.notificationType)}</p>
       )}
     </div>,
     log.recipientLabel ?? '—',
@@ -973,7 +973,7 @@ export function SuperAdminSettingsPage() {
                 type="text"
                 value={settings.platformName}
                 onChange={(e) => updateField('platformName', e.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
               />
             </div>
             <div>
@@ -982,7 +982,7 @@ export function SuperAdminSettingsPage() {
                 type="email"
                 value={settings.supportEmail}
                 onChange={(e) => updateField('supportEmail', e.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
               />
             </div>
             <div>
@@ -991,7 +991,7 @@ export function SuperAdminSettingsPage() {
                 type="text"
                 value={settings.defaultCurrency}
                 onChange={(e) => updateField('defaultCurrency', e.target.value.toUpperCase())}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
               />
             </div>
             <label className="flex items-center justify-between gap-4 text-sm">
@@ -1024,7 +1024,7 @@ export function SuperAdminSettingsPage() {
                 type="text"
                 value={settings.paymentProvider}
                 onChange={(e) => updateField('paymentProvider', e.target.value)}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
               />
             </div>
             <button

@@ -36,7 +36,7 @@ export function Pagination({
   return (
     <div className={cn('space-y-4', className)}>
       {showSummary && total != null && limit != null && (
-        <p className="text-center text-sm text-gray-500">
+        <p className="text-center text-sm text-muted-foreground">
           {resolvedTotal === 0
             ? 'No results'
             : `Showing ${start.toLocaleString()}–${end.toLocaleString()} of ${resolvedTotal.toLocaleString()} results`}
@@ -58,7 +58,7 @@ export function Pagination({
             const showEllipsis = prev != null && p - prev > 1;
             return (
               <span key={p} className="flex items-center gap-1">
-                {showEllipsis && <span className="px-2 text-gray-400">…</span>}
+                {showEllipsis && <span className="px-2 text-muted-foreground/70">…</span>}
                 <Button
                   variant={p === page ? 'default' : 'outline'}
                   size="sm"

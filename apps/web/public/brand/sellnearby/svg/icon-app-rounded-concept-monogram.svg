@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="SellNearby">
+  <rect width="512" height="512" rx="112" fill="#0D9488"/>
+  <g transform="translate(64, 64) scale(0.75)">
+  <defs></defs>
+  <g><rect x="106" y="106" width="300" height="300" rx="88" fill="#FFFFFF"/>
+  <text x="256" y="310" font-family="Inter, Poppins, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="148" font-weight="800" letter-spacing="-0.04em" fill="#FFFFFF" text-anchor="middle">SN</text></g>
+</g>
+</svg>

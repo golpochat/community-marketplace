@@ -1,8 +1,10 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { ListingSummary } from '@community-marketplace/types';
+import { Input } from '@community-marketplace/ui';
 import { formatCurrency } from '@community-marketplace/utils';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
@@ -44,10 +46,7 @@ export default function BuyerSearchPage() {
 
   return (
     <>
-      <PageHeader
-        title="Search Listings"
-        description="Find items across the marketplace."
-      />
+      <PageHeader title="Search Listings" description="Find items across the marketplace." />
 
       <DashboardCard>
         <form
@@ -57,21 +56,21 @@ export default function BuyerSearchPage() {
           }}
           className="mb-4"
         >
-          <input
+          <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search listings..."
-            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
+            aria-label="Search listings"
           />
         </form>
 
         {suggestions.length > 0 && (
-          <ul className="mb-4 rounded-lg border border-gray-200 bg-white text-sm">
+          <ul className="mb-4 overflow-hidden rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] text-sm">
             {suggestions.map((label) => (
               <li key={label}>
                 <button
                   type="button"
-                  className="block w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50"
+                  className="block w-full px-3 py-2 text-left text-[hsl(var(--dashboard-main-fg))] transition-colors duration-150 hover:bg-[hsl(var(--dashboard-sidebar-active)/0.5)]"
                   onClick={() => {
                     setQuery(label);
                     void runSearch(label);
@@ -84,17 +83,23 @@ export default function BuyerSearchPage() {
           </ul>
         )}
 
-        {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
-        {loading && <p className="text-sm text-gray-700">Searching...</p>}
+        {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+        {loading && (
+          <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Searching...</p>
+        )}
 
         <ul className="space-y-2">
           {results.map((listing) => (
             <li
               key={listing.id}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm"
             >
-              <p className="font-medium text-gray-900">{listing.title}</p>
-              <p className="text-gray-700">{formatCurrency(listing.price, listing.currency)}</p>
+              <Link href={`/listings/${listing.id}`} className="block hover:opacity-90">
+                <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">{listing.title}</p>
+                <p className="text-[hsl(var(--dashboard-sidebar-muted))]">
+                  {formatCurrency(listing.price, listing.currency)}
+                </p>
+              </Link>
             </li>
           ))}
         </ul>

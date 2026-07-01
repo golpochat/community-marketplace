@@ -20,7 +20,7 @@ const STATUS_STYLES: Record<
   },
   unverified: {
     label: 'Unverified',
-    className: 'bg-slate-100 text-slate-700 ring-slate-200',
+    className: 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-main-fg))] ring-[hsl(var(--dashboard-sidebar-border))]',
   },
   verification_required: {
     label: 'Verification required',

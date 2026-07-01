@@ -21,7 +21,7 @@ interface CreateListingButtonProps {
 export function CreateListingButton({
   label = 'Create listing',
   className = 'inline-flex rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90',
-  disabledClassName = 'inline-flex cursor-not-allowed rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-gray-500',
+  disabledClassName = 'inline-flex cursor-not-allowed rounded-lg bg-muted px-4 py-2 text-sm font-medium text-muted-foreground',
   redirectOnVerificationRequired = false,
 }: CreateListingButtonProps) {
   const router = useRouter();

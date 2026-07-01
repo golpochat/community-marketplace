@@ -37,9 +37,9 @@ export function SimilarListings({
     : 'mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4';
 
   return (
-    <section className="mt-12 border-t border-gray-100 pt-8">
-      <h2 className="text-xl font-semibold text-gray-900">{heading}</h2>
-      <p className="mt-1 text-sm text-gray-500">Browse more listings in this category</p>
+    <section className="mt-12 border-t border-border pt-8">
+      <h2 className="text-xl font-semibold text-foreground">{heading}</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Browse more listings in this category</p>
       <div className={gridClass}>
         {listings.slice(0, 4).map((listing) => (
           <ListingCard key={listing.id} listing={listing} layout="compact" showTrust={false} />

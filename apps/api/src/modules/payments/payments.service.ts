@@ -32,6 +32,7 @@ import { PaymentsPayoutsService } from './services/payments-payouts.service';
 import { PaymentsRefundsService } from './services/payments-refunds.service';
 import { PaymentsSettlementService } from './services/payments-settlement.service';
 import { StripeConnectService } from './services/stripe-connect.service';
+import { PaymentReceiptService } from './services/payment-receipt.service';
 
 @Injectable()
 export class PaymentsService {
@@ -45,6 +46,7 @@ export class PaymentsService {
     private readonly payouts: PaymentsPayoutsService,
     private readonly ledger: PaymentsLedgerService,
     private readonly stripeConnect: StripeConnectService,
+    private readonly receipts: PaymentReceiptService,
   ) {}
 
   createCheckoutSession(
@@ -151,5 +153,13 @@ export class PaymentsService {
 
   listUserLedger(userId: string, page?: number, limit?: number) {
     return this.ledger.listForUser(userId, page, limit);
+  }
+
+  getBuyerReceiptFile(paymentId: string, buyerId: string) {
+    return this.receipts.getBuyerReceiptFile(paymentId, buyerId);
+  }
+
+  getSellerReceiptFile(paymentId: string, sellerId: string) {
+    return this.receipts.getSellerReceiptFile(paymentId, sellerId);
   }
 }

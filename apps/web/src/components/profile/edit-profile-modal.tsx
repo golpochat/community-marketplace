@@ -10,7 +10,7 @@ import { Modal } from '@/components/shared/modal';
 import { useAuthStore } from '@/store/auth.store';
 
 const TEXTAREA_CLASSES =
-  'flex min-h-[6rem] w-full resize-y rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]';
+  'flex min-h-[6rem] w-full resize-y rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]';
 
 interface EditProfileModalProps {
   open: boolean;
@@ -70,7 +70,7 @@ export function EditProfileModal({
       description={description}
       cancelLabel="Cancel"
     >
-      {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
+      {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
       <div className="space-y-4">
         <ProfileAvatarUpload
           avatarUrl={avatarUrl}

@@ -21,7 +21,7 @@ export function BrowseViewToggle({ className, mode: controlledMode, onChange }: 
 
   return (
     <div
-      className={cn('inline-flex rounded-lg border border-gray-200 bg-white p-0.5', className)}
+      className={cn('inline-flex rounded-lg border border-border bg-card p-0.5', className)}
       role="group"
       aria-label="View mode"
     >
@@ -64,7 +64,7 @@ function ViewButton({
         'inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors',
         active
           ? 'bg-primary text-primary-foreground shadow-brand-sm'
-          : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700',
+          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
       )}
     >
       {children}

@@ -71,13 +71,13 @@ export function SendAdminInvitationModal({ open, onClose, onSent }: SendAdminInv
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-md rounded-xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-          <h3 className="text-lg font-semibold text-slate-900">Send invitation</h3>
+      <div className="w-full max-w-md rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] shadow-xl">
+        <div className="flex items-center justify-between border-b border-[hsl(var(--dashboard-sidebar-border))] px-6 py-4">
+          <h3 className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">Send invitation</h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-md p-1 text-[hsl(var(--dashboard-sidebar-muted))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.5)] hover:text-[hsl(var(--dashboard-main-fg))]"
             aria-label="Close"
           >
             ×
@@ -123,7 +123,7 @@ export function SendAdminInvitationModal({ open, onClose, onSent }: SendAdminInv
               ))}
             </select>
           </div>
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={loading || loadingRoles || !roleId}>
               {loading ? 'Sending…' : 'Send'}

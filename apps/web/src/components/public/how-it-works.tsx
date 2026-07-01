@@ -18,16 +18,22 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="mx-auto max-w-6xl px-4 py-12">
-      <h2 className="text-center text-h2 text-gray-900">How it works</h2>
-      <div className="mt-8 grid gap-8 md:grid-cols-3">
+    <section className="mx-auto max-w-6xl px-4 py-16 md:px-6">
+      <div className="mx-auto max-w-2xl text-center">
+        <h2 className="text-section-title">How it works</h2>
+        <p className="text-body mt-3">Three simple steps to buy or sell locally on SellNearby.</p>
+      </div>
+      <div className="mt-12 grid gap-8 md:grid-cols-3">
         {STEPS.map((item) => (
-          <div key={item.step} className="text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary text-lg font-bold text-primary-foreground">
+          <div
+            key={item.step}
+            className="surface-section flex flex-col items-center p-8 text-center transition-transform duration-200 hover:-translate-y-1"
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-xl font-bold text-primary-foreground shadow-brand-sm">
               {item.step}
             </div>
-            <h3 className="mt-4 text-h3 font-semibold text-gray-900">{item.title}</h3>
-            <p className="mt-2 text-small text-gray-600">{item.description}</p>
+            <h3 className="mt-5 text-lg font-semibold text-foreground">{item.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
           </div>
         ))}
       </div>

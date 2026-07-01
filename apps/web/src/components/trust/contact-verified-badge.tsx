@@ -28,7 +28,7 @@ export function ContactVerifiedBadge({ verified, label }: ContactVerifiedBadgePr
   return (
     <ListingBadge
       tone="outline"
-      className="font-normal text-gray-500"
+      className="font-normal text-muted-foreground"
       title={`${label} not verified`}
       aria-label={`${label} not verified`}
     >

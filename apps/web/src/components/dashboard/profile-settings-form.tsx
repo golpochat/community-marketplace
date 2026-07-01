@@ -23,7 +23,7 @@ import { userService } from '@/services/user.service';
 type ProfileTab = 'profile' | 'account' | 'preferences';
 
 const TEXTAREA_CLASSES =
-  'flex min-h-[6rem] w-full resize-y rounded-md border border-[hsl(var(--dashboard-sidebar-border))] bg-white px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] placeholder:text-[hsl(var(--dashboard-sidebar-muted))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))] disabled:cursor-not-allowed disabled:opacity-50';
+  'flex min-h-[6rem] w-full resize-y rounded-md border border-[hsl(var(--dashboard-sidebar-border))] bg-card px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] placeholder:text-[hsl(var(--dashboard-sidebar-muted))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))] disabled:cursor-not-allowed disabled:opacity-50';
 
 function parseProfileTab(value: string | null): ProfileTab | null {
   if (value === 'profile' || value === 'account' || value === 'preferences') {

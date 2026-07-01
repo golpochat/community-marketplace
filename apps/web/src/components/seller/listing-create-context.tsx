@@ -13,7 +13,7 @@ export type SellerCategoryOption = {
 
 const FIELD_HINT_CLASS = 'mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]';
 const READONLY_VALUE_CLASS =
-  'mt-1 flex min-h-[2.5rem] w-full items-center rounded-md border border-[hsl(var(--dashboard-sidebar-border))] bg-white px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]';
+  'mt-1 flex min-h-[2.5rem] w-full items-center rounded-md border border-[hsl(var(--dashboard-sidebar-border))] bg-card px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]';
 
 export function pickDefaultListingStoreId(stores: SellerStore[]): string {
   if (!stores.length) return '';

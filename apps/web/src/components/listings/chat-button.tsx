@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 import { Button } from '@community-marketplace/ui';
+
 import { useAuth } from '@/hooks/use-auth';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
@@ -13,14 +15,17 @@ interface ChatButtonProps {
 
 export function ChatButton({ listingId, sellerId }: ChatButtonProps) {
   const { isAuthenticated, dashboardPath } = useAuth();
+  const pathname = usePathname();
+
+  const loginHref = `${WEB_APP_ROUTES.login}?returnUrl=${encodeURIComponent(pathname)}`;
 
   if (!isAuthenticated) {
     return (
-      <span className="block w-full" title="Log in to contact this seller">
-        <Button className="w-full" disabled>
+      <Link href={loginHref} className="block w-full">
+        <Button type="button" variant="outline" className="w-full">
           Message seller
         </Button>
-      </span>
+      </Link>
     );
   }
 
@@ -28,7 +33,9 @@ export function ChatButton({ listingId, sellerId }: ChatButtonProps) {
 
   return (
     <Link href={`${chatPath}?listing=${listingId}&seller=${sellerId}`} className="block w-full">
-      <Button className="w-full">Message seller</Button>
+      <Button type="button" variant="outline" className="w-full">
+        Message seller
+      </Button>
     </Link>
   );
 }
@@ -38,7 +45,7 @@ export function ChatLoginHint() {
   if (isAuthenticated) return null;
 
   return (
-    <p className="text-xs text-gray-500">
+    <p className="text-xs text-muted-foreground">
       <Link href={WEB_APP_ROUTES.login} className="font-medium text-primary hover:underline">
         Sign in
       </Link>

@@ -4,6 +4,15 @@ import Link from 'next/link';
 import { useCallback, useState } from 'react';
 
 import type { Listing, ListingSummary } from '@community-marketplace/types';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+  Button,
+} from '@community-marketplace/ui';
 
 import { DescriptionSection } from '@/components/listings/description-section';
 import { Gallery } from '@/components/listings/gallery';
@@ -11,7 +20,6 @@ import { ListingDetailHeader } from '@/components/listings/listing-detail-header
 import { ListingDetailSidebar } from '@/components/listings/listing-detail-sidebar';
 import { ListingDetailUnavailable } from '@/components/listings/listing-detail-unavailable';
 import { SimilarListings } from '@/components/listings/similar-listings';
-import { Button } from '@community-marketplace/ui';
 import { useListingFavorite } from '@/hooks/use-listing-favorite';
 import { getListingUnavailableMessage } from '@/lib/listing-availability';
 import {
@@ -72,11 +80,35 @@ export function ListingDetailClient({
     );
   }
 
+  const categoryHref = listing.category?.slug
+    ? `/listings?categoryId=${listing.categoryId}`
+    : undefined;
+
   return (
     <div className={SITE_PAGE_CLASS}>
-      <Link href="/listings" className="text-sm text-primary hover:text-primary/90">
-        ← Back to listings
-      </Link>
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/listings">Listings</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {listing.category?.name && categoryHref ? (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href={categoryHref}>{listing.category.name}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+            </>
+          ) : null}
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage className="max-w-[12rem] truncate sm:max-w-md">{listing.title}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       {refreshError && (
         <div

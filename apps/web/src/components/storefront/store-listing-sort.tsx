@@ -17,7 +17,7 @@ interface StoreListingSortProps {
 export function StoreListingSort({ value, onChange }: StoreListingSortProps) {
   return (
     <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:items-end">
-      <label htmlFor="store-listing-sort" className="text-xs font-medium uppercase tracking-wide text-gray-500">
+      <label htmlFor="store-listing-sort" className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
         Sort by
       </label>
       <Select
@@ -25,7 +25,7 @@ export function StoreListingSort({ value, onChange }: StoreListingSortProps) {
         value={value}
         onChange={(e) => onChange(e.target.value as StorefrontSort)}
         aria-label="Sort listings"
-        className="w-full min-w-[12rem] rounded-brand-md border-gray-200 bg-white shadow-brand-sm sm:w-auto"
+        className="w-full min-w-[12rem] rounded-brand-md border-border bg-card shadow-brand-sm sm:w-auto"
       >
       {SORT_OPTIONS.map((option) => (
         <option key={option.value} value={option.value}>

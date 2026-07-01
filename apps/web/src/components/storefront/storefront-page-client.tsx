@@ -82,7 +82,7 @@ function StorefrontSkeleton() {
 
   return (
 
-    <div className="min-h-screen bg-gray-50 pb-24 lg:pb-12">
+    <div className="min-h-screen bg-muted/50 pb-24 lg:pb-12">
 
       <Skeleton className={`w-full rounded-none ${STOREFRONT_HERO_BANNER_CLASS}`} />
 
@@ -338,7 +338,7 @@ function StorefrontPageClientContent({ sellerSlug }: StorefrontPageClientProps) 
 
   return (
 
-    <div className="min-h-screen bg-gray-50 pb-24 lg:pb-12">
+    <div className="min-h-screen bg-muted/50 pb-24 lg:pb-12">
 
       <StoreHeader store={store} listingCount={listings.length} />
 
@@ -376,17 +376,17 @@ function StorefrontPageClientContent({ sellerSlug }: StorefrontPageClientProps) 
 
             <section aria-labelledby="store-listings-heading">
 
-              <div className="mb-4 flex flex-col gap-4 border-b border-gray-200 pb-5 lg:flex-row lg:items-end lg:justify-between">
+              <div className="mb-4 flex flex-col gap-4 border-b border-border pb-5 lg:flex-row lg:items-end lg:justify-between">
 
                 <div>
 
-                  <h2 id="store-listings-heading" className="text-xl font-bold text-gray-900">
+                  <h2 id="store-listings-heading" className="text-xl font-bold text-foreground">
 
                     {activeSection ? activeSection.name : 'Shop all listings'}
 
                   </h2>
 
-                  <p className="mt-1 text-sm text-gray-500">{listingLabel} available</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{listingLabel} available</p>
 
                 </div>
 
@@ -442,15 +442,15 @@ function StorefrontPageClientContent({ sellerSlug }: StorefrontPageClientProps) 
 
             <section aria-labelledby="store-reviews-heading">
 
-              <div className="mb-5 border-b border-gray-200 pb-4">
+              <div className="mb-5 border-b border-border pb-4">
 
-                <h2 id="store-reviews-heading" className="text-xl font-bold text-gray-900">
+                <h2 id="store-reviews-heading" className="text-xl font-bold text-foreground">
 
                   Customer reviews
 
                 </h2>
 
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-muted-foreground">
 
                   {store.analytics.reviewCount > 0
 

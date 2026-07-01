@@ -1,44 +1,57 @@
 # SellNearby Brand Assets
 
+Canonical primary: **#0D9488** (teal). Accent: **#F97316** (coral). All SVGs generated from `scripts/brand/sellnearby-shared.svg.js`.
+
 ## Palette
 
 | Token | Hex | Usage |
 |-------|-----|--------|
-| Primary | `#3A6DFF` | Pin, links, primary CTAs |
-| Primary light | `#4D7CFF` | Pin inner circle |
-| Trust | `#2ECC71` | Checkmark, verified badges |
-| Text | `#2F3542` | Wordmark on light backgrounds |
-| White | `#FFFFFF` | Wordmark on dark backgrounds, mono-white assets |
-| Background | `#F1F2F6` | Page surfaces |
-| Amber | `#FFC048` | Discount badges |
-| Coral | `#FF6B6B` | Alerts |
+| Primary | `#0D9488` | Beacon mark, links, primary CTAs |
+| Primary dark | `#0F766E` | Footer, hover / pressed states |
+| Primary light | `#2DD4BF` | Dark mode highlights |
+| Accent | `#F97316` | Hub dot, “Nearby” wordmark, secondary CTAs |
+| Trust | `#16A34A` | Verified badges |
+| Text | `#1C1917` | Body copy on light surfaces |
+| Background | `#FAF7F2` | Warm cream page surface |
+| Amber | `#FBBF24` | Discount badges |
+| Coral | `#EF4444` | Alerts |
 
-## Typography
+## Mark concepts (pick one as default)
 
-- **Wordmark:** Inter, Poppins, system-ui, sans-serif
-- **Text:** SellNearby — Bold (700), single colour (no domain extension in the logo)
+| Concept | File | Description |
+|---------|------|-------------|
+| **Beacon** (default) | `icon-mark.svg` | Proximity arcs + coral hub + storefront awning — **not a map pin** |
+| Monogram | `icon-mark-concept-monogram.svg` | **SN** in rounded square |
+| Bridge | `icon-mark-concept-bridge.svg` | Twin arches + connection hub |
 
-## Files
+Horizontal lockups with alternate marks: `logo-horizontal-compact-concept-monogram.svg`, `logo-horizontal-compact-concept-bridge.svg`.
 
-### SVG (primary)
+## Wordmark
 
-| File | Description |
-|------|-------------|
-| `svg/icon-mark.svg` | Pin + checkmark only |
-| `svg/logo-horizontal-full.svg` | Icon + SellNearby (standard) |
-| `svg/logo-horizontal-compact.svg` | Icon + SellNearby (navbar) |
-| `svg/logo-stacked.svg` | Icon above centred wordmark |
-| `svg/logo-dark-mode.svg` | Horizontal, for dark backgrounds |
-| `svg/logo-stacked-dark-mode.svg` | Stacked, for dark backgrounds |
-| `svg/logo-monochrome-white.svg` | All white (horizontal) |
-| `svg/logo-monochrome-black.svg` | All black (horizontal) |
-| `svg/logo-stacked-monochrome-white.svg` | All white (stacked) |
-| `svg/logo-stacked-monochrome-black.svg` | All black (stacked) |
+Split styling: **Sell** (dark) + **Nearby** (teal primary) — Inter/Poppins Bold, `-0.02em` tracking.
 
-### PNG / WebP
+## Regenerate assets
 
 ```bash
-node scripts/brand/export-sellnearby.mjs
+npm run brand:export --workspace=@community-marketplace/web
 ```
 
-Export script copies favicons to `apps/web/public/icons/`.
+Preview all variants: open `preview.html` in this folder.
+
+## React component
+
+```tsx
+<Logo />                          // nav — auto light/dark lockup
+<Logo variant="dark" size="footer" /> // dark footer band
+<Logo variant="auth" size="auth" />   // login / signup
+<Logo variant="icon" size="icon" />   // sidebar mark
+```
+
+## Favicons (`apps/web/public/icons/`)
+
+| File | Source |
+|------|--------|
+| `icon.svg` | Flat beacon mark |
+| `icon-app.svg` | Teal rounded square + white mark |
+| `favicon-32.png` / `favicon.ico` | Flat beacon |
+| PWA PNGs | `icon-app-rounded` |

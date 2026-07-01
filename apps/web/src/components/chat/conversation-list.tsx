@@ -21,12 +21,12 @@ export function ConversationList({
 }: ConversationListProps) {
   if (!items.length) {
     return (
-      <p className="p-4 text-sm text-gray-500">No conversations yet.</p>
+      <p className="p-4 text-sm text-muted-foreground">No conversations yet.</p>
     );
   }
 
   return (
-    <ul className="divide-y divide-gray-200">
+    <ul className="divide-y divide-border">
       {items.map((item) => {
         const preview = previewText(item);
         return (
@@ -34,14 +34,14 @@ export function ConversationList({
             <button
               type="button"
               onClick={() => onSelect(item.thread.id)}
-              className={`w-full px-4 py-3 text-left hover:bg-gray-50 ${
+              className={`w-full px-4 py-3 text-left hover:bg-muted/50 ${
                 activeThreadId === item.thread.id ? 'bg-brand-50' : ''
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-foreground">
                       {item.participant.displayName ?? 'User'}
                     </p>
                     <ChatVerificationBadge
@@ -49,12 +49,12 @@ export function ConversationList({
                       role={item.participant.role}
                     />
                   </div>
-                  <p className="truncate text-xs text-gray-500">{item.listing.title}</p>
+                  <p className="truncate text-xs text-muted-foreground">{item.listing.title}</p>
                   {preview && (
-                    <p className="mt-1 truncate text-xs text-gray-600">{preview}</p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">{preview}</p>
                   )}
                   {item.thread.isBlocked && (
-                    <p className="mt-0.5 text-xs text-red-600">Blocked</p>
+                    <p className="mt-0.5 text-xs text-destructive">Blocked</p>
                   )}
                 </div>
                 {item.unreadCount > 0 && (

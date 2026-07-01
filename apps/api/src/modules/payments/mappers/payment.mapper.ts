@@ -30,6 +30,10 @@ export function mapPayment(row: {
   providerPaymentId: string | null;
   providerRefundId: string | null;
   clientSecret: string | null;
+  receiptNumber: string | null;
+  buyerReceiptKey: string | null;
+  sellerReceiptKey: string | null;
+  receiptGeneratedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }): Payment {
@@ -48,6 +52,8 @@ export function mapPayment(row: {
     providerPaymentId: row.providerPaymentId ?? undefined,
     providerRefundId: row.providerRefundId ?? undefined,
     clientSecret: row.clientSecret ?? undefined,
+    receiptNumber: row.receiptNumber ?? undefined,
+    receiptAvailable: Boolean(row.receiptGeneratedAt && row.buyerReceiptKey),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
