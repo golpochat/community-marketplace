@@ -13,6 +13,7 @@ import {
   Card,
   IconActionButton,
   IconActionGroup,
+  Tooltip,
 } from '@community-marketplace/ui-dashboard';
 
 import { AdminToastStack, useAdminToast } from '@/components/admin/seller-verification/admin-toast';
@@ -44,6 +45,18 @@ import {
   adminSellerVerificationService,
   type AdminServiceRole,
 } from '@/services/admin-seller-verification.service';
+
+function TruncatedTableCell({ text }: { text: string }) {
+  if (!text || text === '—') {
+    return <span>{text || '—'}</span>;
+  }
+
+  return (
+    <Tooltip label={text}>
+      <span className="block max-w-[14rem] truncate">{text}</span>
+    </Tooltip>
+  );
+}
 
 export function AdminSellerVerificationPage({
   role,
@@ -138,13 +151,14 @@ export function AdminSellerVerificationPage({
             </span>
           )}
         </div>,
-        item.phone ?? '—',
         item.submittedAt ? formatDateTime(item.submittedAt) : '—',
         <SellerStatusBadge key={`${item.userId}-status`} status={statusBadge} />,
         activeView === 'approved' && item.verificationCompletedAt
           ? formatDateTime(item.verificationCompletedAt)
           : activeView === 'rejected'
-            ? item.rejectionReason ?? '—'
+            ? (
+                <TruncatedTableCell key={`${item.userId}-reason`} text={item.rejectionReason ?? '—'} />
+              )
             : '—',
         <div key={`${item.userId}-actions`} className="flex flex-wrap gap-2">
           <IconActionGroup>
@@ -309,10 +323,10 @@ export function AdminSellerVerificationPage({
 
   const columns =
     activeView === 'approved'
-      ? ['Seller', 'Phone', 'Submitted', 'Status', 'Verified at', 'Actions']
+      ? ['Seller', 'Submitted', 'Status', 'Verified at', 'Actions']
       : activeView === 'rejected'
-        ? ['Seller', 'Phone', 'Submitted', 'Status', 'Rejection reason', 'Actions']
-        : ['Seller', 'Phone', 'Submitted', 'Status', 'Details', 'Actions'];
+        ? ['Seller', 'Submitted', 'Status', 'Rejection reason', 'Actions']
+        : ['Seller', 'Submitted', 'Status', 'Details', 'Actions'];
 
   if (!permissionsLoading && !canReview && !can(PERMISSIONS.VIEW_SELLER_DOCUMENTS)) {
     return (

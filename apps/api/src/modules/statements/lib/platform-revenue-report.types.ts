@@ -23,12 +23,19 @@ export interface MarketplaceFeeLine {
 export interface PlatformRevenueSummary {
   platformServicesGross: number;
   marketplaceFeesGross: number;
+  /** Platform services + marketplace fees — use for accountancy. */
   totalRevenueGross: number;
+  /** Buyer + seller trade volume when included in export (informational, not platform income). */
+  activityVolumeGross: number;
+  buyerPurchasesGross: number;
+  sellerSalesGross: number;
   netAmount?: number;
   vatAmount?: number;
   currency: string;
   platformInvoiceCount: number;
   marketplaceFeeCount: number;
+  buyerPurchaseCount: number;
+  sellerSaleCount: number;
 }
 
 export interface PlatformRevenueReportData {

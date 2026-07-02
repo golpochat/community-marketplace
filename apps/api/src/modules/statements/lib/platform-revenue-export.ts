@@ -31,8 +31,16 @@ export function buildPlatformRevenueCsv(data: PlatformRevenueReportData): string
     );
   }
 
+  const { summary } = data;
   lines.push('');
-  lines.push(`Total,,,,,,${data.summary.totalRevenueGross.toFixed(2)},${data.summary.currency}`);
+  lines.push(
+    `Platform revenue total,,,,,,${summary.totalRevenueGross.toFixed(2)},${summary.currency}`,
+  );
+  if (summary.activityVolumeGross > 0) {
+    lines.push(
+      `Activity volume (informational),,,,,,${summary.activityVolumeGross.toFixed(2)},${summary.currency}`,
+    );
+  }
 
   return `${lines.join('\n')}\n`;
 }
@@ -78,12 +86,20 @@ export async function buildPlatformRevenueXlsx(data: PlatformRevenueReportData):
     });
   }
 
+  const { summary } = data;
   sheet.addRow({});
   sheet.addRow({
-    type: 'Total',
-    amount: data.summary.totalRevenueGross,
-    currency: data.summary.currency,
+    type: 'Platform revenue total',
+    amount: summary.totalRevenueGross,
+    currency: summary.currency,
   });
+  if (summary.activityVolumeGross > 0) {
+    sheet.addRow({
+      type: 'Activity volume (informational)',
+      amount: summary.activityVolumeGross,
+      currency: summary.currency,
+    });
+  }
 
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);

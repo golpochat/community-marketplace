@@ -1,6 +1,12 @@
+import {
+  getInvoiceCompanyConfig,
+  splitVatFromGross,
+} from '@community-marketplace/config';
+
 import type {
   MarketplaceFeeLine,
   PlatformRevenueInvoiceLine,
+  PlatformRevenueSummary,
 } from './platform-revenue-report.types';
 
 export type FinanceRecordType =
@@ -28,6 +34,12 @@ export const FINANCE_CATEGORY_LABELS: Record<FinanceRecordCategory, string> = {
   platform_service: 'Platform service',
   marketplace_fee: 'Marketplace fee',
 };
+
+/** Default admin filter: platform income only (accountancy view). */
+export const DEFAULT_REVENUE_CATEGORIES: FinanceRecordCategory[] = [
+  'platform_service',
+  'marketplace_fee',
+];
 
 const CATEGORY_TO_RECORD_TYPE: Record<FinanceRecordCategory, FinanceRecordType> = {
   buyer: 'buyer_purchase',
@@ -123,7 +135,7 @@ export function buildFinanceRecords(
 export function normalizeFinanceCategories(
   categories: FinanceRecordCategory[] | undefined,
 ): FinanceRecordCategory[] {
-  if (!categories?.length) return [...FINANCE_RECORD_CATEGORIES];
+  if (!categories?.length) return [...DEFAULT_REVENUE_CATEGORIES];
   return categories.filter((category) => FINANCE_RECORD_CATEGORIES.includes(category));
 }
 
@@ -164,6 +176,39 @@ export function filterFinanceRecords(
   });
 }
 
+export function computeFinanceSummary(
+  records: FinanceRecordLine[],
+  currency: string,
+): PlatformRevenueSummary {
+  const platformServicesGross = records
+    .filter((row) => row.type === 'platform_service')
+    .reduce((sum, row) => sum + row.amount, 0);
+  const marketplaceFeesGross = records
+    .filter((row) => row.type === 'marketplace_fee')
+    .reduce((sum, row) => sum + row.amount, 0);
+  const buyerPurchasesGross = records
+    .filter((row) => row.type === 'buyer_purchase')
+    .reduce((sum, row) => sum + row.amount, 0);
+  const sellerSalesGross = records
+    .filter((row) => row.type === 'seller_sale')
+    .reduce((sum, row) => sum + row.amount, 0);
+  const totalRevenueGross = platformServicesGross + marketplaceFeesGross;
+
+  return {
+    platformServicesGross,
+    marketplaceFeesGross,
+    totalRevenueGross,
+    activityVolumeGross: buyerPurchasesGross + sellerSalesGross,
+    buyerPurchasesGross,
+    sellerSalesGross,
+    currency,
+    platformInvoiceCount: records.filter((row) => row.type === 'platform_service').length,
+    marketplaceFeeCount: records.filter((row) => row.type === 'marketplace_fee').length,
+    buyerPurchaseCount: records.filter((row) => row.type === 'buyer_purchase').length,
+    sellerSaleCount: records.filter((row) => row.type === 'seller_sale').length,
+  };
+}
+
 export function applyRecordFilters(
   data: import('./platform-revenue-report.types').PlatformRevenueReportData,
   options: {
@@ -173,25 +218,18 @@ export function applyRecordFilters(
 ): import('./platform-revenue-report.types').PlatformRevenueReportData {
   const records = filterFinanceRecords(data.records, options);
   const currency = records[0]?.currency ?? data.summary.currency;
+  const summary = computeFinanceSummary(records, currency);
 
-  const platformServicesGross = records
-    .filter((row) => row.type === 'platform_service')
-    .reduce((sum, row) => sum + row.amount, 0);
-  const marketplaceFeesGross = records
-    .filter((row) => row.type === 'marketplace_fee')
-    .reduce((sum, row) => sum + row.amount, 0);
+  const config = getInvoiceCompanyConfig();
+  if (config.vatStatus === 'registered' && config.vatNumber) {
+    const { net, vat } = splitVatFromGross(summary.totalRevenueGross, config.defaultVatRate);
+    summary.netAmount = net;
+    summary.vatAmount = vat;
+  }
 
   return {
     ...data,
     records,
-    summary: {
-      ...data.summary,
-      currency,
-      platformServicesGross,
-      marketplaceFeesGross,
-      totalRevenueGross: records.reduce((sum, row) => sum + row.amount, 0),
-      platformInvoiceCount: records.filter((row) => row.type === 'platform_service').length,
-      marketplaceFeeCount: records.filter((row) => row.type === 'marketplace_fee').length,
-    },
+    summary,
   };
 }

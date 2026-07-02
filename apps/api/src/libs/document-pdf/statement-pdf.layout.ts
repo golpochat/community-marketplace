@@ -93,7 +93,7 @@ function drawStatementCover(
     .font('Helvetica-Bold')
     .fontSize(20)
     .fillColor(PDF_RGB.text)
-    .text(data.role === 'seller' ? 'Seller activity statement' : 'Purchase activity statement', PDF_MARGIN, y + 8);
+    .text(data.role === 'seller' ? 'Seller account statement' : 'Buyer purchase statement', PDF_MARGIN, y + 8);
   y += 36;
 
   const periodStart = new Date(data.periodStart);

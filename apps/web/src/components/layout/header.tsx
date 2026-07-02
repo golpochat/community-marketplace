@@ -1,38 +1,40 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-import { Button, cn } from '@community-marketplace/ui';
-import { Menu } from 'lucide-react';
+import { Button, cn } from "@community-marketplace/ui";
+import { Menu } from "lucide-react";
 
-import { Logo } from '@/components/brand/logo';
-import { MobileNavDrawer } from '@/components/layout/mobile-nav-drawer';
-import { NavCategoriesDropdown } from '@/components/layout/nav-categories-dropdown';
-import { UserMenuDropdown } from '@/components/layout/user-menu-dropdown';
-import { NotificationBell } from '@/components/shared/notification-bell';
-import { useAuth } from '@/hooks/use-auth';
-import { useUserProfile } from '@/hooks/use-user-profile';
-import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
-import { getUserNavLinks } from '@/lib/user-nav-routes';
-import { authService } from '@/services/auth.service';
+import { Logo } from "@/components/brand/logo";
+import { MobileNavDrawer } from "@/components/layout/mobile-nav-drawer";
+import { NavCategoriesDropdown } from "@/components/layout/nav-categories-dropdown";
+import { UserMenuDropdown } from "@/components/layout/user-menu-dropdown";
+import { NotificationBell } from "@/components/shared/notification-bell";
+import { useAuth } from "@/hooks/use-auth";
+import { useUserProfile } from "@/hooks/use-user-profile";
+import { WEB_APP_ROUTES, isAuthLoginRoute, isAuthRegisterRoute } from "@/lib/rbac-routes";
+import { getUserNavLinks } from "@/lib/user-nav-routes";
+import { authService } from "@/services/auth.service";
 
 const NAV_LINK_CLASS =
-  'relative rounded-lg px-3 py-2 text-[15px] font-medium text-foreground/75 transition-colors duration-150 hover:text-primary';
+  "relative rounded-lg px-3 py-2 text-[15px] font-medium text-foreground/75 transition-colors duration-150 hover:text-primary";
 
 function getSellHref(isAuthenticated: boolean, sellItem?: string): string {
-  const target = sellItem ?? '/seller/listings/create';
+  const target = sellItem ?? "/seller/listings/create";
   if (isAuthenticated) return target;
   return WEB_APP_ROUTES.login;
 }
 
 function isBuyRoute(pathname: string): boolean {
-  return pathname === WEB_APP_ROUTES.listings || pathname.startsWith('/listings/');
+  return (
+    pathname === WEB_APP_ROUTES.listings || pathname.startsWith("/listings/")
+  );
 }
 
 function isSellRoute(pathname: string): boolean {
-  return pathname.startsWith('/seller');
+  return pathname.startsWith("/seller");
 }
 
 function HeaderNavLink({
@@ -49,9 +51,10 @@ function HeaderNavLink({
       href={href}
       className={cn(
         NAV_LINK_CLASS,
-        active && 'font-semibold text-primary after:absolute after:inset-x-3 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-primary',
+        active &&
+          "font-semibold text-primary after:absolute after:inset-x-3 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-primary",
       )}
-      aria-current={active ? 'page' : undefined}
+      aria-current={active ? "page" : undefined}
     >
       {children}
     </Link>
@@ -60,12 +63,14 @@ function HeaderNavLink({
 
 export function Header() {
   const pathname = usePathname();
-  const { user, session, isAuthenticated, clearUser, dashboardPath } = useAuth();
+  const { user, session, isAuthenticated, clearUser, dashboardPath } =
+    useAuth();
   const { profile } = useUserProfile();
   const hasAuthState = isAuthenticated || !!user;
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const navLinks = user && dashboardPath ? getUserNavLinks(user.role, dashboardPath) : null;
+  const navLinks =
+    user && dashboardPath ? getUserNavLinks(user.role, dashboardPath) : null;
   const menuUser = user
     ? {
         ...user,
@@ -76,14 +81,16 @@ export function Header() {
   const sellHref = getSellHref(hasAuthState, navLinks?.sellItem);
   const buyActive = isBuyRoute(pathname);
   const sellActive = isSellRoute(pathname);
+  const onLoginPage = isAuthLoginRoute(pathname);
+  const onRegisterPage = isAuthRegisterRoute(pathname);
 
   const notificationsHref =
-    user?.role === 'SELLER'
+    user?.role === "SELLER"
       ? WEB_APP_ROUTES.sellerNotifications
-      : user?.role === 'SUPER_ADMIN'
-        ? '/super-admin/notifications'
-        : user?.role === 'ADMIN'
-          ? '/admin/notifications'
+      : user?.role === "SUPER_ADMIN"
+        ? "/super-admin/notifications"
+        : user?.role === "ADMIN"
+          ? "/admin/notifications"
           : WEB_APP_ROUTES.buyerNotifications;
 
   async function handleSignOut() {
@@ -129,22 +136,37 @@ export function Header() {
           <div className="hidden shrink-0 items-center gap-3 md:flex">
             {hasAuthState && user && navLinks && menuUser ? (
               <>
-                <Link href={sellHref} aria-current={sellActive ? 'page' : undefined}>
+                <Link
+                  href={sellHref}
+                  aria-current={sellActive ? "page" : undefined}
+                >
                   <Button size="default" className="shadow-brand-sm">
                     Sell
                   </Button>
                 </Link>
-                {user.role && <NotificationBell href={notificationsHref} role={user.role} />}
-                <UserMenuDropdown user={menuUser} links={navLinks} onSignOut={handleSignOut} />
+                {user.role && (
+                  <NotificationBell href={notificationsHref} role={user.role} />
+                )}
+                <UserMenuDropdown
+                  user={menuUser}
+                  links={navLinks}
+                  onSignOut={handleSignOut}
+                />
               </>
             ) : (
               <>
-                <Link href={WEB_APP_ROUTES.login} className={NAV_LINK_CLASS}>
-                  Sign in
-                </Link>
-                <Link href={WEB_APP_ROUTES.register}>
-                  <span className="btn-brand-accent inline-flex h-10 items-center px-5">Join free</span>
-                </Link>
+                {!onLoginPage ? (
+                  <Link href={WEB_APP_ROUTES.login} className={NAV_LINK_CLASS}>
+                    Sign in
+                  </Link>
+                ) : null}
+                {!onRegisterPage ? (
+                  <Link href={WEB_APP_ROUTES.register}>
+                    <span className="btn-brand-accent inline-flex h-10 items-center px-5">
+                      Join free
+                    </span>
+                  </Link>
+                ) : null}
               </>
             )}
           </div>
@@ -153,7 +175,7 @@ export function Header() {
             type="button"
             className="inline-flex items-center justify-center rounded-lg p-2 text-foreground/80 transition-colors duration-150 hover:bg-muted md:hidden"
             aria-expanded={mobileOpen}
-            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
             onClick={() => setMobileOpen(true)}
           >
             <Menu className="h-6 w-6" />
@@ -169,6 +191,8 @@ export function Header() {
         navLinks={navLinks}
         sellHref={sellHref}
         onSignOut={handleSignOut}
+        hideSignIn={onLoginPage}
+        hideJoin={onRegisterPage}
       />
     </>
   );

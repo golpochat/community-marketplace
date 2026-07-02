@@ -25,6 +25,7 @@ import {
 import {
   buildFinanceRecords,
   applyRecordFilters,
+  computeFinanceSummary,
   type FinanceRecordCategory,
   type TradePaymentLine,
 } from '../lib/finance-records.util';
@@ -34,7 +35,6 @@ import {
   type MarketplaceFeeLine,
   type PlatformRevenueInvoiceLine,
   type PlatformRevenueReportData,
-  type PlatformRevenueSummary,
 } from '../lib/platform-revenue-report.types';
 
 export interface FinanceReportQueryOptions {
@@ -152,8 +152,14 @@ export class PlatformRevenueReportService {
         currency: row.currency,
       }));
 
-    const summary = this.buildSummary(platformInvoices, marketplaceFees, currency);
     const records = buildFinanceRecords(platformInvoices, tradePayments);
+    let summary = computeFinanceSummary(records, currency);
+
+    const config = getInvoiceCompanyConfig();
+    if (config.vatStatus === 'registered' && config.vatNumber) {
+      const { net, vat } = splitVatFromGross(summary.totalRevenueGross, config.defaultVatRate);
+      summary = { ...summary, netAmount: net, vatAmount: vat };
+    }
 
     return {
       reportNumber: buildPlatformRevenueReportNumber(dateFrom, dateTo),
@@ -229,33 +235,6 @@ export class PlatformRevenueReportService {
   reportFilenameForMonth(year: number, month: number, ext: 'pdf' | 'csv'): string {
     const ym = `${year}-${String(month).padStart(2, '0')}`;
     return `platform-revenue-${ym}.${ext}`;
-  }
-
-  private buildSummary(
-    platformInvoices: PlatformRevenueInvoiceLine[],
-    marketplaceFees: MarketplaceFeeLine[],
-    currency: string,
-  ): PlatformRevenueSummary {
-    const platformServicesGross = platformInvoices.reduce((sum, row) => sum + row.gross, 0);
-    const marketplaceFeesGross = marketplaceFees.reduce((sum, row) => sum + row.fee, 0);
-    const totalRevenueGross = platformServicesGross + marketplaceFeesGross;
-
-    const config = getInvoiceCompanyConfig();
-    const base: PlatformRevenueSummary = {
-      platformServicesGross,
-      marketplaceFeesGross,
-      totalRevenueGross,
-      currency,
-      platformInvoiceCount: platformInvoices.length,
-      marketplaceFeeCount: marketplaceFees.length,
-    };
-
-    if (config.vatStatus === 'registered' && config.vatNumber) {
-      const { net, vat } = splitVatFromGross(totalRevenueGross, config.defaultVatRate);
-      return { ...base, netAmount: net, vatAmount: vat };
-    }
-
-    return base;
   }
 
   private readMetadata(value: unknown): Record<string, unknown> {

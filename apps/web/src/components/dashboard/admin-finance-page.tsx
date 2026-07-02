@@ -7,9 +7,10 @@ import { DashboardCard } from '@community-marketplace/ui-dashboard';
 
 import { DashboardPageShell } from '@/components/dashboard/async-resource';
 import {
-  defaultFinanceCategories,
+  defaultRevenueFinanceCategories,
   effectiveFinanceCategories,
   FinanceCategoryFilter,
+  includesActivityCategories,
   type FinanceRecordCategory,
 } from '@/components/dashboard/finance-category-filter';
 import { StatementExportButtons } from '@/components/dashboard/statement-export-buttons';
@@ -56,7 +57,8 @@ function TypeBadge({ label }: { label: string }) {
 function FinanceRecordDetails({ row }: { row: FinanceRecord }) {
   return (
     <div className="min-w-0 space-y-0.5">
-      <p className="truncate font-medium text-[hsl(var(--dashboard-main-fg))]">{row.description}</p>
+      <p className="truncate font-medium text-[hsl(var(--dashboard-main-fg))]">{row.party}</p>
+      <p className="truncate text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{row.description}</p>
       <p className="truncate text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{row.partyEmail}</p>
     </div>
   );
@@ -149,9 +151,10 @@ export function AdminFinancePage({ role }: AdminFinancePageProps) {
   const [dateFrom, setDateFrom] = useState(monthStartIso);
   const [dateTo, setDateTo] = useState(todayIso);
   const [search, setSearch] = useState('');
-  const [categories, setCategories] = useState<FinanceRecordCategory[]>(defaultFinanceCategories);
+  const [categories, setCategories] = useState<FinanceRecordCategory[]>(defaultRevenueFinanceCategories);
   const [records, setRecords] = useState<FinanceRecord[]>([]);
-  const [total, setTotal] = useState(0);
+  const [platformRevenue, setPlatformRevenue] = useState(0);
+  const [activityVolume, setActivityVolume] = useState(0);
   const [currency, setCurrency] = useState('EUR');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -181,7 +184,8 @@ export function AdminFinancePage({ role }: AdminFinancePageProps) {
     try {
       const data = await monetizationService.getFinanceReportSummary(role, filters);
       setRecords(data.records);
-      setTotal(data.summary.totalRevenueGross);
+      setPlatformRevenue(data.summary.totalRevenueGross);
+      setActivityVolume(data.summary.activityVolumeGross);
       setCurrency(data.summary.currency);
     } catch (err) {
       setRecords([]);
@@ -210,7 +214,7 @@ export function AdminFinancePage({ role }: AdminFinancePageProps) {
   return (
     <DashboardPageShell
       title="Financial reports"
-      description="Review and export transactions, fees, and platform revenue for accountancy."
+      description="Platform revenue for accountancy by default. Add buyer or seller categories to inspect marketplace activity."
       loading={loading}
       error={error}
       empty={false}
@@ -249,12 +253,23 @@ export function AdminFinancePage({ role }: AdminFinancePageProps) {
         </div>
 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm">
-          <span className="text-[hsl(var(--dashboard-sidebar-muted))]">
-            {records.length} record{records.length === 1 ? '' : 's'} · Total{' '}
-            <span className="font-semibold text-[hsl(var(--dashboard-main-fg))]">
-              {formatCurrency(total, currency)}
-            </span>
-          </span>
+          <div className="space-y-1 text-[hsl(var(--dashboard-sidebar-muted))]">
+            <p>
+              {records.length} record{records.length === 1 ? '' : 's'} · Platform revenue{' '}
+              <span className="font-semibold text-[hsl(var(--dashboard-main-fg))]">
+                {formatCurrency(platformRevenue, currency)}
+              </span>
+            </p>
+            {(activityVolume > 0 || includesActivityCategories(effectiveCategories)) && (
+              <p className="text-xs">
+                Activity volume{' '}
+                <span className="font-medium text-[hsl(var(--dashboard-main-fg))]">
+                  {formatCurrency(activityVolume, currency)}
+                </span>{' '}
+                <span className="italic">(informational — not platform income)</span>
+              </p>
+            )}
+          </div>
           <StatementExportButtons onDownload={handleDownload} downloading={downloading} />
         </div>
 

@@ -161,6 +161,26 @@ export function buildPlatformInvoiceVatNote(config: InvoiceCompanyConfig = getIn
   return 'SellNearby is not currently registered for VAT. No VAT has been charged on this invoice.';
 }
 
+export function buildPlatformRevenueReportVatNote(
+  config: InvoiceCompanyConfig = getInvoiceCompanyConfig(),
+): string {
+  if (config.vatStatus === 'registered' && config.vatNumber) {
+    return `VAT registration number: ${config.vatNumber}. VAT breakdown on platform revenue applies to SellNearby supplies only.`;
+  }
+  return 'SellNearby is not currently registered for VAT. This report summarises gross platform revenue; individual SN-INV invoices remain the primary billing records.';
+}
+
+export function buildPlatformRevenueReportNote(
+  config: InvoiceCompanyConfig = getInvoiceCompanyConfig(),
+): string {
+  return [
+    'This report summarises SellNearby platform revenue for the period shown: direct platform service invoices and marketplace commission on listing sales.',
+    'Use individual SN-INV invoices and payment records as supporting audit evidence.',
+    'Buyer and seller activity sections, when included, show marketplace trade volume only and are not platform income.',
+    buildPlatformRevenueReportVatNote(config),
+  ].join(' ');
+}
+
 export function buildPlatformInvoiceNote(config: InvoiceCompanyConfig = getInvoiceCompanyConfig()): string {
   return [
     'Thank you for your payment. This invoice is for platform services provided by SellNearby.',
@@ -209,7 +229,12 @@ export function splitFooterLegalSentences(text: string): string[] {
 }
 
 export function buildDocumentFooterLegal(
-  kind: 'platform_invoice' | 'buyer_receipt' | 'seller_sales_record' | 'statement',
+  kind:
+    | 'platform_invoice'
+    | 'platform_revenue_report'
+    | 'buyer_receipt'
+    | 'seller_sales_record'
+    | 'statement',
   config: InvoiceCompanyConfig = getInvoiceCompanyConfig(),
 ): string {
   const address = formatInvoiceAddress(config);
@@ -222,6 +247,13 @@ export function buildDocumentFooterLegal(
         'This invoice is for platform services supplied by SellNearby. Listing sales between buyers and sellers are separate transactions.',
         'This document was generated electronically and is valid without signature.',
         buildPlatformInvoiceVatNote(config),
+      ].join(' ');
+    case 'platform_revenue_report':
+      return [
+        base,
+        'Internal platform revenue report for accountancy. Listing sales between buyers and sellers are separate transactions.',
+        'This document was generated electronically and is valid without signature.',
+        buildPlatformRevenueReportVatNote(config),
       ].join(' ');
     case 'buyer_receipt':
       return [

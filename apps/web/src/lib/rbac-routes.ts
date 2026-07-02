@@ -46,3 +46,15 @@ export function isWebDashboardRouteAllowed(role: RbacRole | null, pathname: stri
   if (pathname.startsWith('/buyer')) return role === 'BUYER';
   return false;
 }
+
+export function isAuthRoute(pathname: string): boolean {
+  return pathname === WEB_APP_ROUTES.login || pathname.startsWith('/auth/');
+}
+
+export function isAuthLoginRoute(pathname: string): boolean {
+  return pathname === WEB_APP_ROUTES.login;
+}
+
+export function isAuthRegisterRoute(pathname: string): boolean {
+  return pathname === WEB_APP_ROUTES.register;
+}

@@ -34,6 +34,8 @@ interface MobileNavDrawerProps {
   navLinks: UserNavLinks | null;
   sellHref: string;
   onSignOut: () => void | Promise<void>;
+  hideSignIn?: boolean;
+  hideJoin?: boolean;
 }
 
 export function MobileNavDrawer({
@@ -44,6 +46,8 @@ export function MobileNavDrawer({
   navLinks,
   sellHref,
   onSignOut,
+  hideSignIn = false,
+  hideJoin = false,
 }: MobileNavDrawerProps) {
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -161,17 +165,21 @@ export function MobileNavDrawer({
             </div>
           ) : (
             <div className="space-y-2">
-              <Link href={WEB_APP_ROUTES.login} onClick={onClose}>
-                <Button variant="outline" className="h-11 w-full text-[15px] font-semibold">
-                  Sign In
-                </Button>
-              </Link>
-              <Link href={WEB_APP_ROUTES.register} onClick={onClose}>
-                <Button className="h-11 w-full text-[15px] font-semibold">
-                  <UserPlus className="mr-2 h-4 w-4" aria-hidden />
-                  Join Now
-                </Button>
-              </Link>
+              {!hideSignIn ? (
+                <Link href={WEB_APP_ROUTES.login} onClick={onClose}>
+                  <Button variant="outline" className="h-11 w-full text-[15px] font-semibold">
+                    Sign in
+                  </Button>
+                </Link>
+              ) : null}
+              {!hideJoin ? (
+                <Link href={WEB_APP_ROUTES.register} onClick={onClose}>
+                  <Button className="h-11 w-full text-[15px] font-semibold">
+                    <UserPlus className="mr-2 h-4 w-4" aria-hidden />
+                    Join free
+                  </Button>
+                </Link>
+              ) : null}
             </div>
           )}
         </nav>

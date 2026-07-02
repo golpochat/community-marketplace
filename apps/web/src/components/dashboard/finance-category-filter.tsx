@@ -15,6 +15,11 @@ export const FINANCE_RECORD_CATEGORIES: FinanceRecordCategory[] = [
   'marketplace_fee',
 ];
 
+export const DEFAULT_REVENUE_CATEGORIES: FinanceRecordCategory[] = [
+  'platform_service',
+  'marketplace_fee',
+];
+
 export const FINANCE_CATEGORY_LABELS: Record<FinanceRecordCategory, string> = {
   buyer: 'Buyer',
   seller: 'Seller',
@@ -34,14 +39,23 @@ function normalizeSelection(categories: FinanceRecordCategory[]): FinanceRecordC
   return categories;
 }
 
+function arraysEqual(a: FinanceRecordCategory[], b: FinanceRecordCategory[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((item) => b.includes(item));
+}
+
 function selectionLabel(categories: FinanceRecordCategory[]): string {
-  if (categories.length === 0 || categories.length === FINANCE_RECORD_CATEGORIES.length) {
+  const selected = normalizeSelection(categories);
+  if (arraysEqual(selected, DEFAULT_REVENUE_CATEGORIES)) {
+    return 'Platform revenue';
+  }
+  if (selected.length === 0 || arraysEqual(selected, FINANCE_RECORD_CATEGORIES)) {
     return 'All categories';
   }
-  if (categories.length === 1) {
-    return FINANCE_CATEGORY_LABELS[categories[0]!];
+  if (selected.length === 1) {
+    return FINANCE_CATEGORY_LABELS[selected[0]!];
   }
-  return `${categories.length} selected`;
+  return `${selected.length} selected`;
 }
 
 export function FinanceCategoryFilter({ value, onChange }: FinanceCategoryFilterProps) {
@@ -125,12 +139,16 @@ export function FinanceCategoryFilter({ value, onChange }: FinanceCategoryFilter
   );
 }
 
-export function defaultFinanceCategories(): FinanceRecordCategory[] {
-  return [...FINANCE_RECORD_CATEGORIES];
+export function defaultRevenueFinanceCategories(): FinanceRecordCategory[] {
+  return [...DEFAULT_REVENUE_CATEGORIES];
 }
 
 export function effectiveFinanceCategories(
   categories: FinanceRecordCategory[],
 ): FinanceRecordCategory[] {
   return normalizeSelection(categories);
+}
+
+export function includesActivityCategories(categories: FinanceRecordCategory[]): boolean {
+  return categories.includes('buyer') || categories.includes('seller');
 }

@@ -311,6 +311,9 @@ export const monetizationService = {
       }>;
       summary: {
         totalRevenueGross: number;
+        activityVolumeGross: number;
+        platformServicesGross: number;
+        marketplaceFeesGross: number;
         currency: string;
       };
     }>(`${adminApiPath(role, '/finance/report/summary')}?${buildAdminFinanceQuery(filters)}`);
