@@ -40,12 +40,12 @@ const MODULE_META: ModuleMeta[] = [
 ];
 
 function moduleStatusLabel(
-  module: AdsSystemStatus['modules'][number] | undefined,
+  moduleState: AdsSystemStatus['modules'][number] | undefined,
 ): { text: string; tone: 'published' | 'preview' | 'off' } {
-  if (!module || !module.effective) {
+  if (!moduleState || !moduleState.effective) {
     return { text: 'Off', tone: 'off' };
   }
-  if (module.preview) {
+  if (moduleState.preview) {
     return { text: 'Preview', tone: 'preview' };
   }
   return { text: 'Live', tone: 'published' };
@@ -119,7 +119,7 @@ export function AdminMonetizationAdvertising({
   onSave,
   onGoToCatalog,
 }: AdminMonetizationAdvertisingProps) {
-  const moduleByCode = new Map(adsSystem?.modules.map((module) => [module.code, module]));
+  const moduleByCode = new Map(adsSystem?.modules.map((item) => [item.code, item]));
 
   return (
     <div className="space-y-6">
@@ -181,8 +181,8 @@ export function AdminMonetizationAdvertising({
               </thead>
               <tbody>
                 {MODULE_META.map((meta) => {
-                  const module = moduleByCode.get(meta.code);
-                  const status = moduleStatusLabel(module);
+                  const moduleState = moduleByCode.get(meta.code);
+                  const status = moduleStatusLabel(moduleState);
                   const published = Boolean(settings[meta.settingsField]);
 
                   return (
