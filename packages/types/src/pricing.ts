@@ -1,3 +1,5 @@
+import type { ListingImage } from './listing';
+
 export type PriceChangeStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export type PriceUpdateStatus = 'auto-approved' | 'pending-review';
@@ -27,6 +29,7 @@ export interface PricingPreview {
   badgeLabel?: string;
   wouldRequireReview: boolean;
   reviewReasons: string[];
+  coverImage?: Pick<ListingImage, 'url' | 'cardUrl' | 'thumbUrl' | 'tinyUrl'>;
 }
 
 export interface PriceUpdateResult {

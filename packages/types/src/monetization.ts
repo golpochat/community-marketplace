@@ -63,6 +63,7 @@ export interface MonetizationSettings {
   pricing: PlatformPricingConfig;
   boostsEnabled: boolean;
   featuredEnabled: boolean;
+  displayAdsEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -142,6 +143,7 @@ export interface StoreSlotCatalogResponse {
 }
 
 export interface BoostCatalogOption {
+  productId?: string;
   packageType: BoostPackageType;
   label: string;
   price: number;
@@ -165,6 +167,7 @@ export interface BoostCatalogResponse {
 }
 
 export interface FeaturedCatalogOption {
+  productId?: string;
   placement: FeaturedPlacement;
   label: string;
   price: number;
@@ -267,4 +270,80 @@ export function isBoostPackageType(value: string): value is BoostPackageType {
 
 export function isFeaturedPlacement(value: string): value is FeaturedPlacement {
   return value === 'homepage' || value === 'category';
+}
+
+export type MonetizationProductType = 'listing_boost' | 'featured_slot';
+export type MonetizationProductStatus = 'draft' | 'published' | 'archived';
+
+export interface MonetizationProduct {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  type: MonetizationProductType;
+  status: MonetizationProductStatus;
+  price: number;
+  currency: string;
+  durationDays?: number;
+  durationHours?: number;
+  placement?: string;
+  packageType?: BoostPackageType;
+  slotsPerDay?: number;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type BuyerCashbackRuleScope = 'platform_default' | 'buyer';
+
+export interface BuyerCashbackRule {
+  id: string;
+  name: string;
+  scope: BuyerCashbackRuleScope;
+  buyerId?: string;
+  buyer?: { id: string; displayName?: string; email: string };
+  percent: number;
+  enabled: boolean;
+  priority: number;
+  startsAt?: string;
+  endsAt?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BuyerCashbackOverrideEntry {
+  userId: string;
+  displayName?: string;
+  email: string;
+  customCashbackPercent: number;
+  defaultCashbackPercent: number;
+}
+
+export interface BuyerMonetizationSearchResult {
+  id: string;
+  displayName?: string;
+  email: string;
+  customCashbackPercent?: number;
+  effectiveCashbackPercent: number;
+}
+
+export interface SellerFeeOverrideEntry {
+  userId: string;
+  displayName?: string;
+  email: string;
+  sellerStatus: string;
+  customPlatformFeePercent: number;
+  defaultPlatformFeePercent: number;
+  verifiedSellerFeePercent: number;
+}
+
+export interface SellerMonetizationSearchResult {
+  id: string;
+  displayName?: string;
+  email: string;
+  sellerStatus: string;
+  customPlatformFeePercent?: number;
+  effectiveFeePercent: number;
+  listingCount: number;
 }

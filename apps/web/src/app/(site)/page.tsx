@@ -6,6 +6,7 @@ import { TrustSection } from '@/components/public/trust-section';
 import { SocialProofBar } from '@/components/public/social-proof-bar';
 import { FounderStorySection } from '@/components/public/founder-story-section';
 import { LocalFeedSection } from '@/components/public/local-feed-section';
+import { DisplayAdsSection } from '@/components/ads/display-ads-section';
 import { listingsService } from '@/services/listings.service';
 
 export const metadata = { title: 'Home' };
@@ -24,6 +25,7 @@ export default async function HomePage() {
     <>
       <HeroSection />
       <SocialProofBar />
+      <DisplayAdsSection context="homepage" className="container py-4" />
       <CategoryShortcuts categories={categories} />
       <LocalFeedSection />
       <FeaturedListings listings={featured} isPromoted={featuredListings.length > 0} />

@@ -64,9 +64,24 @@ Or the web app shows `ERR_CONNECTION_REFUSED` while the API terminal reports a c
 
 Another process is already bound to the port. Common sources:
 
-- A **stale Node process** from a previous `pnpm --filter api dev` (often invisible in the UI).
+- A **stale Node process** from a previous `pnpm dev` (often from a background terminal or Nest watch restart on Windows).
+- **Two dev sessions at once** — e.g. Cursor agent background `pnpm dev` **and** your terminal `pnpm dev`.
 - **Two API instances** — e.g. Docker API **and** local `pnpm dev:api` both on port `4000`.
 - A crashed Nest watch process that did not release the port immediately.
+
+### Automatic cleanup (recommended)
+
+`pnpm dev` now runs a dev orchestrator that:
+
+1. Stops any **previous dev session** from this repo (via `.dev/dev.lock.json`)
+2. Clears stale **Community Marketplace** listeners on ports **3000** and **4000**
+3. Shuts down **both** web and API when you press `Ctrl+C`
+
+Manual cleanup if needed:
+
+```bash
+pnpm dev:kill
+```
 
 ### Verify
 
@@ -121,8 +136,10 @@ Invoke-WebRequest -Uri "http://localhost:4000/api/health/live" -UseBasicParsing
 
 | Rule | Why |
 |------|-----|
+| Use **`pnpm dev`** (orchestrator) instead of starting web/API separately when possible | Auto-cleans stale listeners and coordinates shutdown |
+| Run **`pnpm dev:kill`** if ports are stuck | Clears project dev processes on 3000/4000 only |
 | Run **one** API on port `4000` | Docker API **or** `pnpm dev:api`, not both |
-| Stop crashed terminals with `Ctrl+C` before restarting | Avoids orphan Node listeners |
+| Stop dev with `Ctrl+C` and wait for exit | Avoids orphan Node listeners |
 | Use `pnpm dev:web` when Docker runs the API | See [dev-credentials — Mode A](./dev-credentials.md#mode-a--hybrid-recommended) |
 
 **Port reference**

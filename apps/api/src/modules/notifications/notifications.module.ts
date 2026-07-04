@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { DatabaseModule } from '../../database/database.module';
+import { EmailModule } from '../../email/email.module';
 import { EventsModule } from '../../events/events.module';
 import { LibsModule } from '../../libs/libs.module';
 import { NotificationEventsListener } from './listeners/notification-events.listener';
@@ -22,7 +23,7 @@ import { NotificationTemplatesService } from './services/notification-templates.
 import { NotificationsCrudService } from './services/notifications-crud.service';
 
 @Module({
-  imports: [DatabaseModule, EventsModule, LibsModule],
+  imports: [DatabaseModule, EmailModule, EventsModule, LibsModule],
   controllers: [NotificationsController],
   providers: [
     NotificationsService,

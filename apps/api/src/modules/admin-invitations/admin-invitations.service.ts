@@ -22,6 +22,7 @@ import { hashPassword } from '../../database/seeds/password-hash';
 import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthService } from '../auth/services/jwt-auth.service';
 import { SessionService } from '../auth/services/session.service';
+import { PlatformGovernanceService } from '../platform/platform-governance.service';
 import { generateSecureToken, generateSessionId, hashToken } from '../auth/utils/token-hash';
 import { AdminInvitationEmailService } from './admin-invitation-email.service';
 import {
@@ -47,6 +48,7 @@ export class AdminInvitationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: AdminInvitationEmailService,
+    private readonly governance: PlatformGovernanceService,
     private readonly jwtAuth: JwtAuthService,
     private readonly sessions: SessionService,
   ) {}
@@ -143,13 +145,14 @@ export class AdminInvitationsService {
 
     const appBaseUrl = process.env.WEB_APP_URL ?? 'http://localhost:3000';
     const setupUrl = buildAdminInvitationUrl(appBaseUrl, rawToken);
+    const supportEmail = await this.governance.getSupportEmail();
 
     await this.emailService.sendInvitationEmail({
       email,
       displayName,
       roleName: role.name,
       setupUrl,
-      supportEmail: process.env.SUPPORT_EMAIL,
+      supportEmail,
       webAppUrl: appBaseUrl,
     });
 
@@ -180,13 +183,14 @@ export class AdminInvitationsService {
 
     const appBaseUrl = process.env.WEB_APP_URL ?? 'http://localhost:3000';
     const setupUrl = buildAdminInvitationUrl(appBaseUrl, rawToken);
+    const supportEmail = await this.governance.getSupportEmail();
 
     await this.emailService.sendInvitationEmail({
       email: updated.email,
       displayName: updated.displayName,
       roleName: updated.role.name,
       setupUrl,
-      supportEmail: process.env.SUPPORT_EMAIL,
+      supportEmail,
       webAppUrl: appBaseUrl,
     });
 

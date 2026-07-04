@@ -12,6 +12,7 @@ import { AdminService } from '../admin/admin.service';
 import { UsersService } from '../users/users.service';
 import type { AdminActionDto } from '../admin/dto/admin.dto';
 import type { SuperAdminActionDto } from './dto/super-admin.dto';
+import type { PlatformGovernanceUpdateInput } from '@community-marketplace/validation';
 
 @Injectable()
 export class SuperAdminService {
@@ -146,7 +147,7 @@ export class SuperAdminService {
     return this.adminService.getPlatformSettings();
   }
 
-  updatePlatformSettings(settings: Record<string, unknown>) {
-    return this.adminService.updatePlatformSettings(settings as Parameters<AdminService['updatePlatformSettings']>[0]);
+  updatePlatformSettings(settings: PlatformGovernanceUpdateInput) {
+    return this.adminService.updatePlatformSettings(settings);
   }
 }

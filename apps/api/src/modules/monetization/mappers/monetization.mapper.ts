@@ -27,6 +27,7 @@ const DEFAULT_SETTINGS = {
   pricing: DEFAULT_PLATFORM_PRICING,
   boostsEnabled: true,
   featuredEnabled: true,
+  displayAdsEnabled: false,
 };
 
 export function getDefaultPlatformSettings(): Omit<
@@ -50,6 +51,7 @@ export function mapPlatformSettings(row: {
   pricing: Prisma.JsonValue | null;
   boostsEnabled: boolean;
   featuredEnabled: boolean;
+  displayAdsEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 }): MonetizationSettings {
@@ -67,6 +69,7 @@ export function mapPlatformSettings(row: {
     pricing: parsePlatformPricing(row.pricing),
     boostsEnabled: row.boostsEnabled,
     featuredEnabled: row.featuredEnabled,
+    displayAdsEnabled: row.displayAdsEnabled,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

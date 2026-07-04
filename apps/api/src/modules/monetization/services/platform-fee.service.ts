@@ -105,4 +105,121 @@ export class PlatformFeeService {
 
     return updated;
   }
+
+  async listSellerFeeOverrides(): Promise<
+    Array<{
+      userId: string;
+      displayName?: string;
+      email: string;
+      sellerStatus: string;
+      customPlatformFeePercent: number;
+      defaultPlatformFeePercent: number;
+      verifiedSellerFeePercent: number;
+    }>
+  > {
+    const platform = await this.settings.get();
+    const rows = await this.prisma.user.findMany({
+      where: {
+        customPlatformFeePercent: { not: null },
+        primaryRole: { code: 'SELLER' },
+      },
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        sellerStatus: true,
+        customPlatformFeePercent: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    return rows.map((row) => ({
+      userId: row.id,
+      displayName: row.displayName ?? undefined,
+      email: row.email,
+      sellerStatus: row.sellerStatus,
+      customPlatformFeePercent: Number(row.customPlatformFeePercent),
+      defaultPlatformFeePercent: platform.defaultPlatformFeePercent,
+      verifiedSellerFeePercent: platform.verifiedSellerFeePercent,
+    }));
+  }
+
+  async searchBuyers(query: string, limit = 10) {
+    const trimmed = query.trim();
+    const orFilters: Array<Record<string, unknown>> = [
+      { email: { contains: trimmed, mode: 'insensitive' } },
+      { displayName: { contains: trimmed, mode: 'insensitive' } },
+    ];
+    if (/^[0-9a-f-]{8,}$/i.test(trimmed)) {
+      orFilters.push({ id: { startsWith: trimmed } });
+    }
+
+    const rows = await this.prisma.user.findMany({
+      where: {
+        primaryRole: { code: 'BUYER' },
+        OR: orFilters,
+      },
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+      },
+      take: limit,
+      orderBy: { displayName: 'asc' },
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      displayName: row.displayName ?? undefined,
+      email: row.email,
+    }));
+  }
+
+  async searchSellers(query: string, limit = 10) {
+    const platform = await this.settings.get();
+    const trimmed = query.trim();
+    const orFilters: Array<Record<string, unknown>> = [
+      { email: { contains: trimmed, mode: 'insensitive' } },
+      { displayName: { contains: trimmed, mode: 'insensitive' } },
+    ];
+    if (/^[0-9a-f-]{8,}$/i.test(trimmed)) {
+      orFilters.push({ id: { startsWith: trimmed } });
+    }
+
+    const rows = await this.prisma.user.findMany({
+      where: {
+        primaryRole: { code: 'SELLER' },
+        OR: orFilters,
+      },
+      select: {
+        id: true,
+        displayName: true,
+        email: true,
+        sellerStatus: true,
+        customPlatformFeePercent: true,
+        _count: { select: { listings: true } },
+      },
+      take: limit,
+      orderBy: { displayName: 'asc' },
+    });
+
+    return rows.map((row) => {
+      const effectiveFeePercent =
+        row.customPlatformFeePercent != null
+          ? Number(row.customPlatformFeePercent)
+          : platform.defaultPlatformFeePercent;
+      return {
+        id: row.id,
+        displayName: row.displayName ?? undefined,
+        email: row.email,
+        sellerStatus: row.sellerStatus,
+        customPlatformFeePercent:
+          row.customPlatformFeePercent != null
+            ? Number(row.customPlatformFeePercent)
+            : undefined,
+        effectiveFeePercent,
+        listingCount: row._count.listings,
+      };
+    });
+  }
 }

@@ -1,8 +1,20 @@
-import { Body, Controller, Get, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
 import {
+  buyerCashbackOverrideSchema,
   cashbackGrantsAdminFiltersSchema,
+  monetizationProductUpdateSchema,
+  monetizationProductUpsertSchema,
+  monetizationSellerSearchSchema,
   platformPurchasesAdminFiltersSchema,
   platformSettingsUpdateSchema,
   sellerFeeOverrideSchema,
@@ -26,6 +38,12 @@ export class AdminMonetizationController {
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('ads-system')
+  getAdsSystemStatus() {
+    return this.monetization.getAdsSystemStatus();
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
   @Patch('settings')
   updateSettings(@Body() body: unknown) {
     const dto = platformSettingsUpdateSchema.parse(body);
@@ -40,6 +58,70 @@ export class AdminMonetizationController {
   ) {
     const dto = sellerFeeOverrideSchema.parse(body);
     return this.monetization.setSellerFeeOverride(user.id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('seller-fee-overrides')
+  listSellerFeeOverrides() {
+    return this.monetization.listSellerFeeOverrides();
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('sellers/search')
+  searchSellers(@Query() query: Record<string, string>) {
+    const parsed = monetizationSellerSearchSchema.parse({
+      q: query.q,
+      limit: query.limit,
+    });
+    return this.monetization.searchSellersForMonetization(parsed.q, parsed.limit);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('products')
+  listProducts(@Query('type') type?: string) {
+    const productType =
+      type === 'listing_boost' || type === 'featured_slot' ? type : undefined;
+    return this.monetization.listMonetizationProducts(productType);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Post('products')
+  createProduct(@Body() body: unknown) {
+    const dto = monetizationProductUpsertSchema.parse(body);
+    return this.monetization.createMonetizationProduct(dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Patch('products/:id')
+  updateProduct(@Param('id') id: string, @Body() body: unknown) {
+    const dto = monetizationProductUpdateSchema.parse(body);
+    return this.monetization.updateMonetizationProduct(id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Post('buyer-cashback-override')
+  setBuyerCashbackOverride(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: unknown,
+  ) {
+    const dto = buyerCashbackOverrideSchema.parse(body);
+    return this.monetization.setBuyerCashbackOverride(user.id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('buyer-cashback-overrides')
+  listBuyerCashbackOverrides() {
+    return this.monetization.listBuyerCashbackOverrides();
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('buyers/search')
+  searchBuyers(@Query() query: Record<string, string>) {
+    const parsed = monetizationSellerSearchSchema.parse({
+      q: query.q,
+      limit: query.limit,
+    });
+    return this.monetization.searchBuyersForCashback(parsed.q, parsed.limit);
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)

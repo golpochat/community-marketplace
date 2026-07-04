@@ -10,7 +10,8 @@ import type {
   ModerationReport,
   ModerationReportDetail,
   Payment,
-  PlatformSettings,
+  PlatformGovernanceStatus,
+  PlatformGovernanceSettings,
   RbacRole,
   RbacRoleTemplateId,
   ReindexJobStatus,
@@ -554,21 +555,24 @@ export const adminService = {
     return response.data;
   },
 
-  async getPlatformSettings(): Promise<PlatformSettings | null> {
-    try {
-      const response = await apiClient<PlatformSettings>(adminApiPath('SUPER_ADMIN', '/settings'));
-      return response.data ?? null;
-    } catch {
-      return null;
-    }
+  async getPlatformGovernanceStatus(): Promise<PlatformGovernanceStatus> {
+    const response = await apiClient<PlatformGovernanceStatus>(
+      adminApiPath('SUPER_ADMIN', '/settings'),
+    );
+    return response.data!;
   },
 
-  async updatePlatformSettings(settings: Partial<PlatformSettings>): Promise<PlatformSettings> {
-    const response = await apiClient<PlatformSettings>(adminApiPath('SUPER_ADMIN', '/settings'), {
-      method: 'PATCH',
-      body: JSON.stringify(settings),
-    });
-    return response.data ?? (settings as PlatformSettings);
+  async updatePlatformGovernanceSettings(
+    settings: PlatformGovernanceSettings,
+  ): Promise<PlatformGovernanceStatus> {
+    const response = await apiClient<PlatformGovernanceStatus>(
+      adminApiPath('SUPER_ADMIN', '/settings'),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(settings),
+      },
+    );
+    return response.data!;
   },
 
   async getSearchHealth(role: AdminApiRole): Promise<SearchHealthResponse | null> {

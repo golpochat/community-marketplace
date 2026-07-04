@@ -21,6 +21,7 @@ import {
   MAX_AUTO_APPROVE_DISCOUNT_PERCENT,
 } from '../lib/listing-pricing.lib';
 import { mapPriceChangeLog, mapPricingFromListing } from '../mappers/pricing.mapper';
+import { mapListingImage } from '../mappers/listing.mapper';
 import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 
 const HIGH_RISK_CATEGORY_SLUGS = new Set(['vehicles', 'electronics']);
@@ -132,6 +133,7 @@ export class ListingPricingService {
       badgeLabel: computed.badgeLabel,
       wouldRequireReview: review.requiresReview,
       reviewReasons: review.reasons,
+      coverImage: listing.images[0] ? mapListingImage(listing.images[0]) : undefined,
     };
   }
 
@@ -320,7 +322,10 @@ export class ListingPricingService {
   private async assertCanManagePricing(listingId: string, actorId: string, role: RbacRole) {
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
-      include: { category: { select: { slug: true } } },
+      include: {
+        category: { select: { slug: true } },
+        images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+      },
     });
     if (!listing) throw new NotFoundException(`Listing ${listingId} not found`);
 

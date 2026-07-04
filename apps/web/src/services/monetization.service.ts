@@ -1,6 +1,8 @@
 import type {
   BoostCatalogResponse,
   BoostIntentResponse,
+  BuyerCashbackOverrideEntry,
+  BuyerMonetizationSearchResult,
   BuyerStatementIntentResponse,
   BuyerStatementStatusResponse,
   BuyerWalletSummary,
@@ -10,8 +12,11 @@ import type {
   FeaturedIntentResponse,
   FastTrackIntentResponse,
   FastTrackStatusResponse,
+  MonetizationProduct,
   MonetizationSettings,
   PlatformPurchase,
+  SellerFeeOverrideEntry,
+  SellerMonetizationSearchResult,
   SellerPlatformFeeInfo,
   StoreSlotCatalogResponse,
   StoreSlotIntentResponse,
@@ -22,6 +27,7 @@ import type {
   CreateFeaturedIntentInput,
   CreateStoreSlotIntentInput,
   PlatformSettingsUpdateInput,
+  MonetizationProductUpsertInput,
 } from '@community-marketplace/validation';
 import type { PaginatedResult } from '@community-marketplace/types';
 
@@ -264,6 +270,87 @@ export const monetizationService = {
       },
     );
     return response.data;
+  },
+
+  async listSellerFeeOverrides(role: AdminApiRole): Promise<SellerFeeOverrideEntry[]> {
+    const response = await apiClient<SellerFeeOverrideEntry[]>(
+      adminApiPath(role, '/monetization/seller-fee-overrides'),
+    );
+    return response.data ?? [];
+  },
+
+  async searchSellersForMonetization(
+    role: AdminApiRole,
+    q: string,
+    limit = 10,
+  ): Promise<SellerMonetizationSearchResult[]> {
+    const response = await apiClient<SellerMonetizationSearchResult[]>(
+      `${adminApiPath(role, '/monetization/sellers/search')}?q=${encodeURIComponent(q)}&limit=${limit}`,
+    );
+    return response.data ?? [];
+  },
+
+  async listMonetizationProducts(
+    role: AdminApiRole,
+    type?: 'listing_boost' | 'featured_slot',
+  ): Promise<MonetizationProduct[]> {
+    const query = type ? `?type=${encodeURIComponent(type)}` : '';
+    const response = await apiClient<MonetizationProduct[]>(
+      `${adminApiPath(role, '/monetization/products')}${query}`,
+    );
+    return response.data ?? [];
+  },
+
+  async createMonetizationProduct(role: AdminApiRole, body: MonetizationProductUpsertInput) {
+    const response = await apiClient<MonetizationProduct>(
+      adminApiPath(role, '/monetization/products'),
+      { method: 'POST', body: JSON.stringify(body) },
+    );
+    return response.data!;
+  },
+
+  async updateMonetizationProduct(
+    role: AdminApiRole,
+    id: string,
+    body: Partial<MonetizationProductUpsertInput>,
+  ) {
+    const response = await apiClient<MonetizationProduct>(
+      adminApiPath(role, `/monetization/products/${id}`),
+      { method: 'PATCH', body: JSON.stringify(body) },
+    );
+    return response.data!;
+  },
+
+  async setBuyerCashbackOverride(
+    role: AdminApiRole,
+    body: { userId: string; customCashbackPercent: number | null; reason?: string },
+  ) {
+    const response = await apiClient(
+      adminApiPath(role, '/monetization/buyer-cashback-override'),
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      },
+    );
+    return response.data;
+  },
+
+  async listBuyerCashbackOverrides(role: AdminApiRole): Promise<BuyerCashbackOverrideEntry[]> {
+    const response = await apiClient<BuyerCashbackOverrideEntry[]>(
+      adminApiPath(role, '/monetization/buyer-cashback-overrides'),
+    );
+    return response.data ?? [];
+  },
+
+  async searchBuyersForCashback(
+    role: AdminApiRole,
+    q: string,
+    limit = 10,
+  ): Promise<BuyerMonetizationSearchResult[]> {
+    const response = await apiClient<BuyerMonetizationSearchResult[]>(
+      `${adminApiPath(role, '/monetization/buyers/search')}?q=${encodeURIComponent(q)}&limit=${limit}`,
+    );
+    return response.data ?? [];
   },
 
   async listCashbackGrants(

@@ -130,6 +130,8 @@ export const SELLER_VERIFICATION_MESSAGES = {
   MAX_UNVERIFIED: 'You have reached the maximum number of unverified listings.',
   STRIPE_REQUIRES_VERIFICATION:
     'Complete seller verification before setting up Stripe payouts.',
+  MONETIZATION_REQUIRES_VERIFICATION:
+    'Complete seller verification before boosting or featuring listings.',
 } as const;
 
 export function isSellerVerified(status: SellerStatus | null | undefined): boolean {

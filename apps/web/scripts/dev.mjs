@@ -6,7 +6,14 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { freeDevPorts } from '../../../scripts/lib/dev-process.mjs';
+
 process.env.NODE_ENV = 'development';
+
+freeDevPorts({
+  ports: [3000],
+  reason: 'preparing web dev server',
+});
 
 const nextBin = path.join(
   path.dirname(fileURLToPath(import.meta.url)),

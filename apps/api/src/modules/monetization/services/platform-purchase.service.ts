@@ -34,12 +34,10 @@ import { EventBusService } from '../../../events/event-bus.service';
 import { LoggerLib } from '../../../libs/logger.lib';
 import { StripeConnectService } from '../../payments/services/stripe-connect.service';
 import {
-  boostSkuKey,
   roundMoney,
 } from '../lib/boost.lib';
 import {
   buildActiveFeaturedWhere,
-  featuredSkuKey,
   slotsPerDayForPlacement,
 } from '../lib/featured.lib';
 import { mapPlatformPurchase } from '../mappers/monetization.mapper';
@@ -98,7 +96,7 @@ export class PlatformPurchaseService {
     const amount = await this.resolveBoostPrice(
       sellerId,
       dto.packageType,
-      settings.pricing.skus[boostSkuKey(dto.packageType)].amount,
+      option.price,
     );
 
     const purchase = await this.prisma.platformPurchase.create({
@@ -168,8 +166,7 @@ export class PlatformPurchaseService {
     }
 
     const settings = await this.settings.get();
-    const sku = settings.pricing.skus[featuredSkuKey(dto.placement)];
-    const amount = roundMoney(sku?.amount ?? 0);
+    const amount = roundMoney(option.price);
 
     const purchase = await this.prisma.platformPurchase.create({
       data: {

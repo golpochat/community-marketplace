@@ -42,6 +42,7 @@ function superAdminUsesAdminNamespace(path: string): boolean {
     path.startsWith('/moderation') ||
     path.startsWith('/monetization') ||
     path.startsWith('/finance') ||
+    path.startsWith('/email') ||
     path.startsWith('/disputes') ||
     path.startsWith('/fraud')
   );

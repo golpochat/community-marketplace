@@ -17,6 +17,7 @@ export const platformSettingsUpdateSchema = z.object({
   allowedCashbackMethods: z.array(paymentMethodSchema).min(1).optional(),
   boostsEnabled: z.boolean().optional(),
   featuredEnabled: z.boolean().optional(),
+  displayAdsEnabled: z.boolean().optional(),
   boostPrice7d: z.number().min(0).max(999).optional(),
   boostPrice30d: z.number().min(0).max(999).optional(),
   featuredHomepagePrice: z.number().min(0).max(999).optional(),
@@ -227,6 +228,12 @@ export const sellerFeeOverrideSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
+export const buyerCashbackOverrideSchema = z.object({
+  userId: uuidSchema,
+  customCashbackPercent: z.number().min(0).max(10).nullable(),
+  reason: z.string().max(500).optional(),
+});
+
 export const cashbackGrantsAdminFiltersSchema = paginationSchema.extend({
   status: z.enum(['pending', 'earned', 'cancelled']).optional(),
   userId: uuidSchema.optional(),
@@ -243,3 +250,36 @@ export const cashbackEstimateQuerySchema = z.object({
 
 export type PlatformSettingsUpdateInput = z.infer<typeof platformSettingsUpdateSchema>;
 export type SellerFeeOverrideInput = z.infer<typeof sellerFeeOverrideSchema>;
+export type BuyerCashbackOverrideInput = z.infer<typeof buyerCashbackOverrideSchema>;
+
+export const monetizationSellerSearchSchema = z.object({
+  q: z.string().trim().min(1).max(120),
+  limit: z.coerce.number().int().positive().max(25).optional(),
+});
+
+export const monetizationProductUpsertSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(2)
+    .max(64)
+    .regex(/^[a-z0-9_]+$/, 'Code must be lowercase letters, numbers, and underscores'),
+  name: z.string().trim().min(1).max(120),
+  description: z.string().trim().max(2000).optional(),
+  type: z.enum(['listing_boost', 'featured_slot']),
+  status: z.enum(['draft', 'published', 'archived']).default('draft'),
+  price: z.coerce.number().min(0).max(9999),
+  currency: z.string().length(3).default('EUR'),
+  durationDays: z.coerce.number().int().positive().max(365).optional(),
+  durationHours: z.coerce.number().int().positive().max(24 * 30).optional(),
+  placement: z.string().trim().max(64).optional(),
+  packageType: z.enum(['PAID_7D', 'PAID_30D']).optional(),
+  slotsPerDay: z.coerce.number().int().positive().max(1000).optional(),
+  sortOrder: z.coerce.number().int().min(0).max(9999).optional(),
+});
+
+export const monetizationProductUpdateSchema = monetizationProductUpsertSchema.partial();
+
+export type MonetizationSellerSearchInput = z.infer<typeof monetizationSellerSearchSchema>;
+export type MonetizationProductUpsertInput = z.infer<typeof monetizationProductUpsertSchema>;
+export type MonetizationProductUpdateInput = z.infer<typeof monetizationProductUpdateSchema>;

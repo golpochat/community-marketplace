@@ -3,29 +3,20 @@ import { Injectable } from "@nestjs/common";
 import type {
   AdminDashboardStats,
   ListingReviewContext,
-  PlatformSettings,
+  PlatformGovernanceStatus,
   RbacRole,
 } from "@community-marketplace/types";
+import type { PlatformGovernanceUpdateInput } from "@community-marketplace/validation";
 
 import { PrismaService } from "../../database/prisma.service";
 import { EventBusService } from "../../events/event-bus.service";
 import { RedisCacheService } from "../../libs/redis-cache.service";
 import { ListingsService } from "../listings/listings.service";
 import { ModerationService } from "../moderation/moderation.service";
+import { PlatformGovernanceService } from "../platform/platform-governance.service";
 import { UsersService } from "../users/users.service";
 import { AdminAuditEntity } from "./entities/admin-audit.entity";
 import type { AdminActionDto, SuspendUserDto } from "./dto/admin.dto";
-
-const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
-  maintenanceMode: false,
-  platformName: "Community Marketplace",
-  supportEmail: "support@community-marketplace.local",
-  defaultCurrency: "USD",
-  emailNotificationsEnabled: true,
-  pushNotificationsEnabled: true,
-  securityMfaRequired: false,
-  paymentProvider: "stripe",
-};
 
 @Injectable()
 export class AdminService {
@@ -34,6 +25,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cache: RedisCacheService,
+    private readonly governance: PlatformGovernanceService,
     private readonly usersService: UsersService,
     private readonly listingsService: ListingsService,
     private readonly moderationService: ModerationService,
@@ -96,19 +88,16 @@ export class AdminService {
     return stats;
   }
 
-  async getPlatformSettings(): Promise<PlatformSettings> {
-    const cached = await this.cache.get<PlatformSettings>("platform:settings");
-    return cached ?? DEFAULT_PLATFORM_SETTINGS;
+  async getPlatformSettings(): Promise<PlatformGovernanceStatus> {
+    return this.governance.getStatus();
   }
 
   async updatePlatformSettings(
-    settings: Partial<PlatformSettings>,
-  ): Promise<PlatformSettings> {
-    const current = await this.getPlatformSettings();
-    const merged = { ...current, ...settings };
-    await this.cache.set("platform:settings", merged, 0);
+    settings: PlatformGovernanceUpdateInput,
+  ): Promise<PlatformGovernanceStatus> {
+    await this.governance.update(settings);
     await this.cache.del("admin:dashboard:stats");
-    return merged;
+    return this.governance.getStatus();
   }
 
   getUsers(

@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
+import { platformGovernanceUpdateSchema } from '@community-marketplace/validation';
 
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -36,8 +37,9 @@ export class SuperAdminOperationsController {
 
   @RequirePermissions(PERMISSIONS.MANAGE_PLATFORM_PERMISSIONS)
   @Patch('settings')
-  updateSettings(@Body() body: Record<string, unknown>) {
-    return this.superAdminService.updatePlatformSettings(body);
+  updateSettings(@Body() body: unknown) {
+    const dto = platformGovernanceUpdateSchema.parse(body);
+    return this.superAdminService.updatePlatformSettings(dto);
   }
 
   @RequirePermissions(PERMISSIONS.VIEW_USERS)

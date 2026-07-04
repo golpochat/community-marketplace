@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import type { Category, ListingStatus, ModerationReport, PlatformSettings, UserProfile, UserVerification } from '@community-marketplace/types';
+import type { Category, ListingStatus, ModerationReport, PlatformGovernanceSettings, PlatformGovernanceStatus, UserProfile, UserVerification } from '@community-marketplace/types';
 import { formatCurrency, formatDateTime } from '@community-marketplace/utils';
 import {
   Card,
@@ -13,6 +13,8 @@ import {
 } from '@community-marketplace/ui-dashboard';
 
 import { AdminRbacManager } from '@/components/dashboard/admin-rbac-manager';
+import { AdminEmailSettingsCard } from '@/components/dashboard/admin-email-settings';
+import { AdminPlatformGovernanceCard } from '@/components/dashboard/admin-platform-governance';
 import { DashboardPageShell, DataTable, KeyValueList } from '@/components/dashboard/async-resource';
 import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
 import { AdminListingReviewDialog } from '@/components/dashboard/admin-listing-review-dialog';
@@ -903,7 +905,8 @@ export function AdminRbacPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function SuperAdminSettingsPage() {
-  const [settings, setSettings] = useState<PlatformSettings | null>(null);
+  const [governanceStatus, setGovernanceStatus] = useState<PlatformGovernanceStatus | null>(null);
+  const [governanceDraft, setGovernanceDraft] = useState<PlatformGovernanceSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -913,8 +916,9 @@ export function SuperAdminSettingsPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await adminService.getPlatformSettings();
-      setSettings(data);
+      const data = await adminService.getPlatformGovernanceStatus();
+      setGovernanceStatus(data);
+      setGovernanceDraft(data.settings);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load settings');
     } finally {
@@ -926,22 +930,19 @@ export function SuperAdminSettingsPage() {
     void load();
   }, [load]);
 
-  function updateField<K extends keyof PlatformSettings>(key: K, value: PlatformSettings[K]) {
-    setSettings((current) => (current ? { ...current, [key]: value } : current));
-  }
-
-  async function handleSave(event: React.FormEvent) {
+  async function handleGovernanceSave(event: React.FormEvent) {
     event.preventDefault();
-    if (!settings) return;
+    if (!governanceDraft) return;
     setSaving(true);
     setError(null);
     setMessage(null);
     try {
-      const updated = await adminService.updatePlatformSettings(settings);
-      setSettings(updated);
+      const updated = await adminService.updatePlatformGovernanceSettings(governanceDraft);
+      setGovernanceStatus(updated);
+      setGovernanceDraft(updated.settings);
       setMessage('Platform settings saved.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save settings');
+      setError(err instanceof Error ? err.message : 'Failed to save platform settings');
     } finally {
       setSaving(false);
     }
@@ -950,93 +951,25 @@ export function SuperAdminSettingsPage() {
   return (
     <DashboardPageShell
       title="Settings"
-      description="Global platform configuration and feature flags."
+      description="Global platform configuration, governance, and transactional email."
       loading={loading}
       error={error}
-      empty={!loading && !error && !settings}
+      empty={!loading && !error && !governanceStatus}
       emptyTitle="Settings unavailable"
     >
-      {settings && (
-        <Card title="Platform settings">
-          <form onSubmit={(e) => void handleSave(e)} className="space-y-4">
-            <label className="flex items-center justify-between gap-4 text-sm">
-              <span>Maintenance mode</span>
-              <input
-                type="checkbox"
-                checked={settings.maintenanceMode}
-                onChange={(e) => updateField('maintenanceMode', e.target.checked)}
-              />
-            </label>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Platform name</label>
-              <input
-                type="text"
-                value={settings.platformName}
-                onChange={(e) => updateField('platformName', e.target.value)}
-                className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Support email</label>
-              <input
-                type="email"
-                value={settings.supportEmail}
-                onChange={(e) => updateField('supportEmail', e.target.value)}
-                className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Default currency</label>
-              <input
-                type="text"
-                value={settings.defaultCurrency}
-                onChange={(e) => updateField('defaultCurrency', e.target.value.toUpperCase())}
-                className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
-              />
-            </div>
-            <label className="flex items-center justify-between gap-4 text-sm">
-              <span>Email notifications enabled</span>
-              <input
-                type="checkbox"
-                checked={settings.emailNotificationsEnabled}
-                onChange={(e) => updateField('emailNotificationsEnabled', e.target.checked)}
-              />
-            </label>
-            <label className="flex items-center justify-between gap-4 text-sm">
-              <span>Push notifications enabled</span>
-              <input
-                type="checkbox"
-                checked={settings.pushNotificationsEnabled}
-                onChange={(e) => updateField('pushNotificationsEnabled', e.target.checked)}
-              />
-            </label>
-            <label className="flex items-center justify-between gap-4 text-sm">
-              <span>Require MFA for admins</span>
-              <input
-                type="checkbox"
-                checked={settings.securityMfaRequired}
-                onChange={(e) => updateField('securityMfaRequired', e.target.checked)}
-              />
-            </label>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Payment provider</label>
-              <input
-                type="text"
-                value={settings.paymentProvider}
-                onChange={(e) => updateField('paymentProvider', e.target.value)}
-                className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-            >
-              {saving ? 'Saving…' : 'Save settings'}
-            </button>
-            {message && <p className="text-sm text-green-700">{message}</p>}
-          </form>
-        </Card>
+      {governanceStatus && governanceDraft && (
+        <div className="space-y-6">
+          <AdminPlatformGovernanceCard
+            status={governanceStatus}
+            draft={governanceDraft}
+            saving={saving}
+            message={message}
+            error={error}
+            onDraftChange={setGovernanceDraft}
+            onSave={(e) => void handleGovernanceSave(e)}
+          />
+          <AdminEmailSettingsCard />
+        </div>
       )}
     </DashboardPageShell>
   );

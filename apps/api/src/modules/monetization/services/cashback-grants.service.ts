@@ -5,12 +5,14 @@ import type { CashbackEstimate, PaymentMethod } from '@community-marketplace/typ
 import { PrismaService } from '../../../database/prisma.service';
 import { mapCashbackGrant, roundMoney } from '../mappers/monetization.mapper';
 import { PlatformSettingsService } from './platform-settings.service';
+import { BuyerCashbackService } from './buyer-cashback.service';
 
 @Injectable()
 export class CashbackGrantsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly settings: PlatformSettingsService,
+    private readonly buyerCashback: BuyerCashbackService,
   ) {}
 
   async createPendingGrantForPayment(paymentId: string): Promise<void> {
@@ -25,9 +27,10 @@ export class CashbackGrantsService {
 
     if (!this.isEligible(settings, method, amount)) return;
 
+    const cashbackPercent = await this.buyerCashback.resolvePercentForBuyer(payment.buyerId);
     const grantAmount = roundMoney(
       Math.min(
-        amount * (settings.cashbackPercent / 100),
+        amount * (cashbackPercent / 100),
         settings.maxCashbackPerOrder,
       ),
     );
@@ -143,12 +146,14 @@ export class CashbackGrantsService {
       select: { price: true, status: true, sellerId: true },
     });
 
+    const cashbackPercent = await this.buyerCashback.resolvePercentForBuyer(buyerId);
+
     if (!listing || listing.status !== 'active') {
       return {
         eligible: false,
         amount: 0,
         unlockAt: new Date().toISOString(),
-        cashbackPercent: settings.cashbackPercent,
+        cashbackPercent,
         reason: 'Listing is not available',
       };
     }
@@ -159,7 +164,7 @@ export class CashbackGrantsService {
         eligible: false,
         amount: 0,
         unlockAt: new Date().toISOString(),
-        cashbackPercent: settings.cashbackPercent,
+        cashbackPercent,
         reason: !settings.cashbackEnabled
           ? 'Cashback is not currently available'
           : amount < settings.cashbackMinOrderAmount
@@ -170,7 +175,7 @@ export class CashbackGrantsService {
 
     const cashbackAmount = roundMoney(
       Math.min(
-        amount * (settings.cashbackPercent / 100),
+        amount * (cashbackPercent / 100),
         settings.maxCashbackPerOrder,
       ),
     );
@@ -182,7 +187,7 @@ export class CashbackGrantsService {
       eligible: true,
       amount: cashbackAmount,
       unlockAt: unlockAt.toISOString(),
-      cashbackPercent: settings.cashbackPercent,
+      cashbackPercent,
     };
   }
 

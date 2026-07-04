@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
 import { LibsModule } from '../../libs/libs.module';
+import { EmailModule } from '../../email/email.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthAuditService } from './services/auth-audit.service';
@@ -17,6 +18,7 @@ import { SessionService } from './services/session.service';
 @Module({
   imports: [
     LibsModule,
+    EmailModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET ?? 'dev-jwt-secret-change-in-production',
       signOptions: { expiresIn: '15m' },

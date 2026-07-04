@@ -422,6 +422,7 @@ export function VehicleListingForm({
       reviewReasons: wouldRequireReview
         ? [`Discount exceeds ${MAX_AUTO_APPROVE_DISCOUNT_PERCENT}%`]
         : [],
+      coverImage: existingImages[0],
     };
   }
 

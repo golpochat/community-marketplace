@@ -231,6 +231,13 @@ export type {
   PendingCashbackUnlock,
   BuyerWalletSummary,
   CashbackEstimate,
+  MonetizationProduct,
+  MonetizationProductType,
+  MonetizationProductStatus,
+  BuyerCashbackOverrideEntry,
+  BuyerMonetizationSearchResult,
+  SellerFeeOverrideEntry,
+  SellerMonetizationSearchResult,
 } from './monetization';
 export {
   BOOST_PACKAGE_TYPES,
@@ -238,6 +245,26 @@ export {
   isBoostPackageType,
   isFeaturedPlacement,
 } from './monetization';
+export type {
+  AdsSystemModuleCode,
+  DisplayAdPlacement,
+  AdsSystemModuleState,
+  AdsSystemStatus,
+  DisplayAdSlot,
+  DisplayAdsPlacementsResponse,
+} from './ads-system';
+export {
+  DISPLAY_AD_PLACEMENTS,
+  isDisplayAdPlacement,
+} from './ads-system';
+export type {
+  EmailProviderId,
+  EmailPlatformSettings,
+  EmailEnvSenderDefaults,
+  EmailProviderStatusItem,
+  EmailSystemStatus,
+  EmailSendOutcome,
+} from './email';
 export type {
   NotificationType,
   NotificationChannel,
@@ -311,6 +338,14 @@ export type {
 export { STORE_PLATFORM_MAX } from './store';
 export type { PaginationMeta, ApiResponse, ApiError, PaginatedResult } from './api';
 export type { AdminDashboardStats, PlatformSettings, AdminMeResponse } from './admin';
+export type {
+  PlatformGovernanceSettings,
+  PlatformGovernanceEnvDefaults,
+  PlatformGovernanceEffective,
+  PlatformGovernanceStatus,
+  PlatformPublicMeta,
+  PlatformPaymentsStatus,
+} from './platform-governance';
 export type {
   MarketplaceDisputeStatus,
   DisputeEvidenceUploaderRole,

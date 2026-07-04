@@ -18,14 +18,25 @@ export interface AdminDashboardStats {
 
 export interface PlatformSettings {
   maintenanceMode: boolean;
-  platformName: string;
-  supportEmail: string;
-  defaultCurrency: string;
+  platformNameOverrideEnabled: boolean;
+  platformName: string | null;
+  supportEmailOverrideEnabled: boolean;
+  supportEmail: string | null;
+  defaultCurrencyOverrideEnabled: boolean;
+  defaultCurrency: string | null;
   emailNotificationsEnabled: boolean;
   pushNotificationsEnabled: boolean;
   securityMfaRequired: boolean;
-  paymentProvider: string;
 }
+
+export type {
+  PlatformGovernanceSettings,
+  PlatformGovernanceEnvDefaults,
+  PlatformGovernanceEffective,
+  PlatformGovernanceStatus,
+  PlatformPaymentsStatus,
+  PlatformPublicMeta,
+} from './platform-governance';
 
 export interface AdminMeResponse {
   userId: string;

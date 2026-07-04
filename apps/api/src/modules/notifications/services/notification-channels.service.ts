@@ -4,6 +4,7 @@ import type { Prisma } from '@prisma/client';
 import type { NotificationPreferences } from '@community-marketplace/types';
 
 import { PrismaService } from '../../../database/prisma.service';
+import { EmailService } from '../../../email/email.service';
 import { LoggerLib } from '../../../libs/logger.lib';
 import { mapNotification } from '../mappers/notification.mapper';
 import { NotificationDeliveryService } from './notification-delivery.service';
@@ -26,6 +27,7 @@ export class EmailChannelService {
     private readonly providers: NotificationProvidersService,
     private readonly delivery: NotificationDeliveryService,
     private readonly rateLimit: NotificationRateLimitService,
+    private readonly email: EmailService,
     private readonly logger: LoggerLib,
   ) {}
 
@@ -40,28 +42,20 @@ export class EmailChannelService {
     for (const provider of activeProviders) {
       if (!(await this.rateLimit.checkProviderLimit(provider.id))) continue;
 
-      const config = provider.config as Record<string, unknown>;
       const result = await this.delivery.deliverWithRetry(provider.id, input.notificationId, async () => {
-        if (config.mode === 'sendgrid' && process.env.SENDGRID_API_KEY) {
-          const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              personalizations: [{ to: [{ email: user.email }] }],
-              from: { email: String(config.fromEmail ?? process.env.EMAIL_FROM ?? 'noreply@community.market') },
-              subject: input.title,
-              content: [{ type: 'text/plain', value: input.message }],
-            }),
-          });
-          if (!response.ok) throw new Error(`SendGrid error: ${response.status}`);
-          return { provider: provider.name };
+        const sendResult = await this.email.send(
+          {
+            to: user.email,
+            subject: input.title,
+            html: `<p>${input.message}</p>`,
+            text: input.message,
+          },
+          'EmailChannelService',
+        );
+        if (!sendResult.sent && sendResult.mode !== 'stub') {
+          throw new Error('Email delivery failed');
         }
-
-        this.logger.log('EmailChannelService', `[stub] Email to ${user.email}: ${input.title}`);
-        return { provider: provider.name, mode: 'stub' };
+        return { provider: provider.name, mode: sendResult.mode, emailProvider: sendResult.provider };
       });
 
       if (result.success) {

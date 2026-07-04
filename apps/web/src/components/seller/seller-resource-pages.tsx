@@ -58,6 +58,7 @@ import { VerificationProgressBar } from "@/components/seller/verification";
 import { VerificationBanner } from "@/components/seller/verification";
 import {
   isListingCreationBlocked,
+  isSellerVerified,
   listingGateBlockMessage,
   useSellerListingGate,
 } from "@/hooks/use-seller-listing-gate";
@@ -201,7 +202,7 @@ export function SellerListingsPage() {
   const [actionId, setActionId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
   const [showGateModal, setShowGateModal] = useState(false);
-  const { tooltip: listingGateMessage, duplicateBlocked, suspended: sellerSuspended, blockMessage: sellerBlockMessage } =
+  const { tooltip: listingGateMessage, duplicateBlocked, suspended: sellerSuspended, blockMessage: sellerBlockMessage, status: sellerVerificationStatus } =
     useSellerListingGate();
   const [packageDialog, setPackageDialog] = useState<{
     listingId: string;
@@ -242,9 +243,6 @@ export function SellerListingsPage() {
       switch (action) {
         case "submit":
           await sellerService.submitForReview(listingId);
-          break;
-        case "publish":
-          await sellerService.publishListing(listingId);
           break;
         case "cancel-review":
           await sellerService.cancelReview(listingId);
@@ -454,6 +452,7 @@ export function SellerListingsPage() {
                       listingActionsBlockedReason={sellerBlockMessage}
                       duplicateBlocked={duplicateBlocked}
                       duplicateBlockedReason={listingGateMessage}
+                      sellerVerified={isSellerVerified(sellerVerificationStatus?.sellerStatus)}
                     />
                   </td>
                 </tr>

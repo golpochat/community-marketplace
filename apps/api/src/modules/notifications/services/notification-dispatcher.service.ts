@@ -6,6 +6,7 @@ import type {
 } from '@community-marketplace/types';
 
 import { EventBusService } from '../../../events/event-bus.service';
+import { PlatformGovernanceService } from '../../platform/platform-governance.service';
 import { PrismaService } from '../../../database/prisma.service';
 import {
   EmailChannelService,
@@ -31,6 +32,7 @@ export class NotificationDispatcherService {
     private readonly email: EmailChannelService,
     private readonly crud: NotificationsCrudService,
     private readonly eventBus: EventBusService,
+    private readonly governance: PlatformGovernanceService,
   ) {}
 
   async dispatch(input: DispatchNotificationInput) {
@@ -103,12 +105,22 @@ export class NotificationDispatcherService {
       };
 
       if (channel === 'push') {
+        if (!(await this.governance.arePushNotificationsEnabled())) {
+          results.push = { skipped: true, reason: 'platform_disabled' };
+          await this.updateStatus(record.id, 'failed');
+          continue;
+        }
         const pushResult = await this.push.send(payload);
         results.push = pushResult;
         await this.updateStatus(record.id, pushResult.sent ? 'sent' : 'failed');
       }
 
       if (channel === 'email') {
+        if (!(await this.governance.areEmailNotificationsEnabled())) {
+          results.email = { skipped: true, reason: 'platform_disabled' };
+          await this.updateStatus(record.id, 'failed');
+          continue;
+        }
         const emailResult = await this.email.send(payload);
         results.email = emailResult;
         await this.updateStatus(record.id, emailResult.sent ? 'sent' : 'failed');

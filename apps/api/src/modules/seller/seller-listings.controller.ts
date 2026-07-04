@@ -126,7 +126,7 @@ export class SellerListingsController {
   @RequirePermissions(PERMISSIONS.EDIT_LISTING)
   @Post(':id/publish')
   publish(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.listingsService.publishWithoutReview(id, user.id);
+    return this.listingsService.submitForReview(id, user.id);
   }
 
   @RequirePermissions(PERMISSIONS.EDIT_LISTING)

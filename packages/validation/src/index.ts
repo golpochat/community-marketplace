@@ -279,6 +279,10 @@ export {
 export {
   platformSettingsUpdateSchema,
   sellerFeeOverrideSchema,
+  buyerCashbackOverrideSchema,
+  monetizationSellerSearchSchema,
+  monetizationProductUpsertSchema,
+  monetizationProductUpdateSchema,
   cashbackGrantsAdminFiltersSchema,
   walletTransactionsAdminFiltersSchema,
   cashbackEstimateQuerySchema,
@@ -302,6 +306,10 @@ export {
   platformPurchasesAdminFiltersSchema,
   type PlatformSettingsUpdateInput,
   type SellerFeeOverrideInput,
+  type BuyerCashbackOverrideInput,
+  type MonetizationSellerSearchInput,
+  type MonetizationProductUpsertInput,
+  type MonetizationProductUpdateInput,
   type CreateBoostIntentInput,
   type ConfirmBoostInput,
   type CreateFeaturedIntentInput,
@@ -318,6 +326,19 @@ export {
   type FeaturedListingsQueryInput,
   type PlatformPurchasesAdminFiltersInput,
 } from './monetization.schema';
+
+export {
+  emailProviderIdSchema,
+  emailPlatformSettingsUpdateSchema,
+  emailTestSendSchema,
+  type EmailPlatformSettingsUpdateInput,
+  type EmailTestSendInput,
+} from './email.schema';
+
+export {
+  platformGovernanceUpdateSchema,
+  type PlatformGovernanceUpdateInput,
+} from './platform-governance.schema';
 
 export {
   notificationTypeSchema,

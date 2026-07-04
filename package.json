@@ -9,9 +9,10 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "dev": "pnpm --filter \"./packages/*\" build && pnpm --parallel --filter @community-marketplace/web --filter @community-marketplace/api run dev",
+    "dev": "node scripts/dev.mjs",
     "dev:web": "pnpm --filter @community-marketplace/web dev",
     "dev:api": "pnpm --filter \"./packages/*\" build && pnpm --filter @community-marketplace/api dev",
+    "dev:kill": "node scripts/free-dev-ports.mjs",
     "build": "pnpm --filter \"./packages/*\" build && pnpm --filter @community-marketplace/web build && pnpm --filter @community-marketplace/api build",
     "lint": "pnpm -r run lint",
     "test": "pnpm -r run test",

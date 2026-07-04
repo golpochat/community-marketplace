@@ -41,12 +41,28 @@ export const apiEnvSchema = baseEnvSchema.extend({
   R2_PUBLIC_URL: z.string().url().default('https://assets.community.marketplace'),
   R2_ENDPOINT: z.string().url().optional(),
   WORKER_HEALTH_PORT: z.coerce.number().int().positive().default(4001),
+  ADS_SYSTEM_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+  ADS_PREVIEW_MODE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 });
 
 export const webEnvSchema = z.object({
   NODE_ENV: nodeEnvSchema,
   NEXT_PUBLIC_API_URL: z.string().url().default(DEFAULT_API_URL),
   NEXT_PUBLIC_APP_URL: z.string().url().default(`http://localhost:${PORTS.web}`),
+  NEXT_PUBLIC_ADS_SYSTEM_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+  NEXT_PUBLIC_ADS_PREVIEW_MODE: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 });
 
 export const adminEnvSchema = z.object({

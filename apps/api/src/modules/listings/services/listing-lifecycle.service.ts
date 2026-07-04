@@ -27,12 +27,14 @@ import {
 import { listingInclude, mapListing } from '../mappers/listing.mapper';
 import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 import { ListingAuditService } from './listing-audit.service';
-import { ListingAutoModerationService } from './listing-auto-moderation.service';
 
 type PrismaListingStatus = ListingStatus;
 
+/** Sellers may only re-activate listings that were previously approved and published. */
+const SELLER_SELF_ACTIVATE_FROM: ListingStatus[] = ['paused'];
+
 const ALLOWED_TRANSITIONS: Record<ListingStatus, ListingStatus[]> = {
-  draft: ['pending_review', 'active', 'flagged'],
+  draft: ['pending_review', 'flagged'],
   pending_review: ['active', 'rejected', 'draft', 'flagged', 'under_investigation'],
   flagged: ['active', 'rejected', 'removed', 'pending_review', 'under_investigation'],
   under_investigation: ['active', 'rejected', 'removed', 'flagged', 'pending_review'],
@@ -53,7 +55,6 @@ export class ListingLifecycleService {
     private readonly audit: ListingAuditService,
     private readonly eventBus: EventBusService,
     private readonly sellerListingGate: SellerListingGateService,
-    private readonly autoModeration: ListingAutoModerationService,
   ) {}
 
   async submitForReview(listingId: string, sellerId: string): Promise<Listing> {
@@ -116,18 +117,9 @@ export class ListingLifecycleService {
     });
   }
 
+  /** @deprecated Sellers cannot self-publish; routes to submitForReview. */
   publishWithoutReview(listingId: string, sellerId: string): Promise<Listing> {
-    return this.autoModeration
-      .evaluateBeforePublish(listingId, sellerId)
-      .then(() => this.activateListing(listingId, sellerId, 'SELLER', 'draft'))
-      .catch((err: Error) => {
-        if (err.message === 'LISTING_QUEUED_FOR_REVIEW') {
-          throw new BadRequestException(
-            'This listing requires admin review before it can go live.',
-          );
-        }
-        throw err;
-      });
+    return this.submitForReview(listingId, sellerId);
   }
 
   pauseListing(listingId: string, sellerId: string): Promise<Listing> {
@@ -529,82 +521,6 @@ export class ListingLifecycleService {
     return mapListing(row);
   }
 
-  private async activateListing(
-    listingId: string,
-    actorId: string,
-    changedByType: ListingStatusActorType,
-    requiredFrom: ListingStatus,
-  ): Promise<Listing> {
-    const listing = await this.prisma.listing.findUnique({ where: { id: listingId } });
-    if (!listing) throw new NotFoundException(`Listing ${listingId} not found`);
-
-    const fromStatus = listing.status as ListingStatus;
-    if (fromStatus !== requiredFrom) {
-      throw new BadRequestException(
-        `Listing must be in ${requiredFrom} status to activate (current: ${fromStatus})`,
-      );
-    }
-
-    if (changedByType === 'SELLER' && listing.sellerId !== actorId) {
-      throw new ForbiddenException('You can only modify your own listings');
-    }
-
-    const isFirstActivation = !listing.activatedAt;
-    await this.sellerListingGate.assertCanActivateListing(
-      listing.sellerId,
-      isFirstActivation,
-    );
-
-    const now = new Date();
-    const packageType = listing.packageType as ListingPackageType;
-    const expiresAt = computeExpiresAt(now, packageType);
-
-    const row = await this.prisma.$transaction(async (tx) => {
-      const updated = await tx.listing.update({
-        where: { id: listingId },
-        data: {
-          status: 'active',
-          activatedAt: now,
-          expiresAt,
-          isPaid: isPaidPackage(packageType),
-          rejectionReason: null,
-        },
-        include: listingInclude,
-      });
-
-      await this.logStatusChange(tx, {
-        listingId,
-        fromStatus,
-        toStatus: 'active',
-        changedByType,
-        changedById: actorId,
-      });
-
-      return updated;
-    });
-
-    await this.audit.record(listingId, 'listing_approved', actorId, {
-      fromStatus,
-      toStatus: 'active',
-    });
-
-    if (isFirstActivation) {
-      const gateResult = await this.sellerListingGate.onListingActivated(listing.sellerId);
-      if (gateResult.nudgeMessage) {
-        this.eventBus.publish({
-          type: 'seller.verification_nudge',
-          payload: { sellerId: listing.sellerId, message: gateResult.nudgeMessage },
-          timestamp: new Date(),
-        });
-      }
-    }
-
-    this.publishEvents(listingId, listing.sellerId, 'listing.approved');
-    this.publishEvents(listingId, listing.sellerId, 'listing.updated');
-
-    return mapListing(row);
-  }
-
   private async transition(params: {
     listingId: string;
     actorId: string | null;
@@ -636,6 +552,17 @@ export class ListingLifecycleService {
     }
 
     const fromStatus = listing.status as ListingStatus;
+    if (
+      !isAdmin &&
+      params.actorRole === 'SELLER' &&
+      params.toStatus === 'active' &&
+      !SELLER_SELF_ACTIVATE_FROM.includes(fromStatus)
+    ) {
+      throw new ForbiddenException(
+        'Only administrators can approve listings for publication',
+      );
+    }
+
     if (!ALLOWED_TRANSITIONS[fromStatus]?.includes(params.toStatus)) {
       throw new BadRequestException(
         `Cannot transition listing from ${fromStatus} to ${params.toStatus}`,

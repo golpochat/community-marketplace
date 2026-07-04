@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 
 import { DatabaseModule } from '../../database/database.module';
+import { EmailModule } from '../../email/email.module';
 import { EventsModule } from '../../events/events.module';
 import { DevUploadModule } from '../dev-upload/dev-upload.module';
 import { ListingsModule } from '../listings/listings.module';
@@ -31,6 +32,7 @@ import { StripeConnectService } from './services/stripe-connect.service';
 @Module({
   imports: [
     DatabaseModule,
+    EmailModule,
     EventsModule,
     LibsModule,
     DevUploadModule,

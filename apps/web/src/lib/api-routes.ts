@@ -95,6 +95,7 @@ export const WEB_API_ROUTES = {
     listings: '/listings',
     featuredListings: '/listings/featured',
     listingSearch: '/listings/search',
+    adsPlacements: '/ads/placements',
     search: '/search',
     autocomplete: '/search/autocomplete',
     globalSearch: '/search/global',

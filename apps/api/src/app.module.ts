@@ -4,10 +4,12 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { CommonModule } from './common/common.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { AuthGuard } from './common/guards/auth.guard';
+import { MaintenanceGuard } from './common/guards/maintenance.guard';
 import { RolesPermissionsGuard } from './common/guards/roles-permissions.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AppConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
+import { EmailModule } from './email/email.module';
 import { EventsModule } from './events/events.module';
 import { JobsModule } from './jobs/jobs.module';
 import { LibsModule } from './libs/libs.module';
@@ -21,6 +23,7 @@ import { HealthModule } from './modules/health/health.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
 import { ListingsModule } from './modules/listings/listings.module';
 import { MonetizationModule } from './modules/monetization/monetization.module';
+import { PlatformModule } from './modules/platform/platform.module';
 import { StatementsModule } from './modules/statements/statements.module';
 import { ModerationModule } from './modules/moderation/moderation.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -38,6 +41,7 @@ import { UtilsModule } from './utils/utils.module';
   imports: [
     CommonModule,
     AppConfigModule,
+    EmailModule,
     DatabaseModule,
     LibsModule,
     UtilsModule,
@@ -51,6 +55,7 @@ import { UtilsModule } from './utils/utils.module';
     ChatModule,
     PaymentsModule,
     MonetizationModule,
+    PlatformModule,
     StatementsModule,
     NotificationsModule,
     SearchModule,
@@ -68,6 +73,7 @@ import { UtilsModule } from './utils/utils.module';
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
     { provide: APP_GUARD, useClass: AuthGuard },
+    { provide: APP_GUARD, useClass: MaintenanceGuard },
     { provide: APP_GUARD, useClass: RolesPermissionsGuard },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
   ],

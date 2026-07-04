@@ -13,12 +13,13 @@ interface ListingSellerActionsProps {
   /** When true, duplicate is disabled (unverified limit reached). */
   duplicateBlocked?: boolean;
   duplicateBlockedReason?: string;
+  /** When false, paid boost and feature actions are hidden. */
+  sellerVerified?: boolean;
 }
 
 export type SellerListingAction =
   | 'edit'
   | 'submit'
-  | 'publish'
   | 'cancel-review'
   | 'pause'
   | 'resume'
@@ -38,6 +39,7 @@ export function ListingSellerActions({
   listingActionsBlockedReason,
   duplicateBlocked = false,
   duplicateBlockedReason,
+  sellerVerified = true,
 }: ListingSellerActionsProps) {
   const busy = actionId === listing.id;
   const status = listing.status as ListingStatus;
@@ -84,13 +86,6 @@ export function ListingSellerActions({
           disabled={busy}
           onClick={() => onAction(listing.id, 'submit')}
         />,
-        <IconActionButton
-          key="publish"
-          icon="check"
-          label="Publish now"
-          disabled={busy}
-          onClick={() => onAction(listing.id, 'publish')}
-        />,
       );
       break;
     case 'pending_review':
@@ -112,21 +107,25 @@ export function ListingSellerActions({
       break;
     case 'active':
       actions.push(editButton);
+      if (sellerVerified) {
+        actions.push(
+          <IconActionButton
+            key="upgrade"
+            icon="check"
+            label="Boost listing"
+            disabled={busy}
+            onClick={() => onAction(listing.id, 'upgrade')}
+          />,
+          <IconActionButton
+            key="feature"
+            icon="medal"
+            label="Feature listing"
+            disabled={busy}
+            onClick={() => onAction(listing.id, 'feature')}
+          />,
+        );
+      }
       actions.push(
-        <IconActionButton
-          key="upgrade"
-          icon="check"
-          label="Boost listing"
-          disabled={busy}
-          onClick={() => onAction(listing.id, 'upgrade')}
-        />,
-        <IconActionButton
-          key="feature"
-          icon="medal"
-          label="Feature listing"
-          disabled={busy}
-          onClick={() => onAction(listing.id, 'feature')}
-        />,
         <IconActionButton
           key="pause"
           icon="archive"
