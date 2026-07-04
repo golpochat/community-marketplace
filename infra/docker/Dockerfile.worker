@@ -15,6 +15,7 @@ COPY packages/types/package.json ./packages/types/
 COPY packages/utils/package.json ./packages/utils/
 COPY packages/validation/package.json ./packages/validation/
 COPY apps/api/package.json ./apps/api/
+COPY apps/web/eslint-plugin-design-system ./apps/web/eslint-plugin-design-system
 RUN pnpm fetch
 
 FROM base AS builder

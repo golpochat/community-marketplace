@@ -18,6 +18,7 @@ COPY packages/validation/package.json ./packages/validation/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/ui-dashboard/package.json ./packages/ui-dashboard/
 COPY apps/admin/package.json ./apps/admin/
+COPY apps/web/eslint-plugin-design-system ./apps/web/eslint-plugin-design-system
 RUN pnpm fetch
 
 FROM base AS builder
