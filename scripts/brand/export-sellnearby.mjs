@@ -75,6 +75,22 @@ async function rasterize(svg, width, height, outPath, format) {
 
 
 
+async function rasterizeMaskableAppIcon(svg, size, outPath) {
+  const inner = Math.round(size * 0.82);
+  const iconBuffer = await sharp(Buffer.from(svg)).resize(inner, inner).png().toBuffer();
+  await sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: { r: 13, g: 148, b: 136, alpha: 1 },
+    },
+  })
+    .composite([{ input: iconBuffer, gravity: 'center' }])
+    .png()
+    .toFile(outPath);
+}
+
 async function main() {
 
   await mkdir(SVG_DIR, { recursive: true });
@@ -153,6 +169,8 @@ async function main() {
 
   await rasterize(iconAppSvg, 512, 512, path.join(ICONS_DIR, 'icon-512.png'), 'png');
   await rasterize(iconAppSvg, 192, 192, path.join(ICONS_DIR, 'icon-192.png'), 'png');
+  await rasterizeMaskableAppIcon(iconAppSvg, 512, path.join(ICONS_DIR, 'icon-512-maskable.png'));
+  await rasterizeMaskableAppIcon(iconAppSvg, 192, path.join(ICONS_DIR, 'icon-192-maskable.png'));
   await rasterize(iconSvgFlat, 32, 32, path.join(ICONS_DIR, 'favicon-32.png'), 'png');
   await rasterize(iconAppSvg, 180, 180, path.join(ICONS_DIR, 'apple-touch-icon.png'), 'png');
 

@@ -5,7 +5,7 @@ import sharp from 'sharp';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const iconsDir = path.resolve(__dirname, '../public/icons');
-const svgPath = path.join(iconsDir, 'icon.svg');
+const svgPath = path.join(iconsDir, 'icon-app.svg');
 
 async function main() {
   await mkdir(iconsDir, { recursive: true });
