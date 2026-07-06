@@ -25,7 +25,7 @@ export function AdminHeader() {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
+    <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-6">
       <p className="text-sm text-muted-foreground">Administration Panel</p>
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={toggle} aria-label="Toggle theme">

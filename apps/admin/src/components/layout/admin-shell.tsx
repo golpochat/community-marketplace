@@ -10,11 +10,11 @@ interface AdminShellProps {
 export function AdminShell({ children }: AdminShellProps) {
   return (
     <AdminProviders>
-      <div className="flex min-h-screen bg-background">
+      <div className="flex h-screen overflow-hidden bg-background">
         <AdminSidebar />
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <AdminHeader />
-          <main className="flex-1 p-6">{children}</main>
+          <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-6">{children}</main>
         </div>
       </div>
     </AdminProviders>

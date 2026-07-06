@@ -145,8 +145,11 @@ export class SuperAdminController {
 
   @RequirePermissions(PERMISSIONS.VIEW_AUDIT_LOG)
   @Get('audit')
-  getAuditLog() {
-    return this.superAdminService.getAuditLog();
+  getAuditLog(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.superAdminService.getAuditLog(
+      page ? parseInt(page, 10) : undefined,
+      limit ? parseInt(limit, 10) : undefined,
+    );
   }
 
   @RequirePermissions(PERMISSIONS.EXECUTE_ADMIN_ACTION)

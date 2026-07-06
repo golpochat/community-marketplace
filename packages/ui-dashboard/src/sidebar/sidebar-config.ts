@@ -78,6 +78,49 @@ export const SELLER_VERIFICATION_SIDEBAR_CHILDREN = getSellerVerificationSidebar
 export const SUPER_ADMIN_SELLER_VERIFICATION_SIDEBAR_CHILDREN =
   getSellerVerificationSidebarChildren('/super-admin');
 
+/** Break-glass ops tools — delegated to ADMIN day-to-day; reachable for super-admin escalation. */
+export const SUPER_ADMIN_OPS_ESCALATION_CHILDREN: SidebarNavChildItem[] = [
+  {
+    id: 'ops-listing-moderation',
+    label: 'Listing Moderation',
+    href: '/super-admin/listing-moderation',
+    permission: PERMISSIONS.APPROVE_LISTING,
+  },
+  {
+    id: 'ops-moderation',
+    label: 'Moderation',
+    href: '/super-admin/moderation',
+    permission: PERMISSIONS.VIEW_REPORTS,
+  },
+  {
+    id: 'ops-message-moderation',
+    label: 'Message Reports',
+    href: '/super-admin/message-moderation',
+    permission: PERMISSIONS.MODERATE_MESSAGES,
+  },
+  {
+    id: 'ops-verifications',
+    label: 'Account Verifications',
+    href: '/super-admin/verifications',
+    permission: PERMISSIONS.APPROVE_VERIFICATION,
+  },
+  {
+    id: 'ops-listings',
+    label: 'Listings',
+    href: '/super-admin/listings',
+    permission: PERMISSIONS.VIEW_LISTINGS,
+  },
+  { id: 'ops-delivery-reviews', label: 'Delivery Reviews', href: '/super-admin/delivery-reviews' },
+  { id: 'ops-price-reviews', label: 'Price Reviews', href: '/super-admin/price-reviews' },
+  {
+    id: 'ops-payments',
+    label: 'Payments',
+    href: '/super-admin/payments',
+    permission: PERMISSIONS.VIEW_PAYMENTS,
+  },
+  { id: 'ops-monetization', label: 'Listing promotions', href: '/super-admin/monetization' },
+];
+
 export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
   { id: 'overview', label: 'Overview', href: '/super-admin/dashboard', icon: 'crown', exact: true },
 
@@ -93,7 +136,7 @@ export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
   { id: 'admins', label: 'Admins', href: '/super-admin/admins', icon: 'key' },
   { id: 'audit-log', label: 'Audit Log', href: '/super-admin/audit-log', icon: 'scroll' },
 
-  { id: 'section-trust', label: 'Trust & risk', sectionHeader: true },
+  { id: 'section-trust', label: 'Trust & escalation', sectionHeader: true },
   { id: 'users', label: 'Users', href: '/super-admin/users', icon: 'users' },
   {
     id: 'seller-verification',
@@ -114,19 +157,29 @@ export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
     id: 'fraud',
     label: 'Fraud Detection',
     href: '/super-admin/fraud',
-    icon: 'shield-check',
+    icon: 'alert-triangle',
     permission: PERMISSIONS.VIEW_FRAUD,
   },
 
-  { id: 'section-platform', label: 'Platform', sectionHeader: true },
-  { id: 'payments', label: 'Payments', href: '/super-admin/payments', icon: 'landmark' },
-  { id: 'monetization', label: 'Listing promotions', href: '/super-admin/monetization', icon: 'landmark' },
-  { id: 'finance', label: 'Financial reports', href: '/super-admin/finance', icon: 'bar-chart', permission: PERMISSIONS.MANAGE_PAYMENTS },
-  { id: 'search', label: 'Search', href: '/super-admin/search', icon: 'search' },
+  { id: 'section-platform', label: 'Platform insight', sectionHeader: true },
   { id: 'analytics', label: 'Analytics', href: '/super-admin/analytics', icon: 'bar-chart' },
+  {
+    id: 'finance',
+    label: 'Financial reports',
+    href: '/super-admin/finance',
+    icon: 'landmark',
+    permission: PERMISSIONS.MANAGE_PAYMENTS,
+  },
+  { id: 'search', label: 'Search', href: '/super-admin/search', icon: 'compass' },
 
-  { id: 'section-personal', label: 'Personal', sectionHeader: true },
-  { id: 'notifications', label: 'Notifications', href: '/super-admin/notifications', icon: 'bell' },
+  { id: 'section-ops', label: 'Operations escalation', sectionHeader: true },
+  {
+    id: 'ops-escalation',
+    label: 'Ops tools',
+    href: '/super-admin/listing-moderation',
+    icon: 'hammer',
+    children: SUPER_ADMIN_OPS_ESCALATION_CHILDREN,
+  },
 ];
 
 export const ADMIN_SIDEBAR: SidebarNavItem[] = [

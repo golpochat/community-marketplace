@@ -32,12 +32,12 @@ export function AdminSidebar() {
   }, [user, permissions, setPermissions]);
 
   return (
-    <aside className="hidden w-64 shrink-0 bg-slate-900 text-white dark:bg-slate-950 md:block">
-      <div className="border-b border-slate-800 p-6">
+    <aside className="hidden h-screen max-h-screen min-h-0 w-64 shrink-0 flex-col bg-slate-900 text-white dark:bg-slate-950 md:flex">
+      <div className="shrink-0 border-b border-slate-800 p-6">
         <p className="text-lg font-semibold">CM Admin</p>
         <p className="text-xs text-gray-400">Community Marketplace</p>
       </div>
-      <nav className="space-y-1 p-4">
+      <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-y-contain p-4">
         {navItems.map((item) => {
           const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           return (

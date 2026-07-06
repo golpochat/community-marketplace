@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { DatabaseModule } from '../../database/database.module';
 import { AdminModule } from '../admin/admin.module';
 import { ModerationModule } from '../moderation/moderation.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -13,7 +14,14 @@ import { SuperAdminController } from './super-admin.controller';
 import { SuperAdminService } from './super-admin.service';
 
 @Module({
-  imports: [AdminModule, UsersModule, NotificationsModule, SearchModule, ModerationModule],
+  imports: [
+    DatabaseModule,
+    AdminModule,
+    UsersModule,
+    NotificationsModule,
+    SearchModule,
+    ModerationModule,
+  ],
   controllers: [
     SuperAdminController,
     SuperAdminOperationsController,

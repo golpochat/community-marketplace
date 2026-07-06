@@ -337,7 +337,15 @@ export type {
 } from './store';
 export { STORE_PLATFORM_MAX } from './store';
 export type { PaginationMeta, ApiResponse, ApiError, PaginatedResult } from './api';
-export type { AdminDashboardStats, PlatformSettings, AdminMeResponse } from './admin';
+export type {
+  AdminDashboardStats,
+  PlatformSettings,
+  AdminMeResponse,
+  SuperAdminGovernanceMetrics,
+  SuperAdminPlatformFlags,
+  SuperAdminActivityEvent,
+  SuperAdminPlatformOverview,
+} from './admin';
 export type {
   PlatformGovernanceSettings,
   PlatformGovernanceEnvDefaults,

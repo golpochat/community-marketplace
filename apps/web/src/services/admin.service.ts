@@ -17,6 +17,8 @@ import type {
   ReindexJobStatus,
   SearchIndexMeta,
   SearchIndexName,
+  SuperAdminPlatformOverview,
+  SuperAdminActivityEvent,
   SuspensionDuration,
   UserBan,
   UserProfile,
@@ -58,10 +60,26 @@ type ListParams = {
   sellerId?: string;
 };
 
-export interface SuperAdminPlatformOverview extends AdminDashboardStats {
-  roles: number;
-  permissions: number;
-}
+const EMPTY_GOVERNANCE_OVERVIEW: SuperAdminPlatformOverview = {
+  ...EMPTY_STATS,
+  roles: 0,
+  permissions: 0,
+  platformFlags: {
+    maintenanceMode: false,
+    securityMfaRequired: false,
+  },
+  governance: {
+    activeAdminCount: 0,
+    pendingInvitations: 0,
+    openDisputes: 0,
+    openFraudSignals: 0,
+    pendingListingReviews: 0,
+    pendingSellerVerifications: 0,
+  },
+  recentActivity: [],
+};
+
+export type { SuperAdminPlatformOverview };
 
 export const adminService = {
   async getStats(role: AdminApiRole): Promise<AdminDashboardStats> {
@@ -78,9 +96,9 @@ export const adminService = {
       const response = await apiClient<SuperAdminPlatformOverview>(
         adminApiPath('SUPER_ADMIN', '/platform'),
       );
-      return response.data ?? { ...EMPTY_STATS, roles: 0, permissions: 0 };
+      return response.data ?? EMPTY_GOVERNANCE_OVERVIEW;
     } catch {
-      return { ...EMPTY_STATS, roles: 0, permissions: 0 };
+      return EMPTY_GOVERNANCE_OVERVIEW;
     }
   },
 
@@ -300,9 +318,36 @@ export const adminService = {
     return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
   },
 
-  async listAuditLogs(role: AdminApiRole): Promise<unknown[]> {
-    const response = await apiClient<unknown[]>(adminApiPath(role, '/audit'));
-    return Array.isArray(response.data) ? response.data : [];
+  async listAuditLogs(
+    role: AdminApiRole,
+    params: { page?: number; limit?: number } = {},
+  ): Promise<PaginatedResult<SuperAdminActivityEvent | Record<string, unknown>>> {
+    const response = await apiClient<
+      SuperAdminActivityEvent[] | PaginatedResult<SuperAdminActivityEvent> | unknown[]
+    >(adminApiPath(role, '/audit'), {
+      params: {
+        page: String(params.page ?? 1),
+        limit: String(params.limit ?? 20),
+      },
+    });
+
+    if (role === 'SUPER_ADMIN') {
+      return normalizePaginated(response, {
+        page: params.page ?? 1,
+        limit: params.limit ?? 20,
+      });
+    }
+
+    const legacyItems = Array.isArray(response.data) ? response.data : [];
+    return {
+      data: legacyItems,
+      meta: {
+        page: 1,
+        limit: legacyItems.length,
+        total: legacyItems.length,
+        totalPages: 1,
+      },
+    };
   },
 
   async listAdmins(params: ListParams = {}): Promise<PaginatedResult<UserProfile>> {

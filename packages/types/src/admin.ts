@@ -16,6 +16,39 @@ export interface AdminDashboardStats {
   generatedAt: string;
 }
 
+export interface SuperAdminGovernanceMetrics {
+  activeAdminCount: number;
+  pendingInvitations: number;
+  openDisputes: number;
+  openFraudSignals: number;
+  pendingListingReviews: number;
+  pendingSellerVerifications: number;
+}
+
+export interface SuperAdminPlatformFlags {
+  maintenanceMode: boolean;
+  securityMfaRequired: boolean;
+}
+
+export interface SuperAdminActivityEvent {
+  id: string;
+  source: 'user' | 'moderation';
+  eventType: string;
+  createdAt: string;
+  actorId?: string;
+  targetUserId?: string;
+  reportId?: string;
+  userId?: string;
+}
+
+export interface SuperAdminPlatformOverview extends AdminDashboardStats {
+  roles: number;
+  permissions: number;
+  governance: SuperAdminGovernanceMetrics;
+  platformFlags: SuperAdminPlatformFlags;
+  recentActivity: SuperAdminActivityEvent[];
+}
+
 export interface PlatformSettings {
   maintenanceMode: boolean;
   platformNameOverrideEnabled: boolean;

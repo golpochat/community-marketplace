@@ -49,13 +49,13 @@ export function Sidebar({
     <aside
       className={cn(
         'flex shrink-0 flex-col border-r border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-bg))] text-[hsl(var(--dashboard-sidebar-fg))] transition-[width] duration-200 ease-in-out',
-        mobile ? 'h-full w-64' : 'hidden md:flex',
+        mobile ? 'h-full w-64' : 'hidden h-screen max-h-screen min-h-0 md:flex',
         !mobile && (isCollapsed ? 'w-[4.5rem]' : 'w-64'),
       )}
     >
       <div
         className={cn(
-          'flex flex-col border-b border-[hsl(var(--dashboard-sidebar-border))]',
+          'flex shrink-0 flex-col border-b border-[hsl(var(--dashboard-sidebar-border))]',
           isCollapsed ? 'items-center px-2 py-4' : 'px-4 py-5',
         )}
       >
@@ -81,7 +81,7 @@ export function Sidebar({
           </>
         )}
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-y-contain p-3">
         {navItems.map((item) => {
           if (item.sectionHeader) {
             if (isCollapsed) return null;

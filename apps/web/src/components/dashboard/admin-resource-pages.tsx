@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import type { Category, ListingStatus, ModerationReport, PlatformGovernanceSettings, PlatformGovernanceStatus, UserProfile, UserVerification } from '@community-marketplace/types';
+import type { Category, ListingStatus, ModerationReport, PlatformGovernanceSettings, PlatformGovernanceStatus, SuperAdminActivityEvent, UserProfile, UserVerification } from '@community-marketplace/types';
 import { formatCurrency, formatDateTime } from '@community-marketplace/utils';
 import {
   Card,
@@ -34,6 +34,11 @@ import {
   NotificationDeliveryStatusBadge,
 } from '@/components/notifications/notification-delivery-labels';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
+import {
+  formatActivityDetail,
+  formatActivityEventType,
+  formatActivitySource,
+} from '@/lib/super-admin-activity';
 import { adminService, type AdminServiceRole } from '@/services/admin.service';
 import { listingsService } from '@/services/listings.service';
 
@@ -754,28 +759,27 @@ export function AdminVerificationsPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function AdminAuditLogPage({ role }: { role: AdminServiceRole }) {
-  const [items, setItems] = useState<unknown[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const fetchLogs = useCallback(
+    (page: number, limit: number) => adminService.listAuditLogs(role, { page, limit }),
+    [role],
+  );
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    void adminService
-      .listAuditLogs(role)
-      .then((logs) => {
-        if (!cancelled) setItems(logs);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [role]);
+  const { page, setPage, data, meta, loading, error, totalPages } = usePaginatedQuery({
+    fetcher: fetchLogs,
+  });
+
+  const isSuperAdmin = role === 'SUPER_ADMIN';
+  const superAdminRows =
+    isSuperAdmin &&
+    data.map((entry) => {
+      const event = entry as SuperAdminActivityEvent;
+      return [
+        formatActivityEventType(event.eventType),
+        formatActivitySource(event.source),
+        formatActivityDetail(event),
+        formatDateTime(event.createdAt),
+      ];
+    });
 
   return (
     <DashboardPageShell
@@ -783,14 +787,31 @@ export function AdminAuditLogPage({ role }: { role: AdminServiceRole }) {
       description="Review privileged actions and system audit trails."
       loading={loading}
       error={error}
-      empty={!loading && !error && items.length === 0}
+      empty={!loading && !error && data.length === 0}
       emptyTitle="No audit entries"
     >
-      <Card title="Audit trail">
-        <pre className="max-h-96 overflow-auto rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-4 text-xs text-[hsl(var(--dashboard-main-fg))]">
-          {JSON.stringify(items, null, 2)}
-        </pre>
-      </Card>
+      {isSuperAdmin && superAdminRows ? (
+        <>
+          <Card title="Privileged activity trail">
+            <DataTable
+              columns={['Event', 'Source', 'Details', 'When']}
+              rows={superAdminRows}
+            />
+          </Card>
+          <AdminTableFooter
+            page={page}
+            totalPages={totalPages}
+            total={meta.total}
+            onPageChange={setPage}
+          />
+        </>
+      ) : (
+        <Card title="Audit trail">
+          <pre className="max-h-96 overflow-auto rounded-lg bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-4 text-xs text-[hsl(var(--dashboard-main-fg))]">
+            {JSON.stringify(data, null, 2)}
+          </pre>
+        </Card>
+      )}
     </DashboardPageShell>
   );
 }
