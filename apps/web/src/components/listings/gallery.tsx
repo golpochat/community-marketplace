@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 
 import type { ListingImage } from '@community-marketplace/types';
 import type { ListingImageVariant } from '@/lib/listing-image-url';
-import { cn } from '@community-marketplace/ui';
+import { cn, BrandMediaImage } from '@community-marketplace/ui';
 import { Check, ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
 
 import { listingImageFallbackChain } from '@/lib/listing-image-url';
@@ -220,8 +220,8 @@ export function Gallery({ images, title }: GalleryProps) {
 
   if (slides.length === 0) {
     return (
-      <AspectMediaFrame className="flex items-center justify-center rounded-xl text-muted-foreground">
-        No images
+      <AspectMediaFrame className="rounded-xl">
+        <BrandMediaImage src={null} alt={`${title} — no photos`} rounded="lg" className="h-full w-full" />
       </AspectMediaFrame>
     );
   }

@@ -9,7 +9,7 @@ import {
   isFreeListingPrice,
   resolveListingListedAt,
 } from '@community-marketplace/utils';
-import { cn } from '@community-marketplace/ui';
+import { cn, BrandMediaImage } from '@community-marketplace/ui';
 import { BadgeCheck, MapPin } from 'lucide-react';
 
 import { DealBlock } from '@/components/listings/deal-block';
@@ -105,23 +105,12 @@ export function ListingCardImage({
             : 'aspect-video',
       )}
     >
-      {imageSrc ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={imageSrc}
-          alt={listing.title}
-          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]"
-        />
-      ) : (
-        <div
-          className={cn(
-            'flex h-full items-center justify-center text-sm text-muted-foreground',
-            isList && 'min-h-[140px]',
-          )}
-        >
-          No image
-        </div>
-      )}
+      <BrandMediaImage
+        src={imageSrc}
+        alt={listing.title}
+        rounded="none"
+        className="transition-transform duration-200 group-hover:scale-[1.02]"
+      />
 
       {!isFree && (
         <SaleBadgeOverlay

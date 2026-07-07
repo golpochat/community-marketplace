@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import { cn } from '@community-marketplace/ui';
+import { BrandAvatar } from '@community-marketplace/ui';
 import { ChevronDown, LogOut, Settings, User } from 'lucide-react';
 
 export interface ProfileDropdownUser {
@@ -17,17 +18,6 @@ export interface ProfileDropdownProps {
   profileHref: string;
   settingsHref?: string;
   onLogout: () => void | Promise<void>;
-}
-
-function getInitials(name?: string | null, email?: string | null): string {
-  if (name?.trim()) {
-    const parts = name.trim().split(/\s+/);
-    return parts
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase() ?? '')
-      .join('');
-  }
-  return email?.[0]?.toUpperCase() ?? '?';
 }
 
 export function ProfileDropdown({ user, profileHref, settingsHref, onLogout }: ProfileDropdownProps) {
@@ -45,7 +35,6 @@ export function ProfileDropdown({ user, profileHref, settingsHref, onLogout }: P
   }, []);
 
   const displayName = user.name?.trim() || user.email || 'Account';
-  const initials = getInitials(user.name, user.email);
 
   return (
     <div ref={containerRef} className="relative">
@@ -56,14 +45,7 @@ export function ProfileDropdown({ user, profileHref, settingsHref, onLogout }: P
         aria-expanded={open}
         aria-haspopup="menu"
       >
-        {user.avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={user.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
-        ) : (
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--dashboard-accent))] text-[11px] font-semibold text-white">
-            {initials}
-          </span>
-        )}
+        <BrandAvatar src={user.avatarUrl} alt={displayName} size="xs" />
         <span className="hidden max-w-[140px] truncate text-left sm:inline">{displayName}</span>
         <ChevronDown className={cn('h-4 w-4 opacity-60 transition-transform', open && 'rotate-180')} />
       </button>

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 
-import { Button } from '@community-marketplace/ui';
+import { Button, BrandAvatar } from '@community-marketplace/ui';
 
 import { userService } from '@/services/user.service';
 import { useAuthStore } from '@/store/auth.store';
@@ -60,11 +60,7 @@ export function ProfileAvatarUpload({
     }
   }
 
-  const initials = (displayName?.trim() || 'User')
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
+  const displayLabel = displayName?.trim() || 'User';
 
   return (
     <div className="space-y-2">
@@ -72,18 +68,12 @@ export function ProfileAvatarUpload({
         <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">{label}</p>
       )}
       <div className="flex items-center gap-4">
-        {avatarUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={avatarUrl}
-            alt=""
-            className="h-20 w-20 rounded-full border border-[hsl(var(--dashboard-sidebar-border))] object-cover"
-          />
-        ) : (
-          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-dashed border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.15)] text-sm font-semibold text-[hsl(var(--dashboard-sidebar-muted))]">
-            {initials || '?'}
-          </div>
-        )}
+        <BrandAvatar
+          src={avatarUrl}
+          alt={displayLabel}
+          size="2xl"
+          className="border border-[hsl(var(--dashboard-sidebar-border))]"
+        />
         {!readOnly && (
           <div className="space-y-2">
             <input

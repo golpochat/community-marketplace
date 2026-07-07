@@ -7,6 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuPortal,
   DropdownMenuSeparator,
+  BrandAvatar,
 } from '@community-marketplace/ui';
 import {
   ChevronDown,
@@ -37,22 +38,9 @@ interface UserMenuDropdownProps {
   className?: string;
 }
 
-function getInitials(displayName?: string | null, email?: string | null): string {
-  if (displayName?.trim()) {
-    return displayName
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase() ?? '')
-      .join('');
-  }
-  return email?.[0]?.toUpperCase() ?? '?';
-}
-
 export function UserMenuDropdown({ user, links, onSignOut, className }: UserMenuDropdownProps) {
   const { theme, toggle } = useTheme();
   const displayName = user.displayName?.trim() || user.email || 'Account';
-  const initials = getInitials(user.displayName, user.email);
 
   const menuItems = [
     { href: links.dashboard, label: 'Dashboard', icon: LayoutDashboard },
@@ -74,18 +62,7 @@ export function UserMenuDropdown({ user, links, onSignOut, className }: UserMenu
           className="flex items-center gap-2 rounded-full p-0.5 transition-all duration-150 hover:ring-2 hover:ring-primary/20"
           aria-label="Account menu"
         >
-          {user.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={user.avatarUrl}
-              alt=""
-              className="h-9 w-9 rounded-full object-cover"
-            />
-          ) : (
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-              {initials}
-            </span>
-          )}
+          <BrandAvatar src={user.avatarUrl} alt={displayName} size="md" />
           <ChevronDown
             className="hidden h-4 w-4 text-muted-foreground lg:block"
             aria-hidden

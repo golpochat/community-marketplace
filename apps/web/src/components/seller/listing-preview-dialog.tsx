@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { computeListingPricing, formatCurrency } from '@community-marketplace/utils';
-import { Button } from '@community-marketplace/ui';
+import { Button, BrandMediaImage } from '@community-marketplace/ui';
 
 import type { ListingDeliverySelection, ListingImage } from '@community-marketplace/types';
 
@@ -96,23 +96,21 @@ export function ListingPreviewDialog({
         </div>
 
         <div className="space-y-6 px-6 py-6">
-          {coverUrl ? (
-            <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.5)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={coverUrl} alt={data.title || 'Cover'} className="h-full w-full object-cover" />
-              {pricingMeta?.hasSaleBadge && pricingMeta.originalPrice != null && (
-                <SaleBadgeOverlay
-                  originalPrice={pricingMeta.originalPrice}
-                  salePrice={pricingMeta.salePrice}
-                  discountPercent={pricingMeta.discountPercent}
-                />
-              )}
-            </div>
-          ) : (
-            <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-              No photos selected
-            </div>
-          )}
+          <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-[hsl(var(--dashboard-sidebar-border))]">
+            <BrandMediaImage
+              src={coverUrl}
+              alt={data.title || 'Cover'}
+              rounded="lg"
+              className="h-full w-full"
+            />
+            {coverUrl && pricingMeta?.hasSaleBadge && pricingMeta.originalPrice != null ? (
+              <SaleBadgeOverlay
+                originalPrice={pricingMeta.originalPrice}
+                salePrice={pricingMeta.salePrice}
+                discountPercent={pricingMeta.discountPercent}
+              />
+            ) : null}
+          </div>
 
           {(existingImages.length > 1 || imageUrls.length > 1) && (
             <div className="space-y-4">
@@ -122,12 +120,14 @@ export function ListingPreviewDialog({
               {imageUrls.length > 1 && (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {imageUrls.slice(1).map((url, index) => (
-                    <img
-                      key={url}
-                      src={url}
-                      alt={`${data.title || 'Listing'} preview ${index + 2}`}
-                      className="h-48 w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] object-cover"
-                    />
+                    <div key={url} className="h-48 w-full overflow-hidden rounded-lg border border-[hsl(var(--dashboard-sidebar-border))]">
+                      <BrandMediaImage
+                        src={url}
+                        alt={`${data.title || 'Listing'} preview ${index + 2}`}
+                        rounded="lg"
+                        className="h-48 w-full"
+                      />
+                    </div>
                   ))}
                 </div>
               )}

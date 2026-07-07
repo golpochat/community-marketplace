@@ -1,20 +1,16 @@
-'use client';
-
-import { cn } from '@community-marketplace/ui';
+import { BrandMediaImage, cn } from '@community-marketplace/ui';
 
 interface StoreBannerPhotoProps {
   src: string;
   className?: string;
 }
 
-/** Hero banners are pre-processed to 4:1 on upload — always fill edge-to-edge. */
 export function StoreBannerPhoto({ src, className }: StoreBannerPhotoProps) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <BrandMediaImage
       src={src}
-      alt=""
-      aria-hidden
+      alt="Store banner"
+      rounded="none"
       className={cn('absolute inset-0 h-full w-full object-cover object-center', className)}
     />
   );

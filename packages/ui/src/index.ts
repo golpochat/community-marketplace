@@ -1,4 +1,11 @@
 export { cn } from './lib/utils';
+export { BRAND_ICON_MARK, BRAND_ICON_MARK_SUBTLE, resolveImageSrc } from './lib/brand-media';
+
+export { BrandAvatar } from './components/brand-avatar';
+export type { BrandAvatarProps, BrandAvatarSize } from './components/brand-avatar';
+
+export { BrandMediaImage } from './components/brand-media-image';
+export type { BrandMediaImageProps } from './components/brand-media-image';
 
 export { Button, buttonVariants } from './components/button';
 export type { ButtonProps } from './components/button';

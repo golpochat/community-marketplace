@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 
-import { Button } from '@community-marketplace/ui';
+import { Button, BrandMediaImage } from '@community-marketplace/ui';
 
 import { sellerService } from '@/services/marketplace.service';
 import { userService } from '@/services/user.service';
@@ -57,24 +57,15 @@ export function StoreLogoUpload({ logoUrl, storeName, storeId, onUpdated }: Stor
     }
   }
 
-  const initials = (storeName ?? 'Store').slice(0, 2).toUpperCase();
+  const storeLabel = storeName?.trim() || 'Store logo';
 
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Store logo</p>
       <div className="flex items-center gap-4">
-        {logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={logoUrl}
-            alt=""
-            className="h-16 w-16 rounded-lg border object-cover"
-          />
-        ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-dashed border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] text-sm font-medium text-[hsl(var(--dashboard-sidebar-muted))]">
-            {initials}
-          </div>
-        )}
+        <div className="h-16 w-16 overflow-hidden rounded-lg border border-[hsl(var(--dashboard-sidebar-border))]">
+          <BrandMediaImage src={logoUrl} alt={storeLabel} rounded="lg" className="h-16 w-16" />
+        </div>
         <div className="space-y-2">
           <input
             ref={inputRef}

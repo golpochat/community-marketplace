@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 
 import type { Listing, ListingStatus } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
+import { BrandMediaImage } from '@community-marketplace/ui';
 import {
   Card,
   IconActionButton,
@@ -33,17 +34,10 @@ function ListingThumb({ listing }: { listing: Listing }) {
   const cover = listing.images[0];
   const src = cover ? listingImageVariantUrl(cover.url, 'tiny') : undefined;
 
-  if (!src) {
-    return (
-      <div className="flex h-12 w-12 items-center justify-center rounded-md bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[10px] text-[hsl(var(--dashboard-sidebar-muted))]">
-        —
-      </div>
-    );
-  }
-
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="" className="h-12 w-12 rounded-md object-cover" />
+    <div className="h-12 w-12 overflow-hidden">
+      <BrandMediaImage src={src} alt={listing.title} rounded="md" className="h-12 w-12" />
+    </div>
   );
 }
 
