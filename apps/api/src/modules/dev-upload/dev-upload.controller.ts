@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   NotFoundException,
@@ -27,9 +28,6 @@ export class DevUploadController {
 
   @Put()
   async upload(@Query('key') key: string | undefined, @Req() req: RawBodyRequest) {
-    if (this.r2.isConfigured()) {
-      throw new NotFoundException();
-    }
     if (!key) {
       throw new NotFoundException();
     }
@@ -37,7 +35,22 @@ export class DevUploadController {
     const body =
       req.rawBody ??
       (Buffer.isBuffer(req.body) ? req.body : Buffer.from([]));
-    await this.devUpload.save(key, body);
+    if (!body.length) {
+      throw new BadRequestException('Empty upload body');
+    }
+
+    const safeKey = this.devUpload.assertValidKey(key);
+
+    if (this.r2.isConfigured()) {
+      const contentType =
+        typeof req.headers['content-type'] === 'string'
+          ? req.headers['content-type']
+          : 'application/octet-stream';
+      await this.r2.putObject(safeKey, body, contentType);
+      return { ok: true };
+    }
+
+    await this.devUpload.save(safeKey, body);
     return { ok: true };
   }
 

@@ -239,6 +239,8 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-rec
 
 > **Important:** R2 variables must be in `.env.prod` **and** passed into the API container via `docker-compose.prod.yml` (already wired in repo). After enabling R2, **re-upload listing photos** — images saved before R2 was active may be broken.
 
+> **Note:** Seller uploads are proxied through `https://api.${DOMAIN}/api/dev-upload` — you do **not** need R2 bucket CORS rules for browser uploads. Only **public read** access on `R2_PUBLIC_URL` is required for displaying images.
+
 - [ ] API restarted
 - [ ] Check API logs: `docker compose -f docker-compose.prod.yml --env-file .env.prod logs api --tail 30`
 

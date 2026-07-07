@@ -9,6 +9,7 @@ const ALLOWED_KEY_PREFIXES = [
   'avatars/',
   'store-banners/',
   'verification-documents/',
+  'dispute-evidence/',
   'system-assets/',
   'payment-receipts/',
   'platform-invoices/',

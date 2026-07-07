@@ -34,21 +34,12 @@ export class ChatR2StorageService {
     const key = `chat/${threadId}/${userId}/${randomUUID()}.${ext}`;
     const expiresInSeconds = 900;
 
-    if (!this.r2.isConfigured()) {
-      return {
-        uploadUrl: this.r2.devUploadUrl(key),
-        publicUrl: this.r2.buildPublicUrl(key),
-        key,
-        expiresInSeconds,
-      };
-    }
-
-    const publicUrl = this.r2.buildPublicUrl(key);
-    const accountId = process.env.R2_ACCOUNT_ID;
-    const bucket = process.env.R2_BUCKET ?? 'community-marketplace';
-    const uploadUrl = `https://${accountId}.r2.cloudflarestorage.com/${bucket}/${key}?X-Amz-Expires=${expiresInSeconds}`;
-
-    return { uploadUrl, publicUrl, key, expiresInSeconds };
+    return {
+      uploadUrl: this.r2.devUploadUrl(key),
+      publicUrl: this.r2.buildPublicUrl(key),
+      key,
+      expiresInSeconds,
+    };
   }
 
   verifyAttachmentKey(key: string, threadId: string, userId: string) {

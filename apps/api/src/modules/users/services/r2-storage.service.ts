@@ -97,14 +97,13 @@ export class R2StorageService {
 
     const publicUrl = buildR2PublicUrl(key);
 
-    const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-      ContentType: input.contentType,
-    });
-    const uploadUrl = await getSignedUrl(this.getClient(), command, { expiresIn: expiresInSeconds });
-
-    return { uploadUrl, publicUrl, key, expiresInSeconds };
+    // Browser uploads go through the API proxy to avoid R2 bucket CORS configuration.
+    return {
+      uploadUrl: this.devUploadUrl(key),
+      publicUrl,
+      key,
+      expiresInSeconds,
+    };
   }
 
   async createAvatarUploadUrl(
