@@ -230,11 +230,14 @@ Choose **one** option:
 
 ```bash
 ssh ubuntu@YOUR_VPS_IP
-cd /opt/sellnearby/infra/docker
-nano .env.prod   # paste R2_* values
-cd /opt/sellnearby/infra/docker
-docker compose -f docker-compose.prod.yml --env-file .env.prod up -d api worker web
+cd /opt/sellnearby && git pull origin main
+cd infra/docker
+nano .env.prod   # paste all R2_* values (see section D)
+docker compose -f docker-compose.prod.yml --env-file .env.prod build api web
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-recreate
 ```
+
+> **Important:** R2 variables must be in `.env.prod` **and** passed into the API container via `docker-compose.prod.yml` (already wired in repo). After enabling R2, **re-upload listing photos** — images saved before R2 was active may be broken.
 
 - [ ] API restarted
 - [ ] Check API logs: `docker compose -f docker-compose.prod.yml --env-file .env.prod logs api --tail 30`

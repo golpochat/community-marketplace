@@ -57,6 +57,14 @@ export function listingImageFallbackChain(
   return chain;
 }
 
+function isR2PublicAssetUrl(url: string): boolean {
+  try {
+    return isR2PublicHost(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
 function devUploadSrcFromUrl(url: string): string | null {
   try {
     const parsed = new URL(url, 'http://localhost');
@@ -90,7 +98,7 @@ export function resolveListingImageSrc(url: string, width = 800): string {
     return proxied;
   }
 
-  if (isProcessedWebp(url)) {
+  if (isProcessedWebp(url) || isR2PublicAssetUrl(url)) {
     return url;
   }
 

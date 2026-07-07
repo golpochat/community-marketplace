@@ -3,6 +3,10 @@ const PRODUCTION_ASSET_HOSTS = new Set([
   'assets.community.market',
 ]);
 
+function isR2PublicHost(hostname: string): boolean {
+  return hostname.endsWith('.r2.dev') || PRODUCTION_ASSET_HOSTS.has(hostname);
+}
+
 export function isR2Configured(): boolean {
   const accountId = process.env.R2_ACCOUNT_ID;
   const accessKeyId = process.env.R2_ACCESS_KEY_ID;
@@ -35,7 +39,7 @@ export function extractStorageKeyFromUrl(url: string): string | null {
     const keyParam = parsed.searchParams.get('key');
     if (keyParam) return keyParam;
 
-    if (PRODUCTION_ASSET_HOSTS.has(parsed.hostname)) {
+    if (isR2PublicHost(parsed.hostname)) {
       const path = parsed.pathname.replace(/^\//, '');
       return path || null;
     }

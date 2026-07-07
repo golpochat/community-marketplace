@@ -45,13 +45,11 @@ export class DevUploadController {
     @Query('key') key: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ) {
-    if (this.r2.isConfigured()) {
-      throw new NotFoundException();
-    }
     if (!key) {
       throw new NotFoundException();
     }
 
+    // Legacy local uploads (pre-R2) remain readable after R2 is enabled.
     try {
       const file = await this.devUpload.read(key);
       res.setHeader('Content-Type', file.contentType);
