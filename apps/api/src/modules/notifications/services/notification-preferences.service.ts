@@ -96,7 +96,11 @@ export class NotificationPreferencesService {
       return false;
     }
 
-    if (type === 'system' && prefs.marketing === false) return false;
+    // Note: `system` covers operational/transactional alerts (admin review
+    // queue, moderation reports, refunds, disputes, appeals). These must not be
+    // gated by the `marketing` opt-out — opting out of promotions should never
+    // silence operational notifications. Explicit per-type opt-out via
+    // `events[type] === false` (handled above) still applies.
 
     return true;
   }
