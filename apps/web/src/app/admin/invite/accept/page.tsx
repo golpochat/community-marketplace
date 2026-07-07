@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { Button, Input, Label } from '@community-marketplace/ui';
+import { Button, Label, PasswordInput } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
 import { authService } from '@/services/auth.service';
@@ -40,6 +40,10 @@ function AdminInviteAcceptContent() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  const passwordTooShort = password.length > 0 && password.length < 8;
+  const passwordsMismatch =
+    confirmPassword.length > 0 && password !== confirmPassword;
+
   useEffect(() => {
     if (!token) {
       setError('This invitation link is missing a token. Please use the link from your email.');
@@ -63,7 +67,6 @@ function AdminInviteAcceptContent() {
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
       return;
     }
 
@@ -124,30 +127,54 @@ function AdminInviteAcceptContent() {
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             required
             minLength={8}
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError(null);
+            }}
             autoComplete="new-password"
+            aria-invalid={passwordTooShort || undefined}
+            aria-describedby={passwordTooShort ? 'password-help' : undefined}
           />
+          {passwordTooShort ? (
+            <p id="password-help" className="text-sm text-destructive">
+              Password must be at least 8 characters.
+            </p>
+          ) : (
+            <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">Use at least 8 characters.</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm-password">Confirm password</Label>
-          <Input
+          <PasswordInput
             id="confirm-password"
-            type="password"
             required
             minLength={8}
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              setError(null);
+            }}
             autoComplete="new-password"
+            aria-invalid={passwordsMismatch || undefined}
+            aria-describedby={passwordsMismatch ? 'confirm-password-error' : undefined}
           />
+          {passwordsMismatch ? (
+            <p id="confirm-password-error" className="text-sm text-destructive">
+              Passwords do not match.
+            </p>
+          ) : null}
         </div>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
-        <Button type="submit" className="w-full" disabled={submitting}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={submitting || passwordTooShort || passwordsMismatch}
+        >
           {submitting ? 'Setting up…' : 'Complete setup'}
         </Button>
       </form>
