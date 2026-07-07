@@ -29,6 +29,7 @@ import {
 } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../../database/prisma.service';
+import { resolveOptionalAssetPublicUrl } from '../../../libs/asset-url.lib';
 import { EventBusService } from '../../../events/event-bus.service';
 import { OtpService } from '../../auth/services/otp.service';
 import { R2StorageService } from '../../users/services/r2-storage.service';
@@ -452,9 +453,9 @@ export class SellerVerificationService {
       sellerLimit: row.user.sellerLimit,
       totalListings: row.user._count.listings,
       joinedAt: row.user.createdAt.toISOString(),
-      idDocumentPath: row.idDocumentPath ?? undefined,
-      selfiePath: row.selfiePath ?? undefined,
-      addressDocumentPath: row.addressDocumentPath ?? undefined,
+      idDocumentPath: resolveOptionalAssetPublicUrl(row.idDocumentPath),
+      selfiePath: resolveOptionalAssetPublicUrl(row.selfiePath),
+      addressDocumentPath: resolveOptionalAssetPublicUrl(row.addressDocumentPath),
     };
   }
 
@@ -495,9 +496,9 @@ export class SellerVerificationService {
       sellerLimit: user.sellerLimit,
       totalListings: user._count.listings,
       joinedAt: user.createdAt.toISOString(),
-      idDocumentPath: request?.idDocumentPath ?? undefined,
-      selfiePath: request?.selfiePath ?? undefined,
-      addressDocumentPath: request?.addressDocumentPath ?? undefined,
+      idDocumentPath: resolveOptionalAssetPublicUrl(request?.idDocumentPath),
+      selfiePath: resolveOptionalAssetPublicUrl(request?.selfiePath),
+      addressDocumentPath: resolveOptionalAssetPublicUrl(request?.addressDocumentPath),
     };
   }
 

@@ -16,6 +16,7 @@ import {
 } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../../database/prisma.service';
+import { resolveAssetPublicUrl } from '../../../libs/asset-url.lib';
 import { NotificationDispatcherService } from '../../notifications/services/notification-dispatcher.service';
 import { R2StorageService } from '../../users/services/r2-storage.service';
 import { mapDispute } from '../mappers/dispute.mapper';
@@ -106,7 +107,7 @@ export class DisputesService {
         stored: true,
         evidenceId: evidence.id,
         filePath: evidence.filePath,
-        fileUrl: this.storage.buildPublicUrl(evidence.filePath),
+        fileUrl: resolveAssetPublicUrl(evidence.filePath),
       };
     }
 
@@ -388,7 +389,7 @@ export class DisputesService {
   private mapWithUrls(dispute: Awaited<ReturnType<DisputeAccessService['getDisputeOrThrow']>>) {
     const evidenceUrls = new Map<string, string>();
     for (const item of dispute.evidence ?? []) {
-      evidenceUrls.set(item.filePath, this.storage.buildPublicUrl(item.filePath));
+      evidenceUrls.set(item.filePath, resolveAssetPublicUrl(item.filePath));
     }
     return mapDispute(dispute, evidenceUrls);
   }

@@ -2,6 +2,8 @@ import type { Store as DbStore } from '../../../../generated/prisma';
 
 import type { SellerStore } from '@community-marketplace/types';
 
+import { resolveOptionalAssetPublicUrl } from '../../../libs/asset-url.lib';
+
 import {
   normalizeStoreOpeningHours,
   parseStoreContactSettings,
@@ -15,8 +17,8 @@ export function mapSellerStore(row: DbStore): SellerStore {
     name: row.name,
     slug: row.slug,
     description: row.description ?? undefined,
-    logoUrl: row.logoUrl ?? undefined,
-    bannerUrl: row.bannerUrl ?? undefined,
+    logoUrl: resolveOptionalAssetPublicUrl(row.logoUrl),
+    bannerUrl: resolveOptionalAssetPublicUrl(row.bannerUrl),
     location: row.location ?? undefined,
     contact: parseStoreContactSettings(row.contactSettings),
     openingHours: normalizeStoreOpeningHours(row.openingHours),

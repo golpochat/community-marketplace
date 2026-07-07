@@ -7,6 +7,7 @@ import type {
 } from '@community-marketplace/types';
 
 import { mapListingImage } from '../../listings/mappers/listing.mapper';
+import { resolveOptionalAssetPublicUrl } from '../../../libs/asset-url.lib';
 
 export const threadInclude = {
   buyer: {
@@ -66,7 +67,7 @@ export function mapChatMessage(row: {
     senderId: row.senderId,
     content: row.deletedAt ? '[Message deleted]' : row.content,
     messageType: row.messageType as ChatMessage['messageType'],
-    attachmentUrl: row.attachmentUrl ?? undefined,
+    attachmentUrl: resolveOptionalAssetPublicUrl(row.attachmentUrl),
     readBy: row.readBy,
     editedAt: row.editedAt?.toISOString(),
     deletedAt: row.deletedAt?.toISOString(),
@@ -128,7 +129,7 @@ export function mapInboxItem(
     participant: {
       id: participant.id,
       displayName: participant.displayName ?? undefined,
-      avatarUrl: participant.avatarUrl ?? undefined,
+      avatarUrl: resolveOptionalAssetPublicUrl(participant.avatarUrl),
       role: participant.primaryRole.code,
       verificationBadge: participant.verifications.length > 0,
     },

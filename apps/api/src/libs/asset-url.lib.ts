@@ -4,6 +4,29 @@ const PRODUCTION_ASSET_HOSTS = new Set([
   'assets.sellnearby.ie',
 ]);
 
+const STORAGE_KEY_PREFIXES = [
+  'listing-images/',
+  'listings/',
+  'user-avatars/',
+  'avatars/',
+  'store-banners/',
+  'verification-documents/',
+  'dispute-evidence/',
+  'system-assets/',
+  'payment-receipts/',
+  'platform-invoices/',
+  'chat-attachments/',
+  'chat/',
+] as const;
+
+function isBareStorageKey(value: string): boolean {
+  return STORAGE_KEY_PREFIXES.some((prefix) => value.startsWith(prefix));
+}
+
+function prefersProcessedWebpKey(key: string): boolean {
+  return key.startsWith('listing-images/') || key.startsWith('listings/');
+}
+
 function isR2PublicHost(hostname: string): boolean {
   return hostname.endsWith('.r2.dev') || PRODUCTION_ASSET_HOSTS.has(hostname);
 }
@@ -84,11 +107,21 @@ export function extractStorageKeyFromUrl(url: string): string | null {
       return parsed.searchParams.get('key');
     }
   } catch {
-    if (url.startsWith('listing-images/') || url.startsWith('user-avatars/')) {
+    if (isBareStorageKey(url)) {
       return url;
     }
   }
   return null;
+}
+
+/** Resolves optional stored asset URLs (null/undefined-safe). */
+export function resolveOptionalAssetPublicUrl(
+  storedUrl: string | null | undefined,
+): string | undefined {
+  if (!storedUrl) {
+    return undefined;
+  }
+  return resolveAssetPublicUrl(storedUrl);
 }
 
 /**
@@ -113,7 +146,8 @@ export function resolveAssetPublicUrl(storedUrl: string): string {
     }
 
     if (isDevUploadPublicUrl(storedUrl) || !storedUrl.includes('://')) {
-      return buildR2PublicUrl(toProcessedWebpKey(key));
+      const resolvedKey = prefersProcessedWebpKey(key) ? toProcessedWebpKey(key) : key;
+      return buildR2PublicUrl(resolvedKey);
     }
 
     try {

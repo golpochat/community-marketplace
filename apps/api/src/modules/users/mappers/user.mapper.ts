@@ -9,6 +9,8 @@ import type {
   VerificationStatus,
 } from '@community-marketplace/types';
 
+import { resolveOptionalAssetPublicUrl } from '../../../libs/asset-url.lib';
+
 type DbUser = Prisma.UserGetPayload<{
   include: {
     primaryRole: true;
@@ -26,7 +28,7 @@ export function mapUser(
     id: dbUser.id,
     email: dbUser.email,
     displayName: dbUser.displayName ?? undefined,
-    avatarUrl: dbUser.avatarUrl ?? undefined,
+    avatarUrl: resolveOptionalAssetPublicUrl(dbUser.avatarUrl),
     primaryRoleId: dbUser.primaryRoleId,
     role: dbUser.primaryRole.code as RbacRole,
     status: dbUser.status,
@@ -59,7 +61,7 @@ export function mapProfileDetails(
             label: profile.location ?? undefined,
           }
         : undefined,
-    storeBannerUrl: profile.storeBannerUrl ?? undefined,
+    storeBannerUrl: resolveOptionalAssetPublicUrl(profile.storeBannerUrl),
   };
 }
 
@@ -80,10 +82,10 @@ export function mapVerification(db: DbVerification): UserVerification {
     id: db.id,
     userId: db.userId,
     status: db.status as VerificationStatus,
-    idDocumentFrontUrl: db.idDocumentFrontUrl ?? undefined,
-    idDocumentBackUrl: db.idDocumentBackUrl ?? undefined,
-    selfieUrl: db.selfieUrl ?? undefined,
-    addressProofUrl: db.addressProofUrl ?? undefined,
+    idDocumentFrontUrl: resolveOptionalAssetPublicUrl(db.idDocumentFrontUrl),
+    idDocumentBackUrl: resolveOptionalAssetPublicUrl(db.idDocumentBackUrl),
+    selfieUrl: resolveOptionalAssetPublicUrl(db.selfieUrl),
+    addressProofUrl: resolveOptionalAssetPublicUrl(db.addressProofUrl),
     reviewedById: db.reviewedById ?? undefined,
     reviewedAt: db.reviewedAt?.toISOString(),
     rejectionReason: db.rejectionReason ?? undefined,

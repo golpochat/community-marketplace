@@ -7,7 +7,7 @@ import type {
   UserSearchDocument,
 } from '@community-marketplace/types';
 
-import { resolveAssetPublicUrl } from '../../../libs/asset-url.lib';
+import { resolveAssetPublicUrl, resolveOptionalAssetPublicUrl } from '../../../libs/asset-url.lib';
 
 function isBoosted(boostedUntil?: Date | null, now = new Date()): boolean {
   return boostedUntil != null && boostedUntil > now;
@@ -82,7 +82,7 @@ export function toMeiliUserDocument(row: {
   return {
     id: row.id,
     displayName: row.displayName ?? 'User',
-    avatarUrl: row.avatarUrl ?? undefined,
+    avatarUrl: resolveOptionalAssetPublicUrl(row.avatarUrl),
     sellerVerified:
       row.verifications?.some((v) => v.badgeGranted && v.status === 'approved') ?? false,
     role: row.primaryRole.code,

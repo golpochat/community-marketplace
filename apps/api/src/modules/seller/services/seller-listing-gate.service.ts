@@ -12,6 +12,7 @@ import {
 } from '@community-marketplace/types';
 
 import { PrismaService } from '../../../database/prisma.service';
+import { resolveOptionalAssetPublicUrl } from '../../../libs/asset-url.lib';
 import { SellerStatusHistoryService } from './seller-status-history.service';
 
 @Injectable()
@@ -335,9 +336,9 @@ export class SellerVerificationStatusService {
       id: row.id,
       userId: row.userId,
       phoneNumber: row.phoneNumber ?? undefined,
-      idDocumentPath: row.idDocumentPath ?? undefined,
-      selfiePath: row.selfiePath ?? undefined,
-      addressDocumentPath: row.addressDocumentPath ?? undefined,
+      idDocumentPath: resolveOptionalAssetPublicUrl(row.idDocumentPath),
+      selfiePath: resolveOptionalAssetPublicUrl(row.selfiePath),
+      addressDocumentPath: resolveOptionalAssetPublicUrl(row.addressDocumentPath),
       status: row.status as 'pending' | 'approved' | 'rejected',
       priority: row.priority ?? undefined,
       reviewedById: row.reviewedById ?? undefined,

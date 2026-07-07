@@ -4,6 +4,7 @@ import type { Prisma, SellerStatus } from '@prisma/client';
 import type { ListingSummary, SellerStorefront } from '@community-marketplace/types';
 
 import { PrismaService } from '../../../database/prisma.service';
+import { resolveOptionalAssetPublicUrl } from '../../../libs/asset-url.lib';
 import {
   listingInclude,
   mapListingSummaryWithTrust,
@@ -90,8 +91,8 @@ export class StoresService {
     const sections = await this.fetchCategorySections(store.id, seller.id);
 
     const verified = seller.sellerStatus === 'verified' || seller.idVerified;
-    const logoUrl = store.logoUrl ?? undefined;
-    const bannerUrl = store.bannerUrl ?? undefined;
+    const logoUrl = resolveOptionalAssetPublicUrl(store.logoUrl);
+    const bannerUrl = resolveOptionalAssetPublicUrl(store.bannerUrl);
 
     const contact = resolvePublicStoreContact({
       store: {
