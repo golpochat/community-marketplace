@@ -11,6 +11,7 @@ import { ListingPriceDisplay } from '@/components/listings/listing-price-display
 import { SaleBadgeOverlay } from '@/components/listings/sale-badge-overlay';
 import type { ListingFormData } from '@/components/seller/listing-form';
 import { ExistingListingPhotos } from '@/components/seller/listing-image-previews';
+import { listingImageSrcForVariant } from '@/lib/listing-image-url';
 
 interface ListingPreviewDialogProps {
   open: boolean;
@@ -69,7 +70,11 @@ export function ListingPreviewDialog({
   })();
 
   const coverUrl =
-    existingImages[0]?.url ?? imageUrls[0] ?? null;
+    (existingImages[0]
+      ? listingImageSrcForVariant(existingImages[0], 'card')
+      : undefined) ??
+    imageUrls[0] ??
+    null;
 
   return (
     <div

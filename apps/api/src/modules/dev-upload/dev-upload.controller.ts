@@ -11,6 +11,7 @@ import {
 import type { Request, Response } from 'express';
 
 import { Public } from '../../common/decorators/public.decorator';
+import { toProcessedWebpKey } from '../../libs/asset-url.lib';
 import { R2StorageService } from '../users/services/r2-storage.service';
 import { DevUploadService } from './dev-upload.service';
 
@@ -61,6 +62,27 @@ export class DevUploadController {
       );
       return new StreamableFile(file.buffer);
     } catch {
+      if (!this.r2.isConfigured()) {
+        throw new NotFoundException();
+      }
+
+      const candidates = Array.from(
+        new Set([key, toProcessedWebpKey(key)]),
+      );
+      for (const candidate of candidates) {
+        try {
+          const buffer = await this.r2.getObjectBuffer(candidate);
+          res.setHeader(
+            'Content-Type',
+            candidate.endsWith('.webp') ? 'image/webp' : 'application/octet-stream',
+          );
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          return new StreamableFile(buffer);
+        } catch {
+          // try next candidate key
+        }
+      }
+
       throw new NotFoundException();
     }
   }

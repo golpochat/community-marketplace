@@ -6,6 +6,8 @@ import type {
   ChatThread,
 } from '@community-marketplace/types';
 
+import { mapListingImage } from '../../listings/mappers/listing.mapper';
+
 export const threadInclude = {
   buyer: {
     include: {
@@ -35,6 +37,16 @@ export const threadInclude = {
 export type ThreadWithRelations = Prisma.ChatThreadGetPayload<{
   include: typeof threadInclude;
 }>;
+
+export function chatListingImageUrl(
+  image: { id: string; listingId: string; url: string; sortOrder: number } | undefined,
+): string | undefined {
+  if (!image) {
+    return undefined;
+  }
+  const mapped = mapListingImage(image);
+  return mapped.thumbUrl ?? mapped.url;
+}
 
 export function mapChatMessage(row: {
   id: string;
@@ -110,7 +122,7 @@ export function mapInboxItem(
       title: thread.listing.title,
       price: Number(thread.listing.price),
       currency: thread.listing.currency,
-      imageUrl: thread.listing.images[0]?.url,
+      imageUrl: chatListingImageUrl(thread.listing.images[0]),
       status: thread.listing.status,
     },
     participant: {

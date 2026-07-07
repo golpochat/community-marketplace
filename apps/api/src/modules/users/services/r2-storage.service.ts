@@ -5,7 +5,7 @@ import { createHash, randomUUID } from 'node:crypto';
 
 import type { AvatarUploadUrlResponse } from '@community-marketplace/types';
 
-import { buildDevUploadUrl, isR2Configured } from '../../../libs/asset-url.lib';
+import { buildDevUploadUrl, buildR2PublicUrl, isR2Configured } from '../../../libs/asset-url.lib';
 
 export type R2AssetCategory =
   | 'user-avatars'
@@ -30,8 +30,6 @@ export class R2StorageService {
   private readonly accessKeyId = process.env.R2_ACCESS_KEY_ID;
   private readonly secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
   private readonly bucket = process.env.R2_BUCKET ?? 'community-marketplace';
-  private readonly publicBaseUrl =
-    process.env.R2_PUBLIC_URL ?? 'https://assets.community.marketplace';
   private readonly endpoint =
     process.env.R2_ENDPOINT ??
     (this.accountId ? `https://${this.accountId}.r2.cloudflarestorage.com` : undefined);
@@ -75,7 +73,7 @@ export class R2StorageService {
     if (!this.isConfigured()) {
       return this.devUploadUrl(key);
     }
-    return `${this.publicBaseUrl.replace(/\/$/, '')}/${key}`;
+    return buildR2PublicUrl(key);
   }
 
   async createSignedUploadUrl(input: {
@@ -97,7 +95,7 @@ export class R2StorageService {
       };
     }
 
-    const publicUrl = `${this.publicBaseUrl.replace(/\/$/, '')}/${key}`;
+    const publicUrl = buildR2PublicUrl(key);
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,

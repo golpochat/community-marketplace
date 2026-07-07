@@ -4,6 +4,7 @@ import type { ChatConversationDetail, RbacRole } from '@community-marketplace/ty
 import { sendMessageApiSchema } from '@community-marketplace/validation';
 
 import {
+  chatListingImageUrl,
   mapChatMessage,
   mapChatThread,
   mapInboxItem,
@@ -61,7 +62,7 @@ export class ChatService {
         title: thread.listing.title,
         price: Number(thread.listing.price),
         currency: thread.listing.currency,
-        imageUrl: thread.listing.images[0]?.url,
+        imageUrl: chatListingImageUrl(thread.listing.images[0]),
         status: thread.listing.status,
       },
       participant: mapInboxItem(thread, undefined, 0, userId).participant,

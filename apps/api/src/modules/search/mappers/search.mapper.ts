@@ -7,6 +7,8 @@ import type {
   UserSearchDocument,
 } from '@community-marketplace/types';
 
+import { resolveAssetPublicUrl } from '../../../libs/asset-url.lib';
+
 function isBoosted(boostedUntil?: Date | null, now = new Date()): boolean {
   return boostedUntil != null && boostedUntil > now;
 }
@@ -58,7 +60,7 @@ export function toMeiliListingDocument(row: ListingRow, embedding?: number[]): L
     status: row.status,
     locationLabel: row.locationLabel,
     _geo: { lat: Number(row.latitude), lng: Number(row.longitude) },
-    imageUrl: row.images[0]?.url,
+    imageUrl: row.images[0]?.url ? resolveAssetPublicUrl(row.images[0].url) : undefined,
     favoriteCount: row.favoriteCount,
     viewCount: row.viewCount,
     createdAt: row.createdAt.getTime(),
