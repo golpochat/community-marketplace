@@ -94,6 +94,7 @@ export class SearchIndexingService implements OnModuleInit, OnModuleDestroy {
 
       const done: ReindexJobStatus = { type, status: 'completed', indexed };
       this.jobStatuses.set(type, done);
+      this.meili.markIndexSynced(type, indexed);
       return done;
     } catch (error) {
       const failed: ReindexJobStatus = {

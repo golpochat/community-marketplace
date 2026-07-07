@@ -14,7 +14,7 @@ import type {
 import { Button, Input, Label } from '@community-marketplace/ui';
 import { Card } from '@community-marketplace/ui-dashboard';
 
-import { Tabs } from '@/components/shared/tabs';
+import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
 import { formatStoreLimits } from '@/hooks/use-seller-store-data';
 import { getPublicStorefrontPath } from '@/lib/storefront-path';
 import { sellerService } from '@/services/marketplace.service';
@@ -251,10 +251,11 @@ export function SellerStorefrontSettings({
         )}
 
         <div className="flex flex-wrap items-end gap-3">
-          <Tabs
+          <DashboardSectionTabs
             items={storeTabs}
             activeId={showCreateForm ? '' : (activeStoreId ?? '')}
             onChange={selectStore}
+            variant="nested"
             className="min-w-0 flex-1"
           />
           {canAddStore && (

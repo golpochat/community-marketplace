@@ -1,4 +1,10 @@
 export { formatCurrency, formatNumber, formatPercent } from './currency';
+export {
+  formatAuditActivityDetail,
+  formatAuditEventLabel,
+  formatAuditUserLabel,
+  type AuditActivityLabels,
+} from './audit-activity';
 export { formatDate, formatDateTime, formatRelativeTime, toIsoString } from './date';
 export { formatListedAgo, formatUpdatedAgo, resolveListingListedAt, isFreshListing, isNewListing, formatJustListedLabel } from './listing-age';
 export { formatListingConditionLabel, LISTING_CONDITION_LABELS } from './listing-condition';

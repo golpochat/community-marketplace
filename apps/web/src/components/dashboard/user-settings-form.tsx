@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type {
   CommunicationPreferences,
@@ -8,17 +8,22 @@ import type {
   PrivacySettings,
   UserSettings,
 } from '@community-marketplace/types';
-import { Button, Input, Label, Select, cn } from '@community-marketplace/ui';
+import { Button, Label, Select, cn } from '@community-marketplace/ui';
 import { Card, PageHeader } from '@community-marketplace/ui-dashboard';
 import { formatListedAgo } from '@community-marketplace/utils';
 
 import { ErrorState } from '@/components/ErrorState';
 import { LoadingState } from '@/components/LoadingState';
+import { LANGUAGE_OPTIONS, TIMEZONE_OPTIONS } from '@/lib/settings-options';
 import { userService } from '@/services/user.service';
 
 type BooleanNotificationPreferenceKey = Exclude<keyof NotificationPreferences, 'events'>;
+type UserSettingsVariant = 'marketplace' | 'staff';
 
-const NOTIFICATION_TOGGLES: Array<{ key: BooleanNotificationPreferenceKey; label: string }> = [
+const MARKETPLACE_NOTIFICATION_TOGGLES: Array<{
+  key: BooleanNotificationPreferenceKey;
+  label: string;
+}> = [
   { key: 'email', label: 'Email notifications' },
   { key: 'push', label: 'Push notifications' },
   { key: 'inApp', label: 'In-app notifications' },
@@ -26,6 +31,16 @@ const NOTIFICATION_TOGGLES: Array<{ key: BooleanNotificationPreferenceKey; label
   { key: 'marketing', label: 'Marketing updates' },
   { key: 'listingUpdates', label: 'Listing updates' },
   { key: 'messageAlerts', label: 'Message alerts' },
+];
+
+const STAFF_NOTIFICATION_TOGGLES: Array<{
+  key: BooleanNotificationPreferenceKey;
+  label: string;
+}> = [
+  { key: 'email', label: 'Email notifications' },
+  { key: 'push', label: 'Push notifications' },
+  { key: 'inApp', label: 'In-app notifications' },
+  { key: 'sms', label: 'SMS notifications' },
 ];
 
 function SettingsSection({
@@ -50,15 +65,65 @@ function SettingsSection({
   );
 }
 
+function SettingsToggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-2.5 text-sm">
+      <span className="text-[hsl(var(--dashboard-main-fg))]">{label}</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={() => onChange(!checked)}
+        className={cn(
+          'relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-[hsl(var(--dashboard-accent))] focus:ring-offset-2',
+          checked
+            ? 'bg-[hsl(var(--dashboard-accent))]'
+            : 'bg-[hsl(var(--dashboard-sidebar-border))]',
+        )}
+      >
+        <span
+          className={cn(
+            'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transition-transform',
+            checked ? 'translate-x-5' : 'translate-x-0',
+          )}
+        />
+      </button>
+    </div>
+  );
+}
+
 interface UserSettingsFormProps {
   title?: string;
   description?: string;
+  variant?: UserSettingsVariant;
 }
 
 export function UserSettingsForm({
   title = 'Settings',
-  description = 'Notification, privacy, and communication preferences.',
+  description,
+  variant = 'marketplace',
 }: UserSettingsFormProps) {
+  const isStaff = variant === 'staff';
+  const resolvedDescription =
+    description ??
+    (isStaff
+      ? 'Your personal notification and communication preferences — not platform-wide configuration.'
+      : 'Notification, privacy, and communication preferences.');
+
+  const notificationToggles = useMemo(
+    () => (isStaff ? STAFF_NOTIFICATION_TOGGLES : MARKETPLACE_NOTIFICATION_TOGGLES),
+    [isStaff],
+  );
+
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -81,14 +146,14 @@ export function UserSettingsForm({
     void load();
   }, [load]);
 
-  function updateNotifications(key: BooleanNotificationPreferenceKey) {
+  function updateNotifications(key: BooleanNotificationPreferenceKey, value: boolean) {
     setSettings((current) =>
       current
         ? {
             ...current,
             notificationPreferences: {
               ...current.notificationPreferences,
-              [key]: !current.notificationPreferences[key],
+              [key]: value,
             },
           }
         : current,
@@ -140,62 +205,64 @@ export function UserSettingsForm({
     }
   }
 
+  const languageValue = settings?.communicationPreferences.language ?? 'en';
+  const timezoneValue = settings?.communicationPreferences.timezone ?? 'Europe/Dublin';
+
+  const languageOptions = LANGUAGE_OPTIONS.some((option) => option.value === languageValue)
+    ? LANGUAGE_OPTIONS
+    : [...LANGUAGE_OPTIONS, { value: languageValue, label: languageValue }];
+
+  const timezoneOptions = TIMEZONE_OPTIONS.some((option) => option.value === timezoneValue)
+    ? TIMEZONE_OPTIONS
+    : [...TIMEZONE_OPTIONS, { value: timezoneValue, label: timezoneValue }];
+
   return (
     <>
-      <PageHeader title={title} description={description} />
+      <PageHeader title={title} description={resolvedDescription} />
       {loading && <LoadingState />}
       {error && <ErrorState message={error} />}
       {!loading && settings && (
         <Card className="overflow-hidden">
-          <div className="grid gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-3">
+          <div
+            className={cn(
+              'grid gap-4 md:gap-6',
+              isStaff ? 'md:grid-cols-2' : 'md:grid-cols-2 xl:grid-cols-3',
+            )}
+          >
             <SettingsSection title="Notifications">
               <ul className="divide-y divide-[hsl(var(--dashboard-sidebar-border))]">
-                {NOTIFICATION_TOGGLES.map(({ key, label }) => (
+                {notificationToggles.map(({ key, label }) => (
                   <li key={key}>
-                    <label className="flex cursor-pointer items-center justify-between gap-4 py-2.5 text-sm">
-                      <span className="text-[hsl(var(--dashboard-main-fg))]">{label}</span>
-                      <input
-                        type="checkbox"
-                        checked={Boolean(settings.notificationPreferences[key])}
-                        onChange={() => updateNotifications(key)}
-                        className="h-4 w-4 shrink-0 rounded border-[hsl(var(--dashboard-sidebar-border))] text-[hsl(var(--dashboard-accent))] focus:ring-[hsl(var(--dashboard-accent))]"
-                      />
-                    </label>
+                    <SettingsToggle
+                      label={label}
+                      checked={Boolean(settings.notificationPreferences[key])}
+                      onChange={(value) => updateNotifications(key, value)}
+                    />
                   </li>
                 ))}
               </ul>
             </SettingsSection>
 
-            <SettingsSection title="Privacy">
-              <div className="space-y-4">
-                <label className="flex cursor-pointer items-center justify-between gap-4 text-sm">
-                  <span className="text-[hsl(var(--dashboard-main-fg))]">Show email on profile</span>
-                  <input
-                    type="checkbox"
+            {!isStaff ? (
+              <SettingsSection title="Privacy">
+                <div className="space-y-1 divide-y divide-[hsl(var(--dashboard-sidebar-border))]">
+                  <SettingsToggle
+                    label="Show email on profile"
                     checked={Boolean(settings.privacySettings.showEmail)}
-                    onChange={() => updatePrivacy('showEmail', !settings.privacySettings.showEmail)}
-                    className="h-4 w-4 shrink-0 rounded border-[hsl(var(--dashboard-sidebar-border))] text-[hsl(var(--dashboard-accent))] focus:ring-[hsl(var(--dashboard-accent))]"
+                    onChange={(value) => updatePrivacy('showEmail', value)}
                   />
-                </label>
-                <label className="flex cursor-pointer items-center justify-between gap-4 text-sm">
-                  <span className="text-[hsl(var(--dashboard-main-fg))]">Show phone on profile</span>
-                  <input
-                    type="checkbox"
+                  <SettingsToggle
+                    label="Show phone on profile"
                     checked={Boolean(settings.privacySettings.showPhone)}
-                    onChange={() => updatePrivacy('showPhone', !settings.privacySettings.showPhone)}
-                    className="h-4 w-4 shrink-0 rounded border-[hsl(var(--dashboard-sidebar-border))] text-[hsl(var(--dashboard-accent))] focus:ring-[hsl(var(--dashboard-accent))]"
+                    onChange={(value) => updatePrivacy('showPhone', value)}
                   />
-                </label>
-                <label className="flex cursor-pointer items-center justify-between gap-4 text-sm">
-                  <span className="text-[hsl(var(--dashboard-main-fg))]">Show location</span>
-                  <input
-                    type="checkbox"
+                  <SettingsToggle
+                    label="Show location"
                     checked={Boolean(settings.privacySettings.showLocation)}
-                    onChange={() => updatePrivacy('showLocation', !settings.privacySettings.showLocation)}
-                    className="h-4 w-4 shrink-0 rounded border-[hsl(var(--dashboard-sidebar-border))] text-[hsl(var(--dashboard-accent))] focus:ring-[hsl(var(--dashboard-accent))]"
+                    onChange={(value) => updatePrivacy('showLocation', value)}
                   />
-                </label>
-                <div>
+                </div>
+                <div className="mt-4">
                   <Label htmlFor="profile-visibility">Profile visibility</Label>
                   <Select
                     id="profile-visibility"
@@ -213,8 +280,8 @@ export function UserSettingsForm({
                     <option value="private">Private</option>
                   </Select>
                 </div>
-              </div>
-            </SettingsSection>
+              </SettingsSection>
+            ) : null}
 
             <SettingsSection title="Communication">
               <div className="space-y-4">
@@ -238,23 +305,33 @@ export function UserSettingsForm({
                 </div>
                 <div>
                   <Label htmlFor="language">Language</Label>
-                  <Input
+                  <Select
                     id="language"
                     className="mt-1.5"
-                    value={settings.communicationPreferences.language ?? ''}
+                    value={languageValue}
                     onChange={(e) => updateCommunication('language', e.target.value)}
-                    placeholder="en"
-                  />
+                  >
+                    {languageOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="timezone">Timezone</Label>
-                  <Input
+                  <Select
                     id="timezone"
                     className="mt-1.5"
-                    value={settings.communicationPreferences.timezone ?? ''}
+                    value={timezoneValue}
                     onChange={(e) => updateCommunication('timezone', e.target.value)}
-                    placeholder="Europe/Dublin"
-                  />
+                  >
+                    {timezoneOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
                 </div>
               </div>
             </SettingsSection>

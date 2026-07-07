@@ -52,15 +52,15 @@ export function ProfileDropdown({ user, profileHref, settingsHref, onLogout }: P
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-[hsl(var(--dashboard-sidebar-active)/0.4)]"
+        className="flex h-9 max-w-full items-center gap-2 rounded-lg px-1.5 text-sm transition-colors hover:bg-[hsl(var(--dashboard-sidebar-active)/0.4)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--dashboard-accent))] focus-visible:ring-offset-2 focus-visible:ring-offset-[hsl(var(--dashboard-topbar-bg))]"
         aria-expanded={open}
         aria-haspopup="menu"
       >
         {user.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={user.avatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+          <img src={user.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
         ) : (
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(var(--dashboard-accent))] text-xs font-semibold text-white">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[hsl(var(--dashboard-accent))] text-[11px] font-semibold text-white">
             {initials}
           </span>
         )}

@@ -1,7 +1,5 @@
-'use client';
-
-import { AdminAnalyticsPage } from '@/components/dashboard/admin-resource-pages';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return <AdminAnalyticsPage role="SUPER_ADMIN" />;
+  redirect('/super-admin/moderation-insights');
 }

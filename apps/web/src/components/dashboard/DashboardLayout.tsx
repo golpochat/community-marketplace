@@ -84,8 +84,9 @@ export default function DashboardLayout({ role, theme, children }: WebDashboardL
       profileHref={PROFILE_HREF[role]}
       settingsHref={SETTINGS_HREF[role]}
       onLogout={handleLogout}
+      footerCopyright={`© ${new Date().getFullYear()} ${APP_SHORT_NAME}. All rights reserved.`}
       topbarActions={
-        <NotificationBell href={NOTIFICATIONS_HREF[role]} role={role} />
+        <NotificationBell href={NOTIFICATIONS_HREF[role]} />
       }
       sidebarItems={sidebarItems}
     >

@@ -10,7 +10,7 @@ import { AdminMonetizationBuyerCashbackOverrides } from '@/components/dashboard/
 import { AdminMonetizationFeeOverrides } from '@/components/dashboard/admin-monetization-fee-overrides';
 import { AdminMonetizationProductCatalog } from '@/components/dashboard/admin-monetization-product-catalog';
 import { DashboardPageShell } from '@/components/dashboard/async-resource';
-import { Tabs } from '@/components/shared/tabs';
+import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
 import { adsService } from '@/services/ads.service';
 import { monetizationService } from '@/services/monetization.service';
 import type { AdminServiceRole } from '@/services/admin.service';
@@ -173,11 +173,10 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
         {message && <p className="mb-4 text-sm text-green-700">{message}</p>}
         {settings && (
           <>
-            <Tabs
+            <DashboardSectionTabs
               items={MONETIZATION_TABS}
               activeId={activeTab}
               onChange={(id) => setActiveTab(id as MonetizationTab)}
-              className="mb-6 border-[hsl(var(--dashboard-sidebar-border))]"
             />
 
             {activeTab === 'advertising' && (
@@ -196,11 +195,11 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
 
             {activeTab === 'fees' && (
               <div className="space-y-6">
-                <Tabs
+                <DashboardSectionTabs
                   items={FEES_SUB_TABS}
                   activeId={feesSubTab}
                   onChange={(id) => setFeesSubTab(id as FeesSubTab)}
-                  className="border-[hsl(var(--dashboard-sidebar-border))]"
+                  variant="nested"
                 />
 
                 {feesSubTab === 'seller' && (

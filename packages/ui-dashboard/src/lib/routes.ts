@@ -1,5 +1,5 @@
-import type { RbacRole } from '@community-marketplace/types';
-import { getLoginRedirectPath } from '@community-marketplace/types';
+import type { RbacRole, RoleCodeValue } from '@community-marketplace/types';
+import { getPanelLoginRedirectPath } from '@community-marketplace/types';
 
 import {
   ADMIN_SIDEBAR,
@@ -25,8 +25,8 @@ const SIDEBAR_BY_ROLE: Record<RbacRole, SidebarNavItem[]> = {
 };
 
 /** Canonical post-login dashboard path for each role. */
-export function getDashboardRouteByRole(role: RbacRole): string {
-  return getLoginRedirectPath(role);
+export function getDashboardRouteByRole(role: RoleCodeValue): string {
+  return getPanelLoginRedirectPath(role);
 }
 
 export function getSidebarItemsByRole(role: RbacRole): SidebarNavItem[] {

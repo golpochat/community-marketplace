@@ -1,4 +1,8 @@
+'use client';
+
 import { cn } from '@community-marketplace/ui';
+
+import { Tooltip } from './Tooltip';
 
 export const TABLE_TITLE_MAX_LENGTH = 55;
 
@@ -17,9 +21,17 @@ export function TruncatedText({
   const isTruncated = trimmed.length > maxLength;
   const display = isTruncated ? `${trimmed.slice(0, maxLength).trimEnd()}…` : trimmed;
 
+  const content = (
+    <span className={cn('block max-w-xs truncate', className)}>{display}</span>
+  );
+
+  if (!isTruncated) {
+    return content;
+  }
+
   return (
-    <span className={cn('block max-w-xs', className)} title={isTruncated ? trimmed : undefined}>
-      {display}
-    </span>
+    <Tooltip label={trimmed} side="top" multiline className="max-w-full">
+      {content}
+    </Tooltip>
   );
 }

@@ -19,6 +19,12 @@
     "prisma:seed": "ts-node -P tsconfig.scripts.json scripts/ensure-env.ts && prisma db seed",
     "seed:rbac": "ts-node -P tsconfig.scripts.json scripts/seed-rbac.ts",
     "seed:dev-users": "ts-node -P tsconfig.scripts.json scripts/seed-dev-users.ts",
+    "seed:test-data": "ts-node -P tsconfig.scripts.json scripts/seed-test-data.ts",
+    "seed:all": "ts-node -P tsconfig.scripts.json scripts/seed-all.ts",
+    "seed:monetization": "node scripts/seed-monetization-products.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run test/integration",
     "migrate:seed": "ts-node -P tsconfig.scripts.json scripts/ensure-env.ts && prisma migrate dev --name init_rbac && pnpm run seed:rbac"
   },
   "prisma": {
@@ -79,6 +85,7 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.5"
   }
 }

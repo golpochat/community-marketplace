@@ -3,6 +3,7 @@ import type {
   RbacRole,
   UserEffectivePermissions,
 } from '@community-marketplace/types';
+import { isAdminPanelRoleCode } from '@community-marketplace/types';
 
 export interface EffectivePermissionInput {
   userId: string;
@@ -64,6 +65,10 @@ export function hasAnyPermission(
 
 export function hasAnyRole(userRole: RbacRole, required: readonly RbacRole[]): boolean {
   if (!required.length) {
+    return true;
+  }
+
+  if (required.includes('ADMIN') && isAdminPanelRoleCode(userRole)) {
     return true;
   }
 

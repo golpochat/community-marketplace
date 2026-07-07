@@ -131,6 +131,17 @@ export {
 } from './user.schema';
 
 export {
+  staffOperatorRoleSchema,
+  staffRoleChangeReasonSchema,
+  staffStatusChangeReasonSchema,
+  updateStaffRoleSchema,
+  updateStaffStatusSchema,
+  type StaffOperatorRoleInput,
+  type UpdateStaffRoleInput,
+  type UpdateStaffStatusInput,
+} from './staff-admin.schema';
+
+export {
   storeNameSchema,
   storeSlugSchema,
   createStoreSchema,

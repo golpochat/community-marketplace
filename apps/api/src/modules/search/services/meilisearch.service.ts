@@ -57,7 +57,9 @@ export class MeilisearchService implements OnModuleInit, OnModuleDestroy {
           const stats = await this.client.index(name).getStats();
           meta.documentCount = stats.numberOfDocuments;
           meta.isHealthy = true;
-          meta.updatedAt = new Date().toISOString();
+          const now = new Date().toISOString();
+          meta.updatedAt = now;
+          meta.statsUpdatedAt = now;
         } catch {
           meta.isHealthy = false;
         }
@@ -193,6 +195,17 @@ export class MeilisearchService implements OnModuleInit, OnModuleDestroy {
 
   getIndexes(): SearchIndexMeta[] {
     return [...this.indexMeta.values()];
+  }
+
+  markIndexSynced(indexName: SearchIndexName, documentCount: number) {
+    const meta = this.indexMeta.get(indexName);
+    if (!meta) return;
+    const now = new Date().toISOString();
+    meta.documentCount = documentCount;
+    meta.lastSyncedAt = now;
+    meta.updatedAt = now;
+    meta.statsUpdatedAt = now;
+    meta.isHealthy = true;
   }
 
   async updateSynonyms(indexName: SearchIndexName, synonyms: Record<string, string[]>) {

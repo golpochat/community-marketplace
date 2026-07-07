@@ -1,5 +1,6 @@
 import type {
   FraudSignal,
+  FraudSignalListItem,
   HighRiskListingSummary,
   HighRiskUserSummary,
   PaginatedResult,
@@ -53,9 +54,10 @@ export const adminFraudService = {
       userId?: string;
       listingId?: string;
       signalType?: string;
+      status?: 'active' | 'dismissed' | 'escalated' | 'all';
     } = {},
-  ): Promise<PaginatedResult<FraudSignal>> {
-    const response = await apiClient<FraudSignal[] | PaginatedResult<FraudSignal>>(
+  ): Promise<PaginatedResult<FraudSignalListItem>> {
+    const response = await apiClient<FraudSignalListItem[] | PaginatedResult<FraudSignalListItem>>(
       adminApiPath(role, '/fraud/signals'),
       {
         params: {
@@ -64,6 +66,7 @@ export const adminFraudService = {
           ...(params.userId ? { userId: params.userId } : {}),
           ...(params.listingId ? { listingId: params.listingId } : {}),
           ...(params.signalType ? { signalType: params.signalType } : {}),
+          ...(params.status ? { status: params.status } : {}),
         },
       },
     );

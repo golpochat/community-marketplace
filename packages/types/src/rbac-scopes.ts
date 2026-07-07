@@ -1,4 +1,5 @@
 import { PERMISSIONS, type PermissionCode } from './rbac';
+import { ADMIN_PERSONA_ROLE_CODES } from './admin-persona-codes';
 
 export type RbacPermissionScopeId =
   | 'accounts'
@@ -118,7 +119,7 @@ export const PRIVILEGED_PERMISSION_CODES: readonly PermissionCode[] = [
 ];
 
 /** Roles whose permission sets may only be changed by SUPER_ADMIN */
-export const PRIVILEGED_ROLE_CODES = ['SUPER_ADMIN', 'ADMIN'] as const;
+export const PRIVILEGED_ROLE_CODES = ['SUPER_ADMIN', 'ADMIN', ...ADMIN_PERSONA_ROLE_CODES] as const;
 
 export function getScopeForPermissionCode(
   code: PermissionCode,

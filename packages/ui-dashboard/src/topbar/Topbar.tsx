@@ -4,13 +4,14 @@ import type { ReactNode } from 'react';
 
 import { cn } from '@community-marketplace/ui';
 import type { RbacRole } from '@community-marketplace/types';
-import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 
 import { usePageTitle } from '../lib/page-title-context';
 import { useSidebar } from '../lib/sidebar-context';
 import { getThemeByRole } from '../theme/theme-tokens';
 import type { ProfileDropdownUser } from '../ui/ProfileDropdown';
 import { ProfileDropdown } from '../ui/ProfileDropdown';
+import { TopbarIconButton } from '../ui/TopbarIconButton';
 
 export interface TopbarProps {
   role: RbacRole;
@@ -33,35 +34,48 @@ export function Topbar({
 }: TopbarProps) {
   const theme = getThemeByRole(role);
   const { title: pageTitle } = usePageTitle();
-  const { collapsed, toggleCollapsed, toggleMobileOpen } = useSidebar();
+  const { collapsed, toggleCollapsed, mobileOpen, setMobileOpen } = useSidebar();
 
   const displayTitle = pageTitle ?? title ?? theme.label;
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-4 text-[hsl(var(--dashboard-topbar-fg))] sm:px-6">
-      <div className="flex min-w-0 items-center gap-2">
-        <button
-          type="button"
-          className="inline-flex rounded-lg p-2 text-[hsl(var(--dashboard-sidebar-muted))] transition-colors hover:bg-[hsl(var(--dashboard-sidebar-active)/0.5)] hover:text-[hsl(var(--dashboard-topbar-fg))] md:hidden"
-          onClick={toggleMobileOpen}
-          aria-label="Open navigation menu"
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))]/95 px-3 text-[hsl(var(--dashboard-topbar-fg))] backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--dashboard-topbar-bg))]/90 sm:px-4">
+      <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+        <TopbarIconButton
+          className="md:hidden"
+          active={mobileOpen}
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={mobileOpen}
+          aria-controls="dashboard-mobile-sidebar"
         >
-          <Menu className="h-5 w-5" />
-        </button>
-        <button
-          type="button"
-          className="hidden rounded-lg p-2 text-[hsl(var(--dashboard-sidebar-muted))] transition-colors hover:bg-[hsl(var(--dashboard-sidebar-active)/0.5)] hover:text-[hsl(var(--dashboard-topbar-fg))] md:inline-flex"
+          {mobileOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
+        </TopbarIconButton>
+        <TopbarIconButton
+          className="hidden md:inline-flex"
           onClick={toggleCollapsed}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-expanded={!collapsed}
         >
-          {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-        </button>
-        <div className="min-w-0">
-          <h1 className="truncate text-sm font-semibold sm:text-base">{displayTitle}</h1>
+          {collapsed ? (
+            <PanelLeftOpen className="h-5 w-5" aria-hidden />
+          ) : (
+            <PanelLeftClose className="h-5 w-5" aria-hidden />
+          )}
+        </TopbarIconButton>
+        <div className="min-w-0 pl-0.5">
+          <h1 className="truncate text-sm font-semibold tracking-tight sm:text-base">{displayTitle}</h1>
         </div>
       </div>
+
       <div className={cn('flex shrink-0 items-center gap-1 sm:gap-2')}>
-        {actions}
+        {actions ? <div className="flex items-center gap-1">{actions}</div> : null}
+        {actions ? (
+          <span
+            className="mx-0.5 hidden h-6 w-px bg-[hsl(var(--dashboard-sidebar-border))] sm:block"
+            aria-hidden
+          />
+        ) : null}
         <ProfileDropdown
           user={user}
           profileHref={profileHref}

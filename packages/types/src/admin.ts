@@ -34,11 +34,19 @@ export interface SuperAdminActivityEvent {
   id: string;
   source: 'user' | 'moderation';
   eventType: string;
+  /** Human-readable event title for operators. */
+  eventLabel: string;
   createdAt: string;
   actorId?: string;
+  actorLabel?: string;
   targetUserId?: string;
+  targetLabel?: string;
   reportId?: string;
   userId?: string;
+  subjectLabel?: string;
+  /** Human-readable detail line for the audit table. */
+  detail: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SuperAdminPlatformOverview extends AdminDashboardStats {

@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from '@community-marketplace/ui';
 import { Card, PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { EmptyState } from '@/components/EmptyState';
@@ -62,18 +63,45 @@ export function KeyValueList({ items }: KeyValueListProps) {
 interface DataTableProps {
   columns: string[];
   rows: Array<Array<React.ReactNode>>;
+  /** When false, hides horizontal scroll (use when columns fit the layout). */
+  scrollable?: boolean;
+  /** Per-column widths, e.g. `['20%', '40%', '80px']`. */
+  columnWidths?: string[];
+  /** Optional per-column cell classes (applied to header and body cells). */
+  columnClassNames?: string[];
 }
 
-export function DataTable({ columns, rows }: DataTableProps) {
+export function DataTable({
+  columns,
+  rows,
+  scrollable = true,
+  columnWidths,
+  columnClassNames,
+}: DataTableProps) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-[hsl(var(--dashboard-sidebar-border))]">
-      <table className="min-w-full divide-y divide-[hsl(var(--dashboard-sidebar-border))] text-sm">
+    <div
+      className={cn(
+        'rounded-lg border border-[hsl(var(--dashboard-sidebar-border))]',
+        scrollable ? 'overflow-x-auto' : 'overflow-x-hidden',
+      )}
+    >
+      <table className="w-full table-fixed divide-y divide-[hsl(var(--dashboard-sidebar-border))] text-sm">
+        {columnWidths && columnWidths.length > 0 ? (
+          <colgroup>
+            {columnWidths.map((width, index) => (
+              <col key={`${width}-${index}`} style={{ width }} />
+            ))}
+          </colgroup>
+        ) : null}
         <thead className="bg-[hsl(var(--dashboard-sidebar-active)/0.35)]">
           <tr>
-            {columns.map((col) => (
+            {columns.map((col, index) => (
               <th
                 key={col}
-                className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]"
+                className={cn(
+                  'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]',
+                  columnClassNames?.[index],
+                )}
               >
                 {col}
               </th>
@@ -84,7 +112,13 @@ export function DataTable({ columns, rows }: DataTableProps) {
           {rows.map((row, index) => (
             <tr key={index}>
               {row.map((cell, cellIndex) => (
-                <td key={cellIndex} className="px-4 py-3 text-[hsl(var(--dashboard-main-fg))]">
+                <td
+                  key={cellIndex}
+                  className={cn(
+                    'px-4 py-3 text-[hsl(var(--dashboard-main-fg))]',
+                    columnClassNames?.[cellIndex],
+                  )}
+                >
                   {cell}
                 </td>
               ))}

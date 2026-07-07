@@ -62,6 +62,22 @@ export interface FraudSignal {
   createdAt: string;
 }
 
+export type FraudSignalStatus = 'active' | 'dismissed' | 'escalated';
+
+export interface FraudSignalListItem extends FraudSignal {
+  userLabel?: string;
+  userEmail?: string;
+  listingTitle?: string;
+}
+
+export function fraudSignalStatus(
+  signal: Pick<FraudSignal, 'dismissedAt' | 'escalatedAt'>,
+): FraudSignalStatus {
+  if (signal.dismissedAt) return 'dismissed';
+  if (signal.escalatedAt) return 'escalated';
+  return 'active';
+}
+
 export interface FraudRiskBreakdownItem {
   signalType: FraudSignalType;
   label: string;

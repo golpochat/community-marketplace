@@ -110,16 +110,29 @@ pnpm dev
 Run seeds in order:
 
 ```bash
-pnpm seed:rbac
-pnpm seed:dev-users
+pnpm seed:all
 ```
+
+Or step by step: `pnpm seed:rbac` → `pnpm seed:dev-users` → `pnpm seed:test-data`.
+
+See [TESTING.md](./TESTING.md) for full fixture and automated test documentation.
 
 | Role | Email | Password | Display name | User ID | After login |
 |------|-------|----------|--------------|---------|-------------|
 | `SUPER_ADMIN` | `superadmin@community.market` | `ChangeMe!SuperAdmin1` | Super Admin | `00000000-0000-4000-8000-000000000010` | `/super-admin/dashboard` |
 | `ADMIN` | `admin@community.market` | `ChangeMe!Admin1` | Platform Admin | `00000000-0000-4000-8000-000000000011` | `/admin/dashboard` |
+| `ACCOUNTS_ADMIN` | `accounts-admin@community.market` | `ChangeMe!Accounts1` | Accounts Admin | `00000000-0000-4000-8000-000000000014` | `/admin/dashboard` |
+| `MODERATION_ADMIN` | `moderation-admin@community.market` | `ChangeMe!Moderation1` | Moderation Admin | `00000000-0000-4000-8000-000000000015` | `/admin/dashboard` |
+| `FINANCIAL_ADMIN` | `financial-admin@community.market` | `ChangeMe!Financial1` | Financial Admin | `00000000-0000-4000-8000-000000000016` | `/admin/dashboard` |
 | `SELLER` | `seller@community.market` | `ChangeMe!Seller1` | Demo Seller | `00000000-0000-4000-8000-000000000012` | `/seller/dashboard` |
 | `BUYER` | `buyer@community.market` | `ChangeMe!Buyer1` | Demo Buyer | `00000000-0000-4000-8000-000000000013` | `/buyer/dashboard` |
+
+### Additional test sellers (`pnpm seed:test-data`)
+
+| Email | Password | Notes |
+|-------|----------|-------|
+| `seller-unverified@community.market` | `ChangeMe!Seller2` | Unverified seller |
+| `seller-suspended@community.market` | `ChangeMe!Seller3` | Suspended seller |
 
 Sign in at http://localhost:3000/auth/login with any row above. All roles use the same web app; middleware sends each role to the correct dashboard.
 

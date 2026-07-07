@@ -19,7 +19,6 @@ export function SidebarItem({ item, isActive, collapsed = false, onNavigate }: S
   const link = (
     <Link
       href={item.href}
-      title={collapsed ? item.label : undefined}
       onClick={onNavigate}
       className={cn(
         'flex items-center rounded-lg text-sm font-medium transition-colors',
@@ -43,7 +42,11 @@ export function SidebarItem({ item, isActive, collapsed = false, onNavigate }: S
   );
 
   if (collapsed) {
-    return <Tooltip label={item.label}>{link}</Tooltip>;
+    return (
+      <Tooltip label={item.label} side="right" className="w-full">
+        {link}
+      </Tooltip>
+    );
   }
 
   return link;

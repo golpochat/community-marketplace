@@ -1,6 +1,7 @@
 import type {
   FraudRiskBreakdownItem,
   FraudSignal,
+  FraudSignalListItem,
   FraudSignalType,
   HighRiskListingSummary,
   HighRiskUserSummary,
@@ -9,6 +10,7 @@ import {
   FRAUD_SIGNAL_LABELS,
   FRAUD_SIGNAL_WEIGHTS,
   fraudRiskLevel,
+  fraudSignalStatus,
 } from '@community-marketplace/types';
 import type { FraudSignal as PrismaFraudSignal } from '@prisma/client';
 
@@ -25,6 +27,23 @@ export function mapFraudSignal(row: PrismaFraudSignal): FraudSignal {
     createdAt: row.createdAt.toISOString(),
   };
 }
+
+type FraudSignalWithRelations = PrismaFraudSignal & {
+  user?: { displayName: string | null; email: string } | null;
+  listing?: { title: string } | null;
+};
+
+export function mapFraudSignalListItem(row: FraudSignalWithRelations): FraudSignalListItem {
+  const base = mapFraudSignal(row);
+  return {
+    ...base,
+    userLabel: row.user?.displayName ?? undefined,
+    userEmail: row.user?.email,
+    listingTitle: row.listing?.title,
+  };
+}
+
+export { fraudSignalStatus };
 
 export function buildRiskBreakdown(
   signals: Array<{ signalType: FraudSignalType; riskScore: number }>,

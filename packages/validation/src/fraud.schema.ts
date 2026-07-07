@@ -21,6 +21,7 @@ export const fraudSignalsQuerySchema = paginationSchema.extend({
       'suspicious_pricing',
     ])
     .optional(),
+  status: z.enum(['active', 'dismissed', 'escalated', 'all']).optional(),
 });
 
 export const fraudMarkSafeSchema = z.object({

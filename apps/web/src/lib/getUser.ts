@@ -1,4 +1,4 @@
-import type { RbacRole } from '@community-marketplace/types';
+import type { RoleCodeValue } from '@community-marketplace/types';
 
 import { getWebRoleFromCookie } from './auth';
 import { useAuthStore } from '@/store/auth.store';
@@ -9,7 +9,7 @@ export function getClientUser() {
 }
 
 /** Read role from middleware cookie (server) or document cookie (client). */
-export function getUserRole(cookieHeader?: string): RbacRole | null {
+export function getUserRole(cookieHeader?: string): RoleCodeValue | null {
   if (typeof window !== 'undefined') {
     const clientUser = getClientUser();
     if (clientUser?.role) return clientUser.role;

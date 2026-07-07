@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
-import type { RbacRole } from '@community-marketplace/types';
+import type { RoleCodeValue } from '@community-marketplace/types';
 import {
   getDashboardRouteByRole,
   getRequiredRoleForPath,
@@ -11,7 +11,7 @@ import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 import { getWebRoleFromCookie } from '@/lib/role-cookie';
 import { cookies } from 'next/headers';
 
-export async function requireWebDashboardRole(pathname: string): Promise<RbacRole> {
+export async function requireWebDashboardRole(pathname: string): Promise<RoleCodeValue> {
   const cookieStore = await cookies();
   const role = getWebRoleFromCookie(cookieStore.toString());
 

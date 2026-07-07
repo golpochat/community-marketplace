@@ -1,10 +1,11 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 
 import {
+  isAdminPersonaRoleCode,
+  isPrivilegedSystemRole,
   PRIVILEGED_PERMISSION_CODES,
   PERMISSIONS,
   RBAC_PERMISSION_SCOPES,
-  isPrivilegedSystemRole,
   type PermissionCode,
   type RbacPermissionScopeId,
 } from '@community-marketplace/types';
@@ -84,7 +85,7 @@ export class RbacScopePolicy {
       throw new ForbiddenException('SUPER_ADMIN accounts cannot be created or assigned via the API');
     }
 
-    if (targetRoleCode === 'ADMIN') {
+    if (targetRoleCode === 'ADMIN' || isAdminPersonaRoleCode(targetRoleCode)) {
       if (!this.isSuperAdmin(actor)) {
         throw new ForbiddenException('Only SUPER_ADMIN can assign admin roles');
       }

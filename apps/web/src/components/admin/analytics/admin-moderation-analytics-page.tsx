@@ -28,7 +28,7 @@ function DistributionBar({ count, max }: { count: number; max: number }) {
   );
 }
 
-export function AdminAnalyticsPage({ role }: { role: AdminServiceRole }) {
+export function AdminModerationInsightsPage({ role }: { role: AdminServiceRole }) {
   const [days, setDays] = useState<(typeof DAY_OPTIONS)[number]>(30);
   const [analytics, setAnalytics] = useState<ModerationAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,12 +74,12 @@ export function AdminAnalyticsPage({ role }: { role: AdminServiceRole }) {
 
   return (
     <DashboardPageShell
-      title="Analytics"
-      description="Moderation trends — reports, enforcement actions, and appeals."
+      title="Moderation insights"
+      description="Trust and safety trends — reports, enforcement actions, and appeals."
       loading={loading}
       error={error}
       empty={!loading && !error && !analytics}
-      emptyTitle="Analytics unavailable"
+      emptyTitle="Moderation insights unavailable"
     >
       {analytics && (
         <div className="space-y-6">
@@ -202,3 +202,6 @@ export function AdminAnalyticsPage({ role }: { role: AdminServiceRole }) {
     </DashboardPageShell>
   );
 }
+
+/** @deprecated Use AdminModerationInsightsPage */
+export const AdminAnalyticsPage = AdminModerationInsightsPage;

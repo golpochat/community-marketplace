@@ -144,9 +144,9 @@ export function Header() {
                     Sell
                   </Button>
                 </Link>
-                {user.role && (
-                  <NotificationBell href={notificationsHref} role={user.role} />
-                )}
+                {user.role ? (
+                  <NotificationBell href={notificationsHref} variant="site" />
+                ) : null}
                 <UserMenuDropdown
                   user={menuUser}
                   links={navLinks}

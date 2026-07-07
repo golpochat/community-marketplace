@@ -17,12 +17,11 @@ export function PageHeader({ title, description }: PageHeaderProps) {
     return () => setTitle(null);
   }, [title, setTitle]);
 
+  if (!description) {
+    return null;
+  }
+
   return (
-    <div className="mb-6">
-      <h1 className="text-2xl font-semibold text-[hsl(var(--dashboard-main-fg))]">{title}</h1>
-      {description ? (
-        <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">{description}</p>
-      ) : null}
-    </div>
+    <p className="mb-6 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">{description}</p>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { PERMISSIONS, type PermissionCode, type RbacRole } from '@community-marketplace/types';
+import { isPrivilegedSystemRole, PERMISSIONS, type PermissionCode, type RbacRole, type RoleCodeValue } from '@community-marketplace/types';
 import {
   ADMIN_SIDEBAR,
   SUPER_ADMIN_SIDEBAR,
@@ -10,7 +10,7 @@ import {
 import { hasPermission } from '@/lib/permissions';
 
 export function filterSidebarItems(
-  role: RbacRole,
+  role: RoleCodeValue,
   permissions: PermissionCode[],
 ): SidebarNavItem[] {
   const items = role === 'SUPER_ADMIN' ? SUPER_ADMIN_SIDEBAR : ADMIN_SIDEBAR;

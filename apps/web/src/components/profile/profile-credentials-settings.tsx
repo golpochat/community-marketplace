@@ -3,13 +3,19 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-import type { UserProfile } from '@community-marketplace/types';
+import type { RbacRole, UserProfile } from '@community-marketplace/types';
+import { isPrivilegedSystemRole } from '@community-marketplace/types';
 import { Input, Label } from '@community-marketplace/ui';
 import { Card } from '@community-marketplace/ui-dashboard';
 
+import { LoadingState } from '@/components/LoadingState';
 import { PhoneChangePanel } from '@/components/seller/profile/phone-change-panel';
 import { ContactVerifiedBadge } from '@/components/trust/contact-verified-badge';
 import { userService } from '@/services/user.service';
+
+function isStaffRole(role?: RbacRole | string): boolean {
+  return role !== undefined && (role === 'SUPER_ADMIN' || isPrivilegedSystemRole(role));
+}
 
 export interface ProfileCredentialsSettingsProps {
   profile: UserProfile | null;
@@ -59,8 +65,10 @@ export function ProfileCredentialsSettings({
   }
 
   if (!profile) {
-    return <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading…</p>;
+    return <LoadingState />;
   }
+
+  const staff = isStaffRole(profile.role);
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -90,52 +98,74 @@ export function ProfileCredentialsSettings({
             </div>
           </div>
 
-          <div>
-            <PhoneChangePanel
-              currentPhone={profile.phone ?? ''}
-              phoneVerified={phoneVerified}
-              onOpenVerification={onOpenVerification}
-              onPhoneUpdated={(phone) => {
-                setProfile((current) => (current ? { ...current, phone } : current));
-                setMessage('Phone number updated.');
-                onSaved?.();
-              }}
-            />
-            <div className="mt-2">
-              <ContactVerifiedBadge verified={phoneVerified} label="Phone" />
-            </div>
-          </div>
+          <PhoneChangePanel
+            currentPhone={profile.phone ?? ''}
+            phoneVerified={phoneVerified}
+            onOpenVerification={onOpenVerification}
+            onPhoneUpdated={(phone) => {
+              setProfile((current) => (current ? { ...current, phone } : current));
+              setMessage('Phone number updated.');
+              onSaved?.();
+            }}
+          />
         </div>
       </Card>
 
-      <div className="space-y-6">
-        <Card title="Password">
-          <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-            To change your password, sign out and use the password reset option on the login page.
-          </p>
-          <Link
-            href="/auth/login"
-            className="mt-3 inline-block text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
-          >
-            Go to login →
-          </Link>
+      {staff ? (
+        <Card title="Security">
+          <div className="space-y-6">
+            <div>
+              <h4 className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Password</h4>
+              <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+                To change your password, sign out and use the password reset option on the login page.
+              </p>
+              <Link
+                href="/auth/login"
+                className="mt-2 inline-block text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+              >
+                Go to login →
+              </Link>
+            </div>
+            <div className="border-t border-[hsl(var(--dashboard-sidebar-border))] pt-6">
+              <h4 className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Platform account</h4>
+              <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+                {profile.role === 'SUPER_ADMIN'
+                  ? 'Super Admin accounts manage the platform and cannot be self-deactivated. To step down, assign another Super Admin first, then have them revoke your role under User management.'
+                  : 'Admin accounts cannot be self-deactivated from this page. Ask a Super Admin to revoke your admin role under User management if you no longer need platform access.'}
+              </p>
+            </div>
+          </div>
         </Card>
+      ) : (
+        <div className="space-y-6">
+          <Card title="Password">
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+              To change your password, sign out and use the password reset option on the login page.
+            </p>
+            <Link
+              href="/auth/login"
+              className="mt-3 inline-block text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+            >
+              Go to login →
+            </Link>
+          </Card>
 
-        <Card title="Deactivate account">
-          <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-            Deactivation schedules your account for closure. This is not immediate permanent
-            deletion — support will process your request within 30 days.
-          </p>
-          <button
-            type="button"
-            onClick={() => void handleDeactivate()}
-            disabled={deactivating}
-            className="mt-4 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
-          >
-            {deactivating ? 'Submitting…' : 'Request account deactivation'}
-          </button>
-        </Card>
-      </div>
+          <Card title="Deactivate account">
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+              Deactivation schedules your account for closure. This is not immediate permanent
+              deletion — support will process your request within 30 days.
+            </p>
+            <button
+              type="button"
+              onClick={() => void handleDeactivate()}
+              disabled={deactivating}
+              className="mt-4 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+            >
+              {deactivating ? 'Submitting…' : 'Request account deactivation'}
+            </button>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

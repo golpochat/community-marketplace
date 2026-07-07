@@ -11,10 +11,22 @@ export interface SearchIndexMeta {
   indexName: SearchIndexName;
   type: SearchIndexName;
   documentCount: number;
+  /** Active records in the database expected to be searchable. */
+  expectedDocumentCount?: number;
   isHealthy: boolean;
+  /** Set when a full reindex completes successfully. */
   lastSyncedAt?: string;
+  /** Set when live stats were last pulled from Meilisearch. */
+  statsUpdatedAt?: string;
+  syncStatus?: 'synced' | 'empty' | 'stale' | 'offline';
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SearchHealthResponse {
+  healthy: boolean;
+  mode: 'meilisearch' | 'database_fallback';
+  indexes: SearchIndexMeta[];
 }
 
 export interface ListingSearchDocument {

@@ -1,5 +1,5 @@
-import type { RbacRole } from '@community-marketplace/types';
-import { getLoginRedirectPath } from '@community-marketplace/types';
+import type { RbacRole, RoleCodeValue } from '@community-marketplace/types';
+import { getLoginRedirectPath, isAdminPanelRoleCode } from '@community-marketplace/types';
 
 /** Backend API path prefixes (after /api) */
 export const API_NAMESPACES = {
@@ -34,14 +34,18 @@ const ROLE_DASHBOARD_PATHS: Partial<Record<RbacRole, string>> = {
   BUYER: WEB_APP_ROUTES.buyerDashboard,
 };
 
-export function getWebDashboardPathForRole(role: RbacRole): string {
-  return ROLE_DASHBOARD_PATHS[role] ?? getLoginRedirectPath(role);
+export function getWebDashboardPathForRole(role: RoleCodeValue): string {
+  if (isAdminPanelRoleCode(role)) return '/admin/dashboard';
+  if (role in ROLE_DASHBOARD_PATHS) {
+    return ROLE_DASHBOARD_PATHS[role as RbacRole] ?? getLoginRedirectPath(role as RbacRole);
+  }
+  return getLoginRedirectPath(role as RbacRole);
 }
 
-export function isWebDashboardRouteAllowed(role: RbacRole | null, pathname: string): boolean {
+export function isWebDashboardRouteAllowed(role: RoleCodeValue | null, pathname: string): boolean {
   if (!role) return false;
   if (pathname.startsWith('/super-admin')) return role === 'SUPER_ADMIN';
-  if (pathname.startsWith('/admin')) return role === 'ADMIN';
+  if (pathname.startsWith('/admin')) return isAdminPanelRoleCode(role);
   if (pathname.startsWith('/seller')) return role === 'SELLER';
   if (pathname.startsWith('/buyer')) return role === 'BUYER';
   return false;

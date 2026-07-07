@@ -69,6 +69,8 @@ export function SendAdminInvitationModal({ open, onClose, onSent }: SendAdminInv
     }
   };
 
+  const selectedRole = roles.find((role) => role.id === roleId);
+
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
       <div className="w-full max-w-md rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] shadow-xl">
@@ -122,6 +124,9 @@ export function SendAdminInvitationModal({ open, onClose, onSent }: SendAdminInv
                 </option>
               ))}
             </select>
+            {selectedRole?.description ? (
+              <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{selectedRole.description}</p>
+            ) : null}
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <div className="flex gap-3 pt-2">

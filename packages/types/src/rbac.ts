@@ -3,6 +3,8 @@
  * Business logic (guards, resolvers) lives in apps/api; not here.
  */
 
+import { isAdminPersonaRoleCode } from './admin-persona-codes';
+
 // ── Roles ─────────────────────────────────────────────────────────────────────
 
 export const RBAC_ROLES = ['SUPER_ADMIN', 'ADMIN', 'SELLER', 'BUYER'] as const;
@@ -21,7 +23,7 @@ export function isSystemRoleCode(code: string): code is RbacRole {
 }
 
 export function isPrivilegedSystemRole(code: string): boolean {
-  return code === 'SUPER_ADMIN' || code === 'ADMIN';
+  return code === 'SUPER_ADMIN' || code === 'ADMIN' || isAdminPersonaRoleCode(code);
 }
 
 /** Smart templates when creating a custom role. */
@@ -45,6 +47,21 @@ export const RBAC_ROLE_TEMPLATES = [
     id: 'ADMIN',
     label: 'Operations admin template',
     description: 'Copy admin permissions excluding privileged RBAC controls.',
+  },
+  {
+    id: 'ACCOUNTS_ADMIN',
+    label: 'Accounts admin persona',
+    description: 'Users, verification, and seller onboarding permissions.',
+  },
+  {
+    id: 'MODERATION_ADMIN',
+    label: 'Moderation admin persona',
+    description: 'Reports, listings, messages, and dispute resolution.',
+  },
+  {
+    id: 'FINANCIAL_ADMIN',
+    label: 'Financial admin persona',
+    description: 'Payments, refunds, monetization, and financial reporting.',
   },
 ] as const;
 

@@ -15,21 +15,20 @@ import type {
   RbacRole,
   RbacRoleTemplateId,
   ReindexJobStatus,
-  SearchIndexMeta,
+  SearchAnalyticsSummary,
+  SearchHealthResponse,
   SearchIndexName,
-  SuperAdminPlatformOverview,
   SuperAdminActivityEvent,
+  SuperAdminPlatformOverview,
+  StaffAdminDetail,
   SuspensionDuration,
   UserBan,
   UserProfile,
   UserVerification,
+  PaginatedResult,
 } from '@community-marketplace/types';
 
-export interface SearchHealthResponse {
-  healthy: boolean;
-  indexes: SearchIndexMeta[];
-}
-import type { PaginatedResult } from '@community-marketplace/types';
+import type { UpdateStaffRoleInput, UpdateStaffStatusInput } from '@community-marketplace/validation';
 
 import { apiClient } from '@/lib/api-client';
 import { adminApiPath, adminRoutesForRole, type AdminApiRole } from '@/lib/admin-api-routes';
@@ -363,6 +362,44 @@ export const adminService = {
     return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
   },
 
+  async getAdminStaffMember(userId: string): Promise<StaffAdminDetail> {
+    const response = await apiClient<StaffAdminDetail>(
+      adminApiPath('SUPER_ADMIN', `/admins/${userId}`),
+    );
+    if (!response.data) {
+      throw new Error('Staff member not found');
+    }
+    return response.data;
+  },
+
+  async updateAdminStaffRole(userId: string, input: UpdateStaffRoleInput): Promise<UserProfile> {
+    const response = await apiClient<UserProfile>(
+      adminApiPath('SUPER_ADMIN', `/admins/${userId}/role`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      },
+    );
+    if (!response.data) {
+      throw new Error('Failed to update staff role');
+    }
+    return response.data;
+  },
+
+  async updateAdminStaffStatus(userId: string, input: UpdateStaffStatusInput): Promise<UserProfile> {
+    const response = await apiClient<UserProfile>(
+      adminApiPath('SUPER_ADMIN', `/admins/${userId}/status`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify(input),
+      },
+    );
+    if (!response.data) {
+      throw new Error('Failed to update staff status');
+    }
+    return response.data;
+  },
+
   async listInviteableRoles(): Promise<AdminInviteableRoleRow[]> {
     const response = await apiClient<AdminInviteableRoleRow[]>(
       `${API_NAMESPACES.SUPER_ADMIN}/invitations/inviteable-roles`,
@@ -654,6 +691,15 @@ export const adminService = {
     }
   },
 
+  async getSearchAnalytics(role: AdminApiRole): Promise<SearchAnalyticsSummary | null> {
+    try {
+      const response = await apiClient<SearchAnalyticsSummary>(adminApiPath(role, '/search/analytics'));
+      return response.data ?? null;
+    } catch {
+      return null;
+    }
+  },
+
   async getModerationAnalytics(
     role: AdminApiRole,
     days = 30,
@@ -791,6 +837,7 @@ export interface AdminInviteableRoleRow {
   id: string;
   code: string;
   name: string;
+  description: string | null;
   isSystem: boolean;
 }
 

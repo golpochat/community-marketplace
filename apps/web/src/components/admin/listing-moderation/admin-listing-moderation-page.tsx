@@ -14,6 +14,7 @@ import {
 
 import { AdminListingReviewDialog } from '@/components/dashboard/admin-listing-review-dialog';
 import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
+import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
 import { DashboardPageShell, DataTable } from '@/components/dashboard/async-resource';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { listingImageVariantUrl } from '@/lib/listing-image-url';
@@ -187,25 +188,14 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
         empty={!loading && !error && rows.length === 0}
         emptyTitle={`No ${activeTab.label.toLowerCase()}`}
       >
-        <div className="mb-4 flex flex-wrap gap-2">
-          {QUEUE_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => {
-                setQueue(tab.id);
-                setPage(1);
-              }}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                queue === tab.id
-                  ? 'bg-brand-600 text-white'
-                  : 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.7)]'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        <DashboardSectionTabs
+          items={QUEUE_TABS.map((tab) => ({ id: tab.id, label: tab.label }))}
+          activeId={queue}
+          onChange={(id) => {
+            setQueue(id as ModerationQueue);
+            setPage(1);
+          }}
+        />
         <Card>
           <DataTable
             columns={['', 'Title', 'Seller', 'Price', 'Status', 'Reason', 'Actions']}

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { Category, ListingStatus, ModerationReport, PlatformGovernanceSettings, PlatformGovernanceStatus, SuperAdminActivityEvent, UserProfile, UserVerification } from '@community-marketplace/types';
+import { isPrivilegedSystemRole } from '@community-marketplace/types';
 import { formatCurrency, formatDateTime } from '@community-marketplace/utils';
 import {
   Card,
@@ -19,6 +20,7 @@ import { DashboardPageShell, DataTable, KeyValueList } from '@/components/dashbo
 import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
 import { AdminListingReviewDialog } from '@/components/dashboard/admin-listing-review-dialog';
 import { AdminListingStatusHistoryDialog } from '@/components/dashboard/admin-listing-status-history-dialog';
+import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
 import {
   AdminToastStack,
   useAdminToast,
@@ -129,7 +131,7 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
   }
 
   const rows = users.map((user) => {
-    const isProtectedRole = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    const isProtectedRole = isPrivilegedSystemRole(user.role);
     const isActing = actingUserId === user.id;
     const isSuspended = user.status === 'suspended';
 
@@ -774,7 +776,7 @@ export function AdminAuditLogPage({ role }: { role: AdminServiceRole }) {
     data.map((entry) => {
       const event = entry as SuperAdminActivityEvent;
       return [
-        formatActivityEventType(event.eventType),
+        event.eventLabel || formatActivityEventType(event),
         formatActivitySource(event.source),
         formatActivityDetail(event),
         formatDateTime(event.createdAt),
@@ -869,7 +871,11 @@ export function AdminNotificationsPage({ role }: { role: AdminServiceRole }) {
 }
 
 export { AdminSearchPage } from '@/components/admin/search/admin-search-health-page';
-export { AdminAnalyticsPage } from '@/components/admin/analytics/admin-moderation-analytics-page';
+export {
+  AdminModerationInsightsPage,
+  AdminAnalyticsPage,
+} from '@/components/admin/analytics/admin-moderation-analytics-page';
+export { AdminPlatformMetricsPage } from '@/components/admin/analytics/admin-platform-metrics-page';
 
 export function SuperAdminAdminsPage() {
   const [rows, setRows] = useState<Array<Array<React.ReactNode>>>([]);
@@ -926,6 +932,7 @@ export function AdminRbacPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function SuperAdminSettingsPage() {
+  const [activeTab, setActiveTab] = useState<'governance' | 'email'>('governance');
   const [governanceStatus, setGovernanceStatus] = useState<PlatformGovernanceStatus | null>(null);
   const [governanceDraft, setGovernanceDraft] = useState<PlatformGovernanceSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -971,26 +978,36 @@ export function SuperAdminSettingsPage() {
 
   return (
     <DashboardPageShell
-      title="Settings"
-      description="Global platform configuration, governance, and transactional email."
+      title="Platform settings"
+      description="Configure platform governance and transactional email delivery."
       loading={loading}
       error={error}
       empty={!loading && !error && !governanceStatus}
       emptyTitle="Settings unavailable"
     >
       {governanceStatus && governanceDraft && (
-        <div className="space-y-6">
-          <AdminPlatformGovernanceCard
-            status={governanceStatus}
-            draft={governanceDraft}
-            saving={saving}
-            message={message}
-            error={error}
-            onDraftChange={setGovernanceDraft}
-            onSave={(e) => void handleGovernanceSave(e)}
+        <>
+          <DashboardSectionTabs
+            items={[
+              { id: 'governance', label: 'Platform governance' },
+              { id: 'email', label: 'Transactional email' },
+            ]}
+            activeId={activeTab}
+            onChange={(id) => setActiveTab(id as 'governance' | 'email')}
           />
-          <AdminEmailSettingsCard />
-        </div>
+          {activeTab === 'governance' && (
+            <AdminPlatformGovernanceCard
+              status={governanceStatus}
+              draft={governanceDraft}
+              saving={saving}
+              message={message}
+              error={error}
+              onDraftChange={setGovernanceDraft}
+              onSave={(e) => void handleGovernanceSave(e)}
+            />
+          )}
+          {activeTab === 'email' && <AdminEmailSettingsCard />}
+        </>
       )}
     </DashboardPageShell>
   );

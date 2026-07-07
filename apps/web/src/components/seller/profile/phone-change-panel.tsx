@@ -6,6 +6,7 @@ import { Button, Input, Label } from '@community-marketplace/ui';
 import { IRISH_MOBILE_VALIDATION_MESSAGE } from '@community-marketplace/validation';
 
 import { IrishMobileFieldLabel } from '@/components/forms/irish-mobile-field-label';
+import { ContactVerifiedBadge } from '@/components/trust/contact-verified-badge';
 import { formatIrishPhoneHint, normalizeIrishPhoneToE164 } from '@/lib/phone';
 import { userService } from '@/services/user.service';
 
@@ -92,6 +93,10 @@ export function PhoneChangePanel({
         disabled
         className="bg-[hsl(var(--dashboard-sidebar-active)/0.35)] text-[hsl(var(--dashboard-sidebar-muted))]"
       />
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <ContactVerifiedBadge verified={phoneVerified} label="Phone" />
+      </div>
 
       {!phoneVerified && onOpenVerification && (
         <button

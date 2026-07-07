@@ -25,6 +25,29 @@ export {
   isPrivilegedSystemRole,
 } from './rbac';
 
+export {
+  ADMIN_PERSONA_ROLE_CODES,
+  isAdminPersonaRoleCode,
+  isAdminPanelRoleCode,
+  type AdminPersonaRoleCode,
+} from './admin-persona-codes';
+
+export {
+  ADMIN_PERSONA_DEFINITIONS,
+  type AdminPersonaDefinition,
+} from './admin-personas';
+
+export {
+  STAFF_ROLE_CHANGE_REASONS,
+  STAFF_ROLE_CHANGE_REASON_LABELS,
+  STAFF_STATUS_CHANGE_REASONS,
+  STAFF_STATUS_CHANGE_REASON_LABELS,
+  type StaffRoleChangeReason,
+  type StaffStatusChangeReason,
+  type StaffAdminAuditEntry,
+  type StaffAdminDetail,
+} from './staff-admin';
+
 export type { RoleCodeValue, RbacRoleTemplateId } from './rbac';
 
 export {
@@ -282,6 +305,7 @@ export type {
   SearchIndexName,
   SearchEntityType,
   SearchIndexMeta,
+  SearchHealthResponse,
   ListingSearchDocument,
   UserSearchDocument,
   CategorySearchDocument,
@@ -377,6 +401,8 @@ export type {
   FraudSignalType,
   FraudRiskLevel,
   FraudSignal,
+  FraudSignalListItem,
+  FraudSignalStatus,
   FraudRiskBreakdownItem,
   HighRiskUserSummary,
   HighRiskListingSummary,
@@ -386,4 +412,5 @@ export {
   FRAUD_SIGNAL_WEIGHTS,
   FRAUD_SIGNAL_LABELS,
   fraudRiskLevel,
+  fraudSignalStatus,
 } from './fraud';

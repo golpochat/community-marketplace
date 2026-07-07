@@ -83,22 +83,27 @@ export function SidebarDisabledItem({
 
   const content = (
     <div
-      title={reason}
       className={cn(
         'flex cursor-not-allowed items-center rounded-lg text-sm font-medium opacity-50',
         collapsed ? 'justify-center px-2 py-2.5' : 'gap-3 px-3 py-2.5',
         'border-l-[3px] border-transparent text-[hsl(var(--dashboard-sidebar-muted))]',
       )}
       aria-disabled="true"
+      aria-label={collapsed ? item.label : undefined}
     >
       <Icon name={item.icon} className="shrink-0 text-[hsl(var(--dashboard-sidebar-muted))]" />
       {!collapsed ? <span className="truncate">{item.label}</span> : null}
     </div>
   );
 
-  if (collapsed) {
-    return <Tooltip label={reason}>{content}</Tooltip>;
-  }
-
-  return <Tooltip label={reason}>{content}</Tooltip>;
+  return (
+    <Tooltip
+      label={reason}
+      side={collapsed ? 'right' : 'top'}
+      multiline
+      className={collapsed ? 'w-full' : undefined}
+    >
+      {content}
+    </Tooltip>
+  );
 }

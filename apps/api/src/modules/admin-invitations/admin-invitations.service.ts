@@ -57,7 +57,7 @@ export class AdminInvitationsService {
     const roles = await this.prisma.role.findMany({
       where: { code: { notIn: ['SUPER_ADMIN', 'SELLER', 'BUYER'] } },
       orderBy: [{ isSystem: 'desc' }, { name: 'asc' }],
-      select: { id: true, code: true, name: true, isSystem: true },
+      select: { id: true, code: true, name: true, description: true, isSystem: true },
     });
 
     return roles.filter((role) => isInviteableRoleCode(role.code));

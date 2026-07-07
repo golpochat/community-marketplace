@@ -6,6 +6,7 @@ import { cn } from '@community-marketplace/ui';
 import type { RbacRole } from '@community-marketplace/types';
 
 import { FooterBar } from '../footer/FooterBar';
+import { MobileSidebarEffects } from '../lib/mobile-sidebar-effects';
 import { PageTitleProvider } from '../lib/page-title-context';
 import { SidebarProvider, useSidebar } from '../lib/sidebar-context';
 import type { DashboardThemeProp } from '../theme/theme-tokens';
@@ -53,7 +54,8 @@ function DashboardLayoutFrame({
 
   return (
     <ThemeProvider role={role} theme={theme}>
-      <div className="flex h-screen overflow-hidden bg-[hsl(var(--dashboard-main-bg))] text-[hsl(var(--dashboard-main-fg))]">
+      <MobileSidebarEffects />
+      <div className="flex h-[100dvh] overflow-hidden bg-[hsl(var(--dashboard-main-bg))] text-[hsl(var(--dashboard-main-fg))]">
         <Sidebar
           role={role}
           brand={brand}
@@ -62,19 +64,23 @@ function DashboardLayoutFrame({
           brandLogoCollapsed={brandLogoCollapsed}
           items={sidebarItems}
         />
+
         {mobileOpen ? (
           <button
             type="button"
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] transition-opacity duration-200 md:hidden"
+            className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[1px] transition-opacity duration-200 md:hidden"
             aria-label="Close navigation menu"
             onClick={() => setMobileOpen(false)}
           />
         ) : null}
+
         <div
+          id="dashboard-mobile-sidebar"
           className={cn(
-            'fixed inset-y-0 left-0 z-50 transform transition-transform duration-200 ease-in-out md:hidden',
-            mobileOpen ? 'translate-x-0' : '-translate-x-full',
+            'fixed inset-y-0 left-0 z-50 w-[min(100vw-3rem,16rem)] transform shadow-xl transition-transform duration-200 ease-in-out md:hidden',
+            mobileOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none',
           )}
+          aria-hidden={!mobileOpen}
         >
           <Sidebar
             role={role}
@@ -86,6 +92,7 @@ function DashboardLayoutFrame({
             items={sidebarItems}
           />
         </div>
+
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <Topbar
             role={role}
@@ -99,7 +106,7 @@ function DashboardLayoutFrame({
           <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 sm:px-6 sm:py-6">
             {children}
           </main>
-          <FooterBar copyright={footerCopyright} />
+          <FooterBar copyright={footerCopyright} brand={brand} />
         </div>
       </div>
     </ThemeProvider>

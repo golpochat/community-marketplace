@@ -21,6 +21,7 @@ import {
   aggregateRiskScore,
   buildRiskBreakdown,
   mapFraudSignal,
+  mapFraudSignalListItem,
   mapHighRiskListing,
   mapHighRiskUser,
 } from '../mappers/fraud.mapper';
@@ -351,15 +352,27 @@ export class FraudDetectionService {
 
   async listSignals(query: Record<string, string>) {
     const parsed = fraudSignalsQuerySchema.parse(query);
+    const status = parsed.status ?? 'all';
     const where = {
       ...(parsed.userId ? { userId: parsed.userId } : {}),
       ...(parsed.listingId ? { listingId: parsed.listingId } : {}),
       ...(parsed.signalType ? { signalType: parsed.signalType } : {}),
+      ...(status === 'active'
+        ? { dismissedAt: null, escalatedAt: null }
+        : status === 'dismissed'
+          ? { dismissedAt: { not: null } }
+          : status === 'escalated'
+            ? { escalatedAt: { not: null }, dismissedAt: null }
+            : {}),
     };
 
     const [rows, total] = await Promise.all([
       this.prisma.fraudSignal.findMany({
         where,
+        include: {
+          user: { select: { displayName: true, email: true } },
+          listing: { select: { title: true } },
+        },
         orderBy: { createdAt: 'desc' },
         skip: (parsed.page - 1) * parsed.limit,
         take: parsed.limit,
@@ -368,7 +381,7 @@ export class FraudDetectionService {
     ]);
 
     return {
-      data: rows.map(mapFraudSignal),
+      data: rows.map(mapFraudSignalListItem),
       meta: { page: parsed.page, limit: parsed.limit, total },
     };
   }

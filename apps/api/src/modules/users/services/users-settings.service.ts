@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 
 import type { UserSettings } from '@community-marketplace/types';
 import {
@@ -10,6 +10,7 @@ import {
   type UpdateUserSettingsInput,
 } from '@community-marketplace/validation';
 
+import { assertBootstrapSuperAdminImmutable } from '../../../common/constants/bootstrap-users';
 import { PrismaService } from '../../../database/prisma.service';
 import { UserAuditService } from './user-audit.service';
 
@@ -75,6 +76,21 @@ export class UsersSettingsService {
   }
 
   async requestDeletion(userId: string) {
+    assertBootstrapSuperAdminImmutable(userId);
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { primaryRole: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const roleCode = user.primaryRole.code;
+    if (roleCode === 'SUPER_ADMIN' || roleCode === 'ADMIN') {
+      throw new ForbiddenException(
+        'Platform operator accounts cannot be self-deactivated. Contact a Super Admin to revoke admin access.',
+      );
+    }
+
     await this.ensureSettings(userId);
     const updated = await this.prisma.userSettings.update({
       where: { userId },

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 
 import { cn } from '@community-marketplace/ui';
-import { DashboardCard, usePageTitle } from '@community-marketplace/ui-dashboard';
+import { usePageTitle } from '@community-marketplace/ui-dashboard';
 
 import { SuperAdminDashboardOverview } from '@/components/dashboard/super-admin-dashboard-overview';
 import { adminService, type SuperAdminPlatformOverview } from '@/services/admin.service';
@@ -18,52 +18,17 @@ interface SuperAdminDashboardHomeProps {
 
 function OverviewSkeleton() {
   return (
-    <div className="animate-pulse space-y-6">
-      <div className="grid gap-3 sm:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, index) => (
-          <div
-            key={`health-${index}`}
-            className="h-14 rounded-lg bg-[hsl(var(--dashboard-sidebar-border)/0.35)]"
-          />
-        ))}
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 8 }).map((_, index) => (
-          <DashboardCard key={`attention-${index}`}>
-            <div className="h-4 w-28 rounded bg-[hsl(var(--dashboard-sidebar-border)/0.35)]" />
-            <div className="mt-3 h-8 w-16 rounded bg-[hsl(var(--dashboard-sidebar-border)/0.35)]" />
-          </DashboardCard>
-        ))}
-      </div>
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="grid gap-4 sm:grid-cols-2">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <DashboardCard key={`snapshot-${index}`}>
-              <div className="h-4 w-24 rounded bg-[hsl(var(--dashboard-sidebar-border)/0.35)]" />
-              <div className="mt-3 h-8 w-12 rounded bg-[hsl(var(--dashboard-sidebar-border)/0.35)]" />
-            </DashboardCard>
-          ))}
-        </div>
-        <DashboardCard title="Access & accountability">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {Array.from({ length: 2 }).map((_, index) => (
-              <div key={`gov-metric-${index}`}>
-                <div className="h-3 w-24 rounded bg-[hsl(var(--dashboard-sidebar-border)/0.35)]" />
-                <div className="mt-2 h-8 w-12 rounded bg-[hsl(var(--dashboard-sidebar-border)/0.35)]" />
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 h-4 w-full rounded bg-[hsl(var(--dashboard-sidebar-border)/0.35)]" />
-          <div className="mt-5 space-y-2">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={`audit-${index}`}
-                className="h-12 rounded-lg bg-[hsl(var(--dashboard-sidebar-border)/0.35)]"
-              />
-            ))}
-          </div>
-        </DashboardCard>
-      </div>
+    <div className="grid animate-pulse grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="col-span-full h-28 rounded-xl bg-[hsl(var(--dashboard-sidebar-border)/0.35)]" />
+      <div className="col-span-full h-36 rounded-xl bg-[hsl(var(--dashboard-sidebar-border)/0.35)] xl:col-span-1" />
+      <div className="col-span-full h-56 rounded-xl bg-[hsl(var(--dashboard-sidebar-border)/0.35)] xl:col-span-2" />
+      <div className="col-span-full h-4 w-28 rounded bg-[hsl(var(--dashboard-sidebar-border)/0.35)]" />
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={`action-${index}`}
+          className="col-span-full h-16 rounded-xl bg-[hsl(var(--dashboard-sidebar-border)/0.35)] sm:col-span-1 xl:col-span-1"
+        />
+      ))}
     </div>
   );
 }
@@ -110,18 +75,22 @@ export function SuperAdminDashboardHome({ title, description }: SuperAdminDashbo
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-[hsl(var(--dashboard-sidebar-border))] pb-4">
         <div>
-          <h1 className="text-2xl font-semibold text-[hsl(var(--dashboard-main-fg))]">{title}</h1>
+          <h1 className="text-xl font-semibold tracking-tight text-[hsl(var(--dashboard-main-fg))]">
+            {title}
+          </h1>
           {description ? (
-            <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">{description}</p>
+            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[hsl(var(--dashboard-sidebar-muted))]">
+              {description}
+            </p>
           ) : null}
         </div>
         <button
           type="button"
           onClick={() => void loadOverview(true)}
           disabled={loading || refreshing}
-          className="inline-flex items-center gap-2 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] transition-colors hover:bg-[hsl(var(--dashboard-sidebar-active)/0.3)] disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] shadow-sm transition-all hover:border-[hsl(var(--dashboard-accent)/0.35)] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.25)] hover:shadow disabled:opacity-60"
         >
           <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
           {refreshing ? 'Refreshing…' : 'Refresh'}

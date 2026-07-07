@@ -1,22 +1,48 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import {
+  ADMIN_PERSONA_ROLE_CODES,
   DEFAULT_ROLE_PERMISSIONS,
   PERMISSION_CODES,
   RBAC_ROLES,
+  STAFF_ROLE_CHANGE_REASON_LABELS,
+  STAFF_STATUS_CHANGE_REASON_LABELS,
+  isAdminPanelRoleCode,
   type PermissionCode,
   type RbacRole,
   type SuperAdminActivityEvent,
+  type UserAuditEventType,
 } from '@community-marketplace/types';
 
+import {
+  formatAuditActivityDetail,
+  formatAuditEventLabel,
+  formatAuditUserLabel,
+} from '@community-marketplace/utils';
+
+import {
+  updateStaffRoleSchema,
+  updateStaffStatusSchema,
+  type PlatformGovernanceUpdateInput,
+} from '@community-marketplace/validation';
+
+import {
+  assertBootstrapSuperAdminImmutable,
+  assertSuperAdminRoleNotAssignable,
+} from '../../common/constants/bootstrap-users';
 import { PrismaService } from '../../database/prisma.service';
 import { AdminService } from '../admin/admin.service';
 import { UsersService } from '../users/users.service';
+import { mapUserProfile, userProfileInclude } from '../users/mappers/user.mapper';
+import { UserAuditService } from '../users/services/user-audit.service';
 import type { AdminActionDto } from '../admin/dto/admin.dto';
 import type { SuperAdminActionDto } from './dto/super-admin.dto';
-import type { PlatformGovernanceUpdateInput } from '@community-marketplace/validation';
 
 const OPEN_DISPUTE_STATUSES = ['open', 'awaiting_evidence', 'under_review'] as const;
+
+const PANEL_OPERATOR_ROLE_CODES = ['ADMIN', ...ADMIN_PERSONA_ROLE_CODES] as const;
+
+const STAFF_AUDIT_EVENT_TYPES: UserAuditEventType[] = ['role_changed', 'status_changed'];
 
 @Injectable()
 export class SuperAdminService {
@@ -24,6 +50,7 @@ export class SuperAdminService {
     private readonly adminService: AdminService,
     private readonly usersService: UsersService,
     private readonly prisma: PrismaService,
+    private readonly userAudit: UserAuditService,
   ) {}
 
   async getPlatformOverview() {
@@ -33,7 +60,7 @@ export class SuperAdminService {
       this.adminService.getPlatformSettings(),
       Promise.all([
         this.prisma.user.count({
-          where: { primaryRole: { code: 'ADMIN' } },
+          where: { primaryRole: { code: { in: ['ADMIN', ...ADMIN_PERSONA_ROLE_CODES] } } },
         }),
         this.prisma.adminInvitation.count({
           where: {
@@ -69,7 +96,7 @@ export class SuperAdminService {
 
     return {
       ...stats,
-      roles: RBAC_ROLES.length,
+      roles: RBAC_ROLES.length + ADMIN_PERSONA_ROLE_CODES.length,
       permissions: PERMISSION_CODES.length,
       platformFlags: {
         maintenanceMode: governanceStatus.settings.maintenanceMode,
@@ -96,19 +123,23 @@ export class SuperAdminService {
       this.prisma.userAuditLog.findMany({
         orderBy: { createdAt: 'desc' },
         take,
+        include: {
+          actor: { select: { email: true, displayName: true } },
+          target: { select: { email: true, displayName: true } },
+        },
       }),
       this.prisma.moderationAuditLog.findMany({
         orderBy: { createdAt: 'desc' },
         take,
+        include: {
+          actor: { select: { email: true, displayName: true } },
+        },
       }),
       this.prisma.userAuditLog.count(),
       this.prisma.moderationAuditLog.count(),
     ]);
 
-    const merged = this.mergeActivity(
-      userRows.map((row) => this.mapUserAuditRow(row)),
-      modRows.map((row) => this.mapModerationAuditRow(row)),
-    );
+    const merged = await this.buildActivityEvents(userRows, modRows);
 
     const start = (safePage - 1) * safeLimit;
     const total = userTotal + modTotal;
@@ -129,17 +160,73 @@ export class SuperAdminService {
       this.prisma.userAuditLog.findMany({
         orderBy: { createdAt: 'desc' },
         take: limit,
+        include: {
+          actor: { select: { email: true, displayName: true } },
+          target: { select: { email: true, displayName: true } },
+        },
       }),
       this.prisma.moderationAuditLog.findMany({
         orderBy: { createdAt: 'desc' },
         take: limit,
+        include: {
+          actor: { select: { email: true, displayName: true } },
+        },
       }),
     ]);
 
+    const merged = await this.buildActivityEvents(userRows, modRows);
+    return merged.slice(0, limit);
+  }
+
+  private async buildActivityEvents(
+    userRows: Array<{
+      id: string;
+      eventType: string;
+      actorId: string | null;
+      targetUserId: string | null;
+      metadata: unknown;
+      createdAt: Date;
+      actor: { email: string; displayName: string | null } | null;
+      target: { email: string; displayName: string | null } | null;
+    }>,
+    modRows: Array<{
+      id: string;
+      eventType: string;
+      actorId: string | null;
+      reportId: string | null;
+      userId: string | null;
+      metadata: unknown;
+      createdAt: Date;
+      actor: { email: string; displayName: string | null } | null;
+    }>,
+  ): Promise<SuperAdminActivityEvent[]> {
+    const subjectIds = modRows
+      .map((row) => row.userId)
+      .filter((id): id is string => Boolean(id));
+    const subjectLabelById = await this.loadUserLabelMap(subjectIds);
+
     return this.mergeActivity(
       userRows.map((row) => this.mapUserAuditRow(row)),
-      modRows.map((row) => this.mapModerationAuditRow(row)),
-    ).slice(0, limit);
+      modRows.map((row) => this.mapModerationAuditRow(row, subjectLabelById)),
+    );
+  }
+
+  private async loadUserLabelMap(userIds: string[]): Promise<Map<string, string>> {
+    const uniqueIds = [...new Set(userIds)];
+    const labels = new Map<string, string>();
+    if (!uniqueIds.length) return labels;
+
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: uniqueIds } },
+      select: { id: true, email: true, displayName: true },
+    });
+
+    for (const user of users) {
+      const label = formatAuditUserLabel(user);
+      if (label) labels.set(user.id, label);
+    }
+
+    return labels;
   }
 
   private mapUserAuditRow(row: {
@@ -147,34 +234,74 @@ export class SuperAdminService {
     eventType: string;
     actorId: string | null;
     targetUserId: string | null;
+    metadata: unknown;
     createdAt: Date;
+    actor: { email: string; displayName: string | null } | null;
+    target: { email: string; displayName: string | null } | null;
   }): SuperAdminActivityEvent {
+    const metadata = (row.metadata as Record<string, unknown> | null) ?? undefined;
+    const actorLabel = formatAuditUserLabel(row.actor);
+    const targetLabel = formatAuditUserLabel(row.target);
+    const presentation = {
+      eventType: row.eventType,
+      source: 'user' as const,
+      actorLabel,
+      targetLabel,
+      metadata,
+    };
+
     return {
       id: `user:${row.id}`,
       source: 'user',
       eventType: row.eventType,
+      eventLabel: formatAuditEventLabel(row.eventType, 'user'),
       createdAt: row.createdAt.toISOString(),
       actorId: row.actorId ?? undefined,
+      actorLabel,
       targetUserId: row.targetUserId ?? undefined,
+      targetLabel,
+      detail: formatAuditActivityDetail(presentation),
+      metadata,
     };
   }
 
-  private mapModerationAuditRow(row: {
-    id: string;
-    eventType: string;
-    actorId: string | null;
-    reportId: string | null;
-    userId: string | null;
-    createdAt: Date;
-  }): SuperAdminActivityEvent {
+  private mapModerationAuditRow(
+    row: {
+      id: string;
+      eventType: string;
+      actorId: string | null;
+      reportId: string | null;
+      userId: string | null;
+      metadata: unknown;
+      createdAt: Date;
+      actor: { email: string; displayName: string | null } | null;
+    },
+    subjectLabelById: Map<string, string>,
+  ): SuperAdminActivityEvent {
+    const metadata = (row.metadata as Record<string, unknown> | null) ?? undefined;
+    const actorLabel = formatAuditUserLabel(row.actor);
+    const subjectLabel = row.userId ? subjectLabelById.get(row.userId) : undefined;
+    const presentation = {
+      eventType: row.eventType,
+      source: 'moderation' as const,
+      actorLabel,
+      subjectLabel,
+      metadata,
+    };
+
     return {
       id: `moderation:${row.id}`,
       source: 'moderation',
       eventType: row.eventType,
+      eventLabel: formatAuditEventLabel(row.eventType, 'moderation'),
       createdAt: row.createdAt.toISOString(),
       actorId: row.actorId ?? undefined,
+      actorLabel,
       reportId: row.reportId ?? undefined,
       userId: row.userId ?? undefined,
+      subjectLabel,
+      detail: formatAuditActivityDetail(presentation),
+      metadata,
     };
   }
 
@@ -267,11 +394,153 @@ export class SuperAdminService {
   }
 
   async listAdmins(page = 1, limit = 20) {
-    const users = await this.usersService.findAll(page, limit);
-    return {
-      ...users,
-      data: users.data.filter((user) => user.role === 'ADMIN' || user.role === 'SUPER_ADMIN'),
+    const skip = (page - 1) * limit;
+    const where = {
+      primaryRole: { code: { in: [...PANEL_OPERATOR_ROLE_CODES] } },
     };
+
+    const [rows, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where,
+        include: userProfileInclude,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.user.count({ where }),
+    ]);
+
+    return {
+      data: rows.map((row) => mapUserProfile(row)),
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
+  }
+
+  async getAdminStaffMember(userId: string) {
+    const user = await this.assertPanelOperatorUser(userId);
+    const audit = await this.userAudit.listForAdmin({
+      targetUserId: userId,
+      page: 1,
+      limit: 100,
+    });
+
+    const staffAudit = audit.data.filter((entry) =>
+      STAFF_AUDIT_EVENT_TYPES.includes(entry.eventType),
+    );
+
+    const actorIds = [
+      ...new Set(staffAudit.map((entry) => entry.actorId).filter((id): id is string => Boolean(id))),
+    ];
+
+    const actors =
+      actorIds.length > 0
+        ? await this.prisma.user.findMany({
+            where: { id: { in: actorIds } },
+            select: { id: true, displayName: true, email: true },
+          })
+        : [];
+
+    const actorLabels = new Map(
+      actors.map((actor) => [
+        actor.id,
+        formatAuditUserLabel({ displayName: actor.displayName, email: actor.email }),
+      ]),
+    );
+
+    return {
+      profile: mapUserProfile(user),
+      auditHistory: staffAudit.map((entry) => ({
+        id: entry.id,
+        eventType: entry.eventType as 'role_changed' | 'status_changed',
+        actorId: entry.actorId,
+        actorLabel: entry.actorId ? actorLabels.get(entry.actorId) : undefined,
+        metadata: entry.metadata,
+        createdAt: entry.createdAt,
+      })),
+    };
+  }
+
+  async updateAdminStaffRole(actorId: string, userId: string, input: unknown) {
+    const parsed = updateStaffRoleSchema.parse(input);
+    assertBootstrapSuperAdminImmutable(userId);
+    assertSuperAdminRoleNotAssignable(parsed.role);
+
+    if (!isAdminPanelRoleCode(parsed.role)) {
+      throw new BadRequestException('Invalid staff role');
+    }
+
+    if (parsed.reason === 'other' && !parsed.reasonDetail?.trim()) {
+      throw new BadRequestException('Reason details are required when selecting Other');
+    }
+
+    const user = await this.assertPanelOperatorUser(userId);
+    const previousRole = user.primaryRole.code;
+
+    if (previousRole === parsed.role) {
+      return mapUserProfile(user);
+    }
+
+    const role = await this.prisma.role.findUnique({ where: { code: parsed.role } });
+    if (!role) throw new NotFoundException('Role not found');
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { primaryRoleId: role.id },
+      include: userProfileInclude,
+    });
+
+    await this.userAudit.record('role_changed', actorId, userId, {
+      previousRole,
+      role: parsed.role,
+      reason: STAFF_ROLE_CHANGE_REASON_LABELS[parsed.reason],
+      reasonCode: parsed.reason,
+      ...(parsed.reasonDetail?.trim() ? { reasonDetail: parsed.reasonDetail.trim() } : {}),
+    });
+
+    return mapUserProfile(updated);
+  }
+
+  async updateAdminStaffStatus(actorId: string, userId: string, input: unknown) {
+    const parsed = updateStaffStatusSchema.parse(input);
+    assertBootstrapSuperAdminImmutable(userId);
+
+    if (parsed.reason === 'other' && !parsed.reasonDetail?.trim()) {
+      throw new BadRequestException('Reason details are required when selecting Other');
+    }
+
+    const user = await this.assertPanelOperatorUser(userId);
+    const previousStatus = user.status;
+
+    if (previousStatus === parsed.status) {
+      return mapUserProfile(user);
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { status: parsed.status },
+      include: userProfileInclude,
+    });
+
+    await this.userAudit.record('status_changed', actorId, userId, {
+      previousStatus,
+      status: parsed.status,
+      reason: STAFF_STATUS_CHANGE_REASON_LABELS[parsed.reason],
+      reasonCode: parsed.reason,
+      ...(parsed.reasonDetail?.trim() ? { reasonDetail: parsed.reasonDetail.trim() } : {}),
+    });
+
+    return mapUserProfile(updated);
+  }
+
+  private async assertPanelOperatorUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: userProfileInclude,
+    });
+    if (!user || !isAdminPanelRoleCode(user.primaryRole.code)) {
+      throw new NotFoundException('Staff member not found');
+    }
+    return user;
   }
 
   createAdmin(email: string, role: RbacRole = 'ADMIN') {

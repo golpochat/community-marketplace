@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
 
@@ -135,6 +135,32 @@ export class SuperAdminController {
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20,
     );
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_ADMINS)
+  @Get('admins/:userId')
+  getAdminStaffMember(@Param('userId') userId: string) {
+    return this.superAdminService.getAdminStaffMember(userId);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_ADMINS)
+  @Patch('admins/:userId/role')
+  updateAdminStaffRole(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('userId') userId: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return this.superAdminService.updateAdminStaffRole(actor.id, userId, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_ADMINS)
+  @Patch('admins/:userId/status')
+  updateAdminStaffStatus(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('userId') userId: string,
+    @Body() body: Record<string, unknown>,
+  ) {
+    return this.superAdminService.updateAdminStaffStatus(actor.id, userId, body);
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_ADMINS)

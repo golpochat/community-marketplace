@@ -57,8 +57,11 @@ export type { ProfileDropdownProps, ProfileDropdownUser } from './ui/ProfileDrop
 export { NotificationBell } from './ui/NotificationBell';
 export type { NotificationBellProps } from './ui/NotificationBell';
 
+export { TopbarIconButton } from './ui/TopbarIconButton';
+export type { TopbarIconButtonProps } from './ui/TopbarIconButton';
+
 export { Tooltip } from './ui/Tooltip';
-export type { TooltipProps } from './ui/Tooltip';
+export type { TooltipProps, TooltipSide } from './ui/Tooltip';
 
 export { IconActionButton, IconActionGroup } from './ui/IconActionButton';
 export type { IconActionButtonProps } from './ui/IconActionButton';

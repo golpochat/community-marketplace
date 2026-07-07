@@ -1,5 +1,5 @@
-import { SuperAdminInvitationsPage } from '@/components/dashboard/super-admin-invitations-page';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return <SuperAdminInvitationsPage />;
+  redirect('/super-admin/user-management?tab=invitations');
 }

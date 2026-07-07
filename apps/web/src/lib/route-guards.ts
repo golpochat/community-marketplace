@@ -3,7 +3,7 @@ import {
   getRequiredRoleForPath,
   isDashboardRouteAllowed,
 } from '@community-marketplace/ui-dashboard';
-import type { RbacRole } from '@community-marketplace/types';
+import type { RbacRole, RoleCodeValue } from '@community-marketplace/types';
 
 import { WEB_APP_ROUTES, getWebDashboardPathForRole, isWebDashboardRouteAllowed } from './rbac-routes';
 import { getWebRoleFromCookie } from './auth';
@@ -22,7 +22,7 @@ export function isGuestOnlyAuthPath(pathname: string): boolean {
 }
 
 /** Redirect signed-in users away from login, register, and activation pages. */
-export function resolveGuestAuthRedirect(pathname: string, role: RbacRole | null): string | null {
+export function resolveGuestAuthRedirect(pathname: string, role: RoleCodeValue | null): string | null {
   if (!role || !isGuestOnlyAuthPath(pathname)) return null;
   return getWebDashboardPathForRole(role);
 }
@@ -52,7 +52,7 @@ export function isDashboardPath(pathname: string): boolean {
 /** Map `/admin/*` to the super-admin namespace so privileged users stay on `/super-admin/*`. */
 export function resolveSuperAdminAdminNamespaceRedirect(
   pathname: string,
-  role: RbacRole | null,
+  role: RoleCodeValue | null,
 ): string | null {
   if (role !== 'SUPER_ADMIN') return null;
   if (pathname.startsWith('/admin/invite')) return null;
@@ -62,7 +62,7 @@ export function resolveSuperAdminAdminNamespaceRedirect(
   return null;
 }
 
-export function resolveDashboardRedirect(pathname: string, role: RbacRole | null): string | null {
+export function resolveDashboardRedirect(pathname: string, role: RoleCodeValue | null): string | null {
   const legacyTarget = LEGACY_DASHBOARD_REDIRECTS[pathname];
   if (legacyTarget) return legacyTarget;
 
@@ -76,7 +76,7 @@ export function resolveDashboardRedirect(pathname: string, role: RbacRole | null
   return null;
 }
 
-export function canAccessDashboardRoute(role: RbacRole | null, pathname: string): boolean {
+export function canAccessDashboardRoute(role: RoleCodeValue | null, pathname: string): boolean {
   if (!role) return false;
 
   const requiredRole = getRequiredRoleForPath(pathname);
@@ -85,6 +85,6 @@ export function canAccessDashboardRoute(role: RbacRole | null, pathname: string)
   return isDashboardRouteAllowed(role, pathname) && isWebDashboardRouteAllowed(role, pathname);
 }
 
-export function getRoleFromRequest(cookieHeader: string | null | undefined): RbacRole | null {
+export function getRoleFromRequest(cookieHeader: string | null | undefined): RoleCodeValue | null {
   return getWebRoleFromCookie(cookieHeader ?? undefined);
 }

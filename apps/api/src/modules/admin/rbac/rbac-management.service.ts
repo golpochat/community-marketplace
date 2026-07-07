@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 
 import {
-  DEFAULT_ROLE_PERMISSIONS,
   PERMISSIONS,
   PRIVILEGED_PERMISSION_CODES,
   RBAC_PERMISSION_SCOPES,
@@ -23,7 +22,7 @@ import {
 } from '@community-marketplace/types';
 import { toIsoString } from '@community-marketplace/utils';
 
-import { DEV_ROLE_IDS } from '../../../common/constants/dev-role-ids';
+import { DEV_ROLE_IDS, devRoleIdForCode } from '../../../common/constants/dev-role-ids';
 import {
   assertBootstrapSuperAdminImmutable,
   assertSuperAdminRoleNotAssignable,
@@ -31,7 +30,7 @@ import {
 import { AuthorizationService } from '../../../common/authorization/authorization.service';
 import type { AuthenticatedUser } from '../../../common/decorators/current-user.decorator';
 import { PrismaService } from '../../../database/prisma.service';
-import { PERMISSION_SEED, ROLE_SEED } from '../../../database/rbac-seed.data';
+import { PERMISSION_SEED, PERSONA_ROLE_PERMISSION_SEED, ROLE_PERMISSION_SEED, ROLE_SEED } from '../../../database/rbac-seed.data';
 import { UsersService } from '../../users/users.service';
 import { RbacScopePolicy } from './rbac-scope.policy';
 import type {
@@ -878,9 +877,16 @@ export class RbacManagementService {
   private async ensureMemoryStore() {
     if (this.memoryInitialized) return;
 
+    const memoryPermissionSeed: Readonly<Record<string, readonly PermissionCode[]>> = {
+      ...ROLE_PERMISSION_SEED,
+      ...PERSONA_ROLE_PERMISSION_SEED,
+    };
+
     for (const role of ROLE_SEED) {
       const code = role.code;
-      const id = DEV_ROLE_IDS[code as RbacRole];
+      const id = devRoleIdForCode(code);
+      if (!id) continue;
+
       this.memoryRoles.set(id, {
         id,
         code,
@@ -889,7 +895,7 @@ export class RbacManagementService {
         isSystem: role.isSystem,
       });
 
-      const permissionCodes = DEFAULT_ROLE_PERMISSIONS[code as RbacRole];
+      const permissionCodes = memoryPermissionSeed[code] ?? [];
       const permissionIds = permissionCodes.map((permCode) => this.permissionIdForCode(permCode));
       this.memoryRolePermissions.set(id, new Set(permissionIds));
     }

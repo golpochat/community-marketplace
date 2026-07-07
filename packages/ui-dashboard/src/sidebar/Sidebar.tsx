@@ -5,12 +5,14 @@ import { usePathname } from 'next/navigation';
 
 import { cn } from '@community-marketplace/ui';
 import type { RbacRole } from '@community-marketplace/types';
+import { X } from 'lucide-react';
 
 import { getSidebarItemsByRole } from '../lib/routes';
 import type { SidebarNavItem } from './sidebar-config';
 import { isSidebarLinkItem } from './sidebar-config';
 import { useSidebar } from '../lib/sidebar-context';
 import { getThemeByRole } from '../theme/theme-tokens';
+import { TopbarIconButton } from '../ui/TopbarIconButton';
 import { SidebarDisabledItem, SidebarNavGroup } from './SidebarNavGroup';
 import { SidebarItem } from './SidebarItem';
 
@@ -49,17 +51,35 @@ export function Sidebar({
     <aside
       className={cn(
         'flex shrink-0 flex-col border-r border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-bg))] text-[hsl(var(--dashboard-sidebar-fg))] transition-[width] duration-200 ease-in-out',
-        mobile ? 'h-full w-64' : 'hidden h-screen max-h-screen min-h-0 md:flex',
+        mobile ? 'h-full w-full' : 'hidden h-screen max-h-screen min-h-0 md:flex',
         !mobile && (isCollapsed ? 'w-[4.5rem]' : 'w-64'),
       )}
     >
       <div
         className={cn(
           'flex shrink-0 flex-col border-b border-[hsl(var(--dashboard-sidebar-border))]',
-          isCollapsed ? 'items-center px-2 py-4' : 'px-4 py-5',
+          mobile && 'px-3 py-3',
+          !mobile && (isCollapsed ? 'items-center px-2 py-4' : 'px-4 py-5'),
         )}
       >
-        {isCollapsed ? (
+        {mobile ? (
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              {brandLogo ?? (
+                <p className="text-lg font-semibold tracking-tight">{brand}</p>
+              )}
+              <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                {theme.label} Dashboard
+              </p>
+            </div>
+            <TopbarIconButton
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close navigation menu"
+            >
+              <X className="h-5 w-5" aria-hidden />
+            </TopbarIconButton>
+          </div>
+        ) : isCollapsed ? (
           collapsedLogo ? (
             <div className="flex justify-center">{collapsedLogo}</div>
           ) : (

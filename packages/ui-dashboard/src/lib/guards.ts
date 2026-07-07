@@ -1,4 +1,5 @@
-import type { RbacRole } from '@community-marketplace/types';
+import type { RbacRole, RoleCodeValue } from '@community-marketplace/types';
+import { isAdminPanelRoleCode } from '@community-marketplace/types';
 
 import { getDashboardRouteByRole } from './routes';
 
@@ -32,19 +33,19 @@ export function getRequiredRoleForPath(pathname: string): RbacRole | null {
   return null;
 }
 
-export function isDashboardRouteAllowed(role: RbacRole | null, pathname: string): boolean {
+export function isDashboardRouteAllowed(role: RoleCodeValue | null, pathname: string): boolean {
   if (!role) return false;
 
   const required = getRequiredRoleForPath(pathname);
   if (!required) return false;
 
   if (required === 'SUPER_ADMIN') return role === 'SUPER_ADMIN';
-  if (required === 'ADMIN') return role === 'ADMIN';
+  if (required === 'ADMIN') return isAdminPanelRoleCode(role);
 
   return role === required;
 }
 
-export function getUnauthorizedRedirectPath(role: RbacRole | null): string {
+export function getUnauthorizedRedirectPath(role: RoleCodeValue | null): string {
   if (role) return getDashboardRouteByRole(role);
   return '/auth/login';
 }

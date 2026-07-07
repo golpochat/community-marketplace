@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import type { UserProfile } from '@community-marketplace/types';
 import { Card, PageHeader } from '@community-marketplace/ui-dashboard';
 
+import { ErrorState } from '@/components/ErrorState';
+import { LoadingState } from '@/components/LoadingState';
 import { EditProfileModal } from '@/components/profile/edit-profile-modal';
 import { ProfileAvatarUpload } from '@/components/profile/profile-avatar-upload';
 import { ProfileCredentialsSettings } from '@/components/profile/profile-credentials-settings';
@@ -49,10 +51,8 @@ export function UserProfilePage({
         title="Profile"
         description="Your public identity and login credentials."
       />
-      {loading && (
-        <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading…</p>
-      )}
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {loading && <LoadingState />}
+      {error && <ErrorState message={error} />}
       {!loading && localProfile && (
         <div className="space-y-6">
           <Card title="Public profile">

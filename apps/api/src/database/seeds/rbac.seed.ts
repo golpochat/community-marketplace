@@ -2,10 +2,11 @@ import type { PrismaClient } from '../../../generated/prisma';
 
 import type { RbacRole } from '@community-marketplace/types';
 
-import { DEV_ROLE_IDS } from '../../common/constants/dev-role-ids';
+import { DEV_PERSONA_ROLE_IDS, DEV_ROLE_IDS } from '../../common/constants/dev-role-ids';
 import {
   PERMISSION_SEED,
   ROLE_PERMISSION_SEED,
+  PERSONA_ROLE_PERMISSION_SEED,
   ROLE_SEED,
   SUPER_ADMIN_BOOTSTRAP_USER_ID,
 } from '../rbac-seed.data';
@@ -80,7 +81,10 @@ async function seedRoles(prisma: PrismaClient): Promise<number> {
 
   for (const role of ROLE_SEED) {
     const code = role.code;
-    const stableId = DEV_ROLE_IDS[code];
+    const stableId = DEV_ROLE_IDS[code as RbacRole] ?? DEV_PERSONA_ROLE_IDS[code as keyof typeof DEV_PERSONA_ROLE_IDS];
+    if (!stableId) {
+      throw new Error(`Missing stable role ID for seed role: ${code}`);
+    }
 
     await prisma.role.upsert({
       where: { code },
@@ -137,8 +141,11 @@ async function seedRolePermissions(prisma: PrismaClient): Promise<number> {
 
   let count = 0;
 
-  for (const [roleCode, permissionCodes] of Object.entries(ROLE_PERMISSION_SEED)) {
-    const role = roleByCode.get(roleCode as RbacRole);
+  for (const [roleCode, permissionCodes] of Object.entries({
+    ...ROLE_PERMISSION_SEED,
+    ...PERSONA_ROLE_PERMISSION_SEED,
+  })) {
+    const role = roleByCode.get(roleCode);
     if (!role) continue;
 
     for (const code of permissionCodes) {
