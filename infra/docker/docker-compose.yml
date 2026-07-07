@@ -77,6 +77,12 @@ services:
       - "7700:7700"
     volumes:
       - meili_data:/meili_data
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://127.0.0.1:7700/health']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - cm-network
 

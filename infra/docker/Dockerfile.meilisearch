@@ -17,7 +17,7 @@ ENV MEILI_HTTP_ADDR=0.0.0.0:7700
 VOLUME ["/meili_data"]
 EXPOSE 7700
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
-  CMD wget -qO- http://localhost:7700/health || exit 1
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=5 \
+  CMD curl -fsS http://127.0.0.1:7700/health || exit 1
 
 # ENTRYPOINT ["/entrypoint.sh"]
