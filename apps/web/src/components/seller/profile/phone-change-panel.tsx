@@ -6,7 +6,9 @@ import { Button, Input, Label } from '@community-marketplace/ui';
 import { IRISH_MOBILE_VALIDATION_MESSAGE } from '@community-marketplace/validation';
 
 import { IrishMobileFieldLabel } from '@/components/forms/irish-mobile-field-label';
+import { OtpPilotNotice } from '@/components/auth/otp-pilot-notice';
 import { ContactVerifiedBadge } from '@/components/trust/contact-verified-badge';
+import { isOtpPilotMode } from '@/lib/otp-pilot-mode';
 import { formatIrishPhoneHint, normalizeIrishPhoneToE164 } from '@/lib/phone';
 import { userService } from '@/services/user.service';
 
@@ -122,6 +124,7 @@ export function PhoneChangePanel({
         </button>
       ) : (
         <div className="mt-3 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-4">
+          <OtpPilotNotice className="mb-3 flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-950" />
           <p className="text-sm text-[hsl(var(--dashboard-main-fg))]">
             Enter your new Irish mobile number. We&apos;ll send a verification code to confirm it.
           </p>
@@ -161,7 +164,9 @@ export function PhoneChangePanel({
           ) : (
             <div className="mt-3 space-y-3">
               <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-                Code sent to {formatIrishPhoneHint(normalizedPhone)}
+                {isOtpPilotMode()
+                  ? `Enter the code for ${formatIrishPhoneHint(normalizedPhone)} (see notice above — not sent by SMS).`
+                  : `Code sent to ${formatIrishPhoneHint(normalizedPhone)}`}
               </p>
               <div>
                 <Label htmlFor="seller-phone-otp">Verification code</Label>

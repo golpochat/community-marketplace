@@ -818,7 +818,7 @@ export function AdminAuditLogPage({ role }: { role: AdminServiceRole }) {
   );
 }
 
-export function AdminNotificationsPage({ role }: { role: AdminServiceRole }) {
+export function AdminNotificationDeliveryLogsPage({ role }: { role: AdminServiceRole }) {
   const fetchLogs = useCallback(
     (page: number, limit: number) => adminService.listNotificationLogs(role, { page, limit }),
     [role],

@@ -22,8 +22,10 @@ import { useAuthStore } from '@/store/auth.store';
 
 const POLL_INTERVAL_MS = 30_000;
 
-function isInboxRole(role: RbacRole | null | undefined): role is 'BUYER' | 'SELLER' {
-  return role === 'BUYER' || role === 'SELLER';
+function isNotificationInboxRole(
+  role: RbacRole | null | undefined,
+): role is 'BUYER' | 'SELLER' | 'ADMIN' | 'SUPER_ADMIN' {
+  return role === 'BUYER' || role === 'SELLER' || role === 'ADMIN' || role === 'SUPER_ADMIN';
 }
 
 interface NotificationUnreadContextValue {
@@ -40,7 +42,7 @@ export function NotificationUnreadProvider({ children }: { children: ReactNode }
   const [unreadCount, setUnreadCount] = useState(0);
 
   const refresh = useCallback(async () => {
-    if (!isInboxRole(role)) {
+    if (!isNotificationInboxRole(role)) {
       setUnreadCount(0);
       return;
     }
@@ -58,7 +60,7 @@ export function NotificationUnreadProvider({ children }: { children: ReactNode }
   }, [refresh, pathname, user?.id]);
 
   useEffect(() => {
-    if (!isInboxRole(role)) return;
+    if (!isNotificationInboxRole(role)) return;
 
     function handleUpdate(event: Event) {
       const detail = (event as CustomEvent<NotificationsUpdatedDetail>).detail;

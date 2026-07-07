@@ -30,6 +30,9 @@ export class NotificationEventsListener implements OnModuleInit {
     this.eventBus.subscribe('seller.verification_nudge', (e) =>
       void this.onSellerVerificationNudge(e.payload),
     );
+    this.eventBus.subscribe('listing.submitted_for_review', (e) =>
+      void this.onListingSubmittedForReview(e.payload),
+    );
     this.eventBus.subscribe('listing.approved', (e) => void this.onListingApproved(e.payload));
     this.eventBus.subscribe('listing.changes_requested', (e) =>
       void this.onListingChangesRequested(e.payload),
@@ -280,6 +283,55 @@ export class NotificationEventsListener implements OnModuleInit {
         channels: ['in_app'],
       });
     }
+  }
+
+  private async notifyActiveStaffAdmins(input: {
+    message: string;
+    title: string;
+    actionUrl: string;
+    data?: Record<string, unknown>;
+  }) {
+    const admins = await this.prisma.user.findMany({
+      where: {
+        primaryRole: { code: { in: ['ADMIN', 'SUPER_ADMIN'] } },
+        status: 'active',
+      },
+      select: { id: true },
+      take: 50,
+    });
+
+    await Promise.all(
+      admins.map((admin) =>
+        this.dispatcher.dispatch({
+          userId: admin.id,
+          type: 'system',
+          templateKey: 'admin_warning',
+          variables: {
+            title: input.title,
+            message: input.message,
+          },
+          actionUrl: input.actionUrl,
+          data: input.data,
+          channels: ['in_app'],
+        }),
+      ),
+    );
+  }
+
+  private async onListingSubmittedForReview(payload: Record<string, unknown>) {
+    const listingId = payload.listingId as string;
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true },
+    });
+    if (!listing) return;
+
+    await this.notifyActiveStaffAdmins({
+      title: 'Listing pending review',
+      message: `"${listing.title}" was submitted and needs approval.`,
+      actionUrl: '/admin/listings',
+      data: { listingId },
+    });
   }
 
   private async onListingApproved(payload: Record<string, unknown>) {
@@ -606,24 +658,11 @@ export class NotificationEventsListener implements OnModuleInit {
   }
 
   private async onModerationReportCreated(payload: Record<string, unknown>) {
-    const admins = await this.prisma.user.findMany({
-      where: { primaryRole: { code: { in: ['ADMIN', 'SUPER_ADMIN'] } } },
-      select: { id: true },
-      take: 20,
+    await this.notifyActiveStaffAdmins({
+      title: 'New moderation report',
+      message: `New moderation report received (${payload.targetType ?? 'unknown'}).`,
+      actionUrl: '/admin/dashboard/moderation',
     });
-
-    for (const admin of admins) {
-      await this.dispatcher.dispatch({
-        userId: admin.id,
-        type: 'system',
-        templateKey: 'admin_warning',
-        variables: {
-          message: `New moderation report received (${payload.targetType ?? 'unknown'}).`,
-        },
-        actionUrl: '/admin/dashboard/moderation',
-        channels: ['in_app'],
-      });
-    }
   }
 
   private async onModerationUserWarned(payload: Record<string, unknown>) {

@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminNotificationsPage } from '@/components/dashboard/admin-resource-pages';
+import { StaffNotificationsInboxPage } from '@/components/notifications/staff-notifications-inbox-page';
 
 export default function Page() {
-  return <AdminNotificationsPage role="SUPER_ADMIN" />;
+  return <StaffNotificationsInboxPage role="SUPER_ADMIN" />;
 }

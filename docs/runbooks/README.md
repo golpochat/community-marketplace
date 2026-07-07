@@ -5,6 +5,7 @@ Step-by-step procedures for deployments and incidents.
 | Runbook | Description |
 |---------|-------------|
 | **[Pilot kickoff](./pilot-kickoff.md)** | **Start here** — closed pilot: deploy, Stripe, email, invite users |
+| **[Pilot VPS day-by-day](./pilot-vps-day-by-day.md)** | **Granular checklist: R2, email, Stripe, deploy** |
 | **[OVH VPS deploy](./ovh-vps-deploy.md)** | Docker deploy on OVH for `sellnearby.ie` |
 | [Troubleshooting](../troubleshooting.md) | Local dev: ports, API, DB, Prisma, Docker |
 | [Deploy](./deploy.md) | Deploy to dev, staging, production |

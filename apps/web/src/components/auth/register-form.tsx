@@ -14,8 +14,10 @@ import {
   cn,
 } from "@community-marketplace/ui";
 
+import { OtpPilotNotice } from "@/components/auth/otp-pilot-notice";
 import { IrishMobileFieldLabel } from "@/components/forms/irish-mobile-field-label";
 import { InfoTooltip } from "@/components/forms/info-tooltip";
+import { isOtpPilotMode } from "@/lib/otp-pilot-mode";
 import { authService } from "@/services/auth.service";
 import { formatIrishPhoneHint, normalizeIrishPhoneToE164 } from "@/lib/phone";
 
@@ -151,6 +153,7 @@ export function RegisterForm() {
   if (step === "phone") {
     return (
       <form onSubmit={handleSendOtp} className="mt-6 space-y-4">
+        <OtpPilotNotice />
         {error && <FormError message={error} />}
 
         <fieldset className="space-y-2">
@@ -212,10 +215,14 @@ export function RegisterForm() {
   if (step === "otp") {
     return (
       <form onSubmit={handleVerifyOtp} className="mt-6 space-y-4">
+        <OtpPilotNotice />
         {error && <FormError message={error} />}
         <p className="text-sm text-muted-foreground">
-          Enter the 6-digit code sent to{" "}
+          {isOtpPilotMode()
+            ? "Enter the 6-digit code for "
+            : "Enter the 6-digit code sent to "}
           {normalizedPhone ? formatIrishPhoneHint(normalizedPhone) : phone}
+          {isOtpPilotMode() ? " (see notice above — not sent by SMS)." : "."}
         </p>
         <div className="space-y-2">
           <Label htmlFor="code">Verification code</Label>

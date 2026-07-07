@@ -1,9 +1,22 @@
-import type { Notification, NotificationPreferences, PaginationMeta } from '@community-marketplace/types';
+import type { Notification, NotificationPreferences, PaginationMeta, RbacRole } from '@community-marketplace/types';
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
 import { notifyNotificationsUpdated } from '@/lib/notification-unread-events';
 import { asArray, getUnreadCount } from '@/lib/normalize-api-response';
+
+type InboxRole = 'BUYER' | 'SELLER';
+type StaffRole = Extract<RbacRole, 'ADMIN' | 'SUPER_ADMIN'>;
+type NotificationInboxRole = InboxRole | StaffRole;
+
+function staffInboxRoutes(_role: StaffRole) {
+  return {
+    list: WEB_API_ROUTES.admin.notificationsInbox,
+    unreadCount: WEB_API_ROUTES.admin.notificationsInboxUnreadCount,
+    read: WEB_API_ROUTES.admin.notificationsInboxRead,
+    readAll: WEB_API_ROUTES.admin.notificationsInboxReadAll,
+  };
+}
 
 export interface NotificationsListResult {
   notifications: Notification[];
@@ -30,17 +43,53 @@ function toListResult(
 }
 
 export const notificationsService = {
-  async getUnreadCount(role: 'BUYER' | 'SELLER'): Promise<number> {
+  async getUnreadCount(role: NotificationInboxRole): Promise<number> {
     const path =
       role === 'SELLER'
         ? WEB_API_ROUTES.seller.notificationsUnreadCount
-        : WEB_API_ROUTES.buyer.notificationsUnreadCount;
+        : role === 'BUYER'
+          ? WEB_API_ROUTES.buyer.notificationsUnreadCount
+          : staffInboxRoutes(role).unreadCount;
     try {
       const response = await apiClient<number>(path);
       return typeof response.data === 'number' ? response.data : 0;
     } catch {
       return 0;
     }
+  },
+
+  async listStaff(
+    role: StaffRole,
+    page = 1,
+    limit = 20,
+    unreadOnly = false,
+  ): Promise<NotificationsListResult> {
+    const routes = staffInboxRoutes(role);
+    const response = await apiClient<Notification[]>(routes.list, {
+      params: {
+        page: String(page),
+        limit: String(limit),
+        ...(unreadOnly ? { unreadOnly: 'true' } : {}),
+      },
+    });
+    return toListResult(response, { page, limit });
+  },
+
+  async markReadStaff(notificationId: string, role: StaffRole) {
+    const routes = staffInboxRoutes(role);
+    const response = await apiClient<Notification>(routes.read, {
+      method: 'PATCH',
+      body: JSON.stringify({ notificationId }),
+    });
+    const count = await this.getUnreadCount(role);
+    notifyNotificationsUpdated(count);
+    return response.data;
+  },
+
+  async markAllReadStaff(role: StaffRole) {
+    const routes = staffInboxRoutes(role);
+    await apiClient(routes.readAll, { method: 'PATCH' });
+    notifyNotificationsUpdated(0);
   },
 
   async listBuyer(page = 1, limit = 20, unreadOnly = false): Promise<NotificationsListResult> {

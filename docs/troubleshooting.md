@@ -458,6 +458,22 @@ See [dev-credentials.md](./dev-credentials.md#seeded-application-users-one-per-r
 
 OTP codes are printed in the **API console** when you request one — there is no fixed dev code.
 
+### OTP on production VPS (pilot)
+
+SMS is **not** sent until a provider (e.g. Twilio) is integrated. During pilot:
+
+1. The register page shows a **Pilot mode** banner when `OTP_PILOT_MODE=true` (baked into the web image at build).
+2. Codes appear in API container logs:
+
+```bash
+cd /opt/sellnearby/infra/docker
+docker compose -f docker-compose.prod.yml --env-file .env.prod logs api --tail=200 | grep "dev code"
+```
+
+3. After wiring real SMS, set `OTP_PILOT_MODE=false` in `.env.prod`, rebuild and recreate `web`.
+
+See [pilot-vps-day-by-day.md](./runbooks/pilot-vps-day-by-day.md#b2-registration--phone-otp-pilot-mode).
+
 ---
 
 ## Docker infrastructure

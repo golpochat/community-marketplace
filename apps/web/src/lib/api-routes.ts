@@ -71,6 +71,12 @@ export const WEB_API_ROUTES = {
     reviewsPending: `${API_NAMESPACES.SELLER}/reviews/pending`,
     chat: `${API_NAMESPACES.SELLER}/chat`,
   },
+  admin: {
+    notificationsInbox: `${API_NAMESPACES.ADMIN}/notifications/inbox`,
+    notificationsInboxUnreadCount: `${API_NAMESPACES.ADMIN}/notifications/inbox/unread-count`,
+    notificationsInboxRead: `${API_NAMESPACES.ADMIN}/notifications/inbox/read`,
+    notificationsInboxReadAll: `${API_NAMESPACES.ADMIN}/notifications/inbox/read-all`,
+  },
   chat: {
     inbox: '/chat/inbox',
     threads: '/chat/threads',
