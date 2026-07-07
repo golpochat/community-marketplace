@@ -6,6 +6,7 @@ import { Button } from '@community-marketplace/ui';
 import { Card, IconActionButton, IconActionGroup } from '@community-marketplace/ui-dashboard';
 
 import { EmptyState } from '@/components/EmptyState';
+import { ConfirmDialog } from '@/components/admin/seller-verification/confirm-dialog';
 import { DataTable, DashboardPageShell } from '@/components/dashboard/async-resource';
 import { SendAdminInvitationModal } from '@/components/dashboard/send-admin-invitation-modal';
 import { adminService, type AdminInvitationRow } from '@/services/admin.service';
@@ -24,6 +25,7 @@ export function SuperAdminInvitationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showSendModal, setShowSendModal] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
+  const [revokeTargetId, setRevokeTargetId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,9 +57,6 @@ export function SuperAdminInvitationsPage() {
   };
 
   const handleRevoke = async (id: string) => {
-    if (!window.confirm('Revoke this invitation? The link will stop working immediately.')) {
-      return;
-    }
     setActionId(id);
     try {
       await adminService.revokeAdminInvitation(id);
@@ -66,6 +65,7 @@ export function SuperAdminInvitationsPage() {
       setError(err instanceof Error ? err.message : 'Failed to revoke invitation');
     } finally {
       setActionId(null);
+      setRevokeTargetId(null);
     }
   };
 
@@ -84,7 +84,7 @@ export function SuperAdminInvitationsPage() {
         icon="trash"
         label="Revoke invitation"
         variant="danger"
-        onClick={() => void handleRevoke(invitation.id)}
+        onClick={() => setRevokeTargetId(invitation.id)}
         disabled={actionId === invitation.id}
       />
     </IconActionGroup>,
@@ -119,6 +119,20 @@ export function SuperAdminInvitationsPage() {
         open={showSendModal}
         onClose={() => setShowSendModal(false)}
         onSent={() => void load()}
+      />
+      <ConfirmDialog
+        open={revokeTargetId != null}
+        title="Revoke invitation?"
+        message="The invitation link will stop working immediately. The recipient will need a new invitation to join."
+        confirmLabel="Revoke invitation"
+        tone="danger"
+        loading={revokeTargetId != null && actionId === revokeTargetId}
+        onConfirm={() => {
+          if (revokeTargetId) void handleRevoke(revokeTargetId);
+        }}
+        onCancel={() => {
+          if (actionId == null) setRevokeTargetId(null);
+        }}
       />
     </>
   );

@@ -8,6 +8,7 @@ import { Card, IconActionButton, IconActionGroup } from '@community-marketplace/
 
 import { DataTable } from '@/components/dashboard/async-resource';
 import { DashboardSectionTabs, type DashboardTabItem } from '@/components/dashboard/dashboard-section-tabs';
+import { ConfirmDialog } from '@/components/admin/seller-verification/confirm-dialog';
 import {
   adminService,
   type AdminRbacPermissionRow,
@@ -258,6 +259,7 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
   const [newTemplate, setNewTemplate] = useState<CreateAdminRoleInput['template']>('blank');
   const [activeMainTab, setActiveMainTab] = useState<RbacMainTab>('roles');
   const [activeScopeTab, setActiveScopeTab] = useState<string>('accounts');
+  const [showDeleteRoleConfirm, setShowDeleteRoleConfirm] = useState(false);
 
   const selectedRole = roles.find((r) => r.id === selectedRoleId) ?? null;
   const manageableRoles = useMemo(
@@ -445,15 +447,13 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
       setError('Reassign users before deleting this role.');
       return;
     }
-    if (!window.confirm(`Delete custom role "${selectedRole.name}"? This cannot be undone.`)) {
-      return;
-    }
     setSaving(true);
     setError(null);
     try {
       await adminService.deleteRbacRole(role, selectedRole.id);
       setMessage(`Role "${selectedRole.name}" deleted.`);
       setSelectedRoleId(null);
+      setShowDeleteRoleConfirm(false);
       await loadCatalog();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete role');
@@ -548,7 +548,7 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
                         type="button"
                         variant="outline"
                         disabled={saving}
-                        onClick={handleDeleteRole}
+                        onClick={() => setShowDeleteRoleConfirm(true)}
                       >
                         Delete role
                       </Button>
@@ -671,6 +671,19 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
           )}
         </div>
       </Card>
+
+      <ConfirmDialog
+        open={showDeleteRoleConfirm && selectedRole != null && !selectedRole.isSystem}
+        title={selectedRole ? `Delete role "${selectedRole.name}"?` : 'Delete role?'}
+        message="This permanently removes the custom role and its permission assignments. This cannot be undone."
+        confirmLabel="Delete role"
+        tone="danger"
+        loading={saving}
+        onConfirm={() => void handleDeleteRole()}
+        onCancel={() => {
+          if (!saving) setShowDeleteRoleConfirm(false);
+        }}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { Input, Label } from '@community-marketplace/ui';
 import { Card } from '@community-marketplace/ui-dashboard';
 
 import { LoadingState } from '@/components/LoadingState';
+import { ConfirmDialog } from '@/components/admin/seller-verification/confirm-dialog';
 import { PhoneChangePanel } from '@/components/seller/profile/phone-change-panel';
 import { ContactVerifiedBadge } from '@/components/trust/contact-verified-badge';
 import { userService } from '@/services/user.service';
@@ -36,6 +37,7 @@ export function ProfileCredentialsSettings({
 }: ProfileCredentialsSettingsProps) {
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile);
   const [deactivating, setDeactivating] = useState(false);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,19 +46,13 @@ export function ProfileCredentialsSettings({
   }, [initialProfile]);
 
   async function handleDeactivate() {
-    if (
-      !window.confirm(
-        'Request account deactivation? Your account will be scheduled for closure. Support will process your request within 30 days.',
-      )
-    ) {
-      return;
-    }
     setDeactivating(true);
     setError(null);
     setMessage(null);
     try {
       const result = await userService.requestAccountDeactivation();
       setMessage(result.message);
+      setShowDeactivateConfirm(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to request deactivation');
     } finally {
@@ -157,7 +153,7 @@ export function ProfileCredentialsSettings({
             </p>
             <button
               type="button"
-              onClick={() => void handleDeactivate()}
+              onClick={() => setShowDeactivateConfirm(true)}
               disabled={deactivating}
               className="mt-4 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
             >
@@ -166,6 +162,19 @@ export function ProfileCredentialsSettings({
           </Card>
         </div>
       )}
+
+      <ConfirmDialog
+        open={showDeactivateConfirm}
+        title="Request account deactivation?"
+        message="Your account will be scheduled for closure. Support will process your request within 30 days. This is not immediate permanent deletion."
+        confirmLabel="Request deactivation"
+        tone="danger"
+        loading={deactivating}
+        onConfirm={() => void handleDeactivate()}
+        onCancel={() => {
+          if (!deactivating) setShowDeactivateConfirm(false);
+        }}
+      />
     </div>
   );
 }
