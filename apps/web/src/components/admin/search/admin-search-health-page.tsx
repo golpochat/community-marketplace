@@ -15,6 +15,7 @@ import { formatListedAgo } from '@community-marketplace/utils';
 import { DashboardPageShell, DataTable } from '@/components/dashboard/async-resource';
 import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
 import { StatCard } from '@/components/dashboard/stat-card';
+import { ConfirmDialog } from '@/components/admin/seller-verification/confirm-dialog';
 import { adminService, type AdminServiceRole } from '@/services/admin.service';
 
 const INDEX_LABELS: Record<SearchIndexName, string> = {
@@ -78,10 +79,29 @@ function formatDocumentCounts(index: SearchIndexMeta): string {
   return `${index.documentCount} / ${expected}`;
 }
 
-function confirmReindex(target: string): boolean {
-  return window.confirm(
-    `Reindex ${target}? Search results may be incomplete until indexing finishes.`,
-  );
+type ReindexConfirmTarget = SearchIndexName | 'all';
+
+function getReindexConfirmCopy(target: ReindexConfirmTarget): {
+  title: string;
+  message: string;
+  confirmLabel: string;
+} {
+  if (target === 'all') {
+    return {
+      title: 'Reindex all indexes?',
+      message:
+        'This rebuilds every search index from the database. Search results may be incomplete until indexing finishes.',
+      confirmLabel: 'Reindex all',
+    };
+  }
+
+  const label = INDEX_LABELS[target] ?? target;
+  return {
+    title: `Reindex ${label} index?`,
+    message:
+      'This rebuilds the index from the database. Search results for this index may be incomplete until indexing finishes.',
+    confirmLabel: 'Reindex',
+  };
 }
 
 function SearchAnalyticsPanel({
@@ -157,6 +177,7 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
   const [error, setError] = useState<string | null>(null);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
   const [reindexing, setReindexing] = useState<SearchIndexName | 'all' | null>(null);
+  const [reindexConfirmTarget, setReindexConfirmTarget] = useState<ReindexConfirmTarget | null>(null);
   const [jobStatuses, setJobStatuses] = useState<Partial<Record<SearchIndexName, ReindexJobStatus>>>({});
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -216,9 +237,6 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
   }
 
   async function handleReindex(type: SearchIndexName) {
-    const label = INDEX_LABELS[type] ?? type;
-    if (!confirmReindex(label)) return;
-
     setReindexing(type);
     setActionError(null);
     try {
@@ -233,8 +251,6 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
   }
 
   async function handleReindexAll() {
-    if (!confirmReindex('all indexes')) return;
-
     setReindexing('all');
     setActionError(null);
     const types: SearchIndexName[] = ['listings', 'users', 'categories', 'chat_threads'];
@@ -250,6 +266,24 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
       setReindexing(null);
     }
   }
+
+  async function handleConfirmReindex() {
+    if (!reindexConfirmTarget) return;
+
+    const target = reindexConfirmTarget;
+    setReindexConfirmTarget(null);
+
+    if (target === 'all') {
+      await handleReindexAll();
+      return;
+    }
+
+    await handleReindex(target);
+  }
+
+  const reindexConfirmCopy = reindexConfirmTarget
+    ? getReindexConfirmCopy(reindexConfirmTarget)
+    : null;
 
   const indexes = health?.indexes ?? [];
   const totalDocuments = indexes.reduce((sum, idx) => sum + idx.documentCount, 0);
@@ -345,7 +379,7 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
                     variant="default"
                     size="sm"
                     disabled={!!reindexing || !health?.healthy}
-                    onClick={() => void handleReindexAll()}
+                    onClick={() => setReindexConfirmTarget('all')}
                   >
                     {reindexing === 'all' ? 'Reindexing…' : 'Reindex all'}
                   </Button>
@@ -397,7 +431,7 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
                         variant="secondary"
                         size="sm"
                         disabled={!!reindexing || !health?.healthy}
-                        onClick={() => void handleReindex(idx.indexName)}
+                        onClick={() => setReindexConfirmTarget(idx.indexName)}
                       >
                         {reindexing === idx.indexName ? 'Reindexing…' : 'Reindex'}
                       </Button>
@@ -417,6 +451,19 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
       ) : (
         <SearchAnalyticsPanel analytics={analytics} loading={analyticsLoading} error={analyticsError} />
       )}
+
+      <ConfirmDialog
+        open={reindexConfirmTarget != null}
+        title={reindexConfirmCopy?.title ?? 'Reindex index?'}
+        message={reindexConfirmCopy?.message ?? ''}
+        confirmLabel={reindexConfirmCopy?.confirmLabel ?? 'Reindex'}
+        tone="primary"
+        loading={reindexing != null}
+        onConfirm={() => void handleConfirmReindex()}
+        onCancel={() => {
+          if (reindexing == null) setReindexConfirmTarget(null);
+        }}
+      />
     </DashboardPageShell>
   );
 }
