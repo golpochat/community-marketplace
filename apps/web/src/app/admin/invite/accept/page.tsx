@@ -81,16 +81,12 @@ function AdminInviteAcceptContent() {
   };
 
   if (loading) {
-    return (
-      <div className="mx-auto max-w-md py-16 text-center">
-        <p className="text-[hsl(var(--dashboard-main-fg))]">Loading invitation…</p>
-      </div>
-    );
+    return <p className="text-center text-[hsl(var(--dashboard-main-fg))]">Loading invitation…</p>;
   }
 
   if (error && !preview) {
     return (
-      <div className="mx-auto max-w-md py-16 text-center">
+      <div className="text-center">
         <p className="text-destructive">{error}</p>
         <Button className="mt-6" asChild>
           <Link href="/auth/login">Go to sign in</Link>
@@ -101,7 +97,7 @@ function AdminInviteAcceptContent() {
 
   if (preview?.alreadyAccepted) {
     return (
-      <div className="mx-auto max-w-md py-16 text-center">
+      <div className="text-center">
         <p className="text-[hsl(var(--dashboard-main-fg))]">This invitation has already been accepted.</p>
         <Button className="mt-6" asChild>
           <Link href="/auth/login">Go to sign in</Link>
@@ -112,14 +108,14 @@ function AdminInviteAcceptContent() {
 
   if (preview?.expired) {
     return (
-      <div className="mx-auto max-w-md py-16 text-center">
+      <div className="text-center">
         <p className="text-destructive">This invitation has expired. Ask your super admin to send a new one.</p>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-md py-16 px-4">
+    <div>
       <h1 className="text-2xl font-bold text-[hsl(var(--dashboard-main-fg))]">Complete your setup</h1>
       <p className="mt-2 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
         {preview?.displayName ? `Hello ${preview.displayName}, ` : ''}
