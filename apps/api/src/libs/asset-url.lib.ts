@@ -1,6 +1,7 @@
 const PRODUCTION_ASSET_HOSTS = new Set([
   'assets.community.marketplace',
   'assets.community.market',
+  'assets.sellnearby.ie',
 ]);
 
 function isR2PublicHost(hostname: string): boolean {

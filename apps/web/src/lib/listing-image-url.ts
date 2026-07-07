@@ -1,5 +1,15 @@
 const DEV_ASSET_CACHE_VERSION = '3';
 
+const PRODUCTION_ASSET_HOSTS = new Set([
+  'assets.community.marketplace',
+  'assets.community.market',
+  'assets.sellnearby.ie',
+]);
+
+function isR2PublicHost(hostname: string): boolean {
+  return hostname.endsWith('.r2.dev') || PRODUCTION_ASSET_HOSTS.has(hostname);
+}
+
 export type ListingImageVariant = 'full' | 'card' | 'thumb' | 'tiny';
 
 const VARIANT_WIDTHS: Record<ListingImageVariant, number> = {
