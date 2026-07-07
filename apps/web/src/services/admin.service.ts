@@ -26,6 +26,7 @@ import type {
   UserProfile,
   UserVerification,
   PaginatedResult,
+  ApiResponse,
 } from '@community-marketplace/types';
 
 import type { UpdateStaffRoleInput, UpdateStaffStatusInput } from '@community-marketplace/validation';
@@ -331,20 +332,27 @@ export const adminService = {
     });
 
     if (role === 'SUPER_ADMIN') {
-      return normalizePaginated(response, {
-        page: params.page ?? 1,
-        limit: params.limit ?? 20,
-      });
+      return normalizePaginated<SuperAdminActivityEvent>(
+        response as ApiResponse<
+          SuperAdminActivityEvent[] | PaginatedResult<SuperAdminActivityEvent>
+        >,
+        {
+          page: params.page ?? 1,
+          limit: params.limit ?? 20,
+        },
+      );
     }
 
-    const legacyItems = Array.isArray(response.data) ? response.data : [];
+    const legacyItems = (Array.isArray(response.data) ? response.data : []) as Record<
+      string,
+      unknown
+    >[];
     return {
       data: legacyItems,
       meta: {
         page: 1,
         limit: legacyItems.length,
         total: legacyItems.length,
-        totalPages: 1,
       },
     };
   },
