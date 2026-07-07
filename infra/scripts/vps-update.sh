@@ -9,9 +9,10 @@
 # Optional:
 #   GIT_BRANCH=main SKIP_BUILD=1 SKIP_PULL=1 ./infra/scripts/vps-update.sh
 #
-# If docker reports a container is "not connected to the network", run once:
-#   cd /opt/sellnearby/infra/docker
-#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --force-recreate postgres redis
+# The "container is not connected to the network cm-network" error that Docker
+# intermittently throws on recreate is handled automatically: any service that
+# fails to come up is retried with --force-recreate, and Traefik is re-synced
+# afterwards so its router view matches the recreated containers.
 
 set -euo pipefail
 
@@ -23,6 +24,21 @@ GIT_BRANCH="${GIT_BRANCH:-main}"
 
 compose() {
   docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
+}
+
+# Set to 1 whenever a service had to be force-recreated due to Docker leaving a
+# stale container attached to cm-network. Used to trigger a Traefik re-sync.
+FORCED_RECREATE=0
+
+# Bring up the given services, retrying with --force-recreate if Docker reports
+# a stale "not connected to the network" container.
+up_services() {
+  if compose up -d "$@"; then
+    return 0
+  fi
+  echo "==> Stale container network detected — force-recreating: $*"
+  FORCED_RECREATE=1
+  compose up -d --force-recreate "$@"
 }
 
 wait_for_postgres() {
@@ -37,13 +53,11 @@ wait_for_postgres() {
 
 ensure_postgres_redis() {
   echo "==> Ensuring postgres and redis are up"
-  if ! compose up -d --remove-orphans postgres redis; then
-    echo "==> Recreating postgres/redis (stale container network)"
-    compose up -d --force-recreate postgres redis
-  fi
+  up_services --remove-orphans postgres redis
 
   if ! wait_for_postgres; then
     echo "==> Postgres not ready — forcing recreate"
+    FORCED_RECREATE=1
     compose up -d --force-recreate postgres redis
     wait_for_postgres
   fi
@@ -93,7 +107,12 @@ docker run --rm \
   sh -c "cd apps/api && pnpm exec prisma migrate deploy"
 
 echo "==> Restarting app services"
-compose up -d api worker web
+up_services api worker web
+
+if [[ "$FORCED_RECREATE" == "1" ]]; then
+  echo "==> Re-syncing Traefik (a service was force-recreated)"
+  compose up -d --force-recreate traefik
+fi
 
 echo "==> Health check (inside api container)"
 sleep 5
