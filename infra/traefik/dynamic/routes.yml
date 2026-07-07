@@ -1,38 +1,13 @@
 # Dynamic routing — Community Marketplace
 # Mounted at /etc/traefik/dynamic/routes.yml
 # Middlewares defined in middlewares.yml
+#
+# api / web / admin host routing is defined via Docker labels in
+# infra/docker/docker-compose*.yml (and prod DOMAIN substitution).
+# Keep only internal/static routes here to avoid router-name collisions.
 
 http:
   routers:
-    api:
-      rule: Host(`api.community.market`) || Host(`api.localhost`)
-      entryPoints:
-        - websecure
-        - web
-      service: api
-      middlewares:
-        - api-chain
-
-    web:
-      rule: Host(`community.market`) || Host(`www.community.market`) || Host(`localhost`)
-      entryPoints:
-        - websecure
-        - web
-      service: web
-      middlewares:
-        - compress
-        - secure-headers
-
-    admin:
-      rule: Host(`admin.community.market`) || Host(`admin.localhost`)
-      entryPoints:
-        - websecure
-        - web
-      service: admin
-      middlewares:
-        - api-chain
-        - admin-ip-whitelist
-
     meilisearch:
       rule: Host(`search.internal.community.market`)
       entryPoints:
@@ -42,21 +17,6 @@ http:
         - internal-only
 
   services:
-    api:
-      loadBalancer:
-        servers:
-          - url: http://api:4000
-
-    web:
-      loadBalancer:
-        servers:
-          - url: http://web:3000
-
-    admin:
-      loadBalancer:
-        servers:
-          - url: http://admin:3001
-
     meilisearch:
       loadBalancer:
         servers:
