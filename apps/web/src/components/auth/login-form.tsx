@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { Button, Input, Label, PasswordInput } from '@community-marketplace/ui';
@@ -51,7 +52,15 @@ export function LoginForm() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="password">Password</Label>
+          <Link
+            href="/auth/forgot-password"
+            className="text-sm font-medium text-primary hover:text-primary/90"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <PasswordInput
           id="password"
           required

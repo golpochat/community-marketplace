@@ -14,6 +14,8 @@ export const GUEST_ONLY_AUTH_PATHS = [
   WEB_APP_ROUTES.login,
   WEB_APP_ROUTES.register,
   '/auth/activate',
+  '/auth/forgot-password',
+  '/auth/reset-password',
 ] as const;
 
 export function isGuestOnlyAuthPath(pathname: string): boolean {

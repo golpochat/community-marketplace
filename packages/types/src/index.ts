@@ -89,6 +89,7 @@ export type {
   AuthPayload,
   ActivationTokenPayload,
   PhoneVerificationTokenPayload,
+  PasswordResetTokenPayload,
   SessionTokens,
   AuthTokens,
   LoginResponse,
@@ -101,6 +102,9 @@ export type {
   EmailActivationResponse,
   AdminInvitationPreviewResponse,
   AdminInvitationAcceptResponse,
+  ForgotPasswordResponse,
+  PasswordResetPreviewResponse,
+  PasswordResetResponse,
 } from './auth';
 export {
   getLoginRedirectPath,

@@ -9,11 +9,14 @@ import {
   ActivateEmailDto,
   ActivationPreviewDto,
   CompleteRegistrationDto,
+  ForgotPasswordDto,
   LoginDto,
   LogoutDto,
+  PasswordResetPreviewDto,
   RefreshTokenDto,
   RegisterDto,
   ResendActivationDto,
+  ResetPasswordDto,
   SendOtpDto,
   VerifyOtpDto,
 } from './dto/auth.dto';
@@ -84,6 +87,30 @@ export class AuthController {
   @Post('activate/resend')
   resendActivation(@Body() dto: ResendActivationDto) {
     return this.authService.resendActivation(dto);
+  }
+
+  @Public()
+  @Post('password/forgot')
+  forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
+    return this.authService.forgotPassword(dto, this.sessionContext(req));
+  }
+
+  @Public()
+  @Post('password/reset/preview')
+  passwordResetPreview(@Body() dto: PasswordResetPreviewDto) {
+    return this.authService.passwordResetPreview(dto);
+  }
+
+  @Public()
+  @Post('password/reset')
+  async resetPassword(
+    @Body() dto: ResetPasswordDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.resetPassword(dto, this.sessionContext(req));
+    setRefreshTokenCookie(res, result.login.refreshToken);
+    return result;
   }
 
   @Public()

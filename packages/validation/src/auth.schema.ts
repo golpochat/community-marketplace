@@ -124,6 +124,30 @@ export const resendActivationSchema = z.object({
   email: emailSchema,
 });
 
+export const forgotPasswordSchema = z.object({
+  email: emailSchema,
+});
+
+export const passwordResetPreviewSchema = z.object({
+  token: z.string().min(1),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1),
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Confirm your password'),
+  })
+  .superRefine((value, ctx) => {
+    if (value.password !== value.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Passwords do not match',
+        path: ['confirmPassword'],
+      });
+    }
+  });
+
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1).optional(),
 });
@@ -143,5 +167,8 @@ export type CompleteRegistrationInput = z.infer<typeof completeRegistrationSchem
 export type ActivationPreviewInput = z.infer<typeof activationPreviewSchema>;
 export type ActivateEmailInput = z.infer<typeof activateEmailSchema>;
 export type ResendActivationInput = z.infer<typeof resendActivationSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type PasswordResetPreviewInput = z.infer<typeof passwordResetPreviewSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type LogoutInput = z.infer<typeof logoutSchema>;

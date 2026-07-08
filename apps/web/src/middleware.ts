@@ -49,6 +49,8 @@ export const config = {
     '/auth/login',
     '/auth/register',
     '/auth/activate',
+    '/auth/forgot-password',
+    '/auth/reset-password',
     '/admin/invite/accept',
     '/dashboard',
     '/dashboard/:path*',

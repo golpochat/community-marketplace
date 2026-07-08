@@ -9,7 +9,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 
-import type { RegistrationAccountType } from '@community-marketplace/types';
+import type { RegistrationAccountType, SellerRegistrationKind } from '@community-marketplace/types';
 
 export class RegisterDto {
   @IsEmail()
@@ -100,6 +100,29 @@ export class ResendActivationDto {
   email!: string;
 }
 
+export class ForgotPasswordDto {
+  @IsEmail()
+  email!: string;
+}
+
+export class PasswordResetPreviewDto {
+  @IsString()
+  token!: string;
+}
+
+export class ResetPasswordDto {
+  @IsString()
+  token!: string;
+
+  @IsString()
+  @MinLength(8)
+  password!: string;
+
+  @IsString()
+  @MinLength(8)
+  confirmPassword!: string;
+}
+
 export class LogoutDto {
   @IsOptional()
   @IsString()
@@ -123,4 +146,8 @@ export class CompleteRegistrationDto {
 
   @IsString()
   phoneVerificationToken!: string;
+
+  @ValidateIf((dto: CompleteRegistrationDto) => dto.accountType === 'seller')
+  @IsEnum(['individual', 'sole_trader', 'limited_company'])
+  sellerKind?: SellerRegistrationKind;
 }

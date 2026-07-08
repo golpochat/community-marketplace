@@ -5,6 +5,7 @@ import { PrismaService } from '../../../database/prisma.service';
 
 const BRUTE_FORCE_WINDOW_MS = 15 * 60 * 1000;
 const MAX_FAILED_ATTEMPTS = 10;
+const MAX_PASSWORD_RESET_REQUESTS = 5;
 
 @Injectable()
 export class AuthSecurityService {
@@ -46,6 +47,36 @@ export class AuthSecurityService {
       );
       throw new HttpException(
         'Too many failed login attempts. Try again later.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+  }
+
+  async assertPasswordResetAllowed(email: string, ipAddress?: string): Promise<void> {
+    const since = new Date(Date.now() - BRUTE_FORCE_WINDOW_MS);
+
+    const [emailRequests, ipRequests] = await Promise.all([
+      this.prisma.authLoginAudit.count({
+        where: {
+          eventType: 'password_reset_request',
+          email,
+          createdAt: { gte: since },
+        },
+      }),
+      ipAddress
+        ? this.prisma.authLoginAudit.count({
+            where: {
+              eventType: 'password_reset_request',
+              ipAddress,
+              createdAt: { gte: since },
+            },
+          })
+        : Promise.resolve(0),
+    ]);
+
+    if (emailRequests >= MAX_PASSWORD_RESET_REQUESTS || ipRequests >= MAX_PASSWORD_RESET_REQUESTS * 2) {
+      throw new HttpException(
+        'Too many password reset requests. Try again later.',
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }

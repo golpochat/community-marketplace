@@ -20,9 +20,12 @@ import {
   activateEmailSchema,
   activationPreviewSchema,
   completeRegistrationSchema,
+  forgotPasswordSchema,
   loginSchema,
   logoutSchema,
+  passwordResetPreviewSchema,
   refreshTokenSchema,
+  resetPasswordSchema,
 } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../database/prisma.service';
@@ -38,15 +41,21 @@ import type {
 
   CompleteRegistrationDto,
 
+  ForgotPasswordDto,
+
   LoginDto,
 
   LogoutDto,
+
+  PasswordResetPreviewDto,
 
   RefreshTokenDto,
 
   RegisterDto,
 
   ResendActivationDto,
+
+  ResetPasswordDto,
 
   SendOtpDto,
 
@@ -65,6 +74,11 @@ import {
   EmailActivationService,
 
 } from './services/email-activation.service';
+
+import {
+  buildPasswordResetUrl,
+  PasswordResetService,
+} from './services/password-reset.service';
 
 import { JwtAuthService } from './services/jwt-auth.service';
 
@@ -91,6 +105,8 @@ export class AuthService {
     private readonly jwtAuthService: JwtAuthService,
 
     private readonly emailActivationService: EmailActivationService,
+
+    private readonly passwordResetService: PasswordResetService,
 
     private readonly phoneVerificationService: PhoneVerificationService,
 
@@ -514,6 +530,75 @@ export class AuthService {
 
     };
 
+  }
+
+
+
+  async forgotPassword(dto: ForgotPasswordDto, context: SessionContext) {
+    const parsed = forgotPasswordSchema.parse(dto);
+    const genericMessage =
+      'If an account exists for this email, we sent a password reset link. Check your inbox and spam folder.';
+
+    await this.securityService.assertPasswordResetAllowed(parsed.email, context.ipAddress);
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: parsed.email },
+    });
+
+    if (user?.emailVerifiedAt && user.passwordHash) {
+      const token = this.passwordResetService.createResetToken(user.email, user.id);
+      const appBaseUrl = process.env.WEB_APP_URL ?? 'http://localhost:3000';
+
+      this.eventBus.publish({
+        type: 'user.password_reset_requested',
+        payload: {
+          email: user.email,
+          name: user.displayName ?? undefined,
+          resetToken: token,
+          resetUrl: buildPasswordResetUrl(appBaseUrl, token),
+        },
+        timestamp: new Date(),
+      });
+    }
+
+    await this.auditService.record('password_reset_request', true, {
+      ...context,
+      email: parsed.email,
+      userId: user?.id,
+    });
+
+    return { message: genericMessage };
+  }
+
+
+
+  async passwordResetPreview(dto: PasswordResetPreviewDto) {
+    passwordResetPreviewSchema.parse(dto);
+    return this.passwordResetService.previewReset(dto.token);
+  }
+
+
+
+  async resetPassword(dto: ResetPasswordDto, context: SessionContext) {
+    const parsed = resetPasswordSchema.parse(dto);
+    const result = await this.passwordResetService.resetPassword(parsed.token, parsed.password);
+
+    await this.sessionService.revokeAllForUser(result.userId);
+
+    const user = this.toUserFromDb(result.user);
+    const loginResponse = await this.establishSession(user, context);
+
+    await this.auditService.record('password_reset', true, {
+      ...context,
+      email: result.email,
+      userId: result.userId,
+    });
+
+    return {
+      email: result.email,
+      userId: result.userId,
+      login: loginResponse,
+    };
   }
 
 

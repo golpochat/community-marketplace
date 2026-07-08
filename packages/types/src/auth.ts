@@ -21,6 +21,8 @@ export type AuthEventType =
   | 'otp_verify'
   | 'activation'
   | 'registration_complete'
+  | 'password_reset_request'
+  | 'password_reset'
   | 'refresh'
   | 'brute_force_blocked';
 
@@ -48,6 +50,15 @@ export interface PhoneVerificationTokenPayload {
   phone: string;
   type: 'phone_verification';
   purpose: 'register';
+  iat: number;
+  exp: number;
+}
+
+/** Signed JWT payload for password reset links */
+export interface PasswordResetTokenPayload {
+  email: string;
+  userId: string;
+  type: 'password_reset';
   iat: number;
   exp: number;
 }
@@ -129,6 +140,21 @@ export interface AdminInvitationPreviewResponse {
 }
 
 export interface AdminInvitationAcceptResponse {
+  email: string;
+  userId: string;
+  login: LoginResponse;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface PasswordResetPreviewResponse {
+  email: string;
+  expired: boolean;
+}
+
+export interface PasswordResetResponse {
   email: string;
   userId: string;
   login: LoginResponse;

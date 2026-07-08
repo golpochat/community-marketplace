@@ -89,6 +89,42 @@ export const authService = {
     return response.data;
   },
 
+  async requestPasswordReset(email: string) {
+    const response = await apiClient<import('@community-marketplace/types').ForgotPasswordResponse>(
+      WEB_API_ROUTES.public.auth.passwordForgot,
+      {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      },
+    );
+    return response.data;
+  },
+
+  async previewPasswordReset(token: string) {
+    const response = await apiClient<import('@community-marketplace/types').PasswordResetPreviewResponse>(
+      WEB_API_ROUTES.public.auth.passwordResetPreview,
+      {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      },
+    );
+    if (!response.data) {
+      throw new Error('Invalid password reset link');
+    }
+    return response.data;
+  },
+
+  async resetPassword(token: string, password: string, confirmPassword: string) {
+    const response = await apiClient<import('@community-marketplace/types').PasswordResetResponse>(
+      WEB_API_ROUTES.public.auth.passwordReset,
+      {
+        method: 'POST',
+        body: JSON.stringify({ token, password, confirmPassword }),
+      },
+    );
+    return response.data;
+  },
+
   async previewAdminInvitation(token: string) {
     const response = await apiClient<{
       email: string;

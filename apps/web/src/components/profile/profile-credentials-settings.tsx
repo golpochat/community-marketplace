@@ -113,13 +113,13 @@ export function ProfileCredentialsSettings({
             <div>
               <h4 className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Password</h4>
               <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-                To change your password, sign out and use the password reset option on the login page.
+                To change your password, sign out and use forgot password on the login page.
               </p>
               <Link
-                href="/auth/login"
+                href="/auth/forgot-password"
                 className="mt-2 inline-block text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
               >
-                Go to login →
+                Reset password →
               </Link>
             </div>
             <div className="border-t border-[hsl(var(--dashboard-sidebar-border))] pt-6">
@@ -136,13 +136,13 @@ export function ProfileCredentialsSettings({
         <div className="space-y-6">
           <Card title="Password">
             <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-              To change your password, sign out and use the password reset option on the login page.
+              To change your password, sign out and request a reset link from the login page.
             </p>
             <Link
-              href="/auth/login"
+              href="/auth/forgot-password"
               className="mt-3 inline-block text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
             >
-              Go to login →
+              Reset password →
             </Link>
           </Card>
 
