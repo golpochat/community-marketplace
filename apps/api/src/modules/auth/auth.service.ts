@@ -548,29 +548,53 @@ export class AuthService {
       where: { email: parsed.email },
     });
 
-    if (user?.emailVerifiedAt && user.passwordHash) {
-      const token = this.passwordResetService.createResetToken(user.email, user.id);
-      const appBaseUrl = process.env.WEB_APP_URL ?? 'http://localhost:3000';
-
-      this.eventBus.publish({
-        type: 'user.password_reset_requested',
-        payload: {
-          email: user.email,
-          name: user.displayName ?? undefined,
-          resetToken: token,
-          resetUrl: buildPasswordResetUrl(appBaseUrl, token),
-        },
-        timestamp: new Date(),
+    if (user) {
+      await this.sendPasswordResetEmailForUser(user, context);
+    } else {
+      await this.auditService.record('password_reset_request', true, {
+        ...context,
+        email: parsed.email,
       });
     }
 
-    await this.auditService.record('password_reset_request', true, {
-      ...context,
-      email: parsed.email,
-      userId: user?.id,
+    return { message: genericMessage };
+  }
+
+  async sendPasswordResetEmailForUser(
+    user: {
+      id: string;
+      email: string;
+      displayName: string | null;
+      emailVerifiedAt: Date | null;
+      passwordHash: string | null;
+    },
+    context: SessionContext,
+  ): Promise<boolean> {
+    if (!user.emailVerifiedAt || !user.passwordHash) {
+      return false;
+    }
+
+    const token = this.passwordResetService.createResetToken(user.email, user.id);
+    const appBaseUrl = process.env.WEB_APP_URL ?? 'http://localhost:3000';
+
+    this.eventBus.publish({
+      type: 'user.password_reset_requested',
+      payload: {
+        email: user.email,
+        name: user.displayName ?? undefined,
+        resetToken: token,
+        resetUrl: buildPasswordResetUrl(appBaseUrl, token),
+      },
+      timestamp: new Date(),
     });
 
-    return { message: genericMessage };
+    await this.auditService.record('password_reset_request', true, {
+      ...context,
+      email: user.email,
+      userId: user.id,
+    });
+
+    return true;
   }
 
 

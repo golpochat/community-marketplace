@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req } from '@nestjs/common';
+import type { Request } from 'express';
 
 import { PERMISSIONS } from '@community-marketplace/types';
 
@@ -13,6 +14,7 @@ import {
   SyncRolePermissionsDto,
 } from '../admin/rbac/dto/rbac-management.dto';
 import { RbacManagementService } from '../admin/rbac/rbac-management.service';
+import { computeDeviceFingerprint } from '../auth/utils/device-fingerprint';
 import { CreateAdminDto, SuperAdminActionDto } from './dto/super-admin.dto';
 import { SuperAdminService } from './super-admin.service';
 
@@ -164,6 +166,16 @@ export class SuperAdminController {
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_ADMINS)
+  @Post('admins/:userId/send-password-reset')
+  sendAdminStaffPasswordReset(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('userId') userId: string,
+    @Req() req: Request,
+  ) {
+    return this.superAdminService.sendAdminStaffPasswordReset(actor.id, userId, this.sessionContext(req));
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_ADMINS)
   @Post('admins')
   createAdmin(@Body() dto: CreateAdminDto) {
     return this.superAdminService.createAdmin(dto.email);
@@ -182,5 +194,20 @@ export class SuperAdminController {
   @Post('actions')
   executeAction(@CurrentUser() user: AuthenticatedUser, @Body() dto: SuperAdminActionDto) {
     return this.superAdminService.executeAction(user.id, dto);
+  }
+
+  private sessionContext(req: Request) {
+    const clientFingerprint = req.headers['x-device-fingerprint'];
+    const fingerprintHeader = typeof clientFingerprint === 'string' ? clientFingerprint : undefined;
+
+    return {
+      userAgent: req.headers['user-agent'],
+      ipAddress: req.ip,
+      deviceFingerprint: computeDeviceFingerprint(
+        req.headers['user-agent'],
+        req.ip,
+        fingerprintHeader,
+      ),
+    };
   }
 }

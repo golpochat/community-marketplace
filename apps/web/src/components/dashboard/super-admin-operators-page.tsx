@@ -39,7 +39,7 @@ const USER_MANAGEMENT_TABS = [
 
 const USER_MANAGEMENT_ADMIN_COLUMNS = ['Name', 'Email', 'Role', 'Status', 'Actions'] as const;
 
-const USER_MANAGEMENT_ADMIN_COLUMN_WIDTHS = ['22%', '36%', '20%', '68px', '76px'];
+const USER_MANAGEMENT_ADMIN_COLUMN_WIDTHS = ['22%', '34%', '20%', '68px', '108px'];
 
 const USER_MANAGEMENT_ADMIN_COLUMN_CLASSES = [
   'min-w-0',
@@ -90,6 +90,7 @@ export function SuperAdminUserManagementPage() {
   } | null>(null);
   const [statusChangeLoading, setStatusChangeLoading] = useState(false);
   const [revokeTargetId, setRevokeTargetId] = useState<string | null>(null);
+  const [passwordResetTarget, setPasswordResetTarget] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -202,6 +203,20 @@ export function SuperAdminUserManagementPage() {
     }
   };
 
+  const handleSendPasswordReset = async (admin: UserProfile) => {
+    setActionId(admin.id);
+    setError(null);
+    try {
+      await adminService.sendAdminStaffPasswordReset(admin.id);
+      setPasswordResetTarget(null);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to send password reset email');
+    } finally {
+      setActionId(null);
+    }
+  };
+
   const adminRows = admins.map((admin) => {
     const name = admin.displayName?.trim() || '—';
     const roleLabel = formatRoleLabel(admin.role);
@@ -233,6 +248,12 @@ export function SuperAdminUserManagementPage() {
         icon="pencil"
         label="Change role"
         onClick={() => setModifyAdmin(admin)}
+      />
+      <IconActionButton
+        icon="key"
+        label="Send password reset"
+        onClick={() => setPasswordResetTarget(admin)}
+        disabled={actionId === admin.id}
       />
     </IconActionGroup>,
     ];
@@ -376,6 +397,24 @@ export function SuperAdminUserManagementPage() {
         }}
         onCancel={() => {
           if (actionId == null) setRevokeTargetId(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={passwordResetTarget != null}
+        title="Send password reset?"
+        message={
+          passwordResetTarget
+            ? `A password reset link will be emailed to ${passwordResetTarget.email}. They can also use Forgot password on the sign-in page.`
+            : ''
+        }
+        confirmLabel="Send reset email"
+        loading={passwordResetTarget != null && actionId === passwordResetTarget.id}
+        onConfirm={() => {
+          if (passwordResetTarget) void handleSendPasswordReset(passwordResetTarget);
+        }}
+        onCancel={() => {
+          if (actionId == null) setPasswordResetTarget(null);
         }}
       />
     </>

@@ -44,7 +44,7 @@ export const STAFF_STATUS_CHANGE_REASON_LABELS: Record<StaffStatusChangeReason, 
 
 export interface StaffAdminAuditEntry {
   id: string;
-  eventType: 'role_changed' | 'status_changed';
+  eventType: 'role_changed' | 'status_changed' | 'password_reset_sent';
   actorId?: string;
   actorLabel?: string;
   metadata?: Record<string, unknown>;

@@ -178,6 +178,20 @@ function AdminInviteAcceptContent() {
           {submitting ? 'Setting up…' : 'Complete setup'}
         </Button>
       </form>
+      <p className="mt-6 text-center text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+        Already have an account?{' '}
+        <Link href="/auth/login" className="font-medium text-[hsl(var(--dashboard-accent))] hover:underline">
+          Sign in
+        </Link>
+        {' or '}
+        <Link
+          href="/auth/forgot-password"
+          className="font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+        >
+          reset your password
+        </Link>
+        .
+      </p>
     </div>
   );
 }

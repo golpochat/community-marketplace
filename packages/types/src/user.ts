@@ -16,6 +16,7 @@ export type UserAuditEventType =
   | 'verification_rejected'
   | 'role_changed'
   | 'status_changed'
+  | 'password_reset_sent'
   | 'permission_granted'
   | 'permission_revoked'
   | 'user_suspended'

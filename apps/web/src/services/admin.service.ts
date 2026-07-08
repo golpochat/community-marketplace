@@ -408,6 +408,17 @@ export const adminService = {
     return response.data;
   },
 
+  async sendAdminStaffPasswordReset(userId: string): Promise<{ message: string }> {
+    const response = await apiClient<{ message: string }>(
+      adminApiPath('SUPER_ADMIN', `/admins/${userId}/send-password-reset`),
+      { method: 'POST' },
+    );
+    if (!response.data) {
+      throw new Error('Failed to send password reset email');
+    }
+    return response.data;
+  },
+
   async listInviteableRoles(): Promise<AdminInviteableRoleRow[]> {
     const response = await apiClient<AdminInviteableRoleRow[]>(
       `${API_NAMESPACES.SUPER_ADMIN}/invitations/inviteable-roles`,

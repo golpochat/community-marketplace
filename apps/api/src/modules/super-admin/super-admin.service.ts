@@ -10,6 +10,7 @@ import {
   isAdminPanelRoleCode,
   type PermissionCode,
   type RbacRole,
+  type StaffAdminAuditEntry,
   type SuperAdminActivityEvent,
   type UserAuditEventType,
 } from '@community-marketplace/types';
@@ -31,6 +32,8 @@ import {
   assertSuperAdminRoleNotAssignable,
 } from '../../common/constants/bootstrap-users';
 import { PrismaService } from '../../database/prisma.service';
+import { AuthService } from '../auth/auth.service';
+import type { SessionContext } from '../auth/services/session.service';
 import { AdminService } from '../admin/admin.service';
 import { UsersService } from '../users/users.service';
 import { mapUserProfile, userProfileInclude } from '../users/mappers/user.mapper';
@@ -42,7 +45,11 @@ const OPEN_DISPUTE_STATUSES = ['open', 'awaiting_evidence', 'under_review'] as c
 
 const PANEL_OPERATOR_ROLE_CODES = ['ADMIN', ...ADMIN_PERSONA_ROLE_CODES] as const;
 
-const STAFF_AUDIT_EVENT_TYPES: UserAuditEventType[] = ['role_changed', 'status_changed'];
+const STAFF_AUDIT_EVENT_TYPES: UserAuditEventType[] = [
+  'role_changed',
+  'status_changed',
+  'password_reset_sent',
+];
 
 @Injectable()
 export class SuperAdminService {
@@ -51,6 +58,7 @@ export class SuperAdminService {
     private readonly usersService: UsersService,
     private readonly prisma: PrismaService,
     private readonly userAudit: UserAuditService,
+    private readonly authService: AuthService,
   ) {}
 
   async getPlatformOverview() {
@@ -451,7 +459,7 @@ export class SuperAdminService {
       profile: mapUserProfile(user),
       auditHistory: staffAudit.map((entry) => ({
         id: entry.id,
-        eventType: entry.eventType as 'role_changed' | 'status_changed',
+        eventType: entry.eventType as StaffAdminAuditEntry['eventType'],
         actorId: entry.actorId,
         actorLabel: entry.actorId ? actorLabels.get(entry.actorId) : undefined,
         metadata: entry.metadata,
@@ -530,6 +538,33 @@ export class SuperAdminService {
     });
 
     return mapUserProfile(updated);
+  }
+
+  async sendAdminStaffPasswordReset(
+    actorId: string,
+    userId: string,
+    context: SessionContext,
+  ) {
+    assertBootstrapSuperAdminImmutable(userId);
+
+    const user = await this.assertPanelOperatorUser(userId);
+
+    if (!user.emailVerifiedAt || !user.passwordHash) {
+      throw new BadRequestException(
+        'This operator has not completed account setup. Resend their invitation instead.',
+      );
+    }
+
+    const sent = await this.authService.sendPasswordResetEmailForUser(user, context);
+    if (!sent) {
+      throw new BadRequestException('Unable to send password reset email for this operator.');
+    }
+
+    await this.userAudit.record('password_reset_sent', actorId, userId, {
+      initiatedBy: 'super_admin',
+    });
+
+    return { message: `Password reset email sent to ${user.email}` };
   }
 
   private async assertPanelOperatorUser(userId: string) {

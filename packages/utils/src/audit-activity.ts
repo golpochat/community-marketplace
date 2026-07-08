@@ -17,6 +17,7 @@ const USER_EVENT_LABELS: Record<string, string> = {
   verification_rejected: 'Verification rejected',
   role_changed: 'Role changed',
   status_changed: 'Status changed',
+  password_reset_sent: 'Password reset email sent',
   permission_granted: 'Permission granted',
   permission_revoked: 'Permission revoked',
   user_suspended: 'User suspended',

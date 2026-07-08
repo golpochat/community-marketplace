@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { DatabaseModule } from '../../database/database.module';
+import { AuthModule } from '../auth/auth.module';
 import { AdminModule } from '../admin/admin.module';
 import { ModerationModule } from '../moderation/moderation.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -16,6 +17,7 @@ import { SuperAdminService } from './super-admin.service';
 @Module({
   imports: [
     DatabaseModule,
+    AuthModule,
     AdminModule,
     UsersModule,
     NotificationsModule,
