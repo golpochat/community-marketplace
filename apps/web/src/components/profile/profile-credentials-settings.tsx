@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 
 import type { RbacRole, UserProfile } from '@community-marketplace/types';
 import { isPrivilegedSystemRole } from '@community-marketplace/types';
@@ -10,6 +9,7 @@ import { Card } from '@community-marketplace/ui-dashboard';
 
 import { LoadingState } from '@/components/LoadingState';
 import { ConfirmDialog } from '@/components/admin/seller-verification/confirm-dialog';
+import { ChangePasswordPanel } from '@/components/profile/change-password-panel';
 import { PhoneChangePanel } from '@/components/seller/profile/phone-change-panel';
 import { ContactVerifiedBadge } from '@/components/trust/contact-verified-badge';
 import { userService } from '@/services/user.service';
@@ -112,15 +112,18 @@ export function ProfileCredentialsSettings({
           <div className="space-y-6">
             <div>
               <h4 className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Password</h4>
-              <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-                To change your password, sign out and use forgot password on the login page.
-              </p>
-              <Link
-                href="/auth/forgot-password"
-                className="mt-2 inline-block text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
-              >
-                Reset password →
-              </Link>
+              <div className="mt-4">
+                <ChangePasswordPanel
+                  onSuccess={(text) => {
+                    setError(null);
+                    setMessage(text);
+                  }}
+                  onError={(text) => {
+                    setMessage(null);
+                    setError(text);
+                  }}
+                />
+              </div>
             </div>
             <div className="border-t border-[hsl(var(--dashboard-sidebar-border))] pt-6">
               <h4 className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">Platform account</h4>
@@ -135,15 +138,16 @@ export function ProfileCredentialsSettings({
       ) : (
         <div className="space-y-6">
           <Card title="Password">
-            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-              To change your password, sign out and request a reset link from the login page.
-            </p>
-            <Link
-              href="/auth/forgot-password"
-              className="mt-3 inline-block text-sm font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
-            >
-              Reset password →
-            </Link>
+            <ChangePasswordPanel
+              onSuccess={(text) => {
+                setError(null);
+                setMessage(text);
+              }}
+              onError={(text) => {
+                setMessage(null);
+                setError(text);
+              }}
+            />
           </Card>
 
           <Card title="Deactivate account">

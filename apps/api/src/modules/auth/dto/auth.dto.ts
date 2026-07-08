@@ -123,6 +123,20 @@ export class ResetPasswordDto {
   confirmPassword!: string;
 }
 
+export class ChangePasswordDto {
+  @IsString()
+  @MinLength(1)
+  currentPassword!: string;
+
+  @IsString()
+  @MinLength(8)
+  newPassword!: string;
+
+  @IsString()
+  @MinLength(8)
+  confirmPassword!: string;
+}
+
 export class LogoutDto {
   @IsOptional()
   @IsString()

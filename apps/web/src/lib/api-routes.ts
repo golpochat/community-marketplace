@@ -119,6 +119,7 @@ export const WEB_API_ROUTES = {
       passwordForgot: '/auth/password/forgot',
       passwordResetPreview: '/auth/password/reset/preview',
       passwordReset: '/auth/password/reset',
+      passwordChange: '/auth/password/change',
       adminInvitePreview: '/auth/admin-invite/preview',
       adminInviteAccept: '/auth/admin-invite/accept',
     },

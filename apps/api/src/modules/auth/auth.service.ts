@@ -19,6 +19,7 @@ import type { LoginResponse, RbacRole, User } from '@community-marketplace/types
 import {
   activateEmailSchema,
   activationPreviewSchema,
+  changePasswordSchema,
   completeRegistrationSchema,
   forgotPasswordSchema,
   loginSchema,
@@ -29,7 +30,7 @@ import {
 } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../database/prisma.service';
-import { verifyPassword } from '../../database/seeds/password-hash';
+import { hashPassword, verifyPassword } from '../../database/seeds/password-hash';
 
 import { EventBusService } from '../../events/event-bus.service';
 
@@ -38,6 +39,8 @@ import type {
   ActivateEmailDto,
 
   ActivationPreviewDto,
+
+  ChangePasswordDto,
 
   CompleteRegistrationDto,
 
@@ -597,6 +600,60 @@ export class AuthService {
     return {
       email: result.email,
       userId: result.userId,
+      login: loginResponse,
+    };
+  }
+
+
+
+  async changePassword(userId: string, dto: ChangePasswordDto, context: SessionContext) {
+    const parsed = changePasswordSchema.parse(dto);
+
+    const dbUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { primaryRole: true },
+    });
+
+    if (!dbUser?.passwordHash || !verifyPassword(parsed.currentPassword, dbUser.passwordHash)) {
+      await this.auditService.record('password_change', false, {
+        ...context,
+        userId,
+        email: dbUser?.email,
+      }, 'Invalid current password');
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    if (dbUser.status === 'suspended') {
+      throw new ForbiddenException('Account is suspended');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash: hashPassword(parsed.newPassword) },
+    });
+
+    await this.sessionService.revokeAllForUser(userId);
+
+    const refreshed = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { primaryRole: true },
+    });
+
+    if (!refreshed) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const user = this.toUserFromDb(refreshed);
+    const loginResponse = await this.establishSession(user, context);
+
+    await this.auditService.record('password_change', true, {
+      ...context,
+      userId,
+      email: refreshed.email,
+    });
+
+    return {
+      message: 'Password updated successfully.',
       login: loginResponse,
     };
   }

@@ -105,6 +105,7 @@ export type {
   ForgotPasswordResponse,
   PasswordResetPreviewResponse,
   PasswordResetResponse,
+  ChangePasswordResponse,
 } from './auth';
 export {
   getLoginRedirectPath,

@@ -125,6 +125,21 @@ export const authService = {
     return response.data;
   },
 
+  async changePassword(input: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) {
+    const response = await apiClient<import('@community-marketplace/types').ChangePasswordResponse>(
+      WEB_API_ROUTES.public.auth.passwordChange,
+      {
+        method: 'POST',
+        body: JSON.stringify(input),
+      },
+    );
+    return response.data;
+  },
+
   async previewAdminInvitation(token: string) {
     const response = await apiClient<{
       email: string;

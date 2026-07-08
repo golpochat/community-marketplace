@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import {
   ActivateEmailDto,
   ActivationPreviewDto,
+  ChangePasswordDto,
   CompleteRegistrationDto,
   ForgotPasswordDto,
   LoginDto,
@@ -109,6 +110,18 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.resetPassword(dto, this.sessionContext(req));
+    setRefreshTokenCookie(res, result.login.refreshToken);
+    return result;
+  }
+
+  @Post('password/change')
+  async changePassword(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: ChangePasswordDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.changePassword(user.id, dto, this.sessionContext(req));
     setRefreshTokenCookie(res, result.login.refreshToken);
     return result;
   }

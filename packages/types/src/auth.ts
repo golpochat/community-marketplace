@@ -23,6 +23,7 @@ export type AuthEventType =
   | 'registration_complete'
   | 'password_reset_request'
   | 'password_reset'
+  | 'password_change'
   | 'refresh'
   | 'brute_force_blocked';
 
@@ -157,6 +158,11 @@ export interface PasswordResetPreviewResponse {
 export interface PasswordResetResponse {
   email: string;
   userId: string;
+  login: LoginResponse;
+}
+
+export interface ChangePasswordResponse {
+  message: string;
   login: LoginResponse;
 }
 

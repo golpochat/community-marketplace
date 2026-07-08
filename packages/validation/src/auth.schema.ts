@@ -148,6 +148,29 @@ export const resetPasswordSchema = z
     }
   });
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Enter your current password'),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, 'Confirm your new password'),
+  })
+  .superRefine((value, ctx) => {
+    if (value.newPassword !== value.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Passwords do not match',
+        path: ['confirmPassword'],
+      });
+    }
+    if (value.currentPassword === value.newPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'New password must be different from your current password',
+        path: ['newPassword'],
+      });
+    }
+  });
+
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1).optional(),
 });
@@ -170,5 +193,6 @@ export type ResendActivationInput = z.infer<typeof resendActivationSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type PasswordResetPreviewInput = z.infer<typeof passwordResetPreviewSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type LogoutInput = z.infer<typeof logoutSchema>;

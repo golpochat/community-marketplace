@@ -34,6 +34,7 @@ export {
   forgotPasswordSchema,
   passwordResetPreviewSchema,
   resetPasswordSchema,
+  changePasswordSchema,
   refreshTokenSchema,
   logoutSchema,
   deviceFingerprintHeaderSchema,
@@ -48,6 +49,7 @@ export {
   type ForgotPasswordInput,
   type PasswordResetPreviewInput,
   type ResetPasswordInput,
+  type ChangePasswordInput,
   type RefreshTokenInput,
   type LogoutInput,
 } from './auth.schema';
