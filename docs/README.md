@@ -107,6 +107,8 @@ docs/
 | Document | Description |
 |----------|-------------|
 | [Developer Quickstart](./onboarding/quickstart.md) | 15-minute setup |
+| [Launch checklist](./product/launch-checklist.md) | Pilot vs public launch readiness |
+| [SEO audit & roadmap](./product/seo-audit.md) | Current SEO status, gaps, phased plan |
 | [Product Requirements](./product/functional-requirements.md) | Functional scope |
 | [Database Schema](./db/README.md) | Prisma schema & ERD |
 

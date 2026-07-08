@@ -489,7 +489,7 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 | **Incident response** | Runbooks read | On-call rotation | ⚠️ Runbooks ✅ |
 | **Status page** | Nice | Must | ❌ |
 | **Beta invite process** | Waitlist / codes | — | Your choice |
-| **Marketing / SEO** | Minimal | Full | ⚠️ App exists; SEO/meta TBD |
+| **Marketing / SEO** | Minimal | Full | ⚠️ See [seo-audit.md](./seo-audit.md) — Phase 0 before public launch |
 | **App distribution** | PWA | PWA (+ native later) | PWA ✅ |
 
 - [ ] Irish business entity registered
@@ -607,6 +607,7 @@ Run on **staging**, then **production** after each deploy. See also [troubleshoo
 
 ## Related docs
 
+- [SEO audit & enterprise roadmap](./seo-audit.md)
 - [Deploy runbook](../runbooks/deploy.md)
 - [Rollback runbook](../runbooks/rollback.md)
 - [Restore backup runbook](../runbooks/restore-backup.md)
