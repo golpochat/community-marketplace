@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-import type { RegistrationAccountType, SellerRegistrationKind } from "@community-marketplace/types";
 import {
   REGISTRATION_SELLER_KIND_OPTIONS,
   VERIFICATION_ONBOARDING_COPY,
+  type RegistrationAccountType,
+  type SellerRegistrationKind,
 } from "@community-marketplace/types";
 import { IRISH_MOBILE_VALIDATION_MESSAGE } from "@community-marketplace/validation";
 import {

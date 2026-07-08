@@ -132,6 +132,24 @@ export interface AdminSellerVerificationDetail extends AdminSellerVerificationRo
   changedByName?: string;
 }
 
+export const REGISTRATION_SELLER_KIND_OPTIONS = [
+  {
+    value: 'individual' as const,
+    label: 'Individual seller',
+    description: 'Selling personally under your own name or nickname.',
+  },
+  {
+    value: 'sole_trader' as const,
+    label: 'Sole trader',
+    description: 'Trading under a business name as a self-employed seller.',
+  },
+  {
+    value: 'limited_company' as const,
+    label: 'Limited company',
+    description: 'Selling on behalf of a registered Irish company (Ltd).',
+  },
+] as const;
+
 export const SELLER_VERIFICATION_MESSAGES = {
   NUDGE_FIRST_LISTING: 'Verified sellers get more visibility.',
   NUDGE_THIRD_LISTING: 'Verify now to unlock unlimited listings.',

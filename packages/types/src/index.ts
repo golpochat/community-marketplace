@@ -150,7 +150,11 @@ export type {
   AdminSellerVerificationRow,
   AdminSellerVerificationDetail,
 } from './seller-verification';
-export { SELLER_VERIFICATION_MESSAGES, isSellerVerified } from './seller-verification';
+export {
+  SELLER_VERIFICATION_MESSAGES,
+  REGISTRATION_SELLER_KIND_OPTIONS,
+  isSellerVerified,
+} from './seller-verification';
 export type {
   UnifiedVerificationState,
   SellerBusinessStructure,
@@ -161,7 +165,6 @@ export type {
 } from './verification';
 export {
   VERIFICATION_ONBOARDING_COPY,
-  REGISTRATION_SELLER_KIND_OPTIONS,
   mapSellerStatusToUnifiedState,
   resolveUnifiedVerificationStage,
   resolveUnifiedVerificationNextStep,
