@@ -1,4 +1,4 @@
-import { APP_SHORT_NAME, BRAND_COLORS, buildBrandedEmailHtml, buildEmailCtaButton, escapeHtml } from '@community-marketplace/config';
+import { APP_SHORT_NAME, BRAND_COLORS, buildBrandedEmailHtml, buildEmailCtaButton, buildEmailInfoCallout, emailFooterCopyrightStyle, emailFooterLinkStyle, emailFooterTextStyle, escapeHtml } from '@community-marketplace/config';
 
 const RESET_EXPIRY_HOURS = 1;
 const c = BRAND_COLORS;
@@ -71,30 +71,23 @@ export function buildPasswordResetEmailContent(
       Click the button below to choose a new password.
     </p>
     ${buildEmailCtaButton('Reset my password', input.resetUrl)}
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 24px;">
-      <tr>
-        <td style="padding:16px;background-color:${c.surfaceFooter};border-radius:8px;border:1px solid ${c.borderSubtle};">
-          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:${c.textPrimary};">Security notice</p>
-          <p style="margin:0;font-size:13px;line-height:1.5;color:${c.textMuted};">
-            This reset link expires in <strong style="color:${c.textPrimary};">${RESET_EXPIRY_HOURS} hour</strong>.
-            If you did not request this, ignore this email and your password will stay the same.
-          </p>
-        </td>
-      </tr>
-    </table>
+    ${buildEmailInfoCallout(
+      'Security notice',
+      `This reset link expires in <strong style="color:${c.textPrimary};">${RESET_EXPIRY_HOURS} hour</strong>. If you did not request this, ignore this email and your password will stay the same.`,
+    )}
     <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:${c.textMuted};">If the button doesn't work, copy this link:</p>
     <p style="margin:0;font-size:13px;line-height:1.5;word-break:break-all;">
       <a href="${safeUrl}" target="_blank" style="color:${c.primary};text-decoration:underline;">${safeUrl}</a>
     </p>`;
 
   const footerHtml = `
-    <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:${c.textMuted};">
+    <p style="${emailFooterTextStyle()}">
       If you didn't request a password reset, you can safely ignore this email.
     </p>
-    <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:${c.textMuted};">
-      Questions? <a href="mailto:${escapeHtml(supportEmail)}" style="color:${c.primary};text-decoration:none;font-weight:500;">${escapeHtml(supportEmail)}</a>
+    <p style="${emailFooterTextStyle()}">
+      Questions? <a href="mailto:${escapeHtml(supportEmail)}" style="${emailFooterLinkStyle()}">${escapeHtml(supportEmail)}</a>
     </p>
-    <p style="margin:0;font-size:12px;line-height:1.5;color:${c.textFooter};">&copy; ${year} ${escapeHtml(appName)}. All rights reserved.</p>`;
+    <p style="${emailFooterCopyrightStyle()}">&copy; ${year} ${escapeHtml(appName)}. All rights reserved.</p>`;
 
   const html = buildBrandedEmailHtml({
     subject,

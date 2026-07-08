@@ -15,10 +15,10 @@ export function SellerVerificationPage() {
     <>
       <PageHeader
         title="Verification"
-        description={VERIFICATION_ONBOARDING_COPY.VERIFICATION_REQUIRED}
+        description={VERIFICATION_ONBOARDING_COPY.VERIFICATION_PAGE_SUBTITLE}
       />
       <div className="mb-6">
-        <VerificationOnboardingCopy variant="compact" />
+        <VerificationOnboardingCopy />
       </div>
       {loading && (
         <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading…</p>

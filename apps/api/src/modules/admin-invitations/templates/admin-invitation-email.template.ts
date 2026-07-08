@@ -3,6 +3,8 @@ import {
   BRAND_COLORS,
   buildBrandedEmailHtml,
   buildEmailCtaButton,
+  emailFooterCopyrightStyle,
+  emailFooterTextStyle,
   escapeHtml,
 } from '@community-marketplace/config';
 
@@ -101,13 +103,13 @@ export function buildAdminInvitationEmailContent(
     </p>`;
 
   const footerHtml = `
-    <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:${c.textMuted};">
+    <p style="${emailFooterTextStyle()}">
       If you did not expect this email, you can safely ignore it.
     </p>
-    <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:${c.textFooter};">
+    <p style="${emailFooterTextStyle('0 0 12px')}">
       ${escapeHtml(appName)} · Admin invitation
     </p>
-    <p style="margin:0;font-size:12px;line-height:1.5;color:${c.textFooter};">
+    <p style="${emailFooterCopyrightStyle()}">
       &copy; ${year} ${escapeHtml(appName)}. All rights reserved.
     </p>`;
 

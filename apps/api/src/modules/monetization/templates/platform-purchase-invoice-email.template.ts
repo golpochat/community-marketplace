@@ -3,6 +3,7 @@ import {
   BRAND_COLORS,
   buildBrandedEmailHtml,
   buildEmailCtaButton,
+  emailFooterCopyrightStyle,
   escapeHtml,
 } from '@community-marketplace/config';
 
@@ -52,7 +53,7 @@ export function buildPlatformPurchaseInvoiceEmail(
     ${buildEmailCtaButton('Download invoice', downloadUrl)}
     <p style="margin:0;font-size:13px;line-height:1.5;color:${c.textMuted};">Your PDF invoice is attached to this email for your records.</p>`;
 
-  const footerHtml = `<p style="margin:0;font-size:12px;color:${c.textFooter};">&copy; ${new Date().getFullYear()} ${escapeHtml(APP_SHORT_NAME)}</p>`;
+  const footerHtml = `<p style="${emailFooterCopyrightStyle()}">&copy; ${new Date().getFullYear()} ${escapeHtml(APP_SHORT_NAME)}</p>`;
 
   const html = buildBrandedEmailHtml({
     subject,

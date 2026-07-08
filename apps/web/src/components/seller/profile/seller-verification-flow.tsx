@@ -13,7 +13,7 @@ import { Card } from '@community-marketplace/ui-dashboard';
 
 import { IrishMobilePrefixTooltip } from '@/components/forms/irish-mobile-prefix-tooltip';
 
-import { VerificationProgressBar, VerificationOnboardingCopy } from '@/components/seller/verification';
+import { VerificationProgressBar } from '@/components/seller/verification';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
 import { monetizationService } from '@/services/monetization.service';
 import { sellerVerificationService } from '@/services/seller-verification.service';
@@ -348,8 +348,6 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
     <div className="space-y-6">
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <VerificationOnboardingCopy />
-
       {status.sellerStatus !== 'verified' && (
         <VerificationProgressBar
           used={status.unverifiedListingCount}
@@ -383,10 +381,6 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
             <dd>
               <SellerProfileStatusBadge status={status.sellerStatus} />
             </dd>
-          </div>
-          <div className="flex justify-between gap-2 sm:flex-col">
-            <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Public name</dt>
-            <dd>{status.businessName ?? status.publicDisplayName ?? '—'}</dd>
           </div>
           <div className="flex justify-between gap-2 sm:flex-col">
             <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Phone</dt>
@@ -491,11 +485,6 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
                       />
                     </div>
                   </>
-                )}
-                {status.phoneVerified && status.emailVerified && (
-                  <p className="text-sm text-emerald-700">
-                    {VERIFICATION_ONBOARDING_COPY.CONTACT_VERIFIED_AT_REGISTRATION}
-                  </p>
                 )}
                 <button
                   type="submit"

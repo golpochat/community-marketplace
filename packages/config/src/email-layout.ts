@@ -9,6 +9,38 @@ export interface EmailLayoutInput {
   footerHtml: string;
 }
 
+/** Paragraph text for the dark footer band. */
+export function emailFooterTextStyle(margin = '0 0 12px'): string {
+  const c = BRAND_COLORS;
+  return `margin:${margin};font-size:13px;line-height:1.5;color:${c.textOnDarkMuted};`;
+}
+
+/** Muted copyright line for the dark footer band. */
+export function emailFooterCopyrightStyle(): string {
+  const c = BRAND_COLORS;
+  return `margin:0;font-size:12px;line-height:1.5;color:${c.textOnDarkMuted};opacity:0.92;`;
+}
+
+/** Link style for the dark footer band. */
+export function emailFooterLinkStyle(): string {
+  const c = BRAND_COLORS;
+  return `color:${c.linkOnDark};text-decoration:none;font-weight:500;`;
+}
+
+/** Light callout panel for security notices inside the email body. */
+export function buildEmailInfoCallout(title: string, bodyHtml: string): string {
+  const c = BRAND_COLORS;
+
+  return `<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 24px;">
+      <tr>
+        <td style="padding:16px;background-color:${c.surfaceCallout};border-radius:8px;border:1px solid ${c.borderCallout};">
+          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:${c.textPrimary};">${escapeHtml(title)}</p>
+          <p style="margin:0;font-size:13px;line-height:1.5;color:${c.textMuted};">${bodyHtml}</p>
+        </td>
+      </tr>
+    </table>`;
+}
+
 export function buildBrandedEmailHtml(input: EmailLayoutInput): string {
   const font = emailFontStack();
   const c = BRAND_COLORS;
@@ -54,7 +86,7 @@ export function buildBrandedEmailHtml(input: EmailLayoutInput): string {
             </td>
           </tr>
           <tr>
-            <td class="email-footer-cell" style="padding:24px 40px;background-color:${c.surfaceFooter};border-top:1px solid ${c.borderSubtle};font-family:${font};">
+            <td class="email-footer-cell" style="padding:24px 40px;background-color:${c.surfaceFooter};border-top:1px solid ${c.borderOnDark};font-family:${font};color:${c.textOnDarkMuted};">
               ${input.footerHtml}
             </td>
           </tr>

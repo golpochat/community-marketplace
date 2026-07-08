@@ -47,6 +47,7 @@ export const VERIFICATION_ONBOARDING_COPY = {
     'Your personal details are private and are never shown on your public profile or listings.',
   VERIFICATION_REQUIRED:
     'Verification is required for community safety and fraud prevention before you can sell without limits.',
+  VERIFICATION_PAGE_SUBTITLE: 'Complete these steps to sell without limits.',
   FAST_TRACK_EXPLAINER:
     'Fast-track verification speeds up review using signals you have already provided — phone OTP, email verification, OAuth sign-in, or Stripe identity checks. It does not skip verification or replace document review when required.',
   PERSONAL_DETAILS_REQUIRED:

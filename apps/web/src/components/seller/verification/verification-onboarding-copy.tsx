@@ -3,38 +3,36 @@
 import { VERIFICATION_ONBOARDING_COPY } from '@community-marketplace/types';
 
 type VerificationOnboardingCopyProps = {
-  variant?: 'default' | 'compact';
-  showFastTrack?: boolean;
+  /** @default 'learn-more' */
+  variant?: 'learn-more' | 'inline';
 };
 
-export function VerificationOnboardingCopy({
-  variant = 'default',
-  showFastTrack = true,
-}: VerificationOnboardingCopyProps) {
+export function VerificationOnboardingCopy({ variant = 'learn-more' }: VerificationOnboardingCopyProps) {
   const items = [
     VERIFICATION_ONBOARDING_COPY.PERSONAL_DETAILS_PRIVATE,
     VERIFICATION_ONBOARDING_COPY.VERIFICATION_REQUIRED,
-    ...(showFastTrack ? [VERIFICATION_ONBOARDING_COPY.FAST_TRACK_EXPLAINER] : []),
   ];
 
-  if (variant === 'compact') {
+  if (variant === 'inline') {
     return (
-      <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-        {items.join(' ')}
-      </p>
-    );
-  }
-
-  return (
-    <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.25)] p-4">
-      <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
-        Why we verify sellers
-      </p>
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+      <ul className="list-disc space-y-1 pl-5 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
         {items.map((item) => (
           <li key={item}>{item}</li>
         ))}
       </ul>
-    </div>
+    );
+  }
+
+  return (
+    <details className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.2)] px-4 py-3">
+      <summary className="cursor-pointer text-sm font-medium text-[hsl(var(--dashboard-main-fg))] marker:text-[hsl(var(--dashboard-sidebar-muted))]">
+        Why we verify sellers
+      </summary>
+      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </details>
   );
 }

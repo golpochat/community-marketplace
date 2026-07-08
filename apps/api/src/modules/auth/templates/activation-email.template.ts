@@ -1,4 +1,4 @@
-import { APP_SHORT_NAME, BRAND_COLORS, buildBrandedEmailHtml, buildEmailCtaButton, escapeHtml } from '@community-marketplace/config';
+import { APP_SHORT_NAME, BRAND_COLORS, buildBrandedEmailHtml, buildEmailCtaButton, buildEmailInfoCallout, emailFooterCopyrightStyle, emailFooterLinkStyle, emailFooterTextStyle, escapeHtml } from '@community-marketplace/config';
 
 const ACTIVATION_EXPIRY_HOURS = 24;
 const c = BRAND_COLORS;
@@ -72,29 +72,23 @@ export function buildActivationEmailContent(
       and activate your account.
     </p>
     ${buildEmailCtaButton('Activate my account', input.activationUrl)}
-    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin:0 0 24px;">
-      <tr>
-        <td style="padding:16px;background-color:${c.surfaceFooter};border-radius:8px;border:1px solid ${c.borderSubtle};">
-          <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:${c.textPrimary};">Security notice</p>
-          <p style="margin:0;font-size:13px;line-height:1.5;color:${c.textMuted};">
-            This activation link expires in <strong style="color:${c.textPrimary};">${ACTIVATION_EXPIRY_HOURS} hours</strong>.
-          </p>
-        </td>
-      </tr>
-    </table>
+    ${buildEmailInfoCallout(
+      'Security notice',
+      `This activation link expires in <strong style="color:${c.textPrimary};">${ACTIVATION_EXPIRY_HOURS} hours</strong>.`,
+    )}
     <p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:${c.textMuted};">If the button doesn't work, copy this link:</p>
     <p style="margin:0;font-size:13px;line-height:1.5;word-break:break-all;">
       <a href="${safeUrl}" target="_blank" style="color:${c.primary};text-decoration:underline;">${safeUrl}</a>
     </p>`;
 
   const footerHtml = `
-    <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:${c.textMuted};">
+    <p style="${emailFooterTextStyle()}">
       If you didn't create a ${escapeHtml(appName)} account, you can safely ignore this email.
     </p>
-    <p style="margin:0 0 12px;font-size:13px;line-height:1.5;color:${c.textMuted};">
-      Questions? <a href="mailto:${escapeHtml(supportEmail)}" style="color:${c.primary};text-decoration:none;font-weight:500;">${escapeHtml(supportEmail)}</a>
+    <p style="${emailFooterTextStyle()}">
+      Questions? <a href="mailto:${escapeHtml(supportEmail)}" style="${emailFooterLinkStyle()}">${escapeHtml(supportEmail)}</a>
     </p>
-    <p style="margin:0;font-size:12px;line-height:1.5;color:${c.textFooter};">&copy; ${year} ${escapeHtml(appName)}. All rights reserved.</p>`;
+    <p style="${emailFooterCopyrightStyle()}">&copy; ${year} ${escapeHtml(appName)}. All rights reserved.</p>`;
 
   const html = buildBrandedEmailHtml({
     subject,

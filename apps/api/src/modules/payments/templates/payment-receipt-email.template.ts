@@ -1,4 +1,4 @@
-import { APP_SHORT_NAME, BRAND_COLORS, buildBrandedEmailHtml, buildEmailCtaButton, escapeHtml } from '@community-marketplace/config';
+import { APP_SHORT_NAME, BRAND_COLORS, buildBrandedEmailHtml, buildEmailCtaButton, emailFooterCopyrightStyle, escapeHtml } from '@community-marketplace/config';
 
 import type { PaymentReceiptDocumentData } from '../lib/payment-receipt.types';
 import { formatReceiptDate, formatReceiptMoney } from '../lib/payment-receipt.types';
@@ -54,7 +54,7 @@ export function buildBuyerPaymentReceiptEmail(
     ${buildEmailCtaButton('Download receipt', downloadUrl)}
     <p style="margin:0;font-size:13px;line-height:1.5;color:${c.textMuted};">Your PDF receipt is attached to this email for your records.</p>`;
 
-  const footerHtml = `<p style="margin:0;font-size:12px;color:${c.textFooter};">&copy; ${new Date().getFullYear()} ${escapeHtml(APP_SHORT_NAME)}</p>`;
+  const footerHtml = `<p style="${emailFooterCopyrightStyle()}">&copy; ${new Date().getFullYear()} ${escapeHtml(APP_SHORT_NAME)}</p>`;
 
   const html = buildBrandedEmailHtml({
     subject,
@@ -109,7 +109,7 @@ export function buildSellerPaymentRecordEmail(
     ${buildEmailCtaButton('Download sales record', downloadUrl)}
     <p style="margin:0;font-size:13px;line-height:1.5;color:${c.textMuted};">Your PDF sales record is attached to this email.</p>`;
 
-  const footerHtml = `<p style="margin:0;font-size:12px;color:${c.textFooter};">&copy; ${new Date().getFullYear()} ${escapeHtml(APP_SHORT_NAME)}</p>`;
+  const footerHtml = `<p style="${emailFooterCopyrightStyle()}">&copy; ${new Date().getFullYear()} ${escapeHtml(APP_SHORT_NAME)}</p>`;
 
   const html = buildBrandedEmailHtml({
     subject,

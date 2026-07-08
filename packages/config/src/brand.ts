@@ -18,10 +18,18 @@ export const BRAND_COLORS = {
   textPrimary: '#1C1917',
   textMuted: '#78716C',
   textFooter: '#A8A29E',
+  /** Text on dark teal surfaces (footer, header). */
+  textOnDark: '#FFFFFF',
+  textOnDarkMuted: '#CCFBF1',
+  linkOnDark: '#99F6E4',
   surfacePage: '#FAFAFA',
   surfaceCard: '#FFFFFF',
+  /** Light callout panel inside the email body. */
+  surfaceCallout: '#F0FDFA',
+  borderCallout: '#99F6E4',
   surfaceFooter: '#0F766E',
   borderSubtle: '#E4E4E7',
+  borderOnDark: 'rgba(255,255,255,0.15)',
   white: '#FFFFFF',
 } as const;
 
