@@ -102,6 +102,8 @@ export interface OtpSentResponse {
   purpose: OtpPurpose;
   expiresInSeconds: number;
   message: string;
+  /** Present only in dev / OTP pilot mode — never when live SMS is enabled. */
+  devCode?: string;
 }
 
 export interface OtpVerifiedResponse {

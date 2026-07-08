@@ -21,6 +21,7 @@ x-api-env: &api-env
   EMAIL_FROM: ${EMAIL_FROM:-noreply@${DOMAIN}}
   RBAC_SEED_ENABLED: ${RBAC_SEED_ENABLED:-false}
   RBAC_SEED_FORCE: ${RBAC_SEED_FORCE:-false}
+  OTP_PILOT_MODE: ${OTP_PILOT_MODE:-true}
   OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
   LOG_LEVEL: info
   R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}

@@ -76,6 +76,7 @@ export function RegisterForm() {
   const [phoneVerificationToken, setPhoneVerificationToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [devOtpCode, setDevOtpCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -101,8 +102,9 @@ export function RegisterForm() {
 
     setLoading(true);
     try {
-      await authService.sendOtp(e164);
+      const result = await authService.sendOtp(e164);
       setNormalizedPhone(e164);
+      setDevOtpCode(result.devCode ?? null);
       setStep("otp");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send OTP");
@@ -162,7 +164,6 @@ export function RegisterForm() {
   if (step === "phone") {
     return (
       <form onSubmit={handleSendOtp} className="mt-6 space-y-4">
-        <OtpPilotNotice />
         {error && <FormError message={error} />}
 
         <fieldset className="space-y-2">
@@ -224,14 +225,16 @@ export function RegisterForm() {
   if (step === "otp") {
     return (
       <form onSubmit={handleVerifyOtp} className="mt-6 space-y-4">
-        <OtpPilotNotice />
+        <OtpPilotNotice devCode={devOtpCode} />
         {error && <FormError message={error} />}
         <p className="text-sm text-muted-foreground">
-          {isOtpPilotMode()
-            ? "Enter the 6-digit code for "
-            : "Enter the 6-digit code sent to "}
+          {isOtpPilotMode() && devOtpCode
+            ? "Enter the 6-digit code shown above for "
+            : isOtpPilotMode()
+              ? "Enter the 6-digit code for "
+              : "Enter the 6-digit code sent to "}
           {normalizedPhone ? formatIrishPhoneHint(normalizedPhone) : phone}
-          {isOtpPilotMode() ? " (see notice above — not sent by SMS)." : "."}
+          {isOtpPilotMode() && !devOtpCode ? " (see notice above — not sent by SMS)." : "."}
         </p>
         <div className="space-y-2">
           <Label htmlFor="code">Verification code</Label>

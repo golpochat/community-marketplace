@@ -35,6 +35,7 @@ export function PhoneChangePanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [devOtpCode, setDevOtpCode] = useState<string | null>(null);
 
   function resetFlow() {
     setOpen(false);
@@ -44,6 +45,7 @@ export function PhoneChangePanel({
     setCode('');
     setError(null);
     setMessage(null);
+    setDevOtpCode(null);
   }
 
   async function handleSendOtp() {
@@ -60,6 +62,7 @@ export function PhoneChangePanel({
     try {
       const result = await userService.sendPhoneChangeOtp(e164);
       setNormalizedPhone(e164);
+      setDevOtpCode(result.devCode ?? null);
       setStep('otp');
       setMessage(result.message);
     } catch (err) {
@@ -124,13 +127,14 @@ export function PhoneChangePanel({
         </button>
       ) : (
         <div className="mt-3 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.35)] p-4">
-          <OtpPilotNotice className="mb-3 flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-950" />
           <p className="text-sm text-[hsl(var(--dashboard-main-fg))]">
             Enter your new Irish mobile number. We&apos;ll send a verification code to confirm it.
           </p>
 
           {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
-          {message && <p className="mt-2 text-sm text-emerald-700">{message}</p>}
+          {message && step === 'idle' && (
+            <p className="mt-2 text-sm text-emerald-700">{message}</p>
+          )}
 
           {step === 'idle' ? (
             <div className="mt-3 space-y-3">
@@ -163,10 +167,16 @@ export function PhoneChangePanel({
             </div>
           ) : (
             <div className="mt-3 space-y-3">
+              <OtpPilotNotice
+                devCode={devOtpCode}
+                className="flex gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-950"
+              />
               <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-                {isOtpPilotMode()
-                  ? `Enter the code for ${formatIrishPhoneHint(normalizedPhone)} (see notice above — not sent by SMS).`
-                  : `Code sent to ${formatIrishPhoneHint(normalizedPhone)}`}
+                {isOtpPilotMode() && devOtpCode
+                  ? `Enter the code shown above for ${formatIrishPhoneHint(normalizedPhone)}.`
+                  : isOtpPilotMode()
+                    ? `Enter the code for ${formatIrishPhoneHint(normalizedPhone)} (see notice above — not sent by SMS).`
+                    : `Code sent to ${formatIrishPhoneHint(normalizedPhone)}`}
               </p>
               <div>
                 <Label htmlFor="seller-phone-otp">Verification code</Label>
@@ -201,6 +211,7 @@ export function PhoneChangePanel({
                   onClick={() => {
                     setStep('idle');
                     setCode('');
+                    setDevOtpCode(null);
                     setMessage(null);
                     setError(null);
                   }}

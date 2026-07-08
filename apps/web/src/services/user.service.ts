@@ -1,4 +1,10 @@
-import type { ListingUploadUrlResponse, UserEffectivePermissions, UserProfile, UserSettings } from '@community-marketplace/types';
+import type {
+  ListingUploadUrlResponse,
+  OtpSentResponse,
+  UserEffectivePermissions,
+  UserProfile,
+  UserSettings,
+} from '@community-marketplace/types';
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
@@ -88,11 +94,14 @@ export const userService = {
     return response.data;
   },
 
-  async sendPhoneChangeOtp(phone: string): Promise<{ message: string }> {
-    const response = await apiClient<{ message: string }>(WEB_API_ROUTES.users.mePhoneSendOtp, {
-      method: 'POST',
-      body: JSON.stringify({ phone }),
-    });
+  async sendPhoneChangeOtp(phone: string): Promise<Pick<OtpSentResponse, 'message' | 'devCode'>> {
+    const response = await apiClient<Pick<OtpSentResponse, 'message' | 'devCode'>>(
+      WEB_API_ROUTES.users.mePhoneSendOtp,
+      {
+        method: 'POST',
+        body: JSON.stringify({ phone }),
+      },
+    );
     return response.data;
   },
 

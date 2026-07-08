@@ -6,11 +6,16 @@ import {
 } from '@nestjs/common';
 import { OtpChannel, OtpPurpose } from '@prisma/client';
 
-import type { OtpChannel as OtpChannelType, OtpPurpose as OtpPurposeType } from '@community-marketplace/types';
+import type {
+  OtpChannel as OtpChannelType,
+  OtpPurpose as OtpPurposeType,
+  OtpSentResponse,
+} from '@community-marketplace/types';
 import { sendOtpSchema, verifyOtpSchema } from '@community-marketplace/validation';
 
 import { LoggerLib } from '../../../libs/logger.lib';
 import { PrismaService } from '../../../database/prisma.service';
+import { isOtpPilotMode } from '../utils/otp-pilot-mode';
 import { generateOtpCode, hashToken } from '../utils/token-hash';
 
 const OTP_TTL_MS = 10 * 60 * 1000;
@@ -24,7 +29,10 @@ export class OtpService {
     private readonly logger: LoggerLib,
   ) {}
 
-  async sendOtp(input: unknown, context?: { ipAddress?: string; deviceFingerprint?: string }) {
+  async sendOtp(
+    input: unknown,
+    context?: { ipAddress?: string; deviceFingerprint?: string },
+  ): Promise<OtpSentResponse> {
     const dto = sendOtpSchema.parse(input);
     const recipient = dto.channel === 'email' ? dto.email! : dto.phone!;
     const purpose = dto.purpose as OtpPurpose;
@@ -50,13 +58,21 @@ export class OtpService {
       `OTP sent to ${channelLabel} ${recipient} (dev code: ${code}) [ip=${context?.ipAddress ?? 'unknown'}]`,
     );
 
-    return {
+    const response: OtpSentResponse = {
       channel: dto.channel as OtpChannelType,
       recipient,
       purpose: dto.purpose as OtpPurposeType,
       expiresInSeconds: Math.floor(OTP_TTL_MS / 1000),
-      message: `OTP sent to your ${channelLabel}`,
+      message: isOtpPilotMode()
+        ? `Verification code ready (pilot mode — no ${channelLabel} message sent)`
+        : `OTP sent to your ${channelLabel}`,
     };
+
+    if (isOtpPilotMode()) {
+      response.devCode = code;
+    }
+
+    return response;
   }
 
   async verifyOtp(input: unknown, _context?: { ipAddress?: string; deviceFingerprint?: string }) {

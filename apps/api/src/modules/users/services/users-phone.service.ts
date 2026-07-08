@@ -39,7 +39,7 @@ export class UsersPhoneService {
 
     await this.assertPhoneAvailable(phone, userId);
 
-    await this.otpService.sendOtp({
+    const otpResult = await this.otpService.sendOtp({
       channel: 'phone',
       phone,
       purpose: 'phone_change',
@@ -48,7 +48,8 @@ export class UsersPhoneService {
     await this.audit.record('phone_change_otp_sent', userId, userId, { phone });
 
     return {
-      message: 'Verification code sent to your new number.',
+      message: otpResult.message,
+      ...(otpResult.devCode ? { devCode: otpResult.devCode } : {}),
     };
   }
 

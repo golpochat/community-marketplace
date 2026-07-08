@@ -5,9 +5,16 @@ export function isOtpPilotMode(): boolean {
   return false;
 }
 
-export function getOtpPilotNoticeMessage(): string {
-  if (process.env.NODE_ENV === "development") {
-    return "Development mode: verification codes are printed in the API console — no SMS is sent.";
+export function getOtpPilotNoticeMessage(hasDevCode = false): string {
+  if (hasDevCode) {
+    if (process.env.NODE_ENV === "development") {
+      return "Development mode: SMS is not sent. Your verification code is shown below.";
+    }
+    return "Pilot mode: SMS is not live yet. Your verification code is shown below.";
   }
-  return "Pilot mode: SMS is not live yet. Codes are written to the API server logs. Ask your operator to retrieve the code (see pilot runbook).";
+
+  if (process.env.NODE_ENV === "development") {
+    return "Development mode: SMS is not sent. Your verification code will appear here after you tap Send.";
+  }
+  return "Pilot mode: SMS is not live yet. Your verification code will appear here after you tap Send.";
 }
