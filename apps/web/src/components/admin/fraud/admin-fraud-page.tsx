@@ -41,6 +41,48 @@ type FraudDialogAction =
   | { kind: 'escalate-signal'; userId: string; listingId?: string }
   | null;
 
+const FRAUD_USER_COLUMNS = ['Seller', 'Email', 'Status', 'Risk', 'Signals', 'Latest', ''] as const;
+const FRAUD_USER_COLUMN_WIDTHS = ['18%', '26%', '12%', '16%', '8%', '14%', '48px'];
+const FRAUD_USER_COLUMN_CLASSES = [
+  'min-w-0',
+  'min-w-0',
+  'min-w-0',
+  'min-w-0 whitespace-nowrap',
+  'min-w-0',
+  'min-w-0',
+  'px-2',
+] as const;
+
+const FRAUD_LISTING_COLUMNS = ['Listing', 'Seller', 'Status', 'Risk', 'Signals', ''] as const;
+const FRAUD_LISTING_COLUMN_WIDTHS = ['30%', '22%', '12%', '18%', '10%', '48px'];
+const FRAUD_LISTING_COLUMN_CLASSES = [
+  'min-w-0',
+  'min-w-0',
+  'min-w-0',
+  'min-w-0 whitespace-nowrap',
+  'min-w-0',
+  'px-2',
+] as const;
+
+const FRAUD_SIGNAL_COLUMNS = ['Type', 'Subject', 'Risk', 'Detected', 'State', ''] as const;
+const FRAUD_SIGNAL_COLUMN_WIDTHS = ['16%', '28%', '14%', '14%', '12%', '48px'];
+const FRAUD_SIGNAL_COLUMN_CLASSES = [
+  'min-w-0',
+  'min-w-0',
+  'min-w-0 whitespace-nowrap',
+  'min-w-0',
+  'min-w-0 whitespace-nowrap',
+  'px-2',
+] as const;
+
+function QueueCellText({ text }: { text: string }) {
+  return (
+    <span className="block truncate" title={text}>
+      {text}
+    </span>
+  );
+}
+
 const FRAUD_TABS = [
   { id: 'users', label: 'High-risk sellers' },
   { id: 'listings', label: 'High-risk listings' },
@@ -324,21 +366,30 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
   }
 
   const userRows = usersQuery.data.map((user: HighRiskUserSummary) => [
-    user.displayName ?? user.email ?? user.userId.slice(0, 8),
-    user.email ?? '—',
-    user.sellerStatus ?? '—',
+    <QueueCellText
+      key={`seller-${user.userId}`}
+      text={user.displayName ?? user.email ?? user.userId.slice(0, 8)}
+    />,
+    <QueueCellText key={`email-${user.userId}`} text={user.email ?? '—'} />,
+    <QueueCellText key={`status-${user.userId}`} text={user.sellerStatus ?? '—'} />,
     <RiskBadge key={`risk-${user.userId}`} score={user.riskScore} />,
     user.signalCount,
-    user.latestSignalAt ? formatListedAgo(user.latestSignalAt) : '—',
+    <QueueCellText
+      key={`latest-${user.userId}`}
+      text={user.latestSignalAt ? formatListedAgo(user.latestSignalAt) : '—'}
+    />,
     <IconActionGroup key={`actions-${user.userId}`}>
       <IconActionButton icon="eye" label="Review" onClick={() => setSelectedUserId(user.userId)} />
     </IconActionGroup>,
   ]);
 
   const listingRows = listingsQuery.data.map((listing: HighRiskListingSummary) => [
-    <TruncatedText key={`title-${listing.listingId}`} text={listing.title} />,
-    listing.sellerName ?? listing.sellerId.slice(0, 8),
-    listing.status,
+    <TruncatedText key={`title-${listing.listingId}`} text={listing.title} className="max-w-full" />,
+    <QueueCellText
+      key={`seller-${listing.listingId}`}
+      text={listing.sellerName ?? listing.sellerId.slice(0, 8)}
+    />,
+    <QueueCellText key={`status-${listing.listingId}`} text={listing.status} />,
     <RiskBadge key={`risk-${listing.listingId}`} score={listing.riskScore} />,
     listing.signalCount,
     <IconActionGroup key={`actions-${listing.listingId}`}>
@@ -351,15 +402,22 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
   ]);
 
   const signalRows = signalsQuery.data.map((signal: FraudSignalListItem) => [
-    FRAUD_SIGNAL_LABELS[signal.signalType],
-    <div key={`subject-${signal.id}`} className="min-w-0">
-      <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">{formatSubjectLabel(signal)}</p>
+    <QueueCellText key={`type-${signal.id}`} text={FRAUD_SIGNAL_LABELS[signal.signalType]} />,
+    <div key={`subject-${signal.id}`} className="min-w-0 overflow-hidden">
+      <p className="truncate font-medium text-[hsl(var(--dashboard-main-fg))]" title={formatSubjectLabel(signal)}>
+        {formatSubjectLabel(signal)}
+      </p>
       {signal.listingTitle ? (
-        <p className="truncate text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{signal.listingTitle}</p>
+        <p
+          className="truncate text-xs text-[hsl(var(--dashboard-sidebar-muted))]"
+          title={signal.listingTitle}
+        >
+          {signal.listingTitle}
+        </p>
       ) : null}
     </div>,
     <RiskBadge key={`risk-${signal.id}`} score={signal.riskScore} />,
-    formatListedAgo(signal.createdAt),
+    <QueueCellText key={`detected-${signal.id}`} text={formatListedAgo(signal.createdAt)} />,
     <SignalStatusBadge key={`state-${signal.id}`} status={fraudSignalStatus(signal)} />,
     <IconActionGroup key={`actions-${signal.id}`}>
       <IconActionButton icon="eye" label="Review" onClick={() => setSelectedSignalId(signal.id)} />
@@ -693,13 +751,17 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
         queueContent={
           tab === 'users' ? (
             <DataTable
-              columns={['Seller', 'Email', 'Status', 'Risk', 'Signals', 'Latest', '']}
+              columns={[...FRAUD_USER_COLUMNS]}
               rows={userRows}
+              columnWidths={[...FRAUD_USER_COLUMN_WIDTHS]}
+              columnClassNames={[...FRAUD_USER_COLUMN_CLASSES]}
             />
           ) : tab === 'listings' ? (
             <DataTable
-              columns={['Listing', 'Seller', 'Status', 'Risk', 'Signals', '']}
+              columns={[...FRAUD_LISTING_COLUMNS]}
               rows={listingRows}
+              columnWidths={[...FRAUD_LISTING_COLUMN_WIDTHS]}
+              columnClassNames={[...FRAUD_LISTING_COLUMN_CLASSES]}
             />
           ) : (
             <div className="space-y-4">
@@ -710,8 +772,10 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
                 variant="nested"
               />
               <DataTable
-                columns={['Type', 'Subject', 'Risk', 'Detected', 'State', '']}
+                columns={[...FRAUD_SIGNAL_COLUMNS]}
                 rows={signalRows}
+                columnWidths={[...FRAUD_SIGNAL_COLUMN_WIDTHS]}
+                columnClassNames={[...FRAUD_SIGNAL_COLUMN_CLASSES]}
               />
             </div>
           )

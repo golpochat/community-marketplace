@@ -99,7 +99,7 @@ export function DataTable({
               <th
                 key={col}
                 className={cn(
-                  'px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]',
+                  'overflow-hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]',
                   columnClassNames?.[index],
                 )}
               >
@@ -115,7 +115,7 @@ export function DataTable({
                 <td
                   key={cellIndex}
                   className={cn(
-                    'px-4 py-3 text-[hsl(var(--dashboard-main-fg))]',
+                    'overflow-hidden px-4 py-3 text-[hsl(var(--dashboard-main-fg))]',
                     columnClassNames?.[cellIndex],
                   )}
                 >
