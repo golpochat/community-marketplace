@@ -151,6 +151,21 @@ export type {
   AdminSellerVerificationDetail,
 } from './seller-verification';
 export { SELLER_VERIFICATION_MESSAGES, isSellerVerified } from './seller-verification';
+export type {
+  UnifiedVerificationState,
+  SellerBusinessStructure,
+  SellerRegistrationKind,
+  PersonalDetailsSnapshot,
+  AcceleratedVerificationSignals,
+  UnifiedVerificationContext,
+} from './verification';
+export {
+  VERIFICATION_ONBOARDING_COPY,
+  REGISTRATION_SELLER_KIND_OPTIONS,
+  mapSellerStatusToUnifiedState,
+  resolveUnifiedVerificationStage,
+  resolveUnifiedVerificationNextStep,
+} from './verification';
 export type { NearbyArea, UserGeoLocation, ReverseGeocodeResult } from './location';
 export type {
   ListingStatusActorType,

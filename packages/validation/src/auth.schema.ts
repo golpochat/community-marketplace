@@ -36,6 +36,12 @@ export const displayNameSchema = z.string().trim().min(1).max(100);
 
 export const registrationAccountTypeSchema = z.enum(['buyer', 'seller']);
 
+export const sellerRegistrationKindSchema = z.enum([
+  'individual',
+  'sole_trader',
+  'limited_company',
+]);
+
 export const sendOtpSchema = z
   .object({
     channel: otpChannelSchema,
@@ -69,21 +75,50 @@ export const verifyOtpSchema = z
     }
   });
 
-export const completeRegistrationSchema = z.object({
-  accountType: registrationAccountTypeSchema,
-  name: displayNameSchema,
-  email: emailSchema,
-  password: passwordSchema,
-  phoneVerificationToken: z.string().min(1),
-});
+export const completeRegistrationSchema = z
+  .object({
+    accountType: registrationAccountTypeSchema,
+    name: displayNameSchema,
+    email: emailSchema,
+    phoneVerificationToken: z.string().min(1),
+    sellerKind: sellerRegistrationKindSchema.optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.accountType === 'seller' && !value.sellerKind) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Choose how you sell: individual, sole trader, or limited company',
+        path: ['sellerKind'],
+      });
+    }
+    if (value.accountType === 'buyer' && value.sellerKind) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'sellerKind is only valid for seller accounts',
+        path: ['sellerKind'],
+      });
+    }
+  });
 
 export const activationPreviewSchema = z.object({
   token: z.string().min(1),
 });
 
-export const activateEmailSchema = z.object({
-  token: z.string().min(1),
-});
+export const activateEmailSchema = z
+  .object({
+    token: z.string().min(1),
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, 'Confirm your password'),
+  })
+  .superRefine((value, ctx) => {
+    if (value.password !== value.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Passwords do not match',
+        path: ['confirmPassword'],
+      });
+    }
+  });
 
 export const resendActivationSchema = z.object({
   email: emailSchema,
@@ -101,6 +136,7 @@ export const logoutSchema = z.object({
 export const deviceFingerprintHeaderSchema = z.string().min(8).max(128).optional();
 
 export type RegistrationAccountType = z.infer<typeof registrationAccountTypeSchema>;
+export type SellerRegistrationKindInput = z.infer<typeof sellerRegistrationKindSchema>;
 export type SendOtpInput = z.infer<typeof sendOtpSchema>;
 export type VerifyOtpInput = z.infer<typeof verifyOtpSchema>;
 export type CompleteRegistrationInput = z.infer<typeof completeRegistrationSchema>;

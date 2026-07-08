@@ -146,9 +146,37 @@ export function VerificationReviewModal({
                 </h3>
                 <dl className="grid gap-3 text-sm sm:grid-cols-2">
                   <div>
-                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Name</dt>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Public name</dt>
                     <dd className="font-medium">{detail.sellerName ?? '—'}</dd>
                   </div>
+                  <div>
+                    <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Legal name (private)</dt>
+                    <dd className="font-medium">{detail.legalName ?? '—'}</dd>
+                  </div>
+                  {detail.isBusinessAccount ? (
+                    <>
+                      <div>
+                        <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Business type</dt>
+                        <dd className="font-medium">{detail.businessStructure ?? '—'}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Business name</dt>
+                        <dd className="font-medium">{detail.businessName ?? '—'}</dd>
+                      </div>
+                      {detail.registeredCompanyName ? (
+                        <div>
+                          <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Registered company</dt>
+                          <dd className="font-medium">{detail.registeredCompanyName}</dd>
+                        </div>
+                      ) : null}
+                      {detail.croNumber ? (
+                        <div>
+                          <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">CRO number</dt>
+                          <dd className="font-medium">{detail.croNumber}</dd>
+                        </div>
+                      ) : null}
+                    </>
+                  ) : null}
                   <div>
                     <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Email</dt>
                     <dd className="font-medium">{detail.email}</dd>

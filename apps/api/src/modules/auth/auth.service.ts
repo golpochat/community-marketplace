@@ -324,9 +324,9 @@ export class AuthService {
 
       name: parsed.name,
 
-      password: parsed.password,
-
       accountType: parsed.accountType,
+
+      sellerKind: parsed.sellerKind,
 
     });
 
@@ -340,9 +340,9 @@ export class AuthService {
 
       name: parsed.name,
 
-      password: parsed.password,
-
       accountType: parsed.accountType,
+
+      sellerKind: parsed.sellerKind,
 
     });
 
@@ -414,9 +414,9 @@ export class AuthService {
 
   async activateEmail(dto: ActivateEmailDto, context: SessionContext) {
 
-    activateEmailSchema.parse(dto);
+    const parsed = activateEmailSchema.parse(dto);
 
-    const result = await this.emailActivationService.activate(dto.token);
+    const result = await this.emailActivationService.activate(parsed.token, parsed.password);
 
 
 

@@ -48,6 +48,12 @@ export class SellerVerificationController {
   }
 
   @RequirePermissions(PERMISSIONS.SUBMIT_VERIFICATION)
+  @Post('personal-details')
+  savePersonalDetails(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.verificationService.savePersonalDetails(user.id, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.SUBMIT_VERIFICATION)
   @Post('submit')
   submit(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     return this.verificationService.submit(user.id, body);

@@ -7,3 +7,4 @@ export {
   type VerificationToast,
 } from './verification-toast';
 export { VerificationNudgeBanner, VerificationNudgeHost } from './verification-nudge-banner';
+export { VerificationOnboardingCopy } from './verification-onboarding-copy';

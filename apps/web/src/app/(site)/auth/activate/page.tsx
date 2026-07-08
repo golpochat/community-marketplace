@@ -4,14 +4,14 @@ import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-import { Button } from '@community-marketplace/ui';
+import { Button, Label, PasswordInput } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
 import { authService } from '@/services/auth.service';
 
 export default function ActivateEmailPage() {
   return (
-    <Suspense fallback={<p className="mx-auto max-w-md py-16 text-center text-muted-foreground">Activating your account...</p>}>
+    <Suspense fallback={<p className="mx-auto max-w-md py-16 text-center text-muted-foreground">Loading activation…</p>}>
       <ActivateEmailContent />
     </Suspense>
   );
@@ -21,37 +21,80 @@ function ActivateEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth } = useAuth();
-  const [message, setMessage] = useState('Activating your account...');
+  const token = searchParams.get('token');
+
+  const [preview, setPreview] = useState<{
+    email: string;
+    accountType: 'buyer' | 'seller';
+    alreadyActivated: boolean;
+  } | null>(null);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  const passwordTooShort = password.length > 0 && password.length < 8;
+  const passwordsMismatch =
+    confirmPassword.length > 0 && password !== confirmPassword;
 
   useEffect(() => {
-    const token = searchParams.get('token');
     if (!token) {
       setError('This activation link is missing a token. Please use the link from your email.');
+      setLoading(false);
       return;
     }
 
     authService
-      .activateAccount(token)
-      .then((response) => {
-        if (response.login) {
-          setAuth(response.login);
-          router.push(response.login.redirectPath);
-          return;
-        }
+      .previewActivation(token)
+      .then(setPreview)
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [token]);
 
-        setMessage(
-          response.activated
-            ? `Your account for ${response.email} is now active. You can sign in.`
-            : `Your account for ${response.email} was already activated. You can sign in.`,
-        );
-      })
-      .catch((err: Error) => {
-        setError(err.message);
-      });
-  }, [searchParams, router, setAuth]);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!token) return;
 
-  if (error) {
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      return;
+    }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const response = await authService.activateAccount(token, password, confirmPassword);
+      if (response.login) {
+        setAuth(response.login);
+        router.push(response.login.redirectPath);
+        return;
+      }
+
+      setPreview((current) =>
+        current
+          ? { ...current, alreadyActivated: true }
+          : { email: response.email, accountType: 'buyer', alreadyActivated: true },
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Activation failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-md py-16 text-center">
+        <p className="text-muted-foreground">Loading activation…</p>
+      </div>
+    );
+  }
+
+  if (error && !preview) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
         <p className="text-destructive">{error}</p>
@@ -62,9 +105,81 @@ function ActivateEmailContent() {
     );
   }
 
+  if (preview?.alreadyActivated) {
+    return (
+      <div className="mx-auto max-w-md py-16 text-center">
+        <p className="text-muted-foreground">
+          Your account for <span className="font-medium text-foreground">{preview.email}</span> is
+          already active. You can sign in.
+        </p>
+        <Button className="mt-6" asChild>
+          <Link href="/auth/login">Go to sign in</Link>
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className="mx-auto max-w-md py-16 text-center">
-      <p className="text-muted-foreground">{message}</p>
+    <div className="mx-auto max-w-md py-16">
+      <h1 className="text-2xl font-bold text-foreground">Set your password</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Almost done — create a password for your{' '}
+        {preview?.accountType === 'seller' ? 'seller' : 'buyer'} account ({preview?.email}).
+      </p>
+      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <PasswordInput
+            id="password"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError(null);
+            }}
+            autoComplete="new-password"
+            aria-invalid={passwordTooShort || undefined}
+            aria-describedby={passwordTooShort ? 'password-help' : undefined}
+          />
+          {passwordTooShort ? (
+            <p id="password-help" className="text-sm text-destructive">
+              Password must be at least 8 characters.
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Use at least 8 characters.</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="confirm-password">Confirm password</Label>
+          <PasswordInput
+            id="confirm-password"
+            required
+            minLength={8}
+            value={confirmPassword}
+            onChange={(e) => {
+              setConfirmPassword(e.target.value);
+              setError(null);
+            }}
+            autoComplete="new-password"
+            aria-invalid={passwordsMismatch || undefined}
+            aria-describedby={passwordsMismatch ? 'confirm-password-error' : undefined}
+          />
+          {passwordsMismatch ? (
+            <p id="confirm-password-error" className="text-sm text-destructive">
+              Passwords do not match.
+            </p>
+          ) : null}
+        </div>
+        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={submitting || passwordTooShort || passwordsMismatch}
+        >
+          {submitting ? 'Activating…' : 'Activate account'}
+        </Button>
+      </form>
     </div>
   );
 }

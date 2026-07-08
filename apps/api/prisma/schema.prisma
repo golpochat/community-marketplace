@@ -620,6 +620,10 @@ model UserProfile {
   isCommunityAmbassador Boolean   @default(false) @map("is_community_ambassador")
   isBusinessAccount     Boolean   @default(false) @map("is_business_account")
   businessName          String?   @map("business_name")
+  businessStructure     SellerBusinessStructure? @map("business_structure")
+  legalName             String?   @map("legal_name")
+  registeredCompanyName String?   @map("registered_company_name")
+  croNumber             String?   @map("cro_number")
   businessWebsite         String?   @map("business_website")
   businessLogoUrl         String?   @map("business_logo_url")
   storeBannerUrl          String?   @map("store_banner_url")
@@ -771,12 +775,21 @@ enum RegistrationAccountType {
   @@map("RegistrationAccountType")
 }
 
+enum SellerBusinessStructure {
+  individual
+  sole_trader
+  limited_company
+
+  @@map("SellerBusinessStructure")
+}
+
 model PendingRegistration {
   id           String                   @id @default(uuid())
   email        String                   @unique @db.VarChar(255)
   phone        String                   @unique @db.VarChar(20)
   name         String                   @db.VarChar(100)
   accountType  RegistrationAccountType  @default(buyer) @map("account_type")
+  sellerKind   SellerBusinessStructure? @map("seller_kind")
   passwordHash String?                  @map("password_hash")
   expiresAt    DateTime                 @map("expires_at")
   createdAt    DateTime                 @default(now()) @map("created_at")

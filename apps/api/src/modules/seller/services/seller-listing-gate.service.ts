@@ -10,9 +10,11 @@ import {
   type SellerListingGateResult,
   type SellerVerificationStatus,
 } from '@community-marketplace/types';
+import { assessPersonalDetailsNameComplete } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../../database/prisma.service';
 import { resolveOptionalAssetPublicUrl } from '../../../libs/asset-url.lib';
+import { VerificationService } from '../../verification/services/verification.service';
 import { SellerStatusHistoryService } from './seller-status-history.service';
 
 @Injectable()
@@ -252,6 +254,7 @@ export class SellerVerificationStatusService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly listingGate: SellerListingGateService,
+    private readonly verification: VerificationService,
   ) {}
 
   async getStatus(userId: string): Promise<SellerVerificationStatus> {
@@ -272,10 +275,15 @@ export class SellerVerificationStatusService {
     const pendingRequest = user.sellerVerificationRequests[0] ?? null;
     const verificationSubmitted = Boolean(user.verificationRequestedAt);
     const approvedListingCount = this.listingGate.getApprovedCountForStatus(user);
+    const personalDetails = await this.verification.getPersonalDetailsSnapshot(userId);
 
-    const currentStage = this.resolveStage({
+    const currentStage = this.verification.resolveStage({
       phoneVerified,
       emailVerified,
+      personalDetailsNameComplete: assessPersonalDetailsNameComplete({
+        legalName: personalDetails.legalName,
+      }),
+      personalDetailsComplete: personalDetails.complete,
       sellerStatus: user.sellerStatus,
       verificationSubmitted,
       idVerified: user.idVerified,
@@ -295,26 +303,26 @@ export class SellerVerificationStatusService {
       emailVerified,
       idVerified: user.idVerified,
       currentStage,
+      unifiedState: this.verification.resolveUnifiedState({
+        sellerStatus: user.sellerStatus,
+        verificationRequestedAt: user.verificationRequestedAt,
+        idVerified: user.idVerified,
+      }),
+      personalDetailsComplete: personalDetails.complete,
+      personalDetailsNameComplete: assessPersonalDetailsNameComplete({
+        legalName: personalDetails.legalName,
+      }),
+      businessDetailsComplete: personalDetails.businessDetailsComplete,
+      isBusinessAccount: personalDetails.isBusinessAccount,
+      businessStructure: personalDetails.businessStructure,
+      publicDisplayName: personalDetails.publicDisplayName,
+      businessName: personalDetails.businessName,
       nudgeMessage,
       verificationRequestedAt: user.verificationRequestedAt?.toISOString(),
       verificationCompletedAt: user.verificationCompletedAt?.toISOString(),
       verificationRejectedReason: user.verificationRejectedReason ?? undefined,
       pendingRequest: pendingRequest ? this.mapRequest(pendingRequest) : null,
     };
-  }
-
-  private resolveStage(input: {
-    phoneVerified: boolean;
-    emailVerified: boolean;
-    sellerStatus: SellerStatus;
-    verificationSubmitted: boolean;
-    idVerified: boolean;
-  }) {
-    if (input.sellerStatus === 'verified' || input.idVerified) return 'complete' as const;
-    if (input.verificationSubmitted) return 'review' as const;
-    if (!input.phoneVerified) return 'phone' as const;
-    if (!input.emailVerified) return 'email' as const;
-    return 'identity' as const;
   }
 
   mapRequest(row: {

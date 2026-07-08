@@ -40,6 +40,7 @@ import { DisplayAdsService } from './services/display-ads.service';
 import { StoreSlotCatalogService } from './services/store-slot-catalog.service';
 import { StoreSlotFulfillmentService } from './services/store-slot-fulfillment.service';
 import { StatementsModule } from '../statements/statements.module';
+import { VerificationModule } from '../verification/verification.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { StatementsModule } from '../statements/statements.module';
     SearchModule,
     forwardRef(() => PaymentsModule),
     forwardRef(() => StatementsModule),
+    VerificationModule,
   ],
   controllers: [
     AdminMonetizationController,

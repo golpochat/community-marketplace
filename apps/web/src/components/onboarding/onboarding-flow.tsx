@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { Button, Input, Label } from '@community-marketplace/ui';
+import { VERIFICATION_ONBOARDING_COPY } from '@community-marketplace/types';
 import { CheckCircle2, Circle } from 'lucide-react';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -48,8 +49,9 @@ export function OnboardingFlow() {
           you started
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Your phone number is verified to protect the community. Complete these quick steps — or skip
-          and come back anytime.
+          Your phone number is verified to protect the community.{' '}
+          {VERIFICATION_ONBOARDING_COPY.PERSONAL_DETAILS_PRIVATE} Complete these quick steps — or
+          skip and come back anytime.
         </p>
 
         <ol className="mt-6 space-y-4">

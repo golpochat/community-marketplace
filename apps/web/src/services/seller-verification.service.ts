@@ -1,6 +1,7 @@
 import type {
   ListingUploadUrlResponse,
   PaginatedResult,
+  SellerRegistrationKind,
   SellerStatusHistoryEntry,
   SellerVerificationRequest,
   SellerVerificationStartResponse,
@@ -29,6 +30,21 @@ export const sellerVerificationService = {
 
   phone(body: { action: 'send_otp'; phone: string } | { action: 'verify_otp'; phone: string; code: string }) {
     return apiClient(`${WEB_API_ROUTES.seller.verification}/phone`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  },
+
+  savePersonalDetails(body: {
+    legalName?: string;
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    registeredCompanyName?: string;
+    croNumber?: string;
+    businessStructure?: SellerRegistrationKind;
+  }) {
+    return apiClient(`${WEB_API_ROUTES.seller.verification}/personal-details`, {
       method: 'POST',
       body: JSON.stringify(body),
     });

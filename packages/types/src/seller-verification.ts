@@ -13,6 +13,7 @@ export type SellerVerificationStage =
   | 'complete';
 
 export type SellerVerificationNextStep =
+  | 'personal_details'
   | 'phone'
   | 'email'
   | 'id_document'
@@ -67,6 +68,15 @@ export interface SellerVerificationStatus {
   emailVerified: boolean;
   idVerified: boolean;
   currentStage: SellerVerificationStage;
+  /** Unified cross-flow state: pending, verified, or manual-review. */
+  unifiedState?: import('./verification').UnifiedVerificationState;
+  personalDetailsComplete?: boolean;
+  personalDetailsNameComplete?: boolean;
+  businessDetailsComplete?: boolean;
+  isBusinessAccount?: boolean;
+  businessStructure?: import('./verification').SellerBusinessStructure;
+  publicDisplayName?: string;
+  businessName?: string;
   nudgeMessage?: string;
   verificationRequestedAt?: string;
   verificationCompletedAt?: string;
@@ -92,6 +102,13 @@ export interface AdminSellerVerificationRow {
   requestId?: string;
   userId: string;
   sellerName?: string;
+  /** Private legal name for admin review only. */
+  legalName?: string;
+  isBusinessAccount?: boolean;
+  businessStructure?: import('./verification').SellerBusinessStructure;
+  businessName?: string;
+  registeredCompanyName?: string;
+  croNumber?: string;
   email: string;
   phone?: string;
   submittedAt?: string;

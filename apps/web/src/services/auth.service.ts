@@ -5,6 +5,7 @@ import type {
   OtpSentResponse,
   OtpVerifiedResponse,
   RegistrationAccountType,
+  SellerRegistrationKind,
 } from '@community-marketplace/types';
 import { loginSchema } from '@community-marketplace/validation';
 
@@ -44,9 +45,9 @@ export const authService = {
 
   async completeRegistration(input: {
     accountType: RegistrationAccountType;
+    sellerKind?: SellerRegistrationKind;
     name: string;
     email: string;
-    password: string;
     phoneVerificationToken: string;
   }): Promise<CompleteRegistrationResponse> {
     const response = await apiClient<CompleteRegistrationResponse>(
@@ -59,12 +60,30 @@ export const authService = {
     return response.data;
   },
 
-  async activateAccount(token: string): Promise<EmailActivationResponse> {
+  async previewActivation(token: string) {
+    const response = await apiClient<import('@community-marketplace/types').ActivationPreviewResponse>(
+      WEB_API_ROUTES.public.auth.activatePreview,
+      {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      },
+    );
+    if (!response.data) {
+      throw new Error('Invalid activation link');
+    }
+    return response.data;
+  },
+
+  async activateAccount(
+    token: string,
+    password: string,
+    confirmPassword: string,
+  ): Promise<EmailActivationResponse> {
     const response = await apiClient<EmailActivationResponse>(
       WEB_API_ROUTES.public.auth.activate,
       {
         method: 'POST',
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, password, confirmPassword }),
       },
     );
     return response.data;

@@ -74,6 +74,14 @@ export class VerifyOtpDto {
 export class ActivateEmailDto {
   @IsString()
   token!: string;
+
+  @IsString()
+  @MinLength(8)
+  password!: string;
+
+  @IsString()
+  @MinLength(8)
+  confirmPassword!: string;
 }
 
 export class ActivationPreviewDto {
@@ -112,10 +120,6 @@ export class CompleteRegistrationDto {
 
   @IsEmail()
   email!: string;
-
-  @IsString()
-  @MinLength(8)
-  password!: string;
 
   @IsString()
   phoneVerificationToken!: string;

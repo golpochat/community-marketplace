@@ -33,6 +33,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { EventBusService } from '../../../events/event-bus.service';
 import { LoggerLib } from '../../../libs/logger.lib';
 import { StripeConnectService } from '../../payments/services/stripe-connect.service';
+import { VerificationService } from '../../verification/services/verification.service';
 import {
   roundMoney,
 } from '../lib/boost.lib';
@@ -76,6 +77,7 @@ export class PlatformPurchaseService {
     private readonly buyerStatementPurchases: BuyerStatementPurchaseService,
     private readonly eventBus: EventBusService,
     private readonly logger: LoggerLib,
+    private readonly verification: VerificationService,
   ) {}
 
   async createBoostIntent(
@@ -269,6 +271,7 @@ export class PlatformPurchaseService {
 
   async createFastTrackIntent(sellerId: string): Promise<FastTrackIntentResponse> {
     await this.assertIntentRateLimit(sellerId, 'fast_track_verification');
+    await this.verification.assertAcceleratedVerificationAllowed(sellerId);
 
     const status = await this.getFastTrackStatus(sellerId);
     if (!status.eligible) {
@@ -646,6 +649,11 @@ export class PlatformPurchaseService {
     }
     if (sellerStatus === 'suspended') {
       return { eligible: false, reason: 'seller_suspended' };
+    }
+
+    const personalDetails = await this.verification.getPersonalDetailsSnapshot(sellerId);
+    if (!personalDetails.complete) {
+      return { eligible: false, reason: 'personal_details_incomplete' };
     }
 
     const since = new Date();

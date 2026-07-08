@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { phoneSchema } from './auth.schema';
+import { sellerPersonalDetailsUpdateSchema } from './personal-details.schema';
 
 const sellerVerificationLegacyStartSchema = z.discriminatedUnion('action', [
   z.object({
@@ -47,6 +48,8 @@ export const sellerVerificationDocumentSchema = z.union([
     filePath: z.string().min(1).max(2048),
   }),
 ]);
+
+export const sellerVerificationPersonalDetailsSchema = sellerPersonalDetailsUpdateSchema;
 
 export const sellerVerificationFlowSubmitSchema = z.object({
   phoneNumber: phoneSchema.optional(),
@@ -99,6 +102,9 @@ export const sellerForceReverifySchema = z.object({
   reason: z.string().min(1).max(500),
 });
 
+export type SellerVerificationPersonalDetailsInput = z.infer<
+  typeof sellerVerificationPersonalDetailsSchema
+>;
 export type SellerVerificationStartInput = z.infer<typeof sellerVerificationStartSchema>;
 export type SellerVerificationPhoneInput = z.infer<typeof sellerVerificationPhoneSchema>;
 export type SellerVerificationUploadInput = z.infer<typeof sellerVerificationUploadSchema>;

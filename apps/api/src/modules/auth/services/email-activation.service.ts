@@ -17,8 +17,8 @@ export interface ActivationRegistrationData {
   email: string;
   phone: string;
   name: string;
-  password: string;
   accountType: RegistrationAccountType;
+  sellerKind?: import('@community-marketplace/types').SellerRegistrationKind;
 }
 
 @Injectable()
@@ -53,7 +53,7 @@ export class EmailActivationService {
     }));
   }
 
-  async activate(token: string) {
+  async activate(token: string, password: string) {
     const payload = this.verifyActivationToken(token);
 
     const pending = await this.prisma.pendingRegistration.findUnique({
@@ -66,10 +66,6 @@ export class EmailActivationService {
 
     if (pending.phone !== payload.phone) {
       throw new UnauthorizedException('Invalid activation token');
-    }
-
-    if (!pending.passwordHash) {
-      throw new ForbiddenException('Registration data is incomplete. Please register again.');
     }
 
     const accountType = this.resolveAccountType(payload.accountType, pending.accountType);
@@ -109,7 +105,7 @@ export class EmailActivationService {
       data: {
         email: payload.email,
         displayName: pending.name,
-        passwordHash: pending.passwordHash,
+        passwordHash: hashPassword(password),
         primaryRoleId: roleId,
         status: 'active',
         emailVerifiedAt: now,
@@ -119,6 +115,9 @@ export class EmailActivationService {
         profile: {
           create: {
             phone: payload.phone,
+            ...(accountType === 'seller' && pending.sellerKind
+              ? this.buildSellerProfileFromKind(pending.name, pending.sellerKind)
+              : {}),
           },
         },
       },
@@ -140,7 +139,7 @@ export class EmailActivationService {
       where: { email },
     });
 
-    if (!pending || pending.expiresAt < new Date() || !pending.passwordHash) {
+    if (!pending || pending.expiresAt < new Date()) {
       throw new ForbiddenException('No pending registration found for this email');
     }
 
@@ -148,8 +147,8 @@ export class EmailActivationService {
       email: pending.email,
       phone: pending.phone,
       name: pending.name,
-      password: '',
       accountType: this.resolveAccountType(undefined, pending.accountType),
+      sellerKind: pending.sellerKind ?? undefined,
     });
 
     return { email: pending.email, token };
@@ -176,14 +175,15 @@ export class EmailActivationService {
         phone: data.phone,
         name: data.name,
         accountType: data.accountType,
-        passwordHash: hashPassword(data.password),
+        sellerKind: data.sellerKind ?? null,
         expiresAt,
       },
       update: {
         phone: data.phone,
         name: data.name,
         accountType: data.accountType,
-        passwordHash: hashPassword(data.password),
+        sellerKind: data.sellerKind ?? null,
+        passwordHash: null,
         expiresAt,
       },
     });
@@ -195,6 +195,18 @@ export class EmailActivationService {
 
   getActivationExpiresIn(): number {
     return EmailActivationService.ACTIVATION_TTL_SECONDS;
+  }
+
+  private buildSellerProfileFromKind(
+    publicName: string,
+    sellerKind: NonNullable<ActivationRegistrationData['sellerKind']>,
+  ) {
+    const isBusiness = sellerKind === 'sole_trader' || sellerKind === 'limited_company';
+    return {
+      businessStructure: sellerKind,
+      isBusinessAccount: isBusiness,
+      ...(isBusiness ? { businessName: publicName } : {}),
+    };
   }
 
   private resolveAccountType(

@@ -4,13 +4,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
-import type { RegistrationAccountType } from "@community-marketplace/types";
+import type { RegistrationAccountType, SellerRegistrationKind } from "@community-marketplace/types";
+import {
+  REGISTRATION_SELLER_KIND_OPTIONS,
+  VERIFICATION_ONBOARDING_COPY,
+} from "@community-marketplace/types";
 import { IRISH_MOBILE_VALIDATION_MESSAGE } from "@community-marketplace/validation";
 import {
   Button,
   Input,
   Label,
-  PasswordInput,
   cn,
 } from "@community-marketplace/ui";
 
@@ -63,12 +66,12 @@ export function RegisterForm() {
   const [accountType, setAccountType] = useState<RegistrationAccountType | "">(
     "",
   );
+  const [sellerKind, setSellerKind] = useState<SellerRegistrationKind | "">("");
   const [phone, setPhone] = useState("");
   const [normalizedPhone, setNormalizedPhone] = useState("");
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [phoneVerificationToken, setPhoneVerificationToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -132,13 +135,18 @@ export function RegisterForm() {
       return;
     }
 
+    if (accountType === "seller" && !sellerKind) {
+      setError("Choose how you sell: individual, sole trader, or limited company.");
+      return;
+    }
+
     setLoading(true);
     try {
       const result = await authService.completeRegistration({
         accountType,
+        sellerKind: accountType === "seller" ? (sellerKind as SellerRegistrationKind) : undefined,
         name,
         email,
-        password,
         phoneVerificationToken,
       });
       setSuccess(result.message);
@@ -252,9 +260,41 @@ export function RegisterForm() {
           {accountType === "seller" ? "seller" : "buyer"} account.
         </p>
 
+        {accountType === "seller" && (
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium text-foreground">How do you sell?</legend>
+            {REGISTRATION_SELLER_KIND_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                className={cn(
+                  "flex cursor-pointer items-start gap-3 rounded-lg border border-border px-3 py-3 transition-colors duration-150",
+                  "hover:bg-muted/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="seller-kind"
+                  value={option.value}
+                  checked={sellerKind === option.value}
+                  onChange={() => setSellerKind(option.value)}
+                  className="mt-1 accent-primary"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-foreground">{option.label}</span>
+                  <span className="block text-xs text-muted-foreground">{option.description}</span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        )}
+
         <div className="space-y-2">
           <Label htmlFor="name">
-            {accountType === "seller" ? "Store name or your name" : "Full name"}
+            {accountType === "seller"
+              ? sellerKind === "individual"
+                ? "Name buyers will see"
+                : "Business name buyers will see"
+              : "Full name"}
           </Label>
           <Input
             id="name"
@@ -264,6 +304,13 @@ export function RegisterForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
+          {accountType === "seller" && (
+            <p className="text-xs text-muted-foreground">
+              {sellerKind === "individual"
+                ? VERIFICATION_ONBOARDING_COPY.REGISTRATION_PUBLIC_NAME
+                : VERIFICATION_ONBOARDING_COPY.REGISTRATION_BUSINESS_NAME}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -276,24 +323,16 @@ export function RegisterForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <PasswordInput
-            id="password"
-            required
-            autoComplete="new-password"
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
           <p className="text-xs text-muted-foreground">
-            Use at least 8 characters.
+            {VERIFICATION_ONBOARDING_COPY.REGISTRATION_EMAIL_PRIVATE}
           </p>
         </div>
 
-        <Button type="submit" disabled={loading} className="w-full">
+        <Button
+          type="submit"
+          disabled={loading || (accountType === "seller" && !sellerKind)}
+          className="w-full"
+        >
           {loading ? "Sending activation email..." : "Create account"}
         </Button>
       </form>
@@ -306,7 +345,8 @@ export function RegisterForm() {
       <p className="text-sm text-muted-foreground">
         We sent an activation link to{" "}
         <span className="font-medium text-foreground">{email}</span>. Open the
-        email and click the link — you&apos;ll be signed in automatically.
+        email and click the link to set your password and finish creating your
+        account.
       </p>
       <p className="text-sm text-muted-foreground">
         The link expires in 24 hours. Didn&apos;t receive it? Check your spam

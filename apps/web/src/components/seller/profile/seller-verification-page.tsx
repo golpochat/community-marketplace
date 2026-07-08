@@ -1,8 +1,10 @@
 'use client';
 
 import { PageHeader } from '@community-marketplace/ui-dashboard';
+import { VERIFICATION_ONBOARDING_COPY } from '@community-marketplace/types';
 
 import { useSellerProfileData } from '@/hooks/use-seller-profile-data';
+import { VerificationOnboardingCopy } from '@/components/seller/verification';
 
 import { SellerVerificationFlow } from './seller-verification-flow';
 
@@ -13,8 +15,11 @@ export function SellerVerificationPage() {
     <>
       <PageHeader
         title="Verification"
-        description="Verify your identity to unlock unlimited listings and the trusted seller badge."
+        description={VERIFICATION_ONBOARDING_COPY.VERIFICATION_REQUIRED}
       />
+      <div className="mb-6">
+        <VerificationOnboardingCopy variant="compact" />
+      </div>
       {loading && (
         <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading…</p>
       )}

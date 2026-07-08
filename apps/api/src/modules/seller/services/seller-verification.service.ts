@@ -35,6 +35,7 @@ import { OtpService } from '../../auth/services/otp.service';
 import { R2StorageService } from '../../users/services/r2-storage.service';
 import { UserAuditService } from '../../users/services/user-audit.service';
 import { FastTrackFulfillmentService } from '../../monetization/services/fast-track-fulfillment.service';
+import { VerificationService } from '../../verification/services/verification.service';
 import {
   SellerListingGateService,
   SellerVerificationStatusService,
@@ -55,10 +56,15 @@ export class SellerVerificationService {
     private readonly statusService: SellerVerificationStatusService,
     private readonly statusHistory: SellerStatusHistoryService,
     private readonly fastTrackFulfillment: FastTrackFulfillmentService,
+    private readonly verification: VerificationService,
   ) {}
 
   getStatus(userId: string): Promise<SellerVerificationStatus> {
     return this.statusService.getStatus(userId);
+  }
+
+  savePersonalDetails(userId: string, input: unknown) {
+    return this.verification.savePersonalDetails(userId, input);
   }
 
   async start(userId: string, input: unknown = {}) {
@@ -72,7 +78,7 @@ export class SellerVerificationService {
     }
 
     const status = await this.statusService.getStatus(userId);
-    this.assertCanBeginVerification(status);
+    this.verification.assertCanBeginVerification(status);
 
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: userId },
@@ -152,6 +158,8 @@ export class SellerVerificationService {
   async submit(userId: string, input: unknown): Promise<SellerVerificationRequestDto> {
     const parsed = sellerVerificationFlowSubmitSchema.parse(input);
     const status = await this.statusService.getStatus(userId);
+
+    await this.verification.assertPersonalDetailsComplete(userId);
 
     if (!status.phoneVerified) {
       throw new BadRequestException('Phone verification is required before submitting documents');
@@ -423,6 +431,32 @@ export class SellerVerificationService {
     };
   }
 
+  private mapAdminIdentityFields(
+    user: {
+      displayName: string | null;
+      profile: {
+        legalName: string | null;
+        isBusinessAccount: boolean;
+        businessStructure: string | null;
+        businessName: string | null;
+        registeredCompanyName: string | null;
+        croNumber: string | null;
+      } | null;
+    },
+  ) {
+    return {
+      sellerName: user.displayName ?? undefined,
+      legalName: user.profile?.legalName ?? undefined,
+      isBusinessAccount: user.profile?.isBusinessAccount ?? false,
+      businessStructure:
+        (user.profile?.businessStructure as AdminSellerVerificationRow['businessStructure']) ??
+        undefined,
+      businessName: user.profile?.businessName ?? undefined,
+      registeredCompanyName: user.profile?.registeredCompanyName ?? undefined,
+      croNumber: user.profile?.croNumber ?? undefined,
+    };
+  }
+
   private mapAdminRowFromRequest(
     row: Prisma.SellerVerificationRequestGetPayload<{
       include: {
@@ -436,9 +470,9 @@ export class SellerVerificationService {
     }>,
   ): AdminSellerVerificationRow {
     return {
+      ...this.mapAdminIdentityFields(row.user),
       requestId: row.id,
       userId: row.userId,
-      sellerName: row.user.displayName ?? undefined,
       email: row.user.email,
       phone: row.phoneNumber ?? row.user.profile?.phone ?? undefined,
       submittedAt: row.createdAt.toISOString(),
@@ -479,9 +513,9 @@ export class SellerVerificationService {
     } | null,
   ): AdminSellerVerificationRow {
     return {
+      ...this.mapAdminIdentityFields(user),
       requestId: request?.id,
       userId: user.id,
-      sellerName: user.displayName ?? undefined,
       email: user.email,
       phone: request?.phoneNumber ?? user.profile?.phone ?? undefined,
       submittedAt: request?.createdAt.toISOString(),
@@ -918,7 +952,7 @@ export class SellerVerificationService {
         stored: true,
         filePath: parsed.filePath,
         requestId: updated.id,
-        nextRequiredStep: this.resolveNextStep(
+        nextRequiredStep: this.verification.resolveNextStep(
           await this.statusService.getStatus(userId),
           updated,
         ),
@@ -1008,7 +1042,7 @@ export class SellerVerificationService {
   ): SellerVerificationStartResponse {
     return {
       requestId: request.id,
-      nextRequiredStep: this.resolveNextStep(status, request),
+      nextRequiredStep: this.verification.resolveNextStep(status, request),
       sellerStatus: status.sellerStatus,
       phoneVerified: status.phoneVerified,
       emailVerified: status.emailVerified,
@@ -1022,26 +1056,7 @@ export class SellerVerificationService {
       'idDocumentPath' | 'selfiePath' | 'addressDocumentPath'
     > | null,
   ): SellerVerificationNextStep {
-    if (status.sellerStatus === 'verified' || status.idVerified) return 'complete';
-    if (status.verificationRequestedAt) return 'review';
-    if (!status.phoneVerified) return 'phone';
-    if (!status.emailVerified) return 'email';
-    if (!request?.idDocumentPath) return 'id_document';
-    if (!request?.selfiePath) return 'selfie';
-    if (!request?.addressDocumentPath) return 'address';
-    return 'submit';
-  }
-
-  private assertCanBeginVerification(status: SellerVerificationStatus) {
-    if (status.sellerStatus === 'verified') {
-      throw new BadRequestException('You are already a verified seller');
-    }
-    if (status.sellerStatus === 'suspended') {
-      throw new ForbiddenException('Your seller account is suspended');
-    }
-    if (status.verificationRequestedAt) {
-      throw new BadRequestException('A verification request is already pending review');
-    }
+    return this.verification.resolveNextStep(status, request);
   }
 
   private async findRequestOrThrow(requestId: string) {

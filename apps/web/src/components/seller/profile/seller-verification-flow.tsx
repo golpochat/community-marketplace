@@ -7,13 +7,13 @@ import type {
   FastTrackStatusResponse,
   SellerVerificationStatus,
 } from '@community-marketplace/types';
-import { SELLER_VERIFICATION_MESSAGES } from '@community-marketplace/types';
+import { SELLER_VERIFICATION_MESSAGES, VERIFICATION_ONBOARDING_COPY } from '@community-marketplace/types';
 import { IRISH_MOBILE_VALIDATION_MESSAGE, normalizeIrishPhoneToE164 } from '@community-marketplace/validation';
 import { Card } from '@community-marketplace/ui-dashboard';
 
 import { IrishMobilePrefixTooltip } from '@/components/forms/irish-mobile-prefix-tooltip';
 
-import { VerificationProgressBar } from '@/components/seller/verification';
+import { VerificationProgressBar, VerificationOnboardingCopy } from '@/components/seller/verification';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
 import { monetizationService } from '@/services/monetization.service';
 import { sellerVerificationService } from '@/services/seller-verification.service';
@@ -22,19 +22,21 @@ import { SellerProfileStatusBadge } from './seller-profile-status-badge';
 import { SellerStatusHistoryPanel } from './seller-status-history-panel';
 
 const STEPS = [
-  { id: 1, label: 'Phone' },
-  { id: 2, label: 'ID upload' },
-  { id: 3, label: 'Address (optional)' },
-  { id: 4, label: 'Submit' },
+  { id: 1, label: 'Personal details' },
+  { id: 2, label: 'Phone' },
+  { id: 3, label: 'ID upload' },
+  { id: 4, label: 'Address (optional)' },
+  { id: 5, label: 'Submit' },
 ] as const;
 
 function activeStepIndex(status: SellerVerificationStatus | null): number {
   if (!status) return 0;
   if (status.sellerStatus === 'verified' || status.verificationRequestedAt) return 4;
-  if (!status.phoneVerified) return 0;
-  if (!status.idVerified && !status.pendingRequest?.idDocumentPath) return 1;
-  if (!status.pendingRequest?.selfiePath) return 2;
-  return 3;
+  if (!status.personalDetailsComplete) return 0;
+  if (!status.phoneVerified || !status.emailVerified) return 1;
+  if (!status.idVerified && !status.pendingRequest?.idDocumentPath) return 2;
+  if (!status.pendingRequest?.selfiePath) return 3;
+  return 4;
 }
 
 function FilePreview({ file, label }: { file?: File; label: string }) {
@@ -106,18 +108,25 @@ function FastTrackCard({
         <div className="space-y-2">
           <p className="text-sm font-medium text-indigo-800">Priority review</p>
           <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-            You&apos;re in the priority queue. We aim to review within 24 hours.
+            You&apos;re in the priority queue. We aim to review within 24 hours. Fast-track uses
+            your verified phone, email, or other identity signals to accelerate review — it does not
+            skip verification.
           </p>
         </div>
       ) : (
         <>
           <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-            Verification is free. Want faster review? Fast-track for{' '}
+            {VERIFICATION_ONBOARDING_COPY.FAST_TRACK_EXPLAINER} Optional fast-track for{' '}
             <span className="font-semibold text-[hsl(var(--dashboard-main-fg))]">
               €{fastTrack.price.toFixed(2)}
             </span>{' '}
             (24-hour priority queue). Standard review takes 3–5 business days.
           </p>
+          {fastTrack.reason === 'personal_details_incomplete' && (
+            <p className="mt-2 text-sm text-amber-700">
+              Complete your personal details before purchasing fast-track.
+            </p>
+          )}
           {fastTrack.reason && (
             <p className="mt-2 text-sm text-amber-700">{fastTrack.reason}</p>
           )}
@@ -165,6 +174,9 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
   const [normalizedPhone, setNormalizedPhone] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
+  const [fullName, setFullName] = useState('');
+  const [registeredCompanyName, setRegisteredCompanyName] = useState('');
+  const [croNumber, setCroNumber] = useState('');
   const [files, setFiles] = useState<{
     idDocument?: File;
     selfie?: File;
@@ -181,6 +193,9 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
       ]);
       setStatus(verificationStatus);
       setFastTrack(fastTrackStatus);
+      if (!fullName.trim() && verificationStatus.personalDetailsComplete === false) {
+        setFullName('');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load verification');
     } finally {
@@ -197,8 +212,45 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
     status &&
     status.sellerStatus !== 'verified' &&
     !status.verificationRequestedAt &&
+    status.personalDetailsComplete &&
     status.phoneVerified &&
     status.emailVerified;
+
+  async function handleSavePersonalDetails(event: React.FormEvent) {
+    event.preventDefault();
+    if (!fullName.trim()) {
+      setError('Enter your full legal name as it appears on your ID.');
+      return;
+    }
+    if (status?.businessStructure === 'limited_company') {
+      if (!registeredCompanyName.trim()) {
+        setError('Enter your registered company name.');
+        return;
+      }
+      if (!croNumber.trim()) {
+        setError('Enter your CRO number.');
+        return;
+      }
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      await sellerVerificationService.savePersonalDetails({
+        legalName: fullName.trim(),
+        ...(status?.businessStructure === 'limited_company'
+          ? {
+              registeredCompanyName: registeredCompanyName.trim(),
+              croNumber: croNumber.trim(),
+            }
+          : {}),
+      });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save personal details');
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   async function handleSendOtp() {
     if (!phone.trim()) {
@@ -296,6 +348,8 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
     <div className="space-y-6">
       {error && <p className="text-sm text-destructive">{error}</p>}
 
+      <VerificationOnboardingCopy />
+
       {status.sellerStatus !== 'verified' && (
         <VerificationProgressBar
           used={status.unverifiedListingCount}
@@ -329,6 +383,10 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
             <dd>
               <SellerProfileStatusBadge status={status.sellerStatus} />
             </dd>
+          </div>
+          <div className="flex justify-between gap-2 sm:flex-col">
+            <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Public name</dt>
+            <dd>{status.businessName ?? status.publicDisplayName ?? '—'}</dd>
           </div>
           <div className="flex justify-between gap-2 sm:flex-col">
             <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Phone</dt>
@@ -371,9 +429,89 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
 
         {status.sellerStatus !== 'verified' && status.sellerStatus !== 'under_review' && (
           <>
-            {(step === 0 || !status.phoneVerified) && (
+            {!status.personalDetailsComplete && (
+              <form
+                onSubmit={(e) => void handleSavePersonalDetails(e)}
+                className="space-y-4 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-4"
+              >
+                <h3 className="text-sm font-semibold">Step 1 — Legal identity (private)</h3>
+                <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+                  {VERIFICATION_ONBOARDING_COPY.PERSONAL_DETAILS_REQUIRED}{' '}
+                  {VERIFICATION_ONBOARDING_COPY.PUBLIC_NAME_DIFFERS}
+                </p>
+                {(status.publicDisplayName || status.businessName) && (
+                  <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.2)] px-3 py-2 text-sm">
+                    <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">Public name on your account</p>
+                    <p className="text-[hsl(var(--dashboard-sidebar-muted))]">
+                      {status.businessName ?? status.publicDisplayName}
+                      {status.isBusinessAccount ? ' (business)' : ''}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <label htmlFor="seller-verify-full-name" className="text-sm font-medium">
+                    Full legal name (private)
+                  </label>
+                  <input
+                    id="seller-verify-full-name"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Exactly as shown on your government ID"
+                    className="mt-1 w-full max-w-sm rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
+                  />
+                </div>
+                {status.businessStructure === 'limited_company' && (
+                  <>
+                    <div>
+                      <label htmlFor="seller-verify-company" className="text-sm font-medium">
+                        Registered company name
+                      </label>
+                      <input
+                        id="seller-verify-company"
+                        type="text"
+                        value={registeredCompanyName}
+                        onChange={(e) => setRegisteredCompanyName(e.target.value)}
+                        placeholder="As registered with the CRO"
+                        className="mt-1 w-full max-w-sm rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="seller-verify-cro" className="text-sm font-medium">
+                        CRO number
+                      </label>
+                      <input
+                        id="seller-verify-cro"
+                        type="text"
+                        inputMode="numeric"
+                        value={croNumber}
+                        onChange={(e) => setCroNumber(e.target.value)}
+                        placeholder="6–8 digits"
+                        className="mt-1 w-full max-w-sm rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
+                      />
+                    </div>
+                  </>
+                )}
+                {status.phoneVerified && status.emailVerified && (
+                  <p className="text-sm text-emerald-700">
+                    {VERIFICATION_ONBOARDING_COPY.CONTACT_VERIFIED_AT_REGISTRATION}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+                >
+                  Save and continue
+                </button>
+              </form>
+            )}
+
+            {status.personalDetailsComplete &&
+              (!status.phoneVerified || !status.emailVerified) &&
+              (step === 1 || !status.phoneVerified) && (
               <div className="space-y-4 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-4">
-                <h3 className="text-sm font-semibold">Step 1 — Phone verification</h3>
+                <h3 className="text-sm font-semibold">Step 2 — Contact verification</h3>
                 <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
                   Enter your phone number and the one-time code we send you.
                 </p>
@@ -433,7 +571,7 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
                 className="space-y-6 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-4"
               >
                 <div>
-                  <h3 className="text-sm font-semibold">Step 2 — ID upload</h3>
+                  <h3 className="text-sm font-semibold">Step 3 — ID upload</h3>
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="mb-2 block text-sm text-[hsl(var(--dashboard-main-fg))]">Government ID</label>

@@ -5,6 +5,7 @@ import { EventsModule } from '../../events/events.module';
 import { AuthModule } from '../auth/auth.module';
 import { MonetizationModule } from '../monetization/monetization.module';
 import { UsersModule } from '../users/users.module';
+import { VerificationModule } from '../verification/verification.module';
 import {
   SellerListingGateService,
   SellerVerificationStatusService,
@@ -13,7 +14,14 @@ import { SellerStatusHistoryService } from './services/seller-status-history.ser
 import { SellerVerificationService } from './services/seller-verification.service';
 
 @Module({
-  imports: [DatabaseModule, EventsModule, AuthModule, UsersModule, forwardRef(() => MonetizationModule)],
+  imports: [
+    DatabaseModule,
+    EventsModule,
+    AuthModule,
+    UsersModule,
+    VerificationModule,
+    forwardRef(() => MonetizationModule),
+  ],
   providers: [
     SellerStatusHistoryService,
     SellerListingGateService,
@@ -25,6 +33,7 @@ import { SellerVerificationService } from './services/seller-verification.servic
     SellerListingGateService,
     SellerVerificationStatusService,
     SellerVerificationService,
+    VerificationModule,
   ],
 })
 export class SellerVerificationModule {}
