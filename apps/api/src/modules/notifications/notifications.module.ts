@@ -4,6 +4,7 @@ import { DatabaseModule } from '../../database/database.module';
 import { EmailModule } from '../../email/email.module';
 import { EventsModule } from '../../events/events.module';
 import { LibsModule } from '../../libs/libs.module';
+import { PlatformModule } from '../platform/platform.module';
 import { NotificationEventsListener } from './listeners/notification-events.listener';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
@@ -23,7 +24,7 @@ import { NotificationTemplatesService } from './services/notification-templates.
 import { NotificationsCrudService } from './services/notifications-crud.service';
 
 @Module({
-  imports: [DatabaseModule, EmailModule, EventsModule, LibsModule],
+  imports: [DatabaseModule, EmailModule, EventsModule, LibsModule, PlatformModule],
   controllers: [NotificationsController],
   providers: [
     NotificationsService,

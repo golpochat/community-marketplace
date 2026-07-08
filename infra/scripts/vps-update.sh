@@ -22,6 +22,8 @@ COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
 ENV_FILE="${ENV_FILE:-.env.prod}"
 GIT_BRANCH="${GIT_BRANCH:-main}"
 
+COMPOSE_PROJECT="${COMPOSE_PROJECT:-community-marketplace-prod}"
+
 compose() {
   docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
 }
@@ -30,15 +32,70 @@ compose() {
 # stale container attached to cm-network. Used to trigger a Traefik re-sync.
 FORCED_RECREATE=0
 
+# Docker sometimes leaves stopped containers registered on the compose network even
+# though they are no longer connected. Compose then fails with "container … is not
+# connected to the network …". --force-recreate alone cannot fix that.
+remove_stale_network_containers() {
+  local output="$1"
+  local cid found=0
+
+  while IFS= read -r cid; do
+    [[ -z "$cid" ]] && continue
+    echo "==> Removing stale container $cid (disconnected from compose network)"
+    docker rm -f "$cid" >/dev/null 2>&1 || true
+    found=1
+  done < <(printf '%s' "$output" | sed -n 's/.*container \([a-f0-9]\{12,\}\) is not connected.*/\1/p' | sort -u)
+
+  [[ "$found" -eq 1 ]]
+}
+
+prune_exited_compose_containers() {
+  local cid found=0
+
+  while IFS= read -r cid; do
+    [[ -z "$cid" ]] && continue
+    echo "==> Removing exited compose container $cid"
+    docker rm -f "$cid" >/dev/null 2>&1 || true
+    found=1
+  done < <(
+    docker ps -a \
+      --filter "label=com.docker.compose.project=${COMPOSE_PROJECT}" \
+      --filter "status=exited" \
+      --format '{{.ID}}'
+  )
+
+  [[ "$found" -eq 1 ]]
+}
+
 # Bring up the given services, retrying with --force-recreate if Docker reports
 # a stale "not connected to the network" container.
 up_services() {
-  if compose up -d "$@"; then
-    return 0
-  fi
-  echo "==> Stale container network detected — force-recreating: $*"
-  FORCED_RECREATE=1
-  compose up -d --force-recreate "$@"
+  local output status attempt
+
+  for attempt in 1 2 3; do
+    set +e
+    if [[ "$attempt" -eq 1 ]]; then
+      output="$(compose up -d "$@" 2>&1)"
+    else
+      FORCED_RECREATE=1
+      output="$(compose up -d --force-recreate --remove-orphans "$@" 2>&1)"
+    fi
+    status=$?
+    set -e
+    printf '%s\n' "$output"
+
+    if [[ "$status" -eq 0 ]]; then
+      return 0
+    fi
+
+    if [[ "$attempt" -eq 1 ]]; then
+      echo "==> Stale container network detected — force-recreating: $*"
+    fi
+
+    remove_stale_network_containers "$output" || prune_exited_compose_containers || true
+  done
+
+  compose up -d --force-recreate --remove-orphans "$@"
 }
 
 wait_for_postgres() {
@@ -58,7 +115,7 @@ ensure_postgres_redis() {
   if ! wait_for_postgres; then
     echo "==> Postgres not ready — forcing recreate"
     FORCED_RECREATE=1
-    compose up -d --force-recreate postgres redis
+    up_services postgres redis
     wait_for_postgres
   fi
 }
@@ -111,7 +168,7 @@ up_services api worker web
 
 if [[ "$FORCED_RECREATE" == "1" ]]; then
   echo "==> Re-syncing Traefik (a service was force-recreated)"
-  compose up -d --force-recreate traefik
+  up_services traefik
 fi
 
 echo "==> Health check (inside api container)"

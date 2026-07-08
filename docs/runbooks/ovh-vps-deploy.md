@@ -181,6 +181,58 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d api worker 
 
 ## Troubleshooting
 
+### `container … is not connected to the network`
+
+Docker occasionally leaves a **stopped** container registered on the compose network even though it is no longer attached. `docker compose up` then fails with:
+
+```text
+Error response from daemon: container <id> is not connected to the network community-marketplace-prod_cm-network
+```
+
+**Quick fix on VPS** (images already built — no need to rebuild):
+
+```bash
+cd /opt/sellnearby/infra/docker
+
+# Remove known stale containers from the error output
+docker rm -f 95db75d96b90 cef2ac821617 2>/dev/null || true
+
+# Remove ALL exited containers for this compose project
+docker ps -a \
+  --filter "label=com.docker.compose.project=community-marketplace-prod" \
+  --filter "status=exited" \
+  -q | xargs -r docker rm -f
+
+# Start the full pilot stack (skip rebuild — images are already fresh)
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d \
+  traefik postgres redis meilisearch api worker web
+
+# Verify
+sleep 5
+docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T api \
+  wget -qO- http://localhost:4000/api/health/ready
+curl -s https://api.sellnearby.ie/api/health/ready
+```
+
+If that still fails, reset the whole stack (volumes are preserved):
+
+```bash
+cd /opt/sellnearby/infra/docker
+docker compose -f docker-compose.prod.yml --env-file .env.prod down --remove-orphans
+docker ps -a --filter "label=com.docker.compose.project=community-marketplace-prod" -q | xargs -r docker rm -f
+docker compose -f docker-compose.prod.yml --env-file .env.prod up -d \
+  traefik postgres redis meilisearch api worker web
+```
+
+Then re-run the update script with build skipped:
+
+```bash
+cd /opt/sellnearby
+SKIP_PULL=1 SKIP_BUILD=1 ./infra/scripts/vps-update.sh
+```
+
+`vps-update.sh` now auto-removes all stale/exited compose containers before retrying; pull latest `main` if your copy predates that fix.
+
 ### TLS / certificate errors
 
 - Confirm DNS A records point to VPS IP (`dig sellnearby.ie +short`)
