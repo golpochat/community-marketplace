@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Lock } from 'lucide-react';
 
 import type {
   FastTrackIntentResponse,
@@ -9,16 +10,16 @@ import type {
 } from '@community-marketplace/types';
 import { SELLER_VERIFICATION_MESSAGES, VERIFICATION_ONBOARDING_COPY } from '@community-marketplace/types';
 import { IRISH_MOBILE_VALIDATION_MESSAGE, normalizeIrishPhoneToE164 } from '@community-marketplace/validation';
+import { Input, Label } from '@community-marketplace/ui';
 import { Card } from '@community-marketplace/ui-dashboard';
 
 import { IrishMobilePrefixTooltip } from '@/components/forms/irish-mobile-prefix-tooltip';
 
-import { VerificationProgressBar } from '@/components/seller/verification';
+import { VerificationProgressBar, VerificationChecklist } from '@/components/seller/verification';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
 import { monetizationService } from '@/services/monetization.service';
 import { sellerVerificationService } from '@/services/seller-verification.service';
 
-import { SellerProfileStatusBadge } from './seller-profile-status-badge';
 import { SellerStatusHistoryPanel } from './seller-status-history-panel';
 
 const STEPS = [
@@ -375,32 +376,7 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
           ))}
         </ol>
 
-        <dl className="mb-6 grid gap-2 text-sm sm:grid-cols-2">
-          <div className="flex justify-between gap-2 sm:flex-col">
-            <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Status</dt>
-            <dd>
-              <SellerProfileStatusBadge status={status.sellerStatus} />
-            </dd>
-          </div>
-          <div className="flex justify-between gap-2 sm:flex-col">
-            <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Phone</dt>
-            <dd>{status.phoneVerified ? 'Verified' : 'Required'}</dd>
-          </div>
-          <div className="flex justify-between gap-2 sm:flex-col">
-            <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Email</dt>
-            <dd>{status.emailVerified ? 'Verified' : 'Required'}</dd>
-          </div>
-          <div className="flex justify-between gap-2 sm:flex-col">
-            <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Identity</dt>
-            <dd>
-              {status.idVerified
-                ? 'Verified'
-                : status.sellerStatus === 'under_review'
-                  ? 'Under review'
-                  : 'Pending'}
-            </dd>
-          </div>
-        </dl>
+        <VerificationChecklist status={status} />
 
         {status.sellerStatus === 'verified' && (
           <p className="text-sm font-medium text-emerald-700">
@@ -426,66 +402,96 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
             {!status.personalDetailsComplete && (
               <form
                 onSubmit={(e) => void handleSavePersonalDetails(e)}
-                className="space-y-4 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-4"
+                className="space-y-5 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-5"
               >
-                <h3 className="text-sm font-semibold">Step 1 — Legal identity (private)</h3>
-                <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-                  {VERIFICATION_ONBOARDING_COPY.PERSONAL_DETAILS_REQUIRED}{' '}
-                  {VERIFICATION_ONBOARDING_COPY.PUBLIC_NAME_DIFFERS}
-                </p>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">
+                    Step 1 — Legal identity (private)
+                  </h3>
+                  <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+                    {VERIFICATION_ONBOARDING_COPY.PERSONAL_DETAILS_REQUIRED}
+                  </p>
+                </div>
+
                 {(status.publicDisplayName || status.businessName) && (
-                  <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.2)] px-3 py-2 text-sm">
+                  <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.2)] px-4 py-3 text-sm">
                     <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">Public name on your account</p>
-                    <p className="text-[hsl(var(--dashboard-sidebar-muted))]">
+                    <p className="mt-0.5 text-[hsl(var(--dashboard-sidebar-muted))]">
                       {status.businessName ?? status.publicDisplayName}
                       {status.isBusinessAccount ? ' (business)' : ''}
                     </p>
+                    <p className="mt-2 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                      {VERIFICATION_ONBOARDING_COPY.PUBLIC_NAME_DIFFERS}
+                    </p>
                   </div>
                 )}
-                <div>
-                  <label htmlFor="seller-verify-full-name" className="text-sm font-medium">
-                    Full legal name (private)
-                  </label>
-                  <input
-                    id="seller-verify-full-name"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Exactly as shown on your government ID"
-                    className="mt-1 w-full max-w-sm rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
-                  />
+
+                <div className="rounded-xl border-2 border-[hsl(var(--dashboard-accent)/0.35)] bg-[hsl(var(--dashboard-accent)/0.06)] p-4 sm:p-5">
+                  <div className="mb-4 flex items-start gap-3">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--dashboard-accent)/0.12)] text-[hsl(var(--dashboard-accent))]">
+                      <Lock className="h-4 w-4" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-[hsl(var(--dashboard-main-fg))]">
+                        Your legal identity
+                      </p>
+                      <p className="mt-1 text-xs leading-relaxed text-[hsl(var(--dashboard-sidebar-muted))]">
+                        {VERIFICATION_ONBOARDING_COPY.PERSONAL_DETAILS_PRIVATE}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="seller-verify-full-name" className="text-[hsl(var(--dashboard-main-fg))]">
+                      Full legal name
+                    </Label>
+                    <Input
+                      id="seller-verify-full-name"
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Exactly as shown on your government ID"
+                      autoComplete="name"
+                      className="w-full bg-white"
+                    />
+                    <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                      Must match the ID you upload in a later step.
+                    </p>
+                  </div>
+
+                  {status.businessStructure === 'limited_company' && (
+                    <div className="mt-5 space-y-4 border-t border-[hsl(var(--dashboard-accent)/0.2)] pt-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="seller-verify-company" className="text-[hsl(var(--dashboard-main-fg))]">
+                          Registered company name
+                        </Label>
+                        <Input
+                          id="seller-verify-company"
+                          type="text"
+                          value={registeredCompanyName}
+                          onChange={(e) => setRegisteredCompanyName(e.target.value)}
+                          placeholder="As registered with the CRO"
+                          className="w-full bg-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="seller-verify-cro" className="text-[hsl(var(--dashboard-main-fg))]">
+                          CRO number
+                        </Label>
+                        <Input
+                          id="seller-verify-cro"
+                          type="text"
+                          inputMode="numeric"
+                          value={croNumber}
+                          onChange={(e) => setCroNumber(e.target.value)}
+                          placeholder="6–8 digits"
+                          className="w-full bg-white"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                {status.businessStructure === 'limited_company' && (
-                  <>
-                    <div>
-                      <label htmlFor="seller-verify-company" className="text-sm font-medium">
-                        Registered company name
-                      </label>
-                      <input
-                        id="seller-verify-company"
-                        type="text"
-                        value={registeredCompanyName}
-                        onChange={(e) => setRegisteredCompanyName(e.target.value)}
-                        placeholder="As registered with the CRO"
-                        className="mt-1 w-full max-w-sm rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="seller-verify-cro" className="text-sm font-medium">
-                        CRO number
-                      </label>
-                      <input
-                        id="seller-verify-cro"
-                        type="text"
-                        inputMode="numeric"
-                        value={croNumber}
-                        onChange={(e) => setCroNumber(e.target.value)}
-                        placeholder="6–8 digits"
-                        className="mt-1 w-full max-w-sm rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
-                      />
-                    </div>
-                  </>
-                )}
+
                 <button
                   type="submit"
                   disabled={submitting}

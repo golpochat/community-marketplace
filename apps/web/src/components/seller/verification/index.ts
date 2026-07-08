@@ -8,3 +8,4 @@ export {
 } from './verification-toast';
 export { VerificationNudgeBanner, VerificationNudgeHost } from './verification-nudge-banner';
 export { VerificationOnboardingCopy } from './verification-onboarding-copy';
+export { VerificationChecklist } from './verification-checklist';
