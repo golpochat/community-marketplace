@@ -18,6 +18,7 @@ import { FeaturedBadge } from '@/components/listings/featured-badge';
 import { ListingBadge } from '@/components/listings/listing-badge';
 import { SaveButton } from '@/components/listings/save-button';
 import { ShareListingButton } from '@/components/listings/ShareListingButton';
+import { buildListingShareOgPreviewFromSummary } from '@/lib/listing-share-preview';
 import { SaleBadgeOverlay } from '@/components/listings/sale-badge-overlay';
 import {
   isVehicleListingSummary,
@@ -139,7 +140,12 @@ export function ListingCardImage({
           'opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100',
         )}
       >
-        <ShareListingButton listingId={listing.id} title={listing.title} variant="icon" />
+        <ShareListingButton
+          listingId={listing.id}
+          title={listing.title}
+          linkPreview={buildListingShareOgPreviewFromSummary(listing)}
+          variant="icon"
+        />
         {showSave && (
           <SaveButton listingId={listing.id} initialSaved={initialSaved} size="sm" />
         )}

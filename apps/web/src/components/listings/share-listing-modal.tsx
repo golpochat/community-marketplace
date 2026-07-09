@@ -8,6 +8,8 @@ import type { SharePlatform } from '@community-marketplace/types';
 import { Button, cn } from '@community-marketplace/ui';
 
 import { ListingQrCode } from '@/components/listings/ListingQrCode';
+import { ShareLinkPreview } from '@/components/listings/share-link-preview';
+import type { ListingShareOgPreview } from '@/lib/listing-share-preview';
 import {
   extractShareSubtitle,
   SHARE_MORE_PLATFORMS,
@@ -21,6 +23,7 @@ interface ShareListingModalProps {
   title: string;
   open: boolean;
   onClose: () => void;
+  linkPreview?: ListingShareOgPreview;
 }
 
 function CollapsibleSection({
@@ -71,7 +74,13 @@ function PlatformButton({
   );
 }
 
-export function ShareListingModal({ listingId, title, open, onClose }: ShareListingModalProps) {
+export function ShareListingModal({
+  listingId,
+  title,
+  open,
+  onClose,
+  linkPreview,
+}: ShareListingModalProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [shortUrl, setShortUrl] = useState('');
@@ -217,6 +226,15 @@ export function ShareListingModal({ listingId, title, open, onClose }: ShareList
                   {copied ? 'Copied' : 'Copy'}
                 </Button>
               </div>
+
+              {linkPreview && (
+                <ShareLinkPreview
+                  title={linkPreview.title}
+                  description={linkPreview.description}
+                  imageUrl={linkPreview.imageUrl}
+                  url={shortUrl}
+                />
+              )}
 
               {supportsNativeShare && (
                 <Button type="button" className="w-full" onClick={() => void nativeShare()}>

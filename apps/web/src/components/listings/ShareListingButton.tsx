@@ -5,10 +5,12 @@ import { useCallback, useState } from 'react';
 import { Button } from '@community-marketplace/ui';
 
 import { ShareListingModal } from '@/components/listings/share-listing-modal';
+import type { ListingShareOgPreview } from '@/lib/listing-share-preview';
 
 interface ShareListingButtonProps {
   listingId: string;
   title: string;
+  linkPreview?: ListingShareOgPreview;
   variant?: 'button' | 'icon';
   className?: string;
 }
@@ -38,6 +40,7 @@ function ShareIcon({ className }: { className?: string }) {
 export function ShareListingButton({
   listingId,
   title,
+  linkPreview,
   variant = 'button',
   className,
 }: ShareListingButtonProps) {
@@ -68,6 +71,7 @@ export function ShareListingButton({
       <ShareListingModal
         listingId={listingId}
         title={title}
+        linkPreview={linkPreview}
         open={open}
         onClose={() => setOpen(false)}
       />

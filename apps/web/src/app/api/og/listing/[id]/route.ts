@@ -3,6 +3,7 @@ import { computeListingPricing } from '@community-marketplace/utils';
 import sharp from 'sharp';
 
 import { fetchListingById, listingCacheTag } from '@/lib/server-listings';
+import { pickBestListingOgImage } from '@/lib/listing-og-image-pick';
 
 export const runtime = 'nodejs';
 
@@ -75,12 +76,12 @@ async function buildPlaceholder(
 
 function saleOverlaySvg(badgeLabel: string, originalLabel: string, saleLabel: string): Buffer {
   const svg = `
-    <svg width="${OG_WIDTH}" height="120" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="120" fill="rgba(0,0,0,0.55)"/>
-      <rect x="40" y="24" width="160" height="48" rx="8" fill="#dc2626"/>
-      <text x="58" y="58" fill="#ffffff" font-family="Arial, sans-serif" font-size="26" font-weight="700">${badgeLabel}</text>
-      <text x="220" y="50" fill="#d1d5db" font-family="Arial, sans-serif" font-size="28" text-decoration="line-through">${originalLabel}</text>
-      <text x="220" y="88" fill="#ffffff" font-family="Arial, sans-serif" font-size="36" font-weight="700">${saleLabel}</text>
+    <svg width="${OG_WIDTH}" height="96" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="96" fill="rgba(15,23,42,0.72)"/>
+      <rect x="32" y="20" width="148" height="44" rx="8" fill="#dc2626"/>
+      <text x="48" y="50" fill="#ffffff" font-family="Arial, sans-serif" font-size="24" font-weight="700">${badgeLabel}</text>
+      <text x="200" y="44" fill="#d1d5db" font-family="Arial, sans-serif" font-size="26" text-decoration="line-through">${originalLabel}</text>
+      <text x="200" y="76" fill="#ffffff" font-family="Arial, sans-serif" font-size="32" font-weight="700">${saleLabel}</text>
     </svg>`;
   return Buffer.from(svg);
 }
@@ -93,7 +94,7 @@ async function applySaleOverlay(
 ): Promise<Buffer> {
   const overlay = saleOverlaySvg(badgeLabel, originalLabel, saleLabel);
   return sharp(input)
-    .composite([{ input: overlay, top: OG_HEIGHT - 120, left: 0 }])
+    .composite([{ input: overlay, top: OG_HEIGHT - 96, left: 0 }])
     .jpeg({ quality: 85, mozjpeg: true })
     .toBuffer();
 }
@@ -112,7 +113,6 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const price = listing.salePrice ?? listing.price;
   const priceLabel = `€${price.toFixed(price % 1 === 0 ? 0 : 2)}`;
-  const mainImageUrl = listing.images[0]?.url;
 
   let pricingMeta: ReturnType<typeof computeListingPricing> | null = null;
   try {
@@ -134,17 +134,14 @@ export async function GET(_request: Request, context: RouteContext) {
   const badgeLabel = pricingMeta?.badgeLabel ?? 'SALE';
 
   let output: Buffer;
-  if (mainImageUrl) {
-    const source = await fetchImageBuffer(mainImageUrl);
-    if (source) {
-      let composed = await compressToTarget(source);
-      if (hasSale && originalLabel) {
-        composed = await applySaleOverlay(composed, badgeLabel, originalLabel, priceLabel);
-      }
-      output = composed;
-    } else {
-      output = await buildPlaceholder(listing.title, priceLabel, hasSale ? badgeLabel : undefined);
+  const bestImage = await pickBestListingOgImage(listing.images, fetchImageBuffer);
+
+  if (bestImage) {
+    let composed = await compressToTarget(bestImage.buffer);
+    if (hasSale && originalLabel) {
+      composed = await applySaleOverlay(composed, badgeLabel, originalLabel, priceLabel);
     }
+    output = composed;
   } else {
     output = await buildPlaceholder(listing.title, priceLabel, hasSale ? badgeLabel : undefined);
   }

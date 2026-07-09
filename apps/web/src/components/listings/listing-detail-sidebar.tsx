@@ -25,6 +25,7 @@ import { ReportButton } from '@/components/listings/report-button';
 import { SaveButton } from '@/components/listings/save-button';
 import { SellerCard } from '@/components/listings/seller-card';
 import { ShareListingButton } from '@/components/listings/ShareListingButton';
+import { buildListingShareOgPreview } from '@/lib/listing-share-preview';
 import { useAuth } from '@/hooks/use-auth';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
@@ -136,6 +137,7 @@ export function ListingDetailSidebar({
                 <ShareListingButton
                   listingId={listing.id}
                   title={listing.title}
+                  linkPreview={buildListingShareOgPreview(listing)}
                   className="h-10"
                 />
                 <ReportButton listingId={listing.id} className="h-10" />

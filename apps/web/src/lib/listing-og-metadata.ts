@@ -55,10 +55,30 @@ export function buildListingOgTitle(listing: Listing): string {
 }
 
 /** Collapse spammy repeated phrases in seller descriptions for share previews. */
-function dedupeRepetitiveOgText(text: string, title: string): string {
+export function dedupeRepetitiveOgText(text: string, title: string): string {
   if (!text) return title;
 
-  const clauses = text.split(/,\s*/).map((part) => part.trim()).filter(Boolean);
+  const normalized = text.trim().replace(/\s+/g, ' ');
+  const phrase = title.trim();
+
+  if (phrase.length >= 4) {
+    const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const spacedRepeat = new RegExp(`^(?:${escaped}\\s*){2,}$`, 'i');
+    if (spacedRepeat.test(normalized)) return phrase;
+
+    const compact = normalized.replace(/\s+/g, '').toLowerCase();
+    const phraseCompact = phrase.replace(/\s+/g, '').toLowerCase();
+    if (
+      phraseCompact.length >= 6 &&
+      compact.length >= phraseCompact.length * 2 &&
+      compact.length % phraseCompact.length === 0 &&
+      compact === phraseCompact.repeat(compact.length / phraseCompact.length)
+    ) {
+      return phrase;
+    }
+  }
+
+  const clauses = normalized.split(/,\s*/).map((part) => part.trim()).filter(Boolean);
   if (clauses.length > 1) {
     const first = clauses[0] ?? text;
     const repeated = clauses.every(
