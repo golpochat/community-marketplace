@@ -1,5 +1,4 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
+import { getAppUrl } from '@/lib/site-url';
 import sharp, { type OverlayOptions } from 'sharp';
 
 export const runtime = 'nodejs';
@@ -8,9 +7,8 @@ const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 const MAX_BYTES = 300 * 1024;
 
-function brandAsset(...segments: string[]): string {
-  return path.join(process.cwd(), 'public', 'brand', 'sellnearby', 'png', ...segments);
-}
+const LOGO_PATH = '/brand/sellnearby/png/logo-dark-mode-compact.png';
+const ICON_PATH = '/brand/sellnearby/png/icon-app-rounded.png';
 
 /** Gradient background only — no SVG text (Alpine Docker has no font files). */
 function buildBackgroundSvg(): Buffer {
@@ -31,6 +29,19 @@ function buildBackgroundSvg(): Buffer {
       <rect width="100%" height="100%" fill="url(#glow)"/>
     </svg>`;
   return Buffer.from(svg);
+}
+
+async function fetchAsset(origin: string, assetPath: string): Promise<Buffer | null> {
+  try {
+    const response = await fetch(`${origin}${assetPath}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (!response.ok) return null;
+    return Buffer.from(await response.arrayBuffer());
+  } catch {
+    return null;
+  }
 }
 
 async function encodeOgJpeg(layers: OverlayOptions[]): Promise<Buffer> {
@@ -56,12 +67,26 @@ async function encodeOgJpeg(layers: OverlayOptions[]): Promise<Buffer> {
   return output;
 }
 
-export async function GET() {
+function resolveOrigin(request: Request): string {
+  const configured = getAppUrl();
+  if (configured && !configured.includes('localhost')) {
+    return configured;
+  }
+  return new URL(request.url).origin;
+}
+
+export async function GET(request: Request) {
+  const origin = resolveOrigin(request);
+
   try {
     const [logo, icon] = await Promise.all([
-      readFile(brandAsset('logo-dark-mode-compact.png')),
-      readFile(brandAsset('icon-app-rounded.png')),
+      fetchAsset(origin, LOGO_PATH),
+      fetchAsset(origin, ICON_PATH),
     ]);
+
+    if (!logo || !icon) {
+      throw new Error('Brand assets unavailable');
+    }
 
     const logoLayer = await sharp(logo)
       .resize(640, 168, { fit: 'inside' })
@@ -93,6 +118,7 @@ export async function GET() {
       .toBuffer();
 
     return new Response(new Uint8Array(fallback), {
+      status: 200,
       headers: {
         'Content-Type': 'image/jpeg',
         'Content-Length': String(fallback.length),
