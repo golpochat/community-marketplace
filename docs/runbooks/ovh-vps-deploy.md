@@ -157,8 +157,9 @@ curl -s https://api.sellnearby.ie/api/health/ready
 | URL | Expected |
 |-----|----------|
 | https://sellnearby.ie | Marketplace homepage |
-| https://sellnearby.ie/admin | Admin login (dashboard is in apps/web) |
-| https://admin.sellnearby.ie | Admin operators only — sellers/buyers redirect to `https://sellnearby.ie`; operators go to `/admin` or `/super-admin` |
+| https://sellnearby.ie/admin | Admin panel (`/admin/dashboard`) |
+| https://sellnearby.ie/super-admin | Super Admin panel (`/super-admin/dashboard`) |
+| https://admin.sellnearby.ie | **301/308 redirect** → canonical URL on `sellnearby.ie` (legacy DNS alias only) |
 | https://api.sellnearby.ie/api/health/ready | JSON `status: ok` |
 
 ---

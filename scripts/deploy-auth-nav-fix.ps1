@@ -39,8 +39,7 @@ try {
 Write-Host @"
 
 Verify in browser:
-  https://sellnearby.ie          -> marketplace (sellers/buyers)
-  https://admin.sellnearby.ie    -> redirects sellers to sellnearby.ie; admins to panel
-  Seller menu                    -> Seller dashboard, My listings
-  Buyer menu                     -> Buyer dashboard, Purchases, Saved items
+  https://sellnearby.ie/super-admin/dashboard  -> Super Admin panel
+  https://sellnearby.ie/admin/dashboard        -> Admin panel
+  https://admin.sellnearby.ie                  -> 308 redirect to sellnearby.ie (canonical)
 "@ -ForegroundColor Green

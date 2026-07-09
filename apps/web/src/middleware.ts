@@ -2,8 +2,9 @@ import {
   canAccessDashboardRoute,
   getMainSiteOriginFromAdminHost,
   getRoleFromRequest,
+  isAdminSubdomainHost,
   isDashboardPath,
-  resolveAdminSubdomainRedirect,
+  resolveAdminSubdomainCanonicalPath,
   resolveDashboardRedirect,
   resolveGuestAuthRedirect,
   resolveSuperAdminAdminNamespaceRedirect,
@@ -12,6 +13,8 @@ import { ROLE_COOKIE_NAME, getWebRoleFromAuthTokenCookie, getWebRoleFromCookie }
 import { getDashboardRouteByRole } from '@community-marketplace/ui-dashboard';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+
+const PERMANENT_REDIRECT = 308;
 
 function withLegacyRoleCookieCleanup(
   request: NextRequest,
@@ -24,29 +27,23 @@ function withLegacyRoleCookieCleanup(
   return response;
 }
 
+function redirectPermanent(request: NextRequest, target: URL): NextResponse {
+  return withLegacyRoleCookieCleanup(request, NextResponse.redirect(target, PERMANENT_REDIRECT));
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = request.headers.get('host');
   const role = getRoleFromRequest(request.headers.get('cookie'));
 
-  const adminSubdomainRedirect = resolveAdminSubdomainRedirect(
-    pathname,
-    request.headers.get('host'),
-    role,
-  );
-  if (adminSubdomainRedirect) {
-    if (adminSubdomainRedirect === '__MAIN_SITE__') {
-      const mainOrigin =
-        getMainSiteOriginFromAdminHost(request.headers.get('host'), request.nextUrl.protocol) ??
-        request.nextUrl.origin;
-      return withLegacyRoleCookieCleanup(
-        request,
-        NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, mainOrigin)),
-      );
-    }
-    return withLegacyRoleCookieCleanup(
-      request,
-      NextResponse.redirect(new URL(adminSubdomainRedirect, request.url)),
-    );
+  // admin.{domain} is a legacy alias — always canonicalize to the main site.
+  if (isAdminSubdomainHost(host)) {
+    const targetPath =
+      resolveAdminSubdomainCanonicalPath(pathname, host, role) ?? pathname;
+    const mainOrigin =
+      getMainSiteOriginFromAdminHost(host, request.nextUrl.protocol) ?? request.nextUrl.origin;
+    const target = new URL(`${targetPath}${request.nextUrl.search}`, mainOrigin);
+    return redirectPermanent(request, target);
   }
 
   if (pathname === '/') {
@@ -100,22 +97,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/',
-    '/listings',
-    '/listings/:path*',
-    '/auth/login',
-    '/auth/register',
-    '/auth/activate',
-    '/auth/forgot-password',
-    '/auth/reset-password',
-    '/admin/invite/accept',
-    '/dashboard',
-    '/dashboard/:path*',
-    '/seller/:path*',
-    '/buyer/:path*',
-    '/super-admin',
-    '/super-admin/:path*',
-    '/admin',
-    '/admin/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|icons|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };

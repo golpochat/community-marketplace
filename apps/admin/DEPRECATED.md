@@ -20,3 +20,14 @@ pnpm dev
 ```
 
 Do not run `apps/admin` on port 3001. This package is kept temporarily for reference and will be removed in a future cleanup.
+
+## Canonical URLs (production)
+
+| Role | URL |
+|------|-----|
+| Super Admin | `https://sellnearby.ie/super-admin/dashboard` |
+| Admin | `https://sellnearby.ie/admin/dashboard` |
+| Seller | `https://sellnearby.ie/seller/dashboard` |
+| Buyer | `https://sellnearby.ie/buyer/dashboard` |
+
+`https://admin.sellnearby.ie` is a **legacy DNS alias** only. Middleware permanently redirects it to the matching path on `sellnearby.ie` (e.g. `/` → `/admin/dashboard` or `/super-admin/dashboard` when signed in).
