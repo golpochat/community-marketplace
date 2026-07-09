@@ -9,7 +9,6 @@ import {
 import { buildCategoryCanonicalPath } from '@/lib/seo/canonical';
 import { absoluteUrl } from '@/lib/seo/canonical';
 import { HELP_FAQ_ITEMS } from '@/lib/seo/help-faq';
-import { DEFAULT_OG_IMAGE_PATH } from '@/lib/seo/og-default';
 import { buildListingPath } from '@/lib/listing-slug';
 import { getAppUrl } from '@/lib/site-url';
 
@@ -22,7 +21,7 @@ export function buildOrganizationSchema() {
     name: APP_NAME,
     alternateName: APP_SHORT_NAME,
     url: getAppUrl(),
-    logo: absoluteUrl(DEFAULT_OG_IMAGE_PATH),
+    logo: absoluteUrl('/brand/sellnearby/png/icon-app-rounded.png'),
     email: SUPPORT_EMAIL,
     areaServed: {
       '@type': 'Country',
