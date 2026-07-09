@@ -12,6 +12,7 @@
 |----------|-------------|
 | **[launch-checklist.md](./launch-checklist.md)** | **Launch readiness** — pilot vs public: FR/NFR, tools, legal, ops, smoke tests |
 | **[seo-audit.md](./seo-audit.md)** | **SEO audit & roadmap** — Phases 0–4 implemented; production deploy checklist (Part 11) |
+| **[seo-operations.md](./seo-operations.md)** | **SEO operations** — 30-query keyword matrix + monthly checklist |
 | [functional-requirements.md](./functional-requirements.md) | Feature requirements by domain |
 | [non-functional-requirements.md](./non-functional-requirements.md) | Performance, security, scalability targets |
 | [user-stories.md](./user-stories.md) | Stories by persona (buyer, seller, admin) |

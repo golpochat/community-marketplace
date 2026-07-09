@@ -21,7 +21,7 @@
 
 **Post-implementation assessment:** Crawl infrastructure (`robots.txt`, sitemap, `metadataBase`, canonicals, noindex), SSR browse/store pages, category and location landing pages, JSON-LD (Product, Organization, WebSite, FAQ, LocalBusiness, BreadcrumbList), content hub (guides, counties, success stories), listing slug URLs, `llms.txt`, and `next/image` for listings are **in code**. Live production at `sellnearby.ie` still needs a **web container rebuild** to pick up changes, plus manual Search Console / GA4 registration.
 
-**Still manual:** Google Search Console, Bing Webmaster Tools, GA4 property + env vars, Google Business Profile, link building, log-file analysis at scale.
+**Still manual:** Google Search Console, Bing Webmaster Tools, GA4 property + env vars, Google Business Profile, link building, log-file analysis at scale. **Operations:** [seo-operations.md](./seo-operations.md) (keyword matrix + monthly checklist).
 
 ---
 

@@ -489,7 +489,7 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 | **Incident response** | Runbooks read | On-call rotation | ⚠️ Runbooks ✅ |
 | **Status page** | Nice | Must | ❌ |
 | **Beta invite process** | Waitlist / codes | — | Your choice |
-| **Marketing / SEO** | Minimal | Full | ✅ Phases 0–4 coded — [deploy checklist](./seo-audit.md#part-11--production-deploy-checklist-seo) + GSC/GA4 manual |
+| **Marketing / SEO** | Minimal | Full | ✅ Phases 0–4 coded — [deploy checklist](./seo-audit.md#part-11--production-deploy-checklist-seo) + [monthly SEO ops](./seo-operations.md) + GSC/GA4 manual |
 | **App distribution** | PWA | PWA (+ native later) | PWA ✅ |
 
 - [ ] Irish business entity registered
@@ -608,6 +608,7 @@ Run on **staging**, then **production** after each deploy. See also [troubleshoo
 ## Related docs
 
 - [SEO audit & enterprise roadmap](./seo-audit.md)
+- [SEO keyword priority & monthly checklist](./seo-operations.md)
 - [Deploy runbook](../runbooks/deploy.md)
 - [Rollback runbook](../runbooks/rollback.md)
 - [Restore backup runbook](../runbooks/restore-backup.md)
