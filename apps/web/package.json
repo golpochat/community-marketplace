@@ -6,7 +6,7 @@
   "scripts": {
     "predev": "node scripts/clean-pwa-sw.mjs",
     "dev": "node scripts/dev.mjs",
-    "prebuild": "node ../../scripts/brand/export-sellnearby.mjs",
+    "prebuild": "node ../../scripts/brand/export-sellnearby.mjs && node scripts/generate-og-home.mjs",
     "build": "next build",
     "start": "next start --port 3000",
     "clean": "rimraf .next out tsconfig.tsbuildinfo && node scripts/clean-pwa-sw.mjs",

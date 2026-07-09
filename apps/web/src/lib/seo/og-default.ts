@@ -1,7 +1,7 @@
 import { APP_NAME } from '@community-marketplace/config';
 
-/** Dynamic 1200×630 brand card — same pipeline as listing OG images. */
-export const DEFAULT_OG_IMAGE_PATH = '/api/og/home';
+/** Pre-built 1200×630 JPEG — reliable for Facebook/WhatsApp scrapers. */
+export const DEFAULT_OG_IMAGE_PATH = '/og/sellnearby-home.jpg';
 
 export const DEFAULT_OG_TITLE = `${APP_NAME} — Buy and sell locally in Ireland`;
 
