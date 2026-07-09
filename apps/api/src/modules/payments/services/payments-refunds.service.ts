@@ -102,16 +102,21 @@ export class PaymentsRefundsService {
 
     const stripe = this.stripeConnect.getStripeClient();
     let providerRefundId: string | undefined;
+    const providerPaymentId = refund.payment.providerPaymentId;
+    const useDevRefundFallback =
+      !stripe ||
+      !providerPaymentId ||
+      (process.env.NODE_ENV !== 'production' && providerPaymentId.startsWith('pi_test_'));
 
-    if (stripe && refund.payment.providerPaymentId) {
-      const intent = await stripe.paymentIntents.retrieve(refund.payment.providerPaymentId);
+    if (!useDevRefundFallback) {
+      const intent = await stripe!.paymentIntents.retrieve(providerPaymentId);
       const transferId = intent.metadata?.transfer_id;
       if (transferId) {
-        await stripe.transfers.createReversal(transferId);
+        await stripe!.transfers.createReversal(transferId);
       }
 
-      const stripeRefund = await stripe.refunds.create({
-        payment_intent: refund.payment.providerPaymentId,
+      const stripeRefund = await stripe!.refunds.create({
+        payment_intent: providerPaymentId,
       });
       providerRefundId = stripeRefund.id;
     } else {
