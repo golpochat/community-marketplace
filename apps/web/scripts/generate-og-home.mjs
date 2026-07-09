@@ -5,6 +5,9 @@
  * Docker/Alpine CI. Brand logos use SVG <text>; Alpine sharp/librsvg renders
  * that text as hollow rectangles without fontconfig + Inter installed.
  *
+ * Layout: stacked logo fits inside WhatsApp's centre-square crop (~630×630).
+ * Horizontal logos get clipped on the sides in WhatsApp chat thumbnails.
+ *
  * Usage: pnpm --filter @community-marketplace/web og:generate
  */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -20,6 +23,8 @@ const outFile = path.join(outDir, 'sellnearby-home.jpg');
 
 const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
+/** WhatsApp crops a centre square from 1200×630 — keep branding inside this box. */
+const SAFE_SIZE = 540;
 
 function buildBackgroundSvg() {
   return Buffer.from(`
@@ -30,7 +35,7 @@ function buildBackgroundSvg() {
           <stop offset="55%" stop-color="#0F766E"/>
           <stop offset="100%" stop-color="#115E59"/>
         </linearGradient>
-        <radialGradient id="glow" cx="50%" cy="45%" r="55%">
+        <radialGradient id="glow" cx="50%" cy="48%" r="42%">
           <stop offset="0%" stop-color="#5EEAD4" stop-opacity="0.28"/>
           <stop offset="100%" stop-color="#5EEAD4" stop-opacity="0"/>
         </radialGradient>
@@ -48,14 +53,13 @@ async function main() {
 
   await mkdir(outDir, { recursive: true });
 
-  const logo = await readFile(path.join(brandDir, 'logo-dark-mode-compact.png'));
+  const logo = await readFile(path.join(brandDir, 'logo-stacked-dark-mode.png'));
 
   const background = await sharp(buildBackgroundSvg()).png().toBuffer();
-  // Center the full wordmark+icon logo so WhatsApp's square crop hits branding.
-  const logoLayer = await sharp(logo).resize(920, 240, { fit: 'inside' }).png().toBuffer();
+  const logoLayer = await sharp(logo).resize(SAFE_SIZE, SAFE_SIZE, { fit: 'inside' }).png().toBuffer();
   const logoMeta = await sharp(logoLayer).metadata();
-  const logoWidth = logoMeta.width ?? 920;
-  const logoHeight = logoMeta.height ?? 240;
+  const logoWidth = logoMeta.width ?? SAFE_SIZE;
+  const logoHeight = logoMeta.height ?? SAFE_SIZE;
   const logoLeft = Math.round((OG_WIDTH - logoWidth) / 2);
   const logoTop = Math.round((OG_HEIGHT - logoHeight) / 2);
 
