@@ -19,6 +19,19 @@ export default function GuidesHubPage() {
       title="Selling guides"
       subtitle="Practical advice for Irish sellers and buyers — no fluff, just what works locally."
       showFooterActions={false}
+      actions={
+        <>
+          <Button asChild>
+            <Link href="/listings">Browse listings</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/local">Sell safely by county</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/safety">Safety &amp; scam protection</Link>
+          </Button>
+        </>
+      }
     >
       <div className="space-y-6">
         {GUIDE_ARTICLES.map((guide) => (
@@ -48,15 +61,6 @@ export default function GuidesHubPage() {
             </Link>
           </article>
         ))}
-      </div>
-
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Button asChild>
-          <Link href="/local">Sell safely by county</Link>
-        </Button>
-        <Button asChild variant="outline">
-          <Link href="/listings">Browse listings</Link>
-        </Button>
       </div>
     </ContentPageShell>
   );

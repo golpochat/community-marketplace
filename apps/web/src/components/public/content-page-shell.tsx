@@ -5,7 +5,9 @@ import { Button } from '@community-marketplace/ui';
 interface ContentPageShellProps {
   title: string;
   subtitle?: string;
-  /** When false, pages with their own CTA row should set this to avoid duplicate footer buttons. */
+  /** Page-specific CTA row — rendered outside prose styles so button labels stay visible. */
+  actions?: React.ReactNode;
+  /** When false, pages with their own `actions` should set this to avoid duplicate footer buttons. */
   showFooterActions?: boolean;
   children: React.ReactNode;
 }
@@ -16,6 +18,7 @@ const proseLinkStyles =
 export function ContentPageShell({
   title,
   subtitle,
+  actions,
   showFooterActions = true,
   children,
 }: ContentPageShellProps) {
@@ -28,6 +31,7 @@ export function ContentPageShell({
       >
         {children}
       </div>
+      {actions ? <div className="mt-10 flex flex-wrap gap-3">{actions}</div> : null}
       {showFooterActions && (
         <div className="mt-10 flex flex-wrap gap-3">
           <Button asChild>

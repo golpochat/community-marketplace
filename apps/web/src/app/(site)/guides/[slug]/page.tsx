@@ -94,7 +94,7 @@ export default async function GuidePage({ params }: GuidePageProps) {
             <Link href="/guides">All guides</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/safety">Safety tips</Link>
+            <Link href="/safety">Safety &amp; scam protection</Link>
           </Button>
         </div>
       </article>
