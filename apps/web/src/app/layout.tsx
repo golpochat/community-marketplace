@@ -9,7 +9,7 @@ import { ServiceWorkerCleanup } from '@/components/dev/service-worker-cleanup';
 import { ServiceWorkerRecovery } from '@/components/pwa/service-worker-recovery';
 import { AppProviders } from '@/providers/app-providers';
 import { getAppUrl } from '@/lib/site-url';
-import { DEFAULT_OPEN_GRAPH, DEFAULT_TWITTER } from '@/lib/seo/og-default';
+import { DEFAULT_OG_DESCRIPTION, DEFAULT_OG_TITLE, DEFAULT_OPEN_GRAPH, DEFAULT_TWITTER } from '@/lib/seo/og-default';
 
 import './globals.css';
 
@@ -20,10 +20,10 @@ const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?
 export const metadata: Metadata = {
   metadataBase: new URL(getAppUrl()),
   title: {
-    default: APP_NAME,
+    default: DEFAULT_OG_TITLE,
     template: `%s | ${APP_NAME}`,
   },
-  description: 'Buy and sell within your community in Ireland',
+  description: DEFAULT_OG_DESCRIPTION,
   applicationName: APP_SHORT_NAME,
   openGraph: DEFAULT_OPEN_GRAPH,
   twitter: DEFAULT_TWITTER,
@@ -32,12 +32,13 @@ export const metadata: Metadata = {
     : {}),
   icons: {
     icon: [
-      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/favicon-48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon.ico', sizes: '48x48', type: 'image/png' },
       { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icons/icon-app.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
     ],
     apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
-    shortcut: '/icons/favicon.ico',
+    shortcut: '/favicon.ico',
   },
   appleWebApp: {
     capable: true,

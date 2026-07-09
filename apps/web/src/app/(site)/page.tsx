@@ -11,13 +11,16 @@ import { HomepageJsonLd } from '@/components/seo/homepage-json-ld';
 import { canonicalMetadata } from '@/lib/seo/canonical';
 import {
   DEFAULT_OG_DESCRIPTION,
+  DEFAULT_OG_TITLE,
   DEFAULT_OPEN_GRAPH,
   DEFAULT_TWITTER,
 } from '@/lib/seo/og-default';
 import { listingsService } from '@/services/listings.service';
 
 export const metadata = {
-  title: 'Home',
+  title: {
+    absolute: DEFAULT_OG_TITLE,
+  },
   description: DEFAULT_OG_DESCRIPTION,
   ...canonicalMetadata('/'),
   openGraph: {

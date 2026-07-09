@@ -2,8 +2,7 @@ import type { MetadataRoute } from 'next';
 
 import { APP_SHORT_NAME, BRAND_COLORS } from '@community-marketplace/config';
 
-const PWA_DESCRIPTION =
-  'Buy and sell within your community in Ireland.';
+import { DEFAULT_OG_DESCRIPTION } from '@/lib/seo/og-default';
 
 /** Web app manifest — drives install prompt name, icon, and theme. */
 export default function manifest(): MetadataRoute.Manifest {
@@ -11,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: '/',
     name: APP_SHORT_NAME,
     short_name: APP_SHORT_NAME,
-    description: PWA_DESCRIPTION,
+    description: DEFAULT_OG_DESCRIPTION,
     start_url: '/',
     scope: '/',
     display: 'standalone',
