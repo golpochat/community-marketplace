@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import type { Category, ListingStatus, ModerationReport, PlatformGovernanceSettings, PlatformGovernanceStatus, SuperAdminActivityEvent, UserProfile, UserVerification } from '@community-marketplace/types';
+import type { Category, ListingStatus, ModerationReport, Payment, PaymentRefund, PlatformGovernanceSettings, PlatformGovernanceStatus, SuperAdminActivityEvent, UserProfile, UserVerification } from '@community-marketplace/types';
 import { isPrivilegedSystemRole } from '@community-marketplace/types';
 import { formatCurrency, formatDateTime } from '@community-marketplace/utils';
 import {
@@ -13,6 +13,7 @@ import {
   TruncatedText,
 } from '@community-marketplace/ui-dashboard';
 
+import { FraudReasonDialog } from '@/components/admin/fraud/fraud-reason-dialog';
 import { AdminRbacManager } from '@/components/dashboard/admin-rbac-manager';
 import { AdminEmailSettingsCard } from '@/components/dashboard/admin-email-settings';
 import { AdminPlatformGovernanceCard } from '@/components/dashboard/admin-platform-governance';
@@ -475,33 +476,108 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
-  const fetchPayments = useCallback(
-    (page: number, limit: number) => adminService.listPayments(role, { page, limit }),
-    [role],
+  const [activeTab, setActiveTab] = useState<'payments' | 'refunds'>('payments');
+  const [actingRefundId, setActingRefundId] = useState<string | null>(null);
+  const [rejectRefundTarget, setRejectRefundTarget] = useState<PaymentRefund | null>(null);
+
+  const fetchRows = useCallback(
+    (page: number, limit: number) =>
+      activeTab === 'payments'
+        ? adminService.listPayments(role, { page, limit })
+        : adminService.listPendingRefunds(role, { page, limit }),
+    [activeTab, role],
   );
 
-  const { page, setPage, data, meta, loading, error, totalPages } = usePaginatedQuery({
-    fetcher: fetchPayments,
+  const { page, setPage, data, meta, loading, error, totalPages, reload } = usePaginatedQuery<
+    Payment | PaymentRefund
+  >({
+    fetcher: fetchRows,
   });
 
-  const rows = data.map((payment) => [
-    payment.id.slice(0, 8),
-    formatCurrency(payment.amount, payment.currency),
-    payment.status,
-    payment.listingId.slice(0, 8),
-  ]);
+  async function handleRefundAction(refund: PaymentRefund, approve: boolean, reason?: string) {
+    setActingRefundId(refund.id);
+    try {
+      await adminService.resolveRefund(role, { refundId: refund.id, approve, reason });
+      await reload();
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : 'Failed to update refund');
+    } finally {
+      setActingRefundId(null);
+    }
+  }
+
+  const paymentRows =
+    activeTab === 'payments'
+      ? (data as Payment[]).map((payment) => [
+          payment.id.slice(0, 8),
+          formatCurrency(payment.amount, payment.currency),
+          payment.status,
+          payment.listingId.slice(0, 8),
+        ])
+      : [];
+
+  const refundRows =
+    activeTab === 'refunds'
+      ? (data as PaymentRefund[]).map((refund) => {
+          const isActing = actingRefundId === refund.id;
+
+          return [
+            refund.id.slice(0, 8),
+            <TruncatedText key={`${refund.id}-listing`} text={refund.listingTitle ?? '—'} className="max-w-[10rem]" />,
+            refund.buyerEmail ?? '—',
+            formatCurrency(refund.amount),
+            <TruncatedText key={`${refund.id}-reason`} text={refund.reason ?? '—'} className="max-w-[10rem]" />,
+            refund.status,
+            <div key={refund.id} className="flex flex-wrap gap-2">
+              <IconActionGroup>
+                <IconActionButton
+                  icon="check"
+                  label={isActing ? 'Working…' : 'Approve refund'}
+                  variant="accent"
+                  disabled={isActing}
+                  onClick={() => void handleRefundAction(refund, true)}
+                />
+                <IconActionButton
+                  icon="x"
+                  label="Reject refund"
+                  variant="danger"
+                  disabled={isActing}
+                  onClick={() => setRejectRefundTarget(refund)}
+                />
+              </IconActionGroup>
+            </div>,
+          ];
+        })
+      : [];
+
+  const rows = activeTab === 'payments' ? paymentRows : refundRows;
+  const columns =
+    activeTab === 'payments'
+      ? ['ID', 'Amount', 'Status', 'Listing']
+      : ['Refund', 'Listing', 'Buyer', 'Amount', 'Reason', 'Status', 'Actions'];
 
   return (
     <DashboardPageShell
       title="Payments"
-      description="Monitor transactions, payouts, and payment disputes."
+      description="Monitor transactions and review pending buyer refund requests."
       loading={loading}
       error={error}
       empty={!loading && !error && rows.length === 0}
-      emptyTitle="No payments found"
+      emptyTitle={activeTab === 'payments' ? 'No payments found' : 'No pending refund requests'}
     >
+      <DashboardSectionTabs
+        items={[
+          { id: 'payments', label: 'All payments' },
+          { id: 'refunds', label: 'Pending refunds' },
+        ]}
+        activeId={activeTab}
+        onChange={(id) => {
+          setActiveTab(id as 'payments' | 'refunds');
+          setPage(1);
+        }}
+      />
       <Card>
-        <DataTable columns={['ID', 'Amount', 'Status', 'Listing']} rows={rows} />
+        <DataTable columns={columns} rows={rows} />
         <AdminTableFooter
           page={page}
           totalPages={totalPages}
@@ -509,6 +585,30 @@ export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
           onPageChange={setPage}
         />
       </Card>
+      <FraudReasonDialog
+        open={rejectRefundTarget !== null}
+        title="Reject refund request"
+        description={
+          rejectRefundTarget
+            ? `Reject the refund for ${rejectRefundTarget.listingTitle ?? 'this listing'} (${formatCurrency(rejectRefundTarget.amount)}).`
+            : undefined
+        }
+        label="Rejection reason (optional)"
+        placeholder="Explain why this refund was rejected…"
+        confirmLabel="Reject refund"
+        variant="destructive"
+        required={false}
+        loading={actingRefundId === rejectRefundTarget?.id}
+        onConfirm={(reason) => {
+          if (!rejectRefundTarget) return;
+          const target = rejectRefundTarget;
+          setRejectRefundTarget(null);
+          void handleRefundAction(target, false, reason || undefined);
+        }}
+        onClose={() => {
+          if (actingRefundId === null) setRejectRefundTarget(null);
+        }}
+      />
     </DashboardPageShell>
   );
 }

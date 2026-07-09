@@ -10,6 +10,7 @@ import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { StripeCheckoutPanel } from '@/components/payments/stripe-checkout-form';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
+import { RefundRequestDialog } from '@/components/payments/refund-request-dialog';
 import { Pagination } from '@/components/shared/pagination';
 import { ReviewPromptDialog } from '@/components/trust/review-prompt-dialog';
 import { listingsService } from '@/services/listings.service';
@@ -64,6 +65,7 @@ function BuyerPurchasesContent() {
   const [intent, setIntent] = useState<PaymentIntentResponse | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [refundingId, setRefundingId] = useState<string | null>(null);
+  const [refundTarget, setRefundTarget] = useState<Payment | null>(null);
   const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
   const [pendingReviews, setPendingReviews] = useState<PendingReviewItem[]>([]);
   const [dismissedReviewIds, setDismissedReviewIds] = useState<Set<string>>(new Set());
@@ -241,13 +243,13 @@ function BuyerPurchasesContent() {
     setCheckoutMessage('Statement unlocked. You can download it below in PDF, CSV, or Excel.');
   }
 
-  async function handleRefund(payment: Payment) {
-    const reason = window.prompt('Reason for refund (optional):') ?? undefined;
-    if (reason === null) return;
-    setRefundingId(payment.id);
+  async function handleRefundSubmit(reason?: string) {
+    if (!refundTarget) return;
+    setRefundingId(refundTarget.id);
     setError(null);
     try {
-      await paymentsService.requestRefund(payment.id, reason || undefined);
+      await paymentsService.requestRefund(refundTarget.id, reason);
+      setRefundTarget(null);
       await loadHistory();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to request refund');
@@ -450,7 +452,7 @@ function BuyerPurchasesContent() {
                       </Link>
                       <button
                         type="button"
-                        onClick={() => void handleRefund(payment)}
+                        onClick={() => setRefundTarget(payment)}
                         disabled={refundingId === payment.id}
                         className="rounded-md border border-[hsl(var(--dashboard-sidebar-border))] px-2 py-1 text-xs font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)] disabled:opacity-50"
                       >
@@ -470,6 +472,16 @@ function BuyerPurchasesContent() {
           />
         </DashboardCard>
       </div>
+
+      <RefundRequestDialog
+        open={refundTarget !== null}
+        payment={refundTarget}
+        loading={refundingId !== null}
+        onConfirm={(reason) => void handleRefundSubmit(reason)}
+        onClose={() => {
+          if (refundingId === null) setRefundTarget(null);
+        }}
+      />
     </>
   );
 }

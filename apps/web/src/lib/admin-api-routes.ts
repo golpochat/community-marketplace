@@ -34,6 +34,7 @@ function usesSuperAdminReviewNamespace(path: string): boolean {
 function superAdminUsesAdminNamespace(path: string): boolean {
   return (
     SUPER_ADMIN_ADMIN_NAMESPACE_PATHS.has(path) ||
+    path.startsWith('/payments') ||
     path.startsWith('/users/verifications/') ||
     path.startsWith('/seller-verification') ||
     path.startsWith('/seller/') ||

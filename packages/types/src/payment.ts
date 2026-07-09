@@ -128,6 +128,10 @@ export interface PaymentRefund {
   reason?: string;
   status: RefundStatus;
   providerRefundId?: string;
+  /** Populated on admin pending-refund listings. */
+  listingTitle?: string;
+  /** Populated on admin pending-refund listings. */
+  buyerEmail?: string;
   createdAt: string;
   updatedAt: string;
 }

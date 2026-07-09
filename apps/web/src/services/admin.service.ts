@@ -10,6 +10,7 @@ import type {
   ModerationReport,
   ModerationReportDetail,
   Payment,
+  PaymentRefund,
   PlatformGovernanceStatus,
   PlatformGovernanceSettings,
   RbacRole,
@@ -284,6 +285,33 @@ export const adminService = {
       },
     );
     return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
+  },
+
+  async listPendingRefunds(
+    role: AdminApiRole,
+    params: ListParams = {},
+  ): Promise<PaginatedResult<PaymentRefund>> {
+    const response = await apiClient<PaymentRefund[] | PaginatedResult<PaymentRefund>>(
+      adminApiPath(role, '/payments/refunds/pending'),
+      {
+        params: {
+          page: String(params.page ?? 1),
+          limit: String(params.limit ?? 20),
+        },
+      },
+    );
+    return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
+  },
+
+  async resolveRefund(
+    role: AdminApiRole,
+    body: { refundId: string; approve: boolean; reason?: string },
+  ): Promise<PaymentRefund> {
+    const response = await apiClient<PaymentRefund>(
+      adminApiPath(role, '/payments/refunds/approve'),
+      { method: 'POST', body: JSON.stringify(body) },
+    );
+    return response.data;
   },
 
   async listModerationReports(

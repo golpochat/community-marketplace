@@ -13,7 +13,7 @@ import type {
 
 import { EventBusService } from '../../../events/event-bus.service';
 import { PrismaService } from '../../../database/prisma.service';
-import { mapRefund } from '../mappers/payment.mapper';
+import { mapRefund, mapRefundWithPaymentContext } from '../mappers/payment.mapper';
 import { PaymentsAuditService } from './payments-audit.service';
 import { PaymentsLedgerService } from './payments-ledger.service';
 import { StripeConnectService } from './stripe-connect.service';
@@ -174,12 +174,25 @@ export class PaymentsRefundsService {
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
+        include: {
+          payment: {
+            include: {
+              listing: { select: { title: true } },
+              buyer: { select: { email: true } },
+            },
+          },
+        },
       }),
       this.prisma.paymentRefund.count({ where }),
     ]);
 
     return {
-      data: rows.map(mapRefund),
+      data: rows.map((row) =>
+        mapRefundWithPaymentContext(row, {
+          listingTitle: row.payment.listing.title,
+          buyerEmail: row.payment.buyer.email,
+        }),
+      ),
       meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
     };
   }

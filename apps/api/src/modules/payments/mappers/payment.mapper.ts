@@ -157,6 +157,17 @@ export function mapRefund(row: {
   };
 }
 
+export function mapRefundWithPaymentContext(
+  row: Parameters<typeof mapRefund>[0],
+  context: { listingTitle?: string; buyerEmail?: string },
+): PaymentRefund {
+  return {
+    ...mapRefund(row),
+    listingTitle: context.listingTitle,
+    buyerEmail: context.buyerEmail,
+  };
+}
+
 export function mapDispute(row: {
   id: string;
   paymentId: string;
