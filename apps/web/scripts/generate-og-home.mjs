@@ -1,3 +1,12 @@
+/**
+ * Build the static homepage OG JPEG (1200×630).
+ *
+ * IMPORTANT: Run only on a dev machine (Windows/macOS/Linux with fonts), NOT in
+ * Docker/Alpine CI. Brand logos use SVG <text>; Alpine sharp/librsvg renders
+ * that text as hollow rectangles without fontconfig + Inter installed.
+ *
+ * Usage: pnpm --filter @community-marketplace/web og:generate
+ */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,8 +30,8 @@ function buildBackgroundSvg() {
           <stop offset="55%" stop-color="#0F766E"/>
           <stop offset="100%" stop-color="#115E59"/>
         </linearGradient>
-        <radialGradient id="glow" cx="78%" cy="22%" r="50%">
-          <stop offset="0%" stop-color="#5EEAD4" stop-opacity="0.35"/>
+        <radialGradient id="glow" cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stop-color="#5EEAD4" stop-opacity="0.28"/>
           <stop offset="100%" stop-color="#5EEAD4" stop-opacity="0"/>
         </radialGradient>
       </defs>
@@ -32,26 +41,26 @@ function buildBackgroundSvg() {
 }
 
 async function main() {
+  if (process.env.CI === 'true' || process.env.SKIP_OG_GENERATE === '1') {
+    console.log('Skipping OG generation (CI or SKIP_OG_GENERATE=1). Using committed asset.');
+    return;
+  }
+
   await mkdir(outDir, { recursive: true });
 
-  const [logo, icon] = await Promise.all([
-    readFile(path.join(brandDir, 'logo-dark-mode-compact.png')),
-    readFile(path.join(brandDir, 'icon-app-rounded.png')),
-  ]);
+  const logo = await readFile(path.join(brandDir, 'logo-dark-mode-compact.png'));
 
   const background = await sharp(buildBackgroundSvg()).png().toBuffer();
-  const logoLayer = await sharp(logo).resize(640, 168, { fit: 'inside' }).png().toBuffer();
+  // Center the full wordmark+icon logo so WhatsApp's square crop hits branding.
+  const logoLayer = await sharp(logo).resize(920, 240, { fit: 'inside' }).png().toBuffer();
   const logoMeta = await sharp(logoLayer).metadata();
-  const iconLayer = await sharp(icon).resize(200, 200).png().toBuffer();
-
-  const logoTop = Math.round((OG_HEIGHT - (logoMeta.height ?? 168)) / 2);
-  const iconTop = Math.round((OG_HEIGHT - 200) / 2);
+  const logoWidth = logoMeta.width ?? 920;
+  const logoHeight = logoMeta.height ?? 240;
+  const logoLeft = Math.round((OG_WIDTH - logoWidth) / 2);
+  const logoTop = Math.round((OG_HEIGHT - logoHeight) / 2);
 
   const output = await sharp(background)
-    .composite([
-      { input: logoLayer, top: logoTop, left: 72 },
-      { input: iconLayer, top: iconTop, left: 900 },
-    ])
+    .composite([{ input: logoLayer, top: logoTop, left: logoLeft }])
     .jpeg({ quality: 90, progressive: false, mozjpeg: false })
     .toBuffer();
 
