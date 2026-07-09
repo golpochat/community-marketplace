@@ -10,9 +10,8 @@ import { buildCategoryCanonicalPath } from '@/lib/seo/canonical';
 import { absoluteUrl } from '@/lib/seo/canonical';
 import { HELP_FAQ_ITEMS } from '@/lib/seo/help-faq';
 import { buildListingPath } from '@/lib/listing-slug';
+import { PLATFORM_SUPPORT_EMAIL } from '@/lib/constants';
 import { getAppUrl } from '@/lib/site-url';
-
-const SUPPORT_EMAIL = 'support@sellnearby.ie';
 
 export function buildOrganizationSchema() {
   return {
@@ -22,7 +21,7 @@ export function buildOrganizationSchema() {
     alternateName: APP_SHORT_NAME,
     url: getAppUrl(),
     logo: absoluteUrl('/brand/sellnearby/png/icon-app-rounded.png'),
-    email: SUPPORT_EMAIL,
+    email: PLATFORM_SUPPORT_EMAIL,
     areaServed: {
       '@type': 'Country',
       name: PLATFORM_COUNTRY_NAME,

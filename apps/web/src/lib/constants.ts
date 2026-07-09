@@ -4,6 +4,9 @@ import { WEB_APP_ROUTES } from './rbac-routes';
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL;
 
+/** Public support inbox shown on /contact, schema.org, and help content. */
+export const PLATFORM_SUPPORT_EMAIL = 'support@sellnearby.ie';
+
 export { WEB_APP_ROUTES, API_NAMESPACES, getWebDashboardPathForRole } from './rbac-routes';
 export { WEB_API_ROUTES } from './api-routes';
 

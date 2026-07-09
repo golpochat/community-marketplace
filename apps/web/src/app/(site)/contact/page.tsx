@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { ContentPageShell } from '@/components/public/content-page-shell';
+import { PLATFORM_SUPPORT_EMAIL } from '@/lib/constants';
 import { publicPageMetadata } from '@/lib/seo/canonical';
 
 export const metadata = publicPageMetadata({
@@ -17,8 +18,8 @@ export default function ContactPage() {
     >
       <p>
         Email:{' '}
-        <a href="mailto:hello@community.marketplace" className="text-primary hover:underline">
-          hello@community.marketplace
+        <a href={`mailto:${PLATFORM_SUPPORT_EMAIL}`} className="text-primary hover:underline">
+          {PLATFORM_SUPPORT_EMAIL}
         </a>
       </p>
       <p className="mt-4">
