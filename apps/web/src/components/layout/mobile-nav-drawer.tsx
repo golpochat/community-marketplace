@@ -13,7 +13,9 @@ import {
   List,
   LogOut,
   MessageSquare,
+  Package,
   Settings,
+  Shield,
   ShoppingBag,
   Store,
   UserPlus,
@@ -22,9 +24,19 @@ import {
 
 import { Logo } from '@/components/brand/logo';
 import { getCategoryIcon } from '@/lib/category-icons';
-import type { UserNavLinks } from '@/lib/user-nav-routes';
+import type { UserMenuItem, UserNavLinks } from '@/lib/user-nav-routes';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 import { listingsService } from '@/services/listings.service';
+
+const MOBILE_MENU_ICONS = {
+  dashboard: LayoutDashboard,
+  list: List,
+  messages: MessageSquare,
+  heart: Heart,
+  package: Package,
+  settings: Settings,
+  shield: Shield,
+} as const;
 
 interface MobileNavDrawerProps {
   open: boolean;
@@ -32,6 +44,7 @@ interface MobileNavDrawerProps {
   isAuthenticated: boolean;
   userDisplayName?: string;
   navLinks: UserNavLinks | null;
+  menuItems: UserMenuItem[];
   sellHref: string;
   onSignOut: () => void | Promise<void>;
   hideSignIn?: boolean;
@@ -44,6 +57,7 @@ export function MobileNavDrawer({
   isAuthenticated,
   userDisplayName,
   navLinks,
+  menuItems,
   sellHref,
   onSignOut,
   hideSignIn = false,
@@ -139,18 +153,20 @@ export function MobileNavDrawer({
 
           <div className="my-4 border-t border-border" />
 
-          {isAuthenticated && navLinks ? (
+          {isAuthenticated && navLinks && menuItems.length > 0 ? (
             <div className="space-y-1">
               {userDisplayName && (
                 <p className="px-3 py-2 text-sm font-semibold text-foreground">{userDisplayName}</p>
               )}
-              <MobileNavLink href={navLinks.dashboard} icon={LayoutDashboard} label="Dashboard" onClose={onClose} />
-              <MobileNavLink href={navLinks.myListings} icon={List} label="My Listings" onClose={onClose} />
-              <MobileNavLink href={navLinks.messages} icon={MessageSquare} label="Messages" onClose={onClose} />
-              {navLinks.savedItems && (
-                <MobileNavLink href={navLinks.savedItems} icon={Heart} label="Saved Items" onClose={onClose} />
-              )}
-              <MobileNavLink href={navLinks.settings} icon={Settings} label="Settings" onClose={onClose} />
+              {menuItems.map((item) => (
+                <MobileNavLink
+                  key={item.href}
+                  href={item.href}
+                  icon={MOBILE_MENU_ICONS[item.icon]}
+                  label={item.label}
+                  onClose={onClose}
+                />
+              ))}
               <button
                 type="button"
                 className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-[15px] font-medium text-red-600 hover:bg-red-50"

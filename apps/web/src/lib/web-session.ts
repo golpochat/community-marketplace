@@ -1,6 +1,10 @@
 import { API_BASE_URL } from '@/lib/constants';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
 import {
+  setWebAuthTokenCookie,
+  setWebRefreshTokenCookie,
+} from '@/lib/role-cookie';
+import {
   getStoredAccessToken,
   getStoredRefreshToken,
   useAuthStore,
@@ -34,6 +38,8 @@ async function requestSessionRefresh(body: Record<string, unknown>): Promise<str
   const newRefresh = json.data?.refreshToken;
   if (!accessToken || !newRefresh) return null;
 
+  setWebAuthTokenCookie(accessToken);
+  setWebRefreshTokenCookie(newRefresh);
   useAuthStore.getState().updateSessionTokens(accessToken, newRefresh);
   return accessToken;
 }

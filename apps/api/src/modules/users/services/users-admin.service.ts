@@ -11,6 +11,7 @@ import {
 import { AuthorizationService } from '../../../common/authorization/authorization.service';
 import { assertBootstrapSuperAdminImmutable } from '../../../common/constants/bootstrap-users';
 import { PrismaService } from '../../../database/prisma.service';
+import { SessionService } from '../../auth/services/session.service';
 import { mapUser, mapUserProfile, userProfileInclude } from '../mappers/user.mapper';
 import { UserAuditService } from './user-audit.service';
 
@@ -22,6 +23,7 @@ export class UsersAdminService {
     private readonly prisma: PrismaService,
     private readonly audit: UserAuditService,
     private readonly authorization: AuthorizationService,
+    private readonly sessionService: SessionService,
   ) {}
 
   async listUsers(query: unknown, actorRole: RbacRole) {
@@ -101,6 +103,8 @@ export class UsersAdminService {
       data: { status: 'suspended' },
     });
 
+    await this.sessionService.revokeAllForUser(parsed.userId);
+
     await this.audit.record('user_suspended', actorId, parsed.userId, { reason: parsed.reason });
     return { userId: parsed.userId, status: 'suspended' };
   }
@@ -135,6 +139,8 @@ export class UsersAdminService {
       where: { id: parsed.userId },
       data: { status: 'suspended' },
     });
+
+    await this.sessionService.revokeAllForUser(parsed.userId);
 
     await this.audit.record('user_banned', actorId, parsed.userId, {
       banId: ban.id,

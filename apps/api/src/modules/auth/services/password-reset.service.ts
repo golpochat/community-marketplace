@@ -9,6 +9,7 @@ import type { PasswordResetTokenPayload } from '@community-marketplace/types';
 
 import { hashPassword } from '../../../database/seeds/password-hash';
 import { PrismaService } from '../../../database/prisma.service';
+import { assertUserCanAuthenticate } from '../utils/user-auth-status';
 
 @Injectable()
 export class PasswordResetService {
@@ -66,9 +67,7 @@ export class PasswordResetService {
       throw new ForbiddenException('Email not activated. Complete email activation first.');
     }
 
-    if (user.status === 'suspended') {
-      throw new ForbiddenException('Account is suspended');
-    }
+    assertUserCanAuthenticate(user.status);
 
     const updated = await this.prisma.user.update({
       where: { id: user.id },

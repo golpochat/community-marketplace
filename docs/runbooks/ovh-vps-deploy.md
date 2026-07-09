@@ -158,8 +158,19 @@ curl -s https://api.sellnearby.ie/api/health/ready
 |-----|----------|
 | https://sellnearby.ie | Marketplace homepage |
 | https://sellnearby.ie/admin | Admin login (dashboard is in apps/web) |
-| https://admin.sellnearby.ie | Same web app (use `/admin` path for dashboard) |
+| https://admin.sellnearby.ie | Admin operators only — sellers/buyers redirect to `https://sellnearby.ie`; operators go to `/admin` or `/super-admin` |
 | https://api.sellnearby.ie/api/health/ready | JSON `status: ok` |
+
+---
+
+### Lookup a user role (production DB)
+
+```bash
+cd /opt/sellnearby
+chmod +x infra/scripts/lookup-user-prod-docker.sh
+./infra/scripts/lookup-user-prod-docker.sh sujan@sellnearby.ie
+./infra/scripts/lookup-user-prod-docker.sh '%hijabi%'
+```
 
 ---
 

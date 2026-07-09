@@ -34,6 +34,8 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { AuthService } from '../auth/auth.service';
 import type { SessionContext } from '../auth/services/session.service';
+import { SessionService } from '../auth/services/session.service';
+import { isAuthenticationBlockedStatus } from '../auth/utils/user-auth-status';
 import { AdminService } from '../admin/admin.service';
 import { UsersService } from '../users/users.service';
 import { mapUserProfile, userProfileInclude } from '../users/mappers/user.mapper';
@@ -59,6 +61,7 @@ export class SuperAdminService {
     private readonly prisma: PrismaService,
     private readonly userAudit: UserAuditService,
     private readonly authService: AuthService,
+    private readonly sessionService: SessionService,
   ) {}
 
   async getPlatformOverview() {
@@ -528,6 +531,10 @@ export class SuperAdminService {
       data: { status: parsed.status },
       include: userProfileInclude,
     });
+
+    if (isAuthenticationBlockedStatus(parsed.status)) {
+      await this.sessionService.revokeAllForUser(userId);
+    }
 
     await this.userAudit.record('status_changed', actorId, userId, {
       previousStatus,

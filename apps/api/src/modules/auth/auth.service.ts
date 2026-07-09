@@ -94,6 +94,7 @@ import type { SessionContext } from './services/session.service';
 import { SessionService } from './services/session.service';
 
 import { generateSessionId } from './utils/token-hash';
+import { assertUserCanAuthenticate } from './utils/user-auth-status';
 
 
 
@@ -173,12 +174,12 @@ export class AuthService {
 
 
 
-    if (dbUser.status === 'suspended') {
-
-      await this.auditService.record('login', false, { ...context, email: dto.email, userId: dbUser.id }, 'Account suspended');
-
-      throw new ForbiddenException('Account is suspended');
-
+    try {
+      assertUserCanAuthenticate(dbUser.status);
+    } catch (error) {
+      const reason = dbUser.status === 'inactive' ? 'Account deactivated' : 'Account suspended';
+      await this.auditService.record('login', false, { ...context, email: dto.email, userId: dbUser.id }, reason);
+      throw error;
     }
 
 
@@ -270,6 +271,8 @@ export class AuthService {
       throw new ForbiddenException('Email not activated. Complete email activation first.');
 
     }
+
+    assertUserCanAuthenticate(refreshed.status);
 
 
 
@@ -647,9 +650,7 @@ export class AuthService {
       throw new UnauthorizedException('Current password is incorrect');
     }
 
-    if (dbUser.status === 'suspended') {
-      throw new ForbiddenException('Account is suspended');
-    }
+    assertUserCanAuthenticate(dbUser.status);
 
     await this.prisma.user.update({
       where: { id: userId },
@@ -722,6 +723,8 @@ export class AuthService {
 
     }
 
+    assertUserCanAuthenticate(dbUser.status);
+
 
 
     const user = this.toUserFromDb(dbUser);
@@ -779,6 +782,7 @@ export class AuthService {
 
 
   private async establishSession(user: User, context: SessionContext): Promise<LoginResponse> {
+    assertUserCanAuthenticate(user.status);
 
     const sessionId = generateSessionId();
 

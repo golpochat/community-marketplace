@@ -1,6 +1,20 @@
 import type { RbacRole, RoleCodeValue } from '@community-marketplace/types';
 import { isAdminPersonaRoleCode } from '@community-marketplace/types';
 
+export {
+  AUTH_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+  clearWebAuthTokenCookie,
+  clearWebRefreshTokenCookie,
+  getWebAuthTokenFromCookie,
+  getWebRefreshTokenFromCookie,
+  getWebRoleFromAuthTokenCookie,
+  isWebAuthTokenExpired,
+  parseWebAuthJwtPayload,
+  setWebAuthTokenCookie,
+  setWebRefreshTokenCookie,
+} from './web-auth-cookie';
+
 export const ROLE_COOKIE_NAME = 'cm-role';
 
 export function setWebRoleCookie(role: RoleCodeValue): void {

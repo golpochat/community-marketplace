@@ -5,6 +5,7 @@ import { EventsModule } from '../../events/events.module';
 import { JobsModule } from '../../jobs/jobs.module';
 import { LibsModule } from '../../libs/libs.module';
 import { UtilsModule } from '../../utils/utils.module';
+import { AuthModule } from '../auth/auth.module';
 import { ModerationController } from './moderation.controller';
 import { ModerationService } from './moderation.service';
 import { ModerationActionsService } from './services/moderation-actions.service';
@@ -16,7 +17,7 @@ import { ModerationReportsService } from './services/moderation-reports.service'
 import { ModerationSuspensionJobService } from './services/moderation-suspension.job';
 
 @Module({
-  imports: [DatabaseModule, EventsModule, JobsModule, LibsModule, UtilsModule],
+  imports: [DatabaseModule, EventsModule, JobsModule, LibsModule, UtilsModule, AuthModule],
   controllers: [ModerationController],
   providers: [
     ModerationService,

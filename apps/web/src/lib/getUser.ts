@@ -1,6 +1,6 @@
 import type { RoleCodeValue } from '@community-marketplace/types';
 
-import { getWebRoleFromCookie } from './auth';
+import { getWebRoleFromAuthTokenCookie, getWebRoleFromCookie } from './auth';
 import { useAuthStore } from '@/store/auth.store';
 
 /** Client hook consumer — read authenticated user from the auth store. */
@@ -13,7 +13,7 @@ export function getUserRole(cookieHeader?: string): RoleCodeValue | null {
   if (typeof window !== 'undefined') {
     const clientUser = getClientUser();
     if (clientUser?.role) return clientUser.role;
-    return getWebRoleFromCookie(document.cookie);
+    return getWebRoleFromAuthTokenCookie(document.cookie) ?? getWebRoleFromCookie(document.cookie);
   }
-  return getWebRoleFromCookie(cookieHeader);
+  return getWebRoleFromAuthTokenCookie(cookieHeader) ?? getWebRoleFromCookie(cookieHeader);
 }

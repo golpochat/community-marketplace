@@ -15,7 +15,7 @@ import { NotificationBell } from "@/components/shared/notification-bell";
 import { useAuth } from "@/hooks/use-auth";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { WEB_APP_ROUTES, isAuthLoginRoute, isAuthRegisterRoute } from "@/lib/rbac-routes";
-import { getUserNavLinks } from "@/lib/user-nav-routes";
+import { getUserMenuItems, getUserNavLinks } from "@/lib/user-nav-routes";
 import { authService } from "@/services/auth.service";
 
 const NAV_LINK_CLASS =
@@ -71,6 +71,8 @@ export function Header() {
 
   const navLinks =
     user && dashboardPath ? getUserNavLinks(user.role, dashboardPath) : null;
+  const menuItems =
+    user && dashboardPath ? getUserMenuItems(user.role, dashboardPath) : [];
   const menuUser = user
     ? {
         ...user,
@@ -149,7 +151,7 @@ export function Header() {
                 ) : null}
                 <UserMenuDropdown
                   user={menuUser}
-                  links={navLinks}
+                  menuItems={menuItems}
                   onSignOut={handleSignOut}
                 />
               </>
@@ -189,6 +191,7 @@ export function Header() {
         isAuthenticated={hasAuthState}
         userDisplayName={user?.displayName ?? user?.email ?? undefined}
         navLinks={navLinks}
+        menuItems={menuItems}
         sellHref={sellHref}
         onSignOut={handleSignOut}
         hideSignIn={onLoginPage}

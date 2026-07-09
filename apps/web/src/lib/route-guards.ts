@@ -4,9 +4,10 @@ import {
   isDashboardRouteAllowed,
 } from '@community-marketplace/ui-dashboard';
 import type { RbacRole, RoleCodeValue } from '@community-marketplace/types';
+import { isAdminPanelRoleCode } from '@community-marketplace/types';
 
 import { WEB_APP_ROUTES, getWebDashboardPathForRole, isWebDashboardRouteAllowed } from './rbac-routes';
-import { getWebRoleFromCookie } from './auth';
+import { getWebRoleFromAuthTokenCookie, getWebRoleFromCookie } from './auth';
 
 export const DASHBOARD_PREFIXES = ['/super-admin', '/admin', '/seller', '/buyer'] as const;
 
@@ -86,6 +87,71 @@ export function canAccessDashboardRoute(role: RoleCodeValue | null, pathname: st
   return isDashboardRouteAllowed(role, pathname) && isWebDashboardRouteAllowed(role, pathname);
 }
 
+export function isAdminSubdomainHost(host: string | null | undefined): boolean {
+  const hostname = host?.split(':')[0]?.toLowerCase() ?? '';
+  return hostname === 'admin.localhost' || hostname.startsWith('admin.');
+}
+
+/** On admin.{domain}, keep operators in the panel and send everyone else to the main site. */
+export function resolveAdminSubdomainRedirect(
+  pathname: string,
+  host: string | null | undefined,
+  role: RoleCodeValue | null,
+): string | null {
+  if (!isAdminSubdomainHost(host)) return null;
+
+  const isOperator = role === 'SUPER_ADMIN' || (role != null && isAdminPanelRoleCode(role));
+
+  if (pathname === '/') {
+    if (role === 'SUPER_ADMIN') return '/super-admin/dashboard';
+    if (role && isAdminPanelRoleCode(role)) return '/admin/dashboard';
+    return WEB_APP_ROUTES.login;
+  }
+
+  const isOperatorPath =
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/super-admin') ||
+    pathname.startsWith('/auth');
+
+  if (isOperator) {
+    if (pathname.startsWith('/seller') || pathname.startsWith('/buyer') || pathname.startsWith('/listings')) {
+      return role === 'SUPER_ADMIN' ? '/super-admin/dashboard' : '/admin/dashboard';
+    }
+    return null;
+  }
+
+  if (isOperatorPath) {
+    return null;
+  }
+
+  return '__MAIN_SITE__';
+}
+
+/** @deprecated Use resolveAdminSubdomainRedirect */
+export function resolveAdminSubdomainRootRedirect(
+  pathname: string,
+  host: string | null | undefined,
+  role: RoleCodeValue | null,
+): string | null {
+  return resolveAdminSubdomainRedirect(pathname, host, role);
+}
+
+export function getMainSiteOriginFromAdminHost(host: string | null | undefined, protocol: string): string | null {
+  const hostname = host?.split(':')[0]?.toLowerCase() ?? '';
+  if (!hostname.startsWith('admin.')) return null;
+  const port = host?.includes(':') ? host.split(':')[1] : '';
+  const mainHost = hostname.slice('admin.'.length);
+  const portSuffix = port ? `:${port}` : '';
+  return `${protocol}//${mainHost}${portSuffix}`;
+}
+
 export function getRoleFromRequest(cookieHeader: string | null | undefined): RoleCodeValue | null {
-  return getWebRoleFromCookie(cookieHeader ?? undefined);
+  const header = cookieHeader ?? undefined;
+  const roleFromToken = getWebRoleFromAuthTokenCookie(header);
+  if (roleFromToken) return roleFromToken;
+
+  // A legacy role hint without a bound access token must not drive routing.
+  if (getWebRoleFromCookie(header)) return null;
+
+  return null;
 }

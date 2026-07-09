@@ -3,7 +3,14 @@ import { persist } from 'zustand/middleware';
 
 import type { AuthResponse, User } from '@community-marketplace/types';
 
-import { clearWebRoleCookie, setWebRoleCookie } from '@/lib/role-cookie';
+import {
+  clearWebAuthTokenCookie,
+  clearWebRefreshTokenCookie,
+  clearWebRoleCookie,
+  setWebAuthTokenCookie,
+  setWebRefreshTokenCookie,
+  setWebRoleCookie,
+} from '@/lib/role-cookie';
 
 interface AuthSession {
   accessToken: string;
@@ -31,6 +38,8 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       setAuth: (response) => {
         setWebRoleCookie(response.user.role);
+        setWebAuthTokenCookie(response.accessToken);
+        setWebRefreshTokenCookie(response.refreshToken);
         set({
           user: response.user,
           session: {
@@ -49,6 +58,8 @@ export const useAuthStore = create<AuthState>()(
         );
       },
       updateSessionTokens: (accessToken, refreshToken) => {
+        setWebAuthTokenCookie(accessToken);
+        setWebRefreshTokenCookie(refreshToken);
         set((state) => ({
           session: state.session
             ? { ...state.session, accessToken, refreshToken }
@@ -57,6 +68,8 @@ export const useAuthStore = create<AuthState>()(
       },
       clearUser: () => {
         clearWebRoleCookie();
+        clearWebAuthTokenCookie();
+        clearWebRefreshTokenCookie();
         set({ user: null, session: null, isAuthenticated: false });
       },
     }),

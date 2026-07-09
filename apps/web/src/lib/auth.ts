@@ -4,7 +4,12 @@ import {
   ROLE_COOKIE_NAME,
   clearWebRoleCookie,
   getWebRoleFromCookie,
+  getWebRoleFromAuthTokenCookie,
   setWebRoleCookie,
+  setWebAuthTokenCookie,
+  setWebRefreshTokenCookie,
+  clearWebAuthTokenCookie,
+  clearWebRefreshTokenCookie,
 } from './role-cookie';
 
 export {
@@ -12,6 +17,11 @@ export {
   setWebRoleCookie,
   clearWebRoleCookie,
   getWebRoleFromCookie,
+  getWebRoleFromAuthTokenCookie,
+  setWebAuthTokenCookie,
+  setWebRefreshTokenCookie,
+  clearWebAuthTokenCookie,
+  clearWebRefreshTokenCookie,
 };
 
 export function setAuthRoleCookie(role: RbacRole): void {

@@ -10,6 +10,7 @@ import { takeModerationActionSchema } from '@community-marketplace/validation';
 import { PrismaService } from '../../../database/prisma.service';
 import { EventBusService } from '../../../events/event-bus.service';
 import { JobQueueService } from '../../../jobs/job-queue.service';
+import { SessionService } from '../../auth/services/session.service';
 import { mapModerationAction } from '../mappers/moderation.mapper';
 import { ModerationAuditService } from './moderation-audit.service';
 import { ModerationReportsService } from './moderation-reports.service';
@@ -37,6 +38,7 @@ export class ModerationActionsService {
     private readonly audit: ModerationAuditService,
     private readonly reports: ModerationReportsService,
     private readonly jobQueue: JobQueueService,
+    private readonly sessionService: SessionService,
   ) {}
 
   async takeAction(reportId: string, adminId: string, input: unknown): Promise<ModerationAction> {
@@ -123,6 +125,7 @@ export class ModerationActionsService {
             where: { id: userId },
             data: { status: 'suspended' },
           });
+          await this.sessionService.revokeAllForUser(userId);
           await this.prisma.userBan.create({
             data: {
               userId,
@@ -163,6 +166,7 @@ export class ModerationActionsService {
             where: { id: userId },
             data: { status: 'suspended' },
           });
+          await this.sessionService.revokeAllForUser(userId);
           this.eventBus.publish({
             type: 'moderation.user_banned',
             payload: { userId, actionId },
