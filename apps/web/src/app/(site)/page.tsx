@@ -8,14 +8,24 @@ import { FounderStorySection } from '@/components/public/founder-story-section';
 import { LocalFeedSection } from '@/components/public/local-feed-section';
 import { DisplayAdsSection } from '@/components/ads/display-ads-section';
 import { HomepageJsonLd } from '@/components/seo/homepage-json-ld';
-import { publicPageMetadata } from '@/lib/seo/canonical';
+import { canonicalMetadata } from '@/lib/seo/canonical';
+import {
+  DEFAULT_OG_DESCRIPTION,
+  DEFAULT_OPEN_GRAPH,
+  DEFAULT_TWITTER,
+} from '@/lib/seo/og-default';
 import { listingsService } from '@/services/listings.service';
 
-export const metadata = publicPageMetadata({
+export const metadata = {
   title: 'Home',
-  description: 'Buy and sell within your community in Ireland — no commission, trusted local sellers.',
-  path: '/',
-});
+  description: DEFAULT_OG_DESCRIPTION,
+  ...canonicalMetadata('/'),
+  openGraph: {
+    ...DEFAULT_OPEN_GRAPH,
+    url: '/',
+  },
+  twitter: DEFAULT_TWITTER,
+};
 
 export default async function HomePage() {
   const [categories, featuredListings, newestFallback] = await Promise.all([

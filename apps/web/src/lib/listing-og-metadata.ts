@@ -54,6 +54,32 @@ export function buildListingOgTitle(listing: Listing): string {
   return title;
 }
 
+/** Collapse spammy repeated phrases in seller descriptions for share previews. */
+function dedupeRepetitiveOgText(text: string, title: string): string {
+  if (!text) return title;
+
+  const clauses = text.split(/,\s*/).map((part) => part.trim()).filter(Boolean);
+  if (clauses.length > 1) {
+    const first = clauses[0] ?? text;
+    const repeated = clauses.every(
+      (clause) => clause === first || clause.startsWith(first) || first.startsWith(clause),
+    );
+    if (repeated) return first;
+  }
+
+  const chunk = Math.min(24, Math.max(8, Math.floor(title.length / 2) || 12));
+  const seed = title.slice(0, chunk).trim();
+  if (seed.length >= 8 && text.includes(seed.repeat(2))) {
+    const firstIndex = text.indexOf(seed);
+    const nextIndex = text.indexOf(seed, firstIndex + seed.length);
+    if (nextIndex > 0 && nextIndex - firstIndex <= seed.length + 2) {
+      return seed;
+    }
+  }
+
+  return text;
+}
+
 function deliverySuffix(options?: ListingDeliverySelection[]): string {
   if (!options?.length) return '';
 
@@ -68,10 +94,11 @@ function deliverySuffix(options?: ListingDeliverySelection[]): string {
 
 export function buildListingOgDescription(listing: Listing): string {
   const trimmed = listing.description.trim().replace(/\s+/g, ' ');
+  const deduped = dedupeRepetitiveOgText(trimmed, listing.title);
   const base =
-    trimmed.length > OG_DESCRIPTION_MAX
-      ? `${trimmed.slice(0, OG_DESCRIPTION_MAX).trimEnd()}…`
-      : trimmed;
+    deduped.length > OG_DESCRIPTION_MAX
+      ? `${deduped.slice(0, OG_DESCRIPTION_MAX).trimEnd()}…`
+      : deduped;
 
   let description = base + deliverySuffix(listing.deliveryOptions);
 
