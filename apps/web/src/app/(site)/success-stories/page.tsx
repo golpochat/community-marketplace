@@ -18,6 +18,7 @@ export const metadata = publicPageMetadata({
 export default function SuccessStoriesPage() {
   return (
     <ContentPageShell
+      showFooterActions={false}
       title="Success stories"
       subtitle="Real wins from neighbours buying and selling locally — Dublin to Galway and beyond."
     >

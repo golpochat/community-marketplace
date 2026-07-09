@@ -18,6 +18,7 @@ export default function LocalHubPage() {
     <ContentPageShell
       title="Sell safely in your county"
       subtitle="Local tips, public meet-up advice, and browse links for all 26 counties in Ireland."
+      showFooterActions={false}
     >
       <p>
         Hyper-local selling works best when buyers know you are nearby and you meet in safe, busy
@@ -40,10 +41,10 @@ export default function LocalHubPage() {
 
       <div className="mt-10 flex flex-wrap gap-3">
         <Button asChild>
-          <Link href="/guides">Read selling guides</Link>
+          <Link href="/listings">Browse listings</Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href="/listings/dublin">Dublin listings</Link>
+          <Link href="/guides">Read selling guides</Link>
         </Button>
         <Button asChild variant="outline">
           <Link href="/safety">Safety &amp; scam protection</Link>

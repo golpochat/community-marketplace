@@ -39,7 +39,7 @@ export function ContentHubLinks({ variant = 'full' }: ContentHubLinksProps) {
           </li>
           <li>
             <Link href="/safety" className="hover:text-primary">
-              Safety tips
+              Safety &amp; scam protection
             </Link>
           </li>
         </ul>

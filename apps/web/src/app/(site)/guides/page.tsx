@@ -18,6 +18,7 @@ export default function GuidesHubPage() {
     <ContentPageShell
       title="Selling guides"
       subtitle="Practical advice for Irish sellers and buyers — no fluff, just what works locally."
+      showFooterActions={false}
     >
       <div className="space-y-6">
         {GUIDE_ARTICLES.map((guide) => (
