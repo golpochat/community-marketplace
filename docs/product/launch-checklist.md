@@ -489,7 +489,7 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 | **Incident response** | Runbooks read | On-call rotation | ⚠️ Runbooks ✅ |
 | **Status page** | Nice | Must | ❌ |
 | **Beta invite process** | Waitlist / codes | — | Your choice |
-| **Marketing / SEO** | Minimal | Full | ⚠️ See [seo-audit.md](./seo-audit.md) — Phase 0 before public launch |
+| **Marketing / SEO** | Minimal | Full | ✅ Phases 0–4 coded — [deploy checklist](./seo-audit.md#part-11--production-deploy-checklist-seo) + GSC/GA4 manual |
 | **App distribution** | PWA | PWA (+ native later) | PWA ✅ |
 
 - [ ] Irish business entity registered

@@ -1,8 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { Button } from '@community-marketplace/ui';
 
-export const metadata = { title: 'Messages' };
+import { NOINDEX_ROBOTS } from '@/lib/seo/constants';
+
+export const metadata: Metadata = {
+  title: 'Messages',
+  robots: NOINDEX_ROBOTS,
+};
 
 export default function ChatPage() {
   return (

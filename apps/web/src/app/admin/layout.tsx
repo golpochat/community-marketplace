@@ -1,27 +1,13 @@
-'use client';
+import type { Metadata } from 'next';
 
-import { usePathname } from 'next/navigation';
+import { NOINDEX_ROBOTS } from '@/lib/seo/constants';
 
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { AdminLayoutShell } from './admin-layout-shell';
 
-function isAdminInvitePath(pathname: string): boolean {
-  return pathname === '/admin/invite/accept' || pathname.startsWith('/admin/invite/');
-}
+export const metadata: Metadata = {
+  robots: NOINDEX_ROBOTS,
+};
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
-  if (isAdminInvitePath(pathname)) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[hsl(var(--dashboard-main-bg))] px-4 py-8">
-        <div className="w-full max-w-md">{children}</div>
-      </div>
-    );
-  }
-
-  return (
-    <DashboardLayout role="ADMIN" theme="admin">
-      {children}
-    </DashboardLayout>
-  );
+  return <AdminLayoutShell>{children}</AdminLayoutShell>;
 }

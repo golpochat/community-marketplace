@@ -1,6 +1,11 @@
 import { ContentPageShell } from '@/components/public/content-page-shell';
+import { publicPageMetadata } from '@/lib/seo/canonical';
 
-export const metadata = { title: 'Terms of Service' };
+export const metadata = publicPageMetadata({
+  title: 'Terms of Service',
+  description: 'Terms and conditions for using SellNearby.ie.',
+  path: '/terms',
+});
 
 export default function TermsPage() {
   return (

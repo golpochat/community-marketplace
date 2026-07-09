@@ -4,8 +4,13 @@ import { Button } from '@community-marketplace/ui';
 import { APP_NAME, PLATFORM_COUNTRY_NAME } from '@community-marketplace/config';
 
 import { FounderCallout } from '@/components/public/founder-story-section';
+import { publicPageMetadata } from '@/lib/seo/canonical';
 
-export const metadata = { title: 'About' };
+export const metadata = publicPageMetadata({
+  title: 'About',
+  description: `Learn about ${APP_NAME} — Ireland's community marketplace for buying and selling locally without commission.`,
+  path: '/about',
+});
 
 export default function AboutPage() {
   return (

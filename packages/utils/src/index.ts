@@ -79,3 +79,10 @@ export {
   getShortLinkUrl,
   type ShareTextInput,
 } from './share';
+export {
+  buildListingImageVariantUrls,
+  resolveListingImageVariantPath,
+  stripListingWebpVariantStem,
+  type ListingImageVariant,
+  type ListingImageVariantUrls,
+} from './listing-image-variants';

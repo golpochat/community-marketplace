@@ -1,6 +1,11 @@
 import { ContentPageShell } from '@/components/public/content-page-shell';
+import { publicPageMetadata } from '@/lib/seo/canonical';
 
-export const metadata = { title: 'Privacy Policy' };
+export const metadata = publicPageMetadata({
+  title: 'Privacy Policy',
+  description: 'How SellNearby collects, uses, and protects your personal data.',
+  path: '/privacy',
+});
 
 export default function PrivacyPage() {
   return (

@@ -1,8 +1,13 @@
 import Link from 'next/link';
 
 import { ContentPageShell } from '@/components/public/content-page-shell';
+import { publicPageMetadata } from '@/lib/seo/canonical';
 
-export const metadata = { title: 'Contact' };
+export const metadata = publicPageMetadata({
+  title: 'Contact',
+  description: 'Get in touch with the SellNearby team for support, feedback, or partnership enquiries.',
+  path: '/contact',
+});
 
 export default function ContactPage() {
   return (

@@ -53,9 +53,8 @@ import {
 
 
 interface StorefrontPageClientProps {
-
   sellerSlug: string;
-
+  initialStore?: SellerStorefront | null;
 }
 
 
@@ -130,13 +129,13 @@ function StorefrontSkeleton() {
 
 
 
-export function StorefrontPageClient({ sellerSlug }: StorefrontPageClientProps) {
+export function StorefrontPageClient({ sellerSlug, initialStore }: StorefrontPageClientProps) {
 
   return (
 
     <Suspense fallback={<StorefrontSkeleton />}>
 
-      <StorefrontPageClientContent sellerSlug={sellerSlug} />
+      <StorefrontPageClientContent sellerSlug={sellerSlug} initialStore={initialStore} />
 
     </Suspense>
 
@@ -146,7 +145,7 @@ export function StorefrontPageClient({ sellerSlug }: StorefrontPageClientProps) 
 
 
 
-function StorefrontPageClientContent({ sellerSlug }: StorefrontPageClientProps) {
+function StorefrontPageClientContent({ sellerSlug, initialStore }: StorefrontPageClientProps) {
 
   const router = useRouter();
 
@@ -154,9 +153,9 @@ function StorefrontPageClientContent({ sellerSlug }: StorefrontPageClientProps) 
 
   const searchParams = useSearchParams();
 
-  const [store, setStore] = useState<SellerStorefront | null>(null);
+  const [store, setStore] = useState<SellerStorefront | null>(initialStore ?? null);
 
-  const [listings, setListings] = useState<StorefrontListing[]>([]);
+  const [listings, setListings] = useState<StorefrontListing[]>(initialStore?.listings ?? []);
 
   const [sort, setSort] = useState<StorefrontSort>('newest');
 
@@ -164,15 +163,17 @@ function StorefrontPageClientContent({ sellerSlug }: StorefrontPageClientProps) 
 
   const [viewMode, setViewMode] = useBrowseViewMode();
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialStore);
 
   const [listingsLoading, setListingsLoading] = useState(false);
 
-  const skipInitialListingFetch = useRef(true);
+  const skipInitialListingFetch = useRef(Boolean(initialStore));
 
 
 
   useEffect(() => {
+
+    if (initialStore) return;
 
     let cancelled = false;
 
@@ -202,7 +203,7 @@ function StorefrontPageClientContent({ sellerSlug }: StorefrontPageClientProps) 
 
     };
 
-  }, [sellerSlug]);
+  }, [sellerSlug, initialStore, searchParams]);
 
 
 

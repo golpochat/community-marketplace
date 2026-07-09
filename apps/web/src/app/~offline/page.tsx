@@ -1,11 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { Button } from '@community-marketplace/ui';
 
 import { OfflineRetryButton } from '@/components/pwa/offline-retry-button';
+import { NOINDEX_ROBOTS } from '@/lib/seo/constants';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Offline',
+  robots: NOINDEX_ROBOTS,
 };
 
 export default function OfflinePage() {

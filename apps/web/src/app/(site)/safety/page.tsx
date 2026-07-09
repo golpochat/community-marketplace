@@ -1,6 +1,11 @@
 import { ContentPageShell } from '@/components/public/content-page-shell';
+import { publicPageMetadata } from '@/lib/seo/canonical';
 
-export const metadata = { title: 'Safety & Scam Protection' };
+export const metadata = publicPageMetadata({
+  title: 'Safety & Scam Protection',
+  description: 'How SellNearby helps you buy and sell safely in your local community.',
+  path: '/safety',
+});
 
 export default function SafetyPage() {
   return (

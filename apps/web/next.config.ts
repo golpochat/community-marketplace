@@ -56,6 +56,17 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  images: {
+    formats: ['image/webp'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'assets.sellnearby.ie' },
+      { protocol: 'https', hostname: 'assets.community.marketplace' },
+      { protocol: 'https', hostname: 'assets.community.market' },
+      { protocol: 'https', hostname: '**.r2.dev' },
+      { protocol: 'http', hostname: 'localhost', port: '4000' },
+      { protocol: 'http', hostname: '127.0.0.1', port: '4000' },
+    ],
+  },
   transpilePackages: [
     '@community-marketplace/ui',
     '@community-marketplace/ui-dashboard',

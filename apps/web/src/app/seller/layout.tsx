@@ -1,13 +1,13 @@
-'use client';
+import type { Metadata } from 'next';
 
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { VerificationNudgeHost } from '@/components/seller/verification';
+import { NOINDEX_ROBOTS } from '@/lib/seo/constants';
+
+import { SellerLayoutShell } from './seller-layout-shell';
+
+export const metadata: Metadata = {
+  robots: NOINDEX_ROBOTS,
+};
 
 export default function SellerLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <DashboardLayout role="SELLER" theme="seller">
-      <VerificationNudgeHost />
-      {children}
-    </DashboardLayout>
-  );
+  return <SellerLayoutShell>{children}</SellerLayoutShell>;
 }

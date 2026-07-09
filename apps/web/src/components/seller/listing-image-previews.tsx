@@ -6,7 +6,7 @@ import type { ListingImage } from '@community-marketplace/types';
 import { Button } from '@community-marketplace/ui';
 import { cn } from '@community-marketplace/ui';
 
-import { listingImageVariantUrl, resolveListingImageSrc } from '@/lib/listing-image-url';
+import { ListingMediaImage } from '@/components/listings/listing-media-image';
 
 interface ExistingListingPhotosProps {
   images: ListingImage[];
@@ -131,15 +131,6 @@ function ExistingPhotoThumb({
   onSetCover: () => void;
   reordering?: boolean;
 }) {
-  const [src, setSrc] = useState(() =>
-    resolveListingImageSrc(listingImageVariantUrl(image.url, 'tiny') ?? image.url),
-  );
-  const hasSrc = Boolean(src);
-
-  useEffect(() => {
-    setSrc(resolveListingImageSrc(listingImageVariantUrl(image.url, 'tiny') ?? image.url));
-  }, [image.url]);
-
   return (
     <figure
       draggable={sortable && !removeDisabled}
@@ -156,23 +147,13 @@ function ExistingPhotoThumb({
         dragging && 'opacity-50',
       )}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      {hasSrc ? (
-        <img
-          src={src}
-          alt={`Listing photo ${index + 1}`}
-          className="aspect-square w-full object-cover"
-          onError={() => {
-            if (src.includes('_retry=')) return;
-            const separator = src.includes('?') ? '&' : '?';
-            setSrc(`${src}${separator}_retry=${Date.now()}`);
-          }}
-        />
-      ) : (
-        <div className="flex aspect-square w-full items-center justify-center text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-          No preview
-        </div>
-      )}
+      <ListingMediaImage
+        image={image}
+        variant="tiny"
+        alt={`Listing photo ${index + 1}`}
+        rounded="none"
+        className="aspect-square w-full"
+      />
       {isCover && (
         <span className="absolute left-2 top-2 rounded bg-[hsl(var(--dashboard-accent))] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
           Cover

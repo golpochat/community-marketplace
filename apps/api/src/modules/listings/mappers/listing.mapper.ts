@@ -9,6 +9,7 @@ import type {
 } from "@community-marketplace/types";
 import {
   buildDeliverySummaryLabel,
+  buildListingImageVariantUrls,
   formatLocationLabel,
 } from "@community-marketplace/utils";
 
@@ -66,22 +67,7 @@ function parseListingAttributes(value: unknown): ListingVehicleAttributes | unde
 }
 
 function buildImageVariantUrls(url: string) {
-  const resolved = resolveAssetPublicUrl(url);
-  const parts = resolved.split("?");
-  const pathPart = parts[0] ?? resolved;
-  const query = parts[1];
-  if (!pathPart.endsWith(".webp")) {
-    return { url: resolved };
-  }
-
-  const base = pathPart.slice(0, -5);
-  const suffix = query ? `?${query}` : "";
-  return {
-    url: resolved,
-    cardUrl: `${base}-card.webp${suffix}`,
-    thumbUrl: `${base}-thumb.webp${suffix}`,
-    tinyUrl: `${base}-tiny.webp${suffix}`,
-  };
+  return buildListingImageVariantUrls(resolveAssetPublicUrl(url));
 }
 
 export function mapCategory(row: {
@@ -371,7 +357,8 @@ export function toMeiliDocument(
       lng: Number(row.longitude),
     },
     imageUrl: row.images[0]
-      ? resolveAssetPublicUrl(row.images[0].url)
+      ? buildListingImageVariantUrls(resolveAssetPublicUrl(row.images[0].url)).cardUrl ??
+        resolveAssetPublicUrl(row.images[0].url)
       : undefined,
     favoriteCount: row.favoriteCount,
     viewCount: row.viewCount,

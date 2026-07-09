@@ -1,6 +1,11 @@
 import { ContentPageShell } from '@/components/public/content-page-shell';
+import { publicPageMetadata } from '@/lib/seo/canonical';
 
-export const metadata = { title: 'Community Rules' };
+export const metadata = publicPageMetadata({
+  title: 'Community Rules',
+  description: 'Guidelines for respectful, safe trading on SellNearby.',
+  path: '/community-rules',
+});
 
 export default function CommunityRulesPage() {
   return (

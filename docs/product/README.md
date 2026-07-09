@@ -11,7 +11,7 @@
 | Document | Description |
 |----------|-------------|
 | **[launch-checklist.md](./launch-checklist.md)** | **Launch readiness** — pilot vs public: FR/NFR, tools, legal, ops, smoke tests |
-| **[seo-audit.md](./seo-audit.md)** | **SEO audit & enterprise roadmap** — current status, gaps, phased plan |
+| **[seo-audit.md](./seo-audit.md)** | **SEO audit & roadmap** — Phases 0–4 implemented; production deploy checklist (Part 11) |
 | [functional-requirements.md](./functional-requirements.md) | Feature requirements by domain |
 | [non-functional-requirements.md](./non-functional-requirements.md) | Performance, security, scalability targets |
 | [user-stories.md](./user-stories.md) | Stories by persona (buyer, seller, admin) |

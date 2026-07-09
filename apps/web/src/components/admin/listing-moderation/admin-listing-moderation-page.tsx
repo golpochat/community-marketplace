@@ -4,7 +4,6 @@ import { useCallback, useState } from 'react';
 
 import type { Listing, ListingStatus } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
-import { BrandMediaImage } from '@community-marketplace/ui';
 import {
   Card,
   IconActionButton,
@@ -18,7 +17,7 @@ import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
 import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
 import { DashboardPageShell, DataTable } from '@/components/dashboard/async-resource';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
-import { listingImageVariantUrl } from '@/lib/listing-image-url';
+import { ListingMediaImage } from '@/components/listings/listing-media-image';
 import { adminService, type AdminServiceRole } from '@/services/admin.service';
 
 type ModerationQueue = 'pending' | 'flagged' | 'rejected' | 'removed';
@@ -32,11 +31,16 @@ const QUEUE_TABS: { id: ModerationQueue; label: string; status: ListingStatus }[
 
 function ListingThumb({ listing }: { listing: Listing }) {
   const cover = listing.images[0];
-  const src = cover ? listingImageVariantUrl(cover.url, 'tiny') : undefined;
 
   return (
     <div className="h-12 w-12 overflow-hidden">
-      <BrandMediaImage src={src} alt={listing.title} rounded="md" className="h-12 w-12" />
+      <ListingMediaImage
+        image={cover}
+        variant="tiny"
+        alt={listing.title}
+        rounded="md"
+        className="h-12 w-12"
+      />
     </div>
   );
 }

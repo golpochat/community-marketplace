@@ -1,3 +1,11 @@
+import type { ListingImageVariant } from '@community-marketplace/utils';
+import {
+  buildListingImageVariantUrls,
+  resolveListingImageVariantPath,
+} from '@community-marketplace/utils';
+
+export type { ListingImageVariant };
+
 const DEV_ASSET_CACHE_VERSION = '3';
 
 const PRODUCTION_ASSET_HOSTS = new Set([
@@ -9,8 +17,6 @@ const PRODUCTION_ASSET_HOSTS = new Set([
 function isR2PublicHost(hostname: string): boolean {
   return hostname.endsWith('.r2.dev') || PRODUCTION_ASSET_HOSTS.has(hostname);
 }
-
-export type ListingImageVariant = 'full' | 'card' | 'thumb' | 'tiny';
 
 const VARIANT_WIDTHS: Record<ListingImageVariant, number> = {
   full: 1600,
@@ -25,47 +31,6 @@ export type ListingImageLike = {
   thumbUrl?: string;
   tinyUrl?: string;
 };
-
-export function listingImageSrcForVariant(
-  image: ListingImageLike,
-  variant: ListingImageVariant,
-): string {
-  const direct =
-    variant === 'card'
-      ? image.cardUrl
-      : variant === 'thumb'
-        ? image.thumbUrl
-        : variant === 'tiny'
-          ? image.tinyUrl
-          : undefined;
-  const url = direct ?? listingImageVariantUrl(image.url, variant) ?? image.url;
-  return resolveListingImageSrc(url, VARIANT_WIDTHS[variant]);
-}
-
-/** Ordered URLs to try when a variant fails to load (e.g. missing processed crop). */
-export function listingImageFallbackChain(
-  image: ListingImageLike,
-  variant: ListingImageVariant,
-): string[] {
-  const chain: string[] = [];
-  const push = (value: string) => {
-    if (!chain.includes(value)) chain.push(value);
-  };
-
-  if (variant === 'thumb') {
-    push(listingImageSrcForVariant(image, 'thumb'));
-    push(listingImageSrcForVariant(image, 'card'));
-    push(listingImageSrcForVariant(image, 'full'));
-  } else if (variant === 'card') {
-    push(listingImageSrcForVariant(image, 'card'));
-    push(listingImageSrcForVariant(image, 'full'));
-  } else {
-    push(listingImageSrcForVariant(image, 'full'));
-  }
-
-  push(resolveListingImageSrc(image.url));
-  return chain;
-}
 
 function isR2PublicAssetUrl(url: string): boolean {
   try {
@@ -130,24 +95,71 @@ export function listingImageVariantUrl(
   variant: ListingImageVariant = 'full',
 ): string | undefined {
   if (!url) return undefined;
-  if (variant === 'full') {
-    return resolveListingImageSrc(url, VARIANT_WIDTHS.full);
-  }
+  const variantPath = resolveListingImageVariantPath(url, variant);
+  return resolveListingImageSrc(variantPath, VARIANT_WIDTHS[variant]);
+}
 
-  const [pathPart, query = ''] = url.split('?');
-  if (pathPart.endsWith('.webp')) {
-    const base = pathPart.slice(0, -5);
-    const suffixMap: Record<Exclude<ListingImageVariant, 'full'>, string> = {
-      card: '-card.webp',
-      thumb: '-thumb.webp',
-      tiny: '-tiny.webp',
-    };
-    const suffix = suffixMap[variant];
-    return resolveListingImageSrc(
-      `${base}${suffix}${query ? `?${query}` : ''}`,
-      VARIANT_WIDTHS[variant],
-    );
-  }
-
+export function listingImageSrcForVariant(
+  image: ListingImageLike,
+  variant: ListingImageVariant,
+): string {
+  const direct =
+    variant === 'card'
+      ? image.cardUrl
+      : variant === 'thumb'
+        ? image.thumbUrl
+        : variant === 'tiny'
+          ? image.tinyUrl
+          : undefined;
+  const url = direct ?? listingImageVariantUrl(image.url, variant) ?? image.url;
   return resolveListingImageSrc(url, VARIANT_WIDTHS[variant]);
+}
+
+function pushUnique(chain: string[], value: string | undefined) {
+  if (value && !chain.includes(value)) chain.push(value);
+}
+
+/** Fallback URLs for full ListingImage objects (detail pages, seller forms). */
+export function listingImageFallbackChain(
+  image: ListingImageLike,
+  variant: ListingImageVariant,
+): string[] {
+  const chain: string[] = [];
+
+  if (variant === 'tiny') {
+    pushUnique(chain, listingImageSrcForVariant(image, 'tiny'));
+    pushUnique(chain, listingImageSrcForVariant(image, 'thumb'));
+    pushUnique(chain, listingImageSrcForVariant(image, 'card'));
+    pushUnique(chain, listingImageSrcForVariant(image, 'full'));
+  } else if (variant === 'thumb') {
+    pushUnique(chain, listingImageSrcForVariant(image, 'thumb'));
+    pushUnique(chain, listingImageSrcForVariant(image, 'card'));
+    pushUnique(chain, listingImageSrcForVariant(image, 'full'));
+  } else if (variant === 'card') {
+    pushUnique(chain, listingImageSrcForVariant(image, 'card'));
+    pushUnique(chain, listingImageSrcForVariant(image, 'full'));
+  } else {
+    pushUnique(chain, listingImageSrcForVariant(image, 'full'));
+  }
+
+  pushUnique(chain, resolveListingImageSrc(image.url));
+  return chain;
+}
+
+/** Fallback URLs for ListingSummary.imageUrl (browse cards, similar listings, chat). */
+export function listingSummaryImageFallbackChain(
+  imageUrl: string | undefined,
+  variant: ListingImageVariant,
+): string[] {
+  if (!imageUrl) return [];
+
+  const variants = buildListingImageVariantUrls(imageUrl);
+  const asImage: ListingImageLike = {
+    url: variants.url,
+    cardUrl: variants.cardUrl,
+    thumbUrl: variants.thumbUrl,
+    tinyUrl: variants.tinyUrl,
+  };
+
+  return listingImageFallbackChain(asImage, variant);
 }

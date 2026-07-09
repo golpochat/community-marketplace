@@ -23,7 +23,6 @@ import {
   IRISH_MOBILE_VALIDATION_MESSAGE,
   normalizeIrishPhoneToE164,
 } from "@community-marketplace/validation";
-import { BrandMediaImage } from "@community-marketplace/ui";
 import {
   Card,
   formatExpiredAgo,
@@ -37,8 +36,8 @@ import {
   DataTable,
 } from "@/components/dashboard/async-resource";
 import { ListingPriceDisplay } from "@/components/listings/listing-price-display";
+import { ListingMediaImage } from "@/components/listings/listing-media-image";
 import { IrishMobilePrefixTooltip } from "@/components/forms/irish-mobile-prefix-tooltip";
-import { listingImageVariantUrl } from "@/lib/listing-image-url";
 import {
   DEFAULT_RENEW_PACKAGE,
   ListingSellerActions,
@@ -175,11 +174,16 @@ const STATUS_FILTER_OPTIONS = [
 
 function SellerListingThumb({ listing }: { listing: Listing }) {
   const cover = listing.images[0];
-  const src = cover ? listingImageVariantUrl(cover.url, "tiny") : undefined;
 
   return (
     <div className="h-12 w-12 overflow-hidden">
-      <BrandMediaImage src={src} alt={listing.title} rounded="md" className="aspect-square h-12 w-12" />
+      <ListingMediaImage
+        image={cover}
+        variant="tiny"
+        alt={listing.title}
+        rounded="md"
+        className="aspect-square h-12 w-12"
+      />
     </div>
   );
 }

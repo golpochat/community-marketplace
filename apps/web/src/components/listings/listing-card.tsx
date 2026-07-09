@@ -14,6 +14,7 @@ import {
   type ListingCardLayout,
 } from '@/components/listings/listing-card-parts';
 import type { ListingImageVariant } from '@/lib/listing-image-url';
+import { buildListingPath } from '@/lib/listing-slug';
 
 export interface ListingCardProps {
   listing: ListingSummary;
@@ -51,7 +52,7 @@ export function ListingCard({
 
   return (
     <article className={listingCardShellClass(layout, className)}>
-      <Link href={`/listings/${listing.id}`} className={listingCardLinkClass(layout)}>
+      <Link href={buildListingPath(listing)} className={listingCardLinkClass(layout)}>
         <ListingCardImage
           listing={listing}
           layout={layout}

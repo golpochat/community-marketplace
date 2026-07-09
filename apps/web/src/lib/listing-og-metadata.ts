@@ -1,6 +1,8 @@
 import type { Listing, ListingDeliverySelection } from '@community-marketplace/types';
 import type { Metadata } from 'next';
 
+import { buildListingCanonicalPath, canonicalMetadata } from '@/lib/seo/canonical';
+import { listingRobotsMetadata } from '@/lib/seo/listing-indexability';
 import { getOptimizedOgImageUrl } from '@/lib/og-image';
 import { fetchShortLinkForListing } from '@/lib/server-share';
 import { getListingPageUrl } from '@/lib/site-url';
@@ -94,23 +96,26 @@ export function buildListingOgContent(
     finalPrice: getFinalPrice(listing),
     currency: listing.currency,
     imageUrl: getOptimizedOgImageUrl(listing.id, mainImage),
-    pageUrl: pageUrl ?? getListingPageUrl(listing.id),
+    pageUrl: pageUrl ?? getListingPageUrl(listing),
     hasSale: listingHasSale(listing),
   };
 }
 
 export async function buildListingOgContentAsync(listing: Listing): Promise<ListingOgContent> {
   const shortLink = await fetchShortLinkForListing(listing.id);
-  const pageUrl = shortLink?.shortUrl ?? getListingPageUrl(listing.id);
+  const pageUrl = shortLink?.shortUrl ?? getListingPageUrl(listing);
   return buildListingOgContent(listing, pageUrl);
 }
 
 export function buildListingMetadata(listing: Listing, pageUrl?: string): Metadata {
   const og = buildListingOgContent(listing, pageUrl);
+  const canonicalPath = buildListingCanonicalPath(listing);
 
   return {
     title: og.title,
     description: og.description,
+    ...canonicalMetadata(canonicalPath),
+    ...listingRobotsMetadata(listing.status),
     openGraph: {
       title: og.title,
       description: og.description,

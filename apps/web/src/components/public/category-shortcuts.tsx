@@ -23,7 +23,7 @@ export function CategoryShortcuts({ categories }: CategoryShortcutsProps) {
           return (
             <Link
               key={cat.id}
-              href={`/listings?categoryId=${cat.id}`}
+              href={`/categories/${cat.slug}`}
               className="group surface-section flex items-center gap-3 p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-brand-md sm:flex-col sm:items-center sm:p-5 sm:text-center"
             >
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors duration-200 group-hover:bg-primary group-hover:text-primary-foreground">

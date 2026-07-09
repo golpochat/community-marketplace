@@ -1,8 +1,14 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { Button } from '@community-marketplace/ui';
 
-export const metadata = { title: 'Unauthorized' };
+import { NOINDEX_ROBOTS } from '@/lib/seo/constants';
+
+export const metadata: Metadata = {
+  title: 'Unauthorized',
+  robots: NOINDEX_ROBOTS,
+};
 
 export default function UnauthorizedPage() {
   return (

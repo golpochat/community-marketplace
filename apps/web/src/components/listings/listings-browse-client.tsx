@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { Category, ListingSearchFilters, ListingSummary } from '@community-marketplace/types';
 
@@ -28,16 +28,33 @@ import { listingsService } from '@/services/listings.service';
 const GRID_CLASS = BROWSE_RESULTS_GRID_CLASS;
 const LIST_CLASS = BROWSE_RESULTS_LIST_CLASS;
 
-export function ListingsBrowseClient() {
+interface ListingsBrowseClientProps {
+  initialCategories?: Category[];
+  initialListings?: ListingSummary[];
+  initialMeta?: { page: number; limit: number; total: number };
+  initialFiltersKey?: string;
+  pageTitle?: string;
+  pageDescription?: string;
+}
+
+export function ListingsBrowseClient({
+  initialCategories,
+  initialListings,
+  initialMeta,
+  initialFiltersKey,
+  pageTitle,
+  pageDescription,
+}: ListingsBrowseClientProps = {}) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [viewMode, setViewMode] = useBrowseViewMode();
   const { isAuthenticated, user } = useAuth();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [listings, setListings] = useState<ListingSummary[]>([]);
+  const [categories, setCategories] = useState<Category[]>(initialCategories ?? []);
+  const [listings, setListings] = useState<ListingSummary[]>(initialListings ?? []);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-  const [meta, setMeta] = useState({ page: 1, limit: 12, total: 0 });
+  const [loading, setLoading] = useState(!initialListings);
+  const [meta, setMeta] = useState(initialMeta ?? { page: 1, limit: 12, total: 0 });
+  const loadedKeyRef = useRef<string | null>(initialFiltersKey ?? null);
 
   const filters = parseBrowseFiltersFromParams(searchParams);
   const paramsKey = searchParams.toString();
@@ -81,8 +98,10 @@ export function ListingsBrowseClient() {
   }, [paramsKey, isAuthenticated, user?.role]);
 
   useEffect(() => {
+    if (loadedKeyRef.current === paramsKey) return;
+    loadedKeyRef.current = paramsKey;
     void load();
-  }, [load]);
+  }, [load, paramsKey]);
 
   function updateFilters(next: ListingSearchFilters) {
     const prevCategoryId = filters.categoryId;
@@ -99,9 +118,11 @@ export function ListingsBrowseClient() {
   return (
     <div className={SITE_PAGE_CLASS}>
       <header className="mb-6 space-y-1">
-        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Browse listings</h1>
+        <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
+          {pageTitle ?? 'Browse listings'}
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Discover items from trusted sellers in your community
+          {pageDescription ?? 'Discover items from trusted sellers in your community'}
         </p>
       </header>
 

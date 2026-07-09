@@ -155,6 +155,7 @@ services:
       dockerfile: infra/docker/Dockerfile.web
       args:
         NEXT_PUBLIC_API_URL: https://api.${DOMAIN}/api
+        NEXT_PUBLIC_APP_URL: https://${DOMAIN}
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
         NEXT_PUBLIC_OTP_PILOT_MODE: ${OTP_PILOT_MODE:-true}
     environment:

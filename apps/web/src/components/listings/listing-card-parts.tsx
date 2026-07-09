@@ -9,7 +9,7 @@ import {
   isFreeListingPrice,
   resolveListingListedAt,
 } from '@community-marketplace/utils';
-import { cn, BrandMediaImage } from '@community-marketplace/ui';
+import { cn } from '@community-marketplace/ui';
 import { BadgeCheck, MapPin } from 'lucide-react';
 
 import { DealBlock } from '@/components/listings/deal-block';
@@ -25,7 +25,9 @@ import {
 } from '@/components/listings/vehicle-listing-meta';
 import { SellerRatingDisplay } from '@/components/trust/seller-rating-display';
 import { SellerTrustBadges } from '@/components/trust/seller-trust-badges';
-import { listingImageVariantUrl, type ListingImageVariant } from '@/lib/listing-image-url';
+import type { ListingImageVariant } from '@/lib/listing-image-url';
+
+import { ListingMediaImage } from '@/components/listings/listing-media-image';
 
 export type ListingCardLayout = 'grid' | 'list' | 'compact';
 
@@ -92,7 +94,6 @@ export function ListingCardImage({
 }: ListingCardImageProps) {
   const isList = layout === 'list';
   const isCompact = layout === 'compact';
-  const imageSrc = listingImageVariantUrl(listing.imageUrl, imageVariant);
 
   return (
     <div
@@ -105,10 +106,10 @@ export function ListingCardImage({
             : 'aspect-video',
       )}
     >
-      <BrandMediaImage
-        src={imageSrc}
+      <ListingMediaImage
+        imageUrl={listing.imageUrl}
+        variant={imageVariant}
         alt={listing.title}
-        rounded="none"
         className="transition-transform duration-200 group-hover:scale-[1.02]"
       />
 

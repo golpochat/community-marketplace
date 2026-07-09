@@ -3,21 +3,33 @@ import { Inter } from 'next/font/google';
 
 import { APP_NAME, APP_SHORT_NAME, PLATFORM_LOCALE } from '@community-marketplace/config';
 
+import { SiteAnalytics } from '@/components/analytics/site-analytics';
+import { WebVitalsReporter } from '@/components/analytics/web-vitals-reporter';
 import { ServiceWorkerCleanup } from '@/components/dev/service-worker-cleanup';
 import { ServiceWorkerRecovery } from '@/components/pwa/service-worker-recovery';
 import { AppProviders } from '@/providers/app-providers';
+import { getAppUrl } from '@/lib/site-url';
+import { DEFAULT_OPEN_GRAPH, DEFAULT_TWITTER } from '@/lib/seo/og-default';
 
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
+const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim();
+
 export const metadata: Metadata = {
+  metadataBase: new URL(getAppUrl()),
   title: {
     default: APP_NAME,
     template: `%s | ${APP_NAME}`,
   },
   description: 'Buy and sell within your community in Ireland',
   applicationName: APP_SHORT_NAME,
+  openGraph: DEFAULT_OPEN_GRAPH,
+  twitter: DEFAULT_TWITTER,
+  ...(googleSiteVerification
+    ? { verification: { google: googleSiteVerification } }
+    : {}),
   icons: {
     icon: [
       { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
@@ -62,6 +74,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           />
         ) : null}
         <ServiceWorkerCleanup />
+        <SiteAnalytics />
+        <WebVitalsReporter />
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

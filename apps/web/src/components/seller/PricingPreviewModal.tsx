@@ -6,7 +6,7 @@ import { formatCurrency } from '@community-marketplace/utils';
 
 import { ListingPriceDisplay } from '@/components/listings/listing-price-display';
 import { SaleBadgeOverlay } from '@/components/listings/sale-badge-overlay';
-import { listingImageSrcForVariant } from '@/lib/listing-image-url';
+import { ListingMediaImage } from '@/components/listings/listing-media-image';
 
 interface PricingPreviewModalProps {
   open: boolean;
@@ -31,9 +31,6 @@ export function PricingPreviewModal({
   if (!open || !preview) return null;
 
   const currency = 'EUR';
-  const coverSrc = preview.coverImage
-    ? listingImageSrcForVariant(preview.coverImage, 'card')
-    : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -139,11 +136,12 @@ export function PricingPreviewModal({
                   Featured image badge preview
                 </p>
                 <div className="relative mt-2 aspect-[4/3] overflow-hidden rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.6)]">
-                  {coverSrc ? (
-                    <img
-                      src={coverSrc}
+                  {preview.coverImage ? (
+                    <ListingMediaImage
+                      image={preview.coverImage}
+                      variant="card"
                       alt={preview.listingTitle}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full"
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-sm text-[hsl(var(--dashboard-sidebar-muted))]">

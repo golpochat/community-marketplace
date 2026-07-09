@@ -8,6 +8,8 @@ const FOOTER_LINKS = {
   marketplace: [
     { href: '/listings', label: 'Browse listings' },
     { href: '/auth/register?intent=seller', label: 'Start selling' },
+    { href: '/guides', label: 'Selling guides' },
+    { href: '/local', label: 'Sell by county' },
     { href: '/success-stories', label: 'Success stories' },
   ],
   company: [

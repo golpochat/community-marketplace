@@ -8,7 +8,7 @@ import type { ListingImageVariant } from '@/lib/listing-image-url';
 import { cn, BrandMediaImage } from '@community-marketplace/ui';
 import { Check, ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
 
-import { listingImageFallbackChain } from '@/lib/listing-image-url';
+import { ListingMediaImage } from '@/components/listings/listing-media-image';
 
 const COVER_IMAGE_CLASS = 'absolute inset-0 h-full w-full object-cover';
 
@@ -20,28 +20,10 @@ interface GalleryImageProps {
 }
 
 function GalleryImage({ image, alt, variant, className }: GalleryImageProps) {
-  const fallbacks = listingImageFallbackChain(image, variant);
-  const [fallbackIndex, setFallbackIndex] = useState(0);
-
-  useEffect(() => {
-    setFallbackIndex(0);
-  }, [image.id, variant]);
-
-  const resolvedSrc = fallbacks[fallbackIndex] ?? fallbacks[0] ?? image.url;
-
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={resolvedSrc}
-      alt={alt}
-      className={className}
-      onError={() => {
-        setFallbackIndex((current) => {
-          if (current >= fallbacks.length - 1) return current;
-          return current + 1;
-        });
-      }}
-    />
+    <div className={cn('absolute inset-0', className)}>
+      <ListingMediaImage image={image} variant={variant} alt={alt} className="h-full w-full" />
+    </div>
   );
 }
 

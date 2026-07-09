@@ -7,6 +7,8 @@ import { BRAND_ICON_MARK_SUBTLE, resolveImageSrc } from '../lib/brand-media';
 
 export interface BrandMediaImageProps {
   src?: string | null;
+  /** Additional URLs to try if the primary src fails to load. */
+  fallbackSrcs?: string[];
   alt: string;
   className?: string;
   rounded?: 'none' | 'sm' | 'md' | 'lg' | 'full';
@@ -54,26 +56,43 @@ function BrandMediaPlaceholder({
 
 export function BrandMediaImage({
   src,
+  fallbackSrcs = [],
   alt,
   className,
   rounded = 'md',
   fit = 'cover',
 }: BrandMediaImageProps) {
-  const resolvedSrc = resolveImageSrc(src);
-  const [failed, setFailed] = React.useState(false);
+  const candidates = React.useMemo(() => {
+    const primary = resolveImageSrc(src);
+    const extras = fallbackSrcs
+      .map(resolveImageSrc)
+      .filter((url): url is string => Boolean(url));
+    const ordered: string[] = [];
+    if (primary) ordered.push(primary);
+    for (const url of extras) {
+      if (!ordered.includes(url)) ordered.push(url);
+    }
+    return ordered;
+  }, [src, fallbackSrcs]);
+
+  const [index, setIndex] = React.useState(0);
+  const [exhausted, setExhausted] = React.useState(false);
 
   React.useEffect(() => {
-    setFailed(false);
-  }, [resolvedSrc]);
+    setIndex(0);
+    setExhausted(false);
+  }, [candidates.join('\0')]);
 
-  if (!resolvedSrc || failed) {
+  const currentSrc = candidates[index];
+
+  if (exhausted || !currentSrc) {
     return <BrandMediaPlaceholder alt={alt} className={className} rounded={rounded} />;
   }
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={resolvedSrc}
+      src={currentSrc}
       alt={alt}
       className={cn(
         'h-full w-full',
@@ -81,7 +100,13 @@ export function BrandMediaImage({
         roundedClasses[rounded],
         className,
       )}
-      onError={() => setFailed(true)}
+      onError={() => {
+        if (index < candidates.length - 1) {
+          setIndex((current) => current + 1);
+          return;
+        }
+        setExhausted(true);
+      }}
     />
   );
 }

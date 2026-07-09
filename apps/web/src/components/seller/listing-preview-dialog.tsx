@@ -9,9 +9,9 @@ import type { ListingDeliverySelection, ListingImage } from '@community-marketpl
 
 import { ListingPriceDisplay } from '@/components/listings/listing-price-display';
 import { SaleBadgeOverlay } from '@/components/listings/sale-badge-overlay';
+import { ListingMediaImage } from '@/components/listings/listing-media-image';
 import type { ListingFormData } from '@/components/seller/listing-form';
 import { ExistingListingPhotos } from '@/components/seller/listing-image-previews';
-import { listingImageSrcForVariant } from '@/lib/listing-image-url';
 
 interface ListingPreviewDialogProps {
   open: boolean;
@@ -69,12 +69,8 @@ export function ListingPreviewDialog({
     }
   })();
 
-  const coverUrl =
-    (existingImages[0]
-      ? listingImageSrcForVariant(existingImages[0], 'card')
-      : undefined) ??
-    imageUrls[0] ??
-    null;
+  const coverImage = existingImages[0];
+  const draftCoverUrl = imageUrls[0] ?? null;
 
   return (
     <div
@@ -102,13 +98,23 @@ export function ListingPreviewDialog({
 
         <div className="space-y-6 px-6 py-6">
           <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-[hsl(var(--dashboard-sidebar-border))]">
-            <BrandMediaImage
-              src={coverUrl}
-              alt={data.title || 'Cover'}
-              rounded="lg"
-              className="h-full w-full"
-            />
-            {coverUrl && pricingMeta?.hasSaleBadge && pricingMeta.originalPrice != null ? (
+            {coverImage ? (
+              <ListingMediaImage
+                image={coverImage}
+                variant="card"
+                alt={data.title || 'Cover'}
+                rounded="lg"
+                className="h-full w-full"
+              />
+            ) : (
+              <BrandMediaImage
+                src={draftCoverUrl}
+                alt={data.title || 'Cover'}
+                rounded="lg"
+                className="h-full w-full"
+              />
+            )}
+            {(coverImage || draftCoverUrl) && pricingMeta?.hasSaleBadge && pricingMeta.originalPrice != null ? (
               <SaleBadgeOverlay
                 originalPrice={pricingMeta.originalPrice}
                 salePrice={pricingMeta.salePrice}

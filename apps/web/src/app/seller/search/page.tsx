@@ -9,6 +9,7 @@ import { formatCurrency } from '@community-marketplace/utils';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { searchService } from '@/services/search.service';
+import { buildListingPath } from '@/lib/listing-slug';
 
 export default function SellerSearchPage() {
   const [query, setQuery] = useState('');
@@ -97,7 +98,7 @@ export default function SellerSearchPage() {
               key={listing.id}
               className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm"
             >
-              <Link href={`/listings/${listing.id}`} className="block hover:opacity-90">
+              <Link href={buildListingPath(listing)} className="block hover:opacity-90">
                 <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">{listing.title}</p>
                 <p className="text-[hsl(var(--dashboard-sidebar-muted))]">
                   {formatCurrency(listing.price, listing.currency)}

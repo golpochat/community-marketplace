@@ -16,6 +16,31 @@ function readBoolean(params: ReadonlyURLSearchParams, key: string): boolean | un
   return undefined;
 }
 
+function toURLSearchParams(
+  params: Record<string, string | string[] | undefined>,
+): URLSearchParams {
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined) continue;
+    if (Array.isArray(value)) {
+      for (const item of value) searchParams.append(key, item);
+    } else {
+      searchParams.set(key, value);
+    }
+  }
+  return searchParams;
+}
+
+export function parseBrowseFiltersFromRecord(
+  params: Record<string, string | string[] | undefined>,
+  limit = 12,
+): ListingSearchFilters {
+  return parseBrowseFiltersFromParams(
+    toURLSearchParams(params) as unknown as ReadonlyURLSearchParams,
+    limit,
+  );
+}
+
 export function parseBrowseFiltersFromParams(
   searchParams: ReadonlyURLSearchParams,
   limit = 12,
