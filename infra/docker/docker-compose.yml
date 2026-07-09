@@ -51,21 +51,6 @@ services:
     networks:
       - cm-network
 
-  admin:
-    build:
-      context: ../..
-      dockerfile: infra/docker/Dockerfile.admin
-    environment:
-      NEXT_PUBLIC_API_URL: http://api.localhost/api
-    depends_on:
-      - api
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.admin.rule=Host(`admin.localhost`)
-      - traefik.http.services.admin.loadbalancer.server.port=3001
-    networks:
-      - cm-network
-
   meilisearch:
     build:
       context: ../..

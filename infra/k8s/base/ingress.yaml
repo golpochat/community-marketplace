@@ -12,7 +12,6 @@ spec:
     - hosts:
         - community.market
         - api.community.market
-        - admin.community.market
       secretName: cm-tls
   rules:
     - host: community.market
@@ -35,13 +34,3 @@ spec:
                 name: api
                 port:
                   number: 4000
-    - host: admin.community.market
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: admin
-                port:
-                  number: 3001

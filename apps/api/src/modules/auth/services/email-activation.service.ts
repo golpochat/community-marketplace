@@ -12,6 +12,7 @@ import { RegistrationAccountType as PrismaRegistrationAccountType } from '../../
 
 import { hashPassword } from '../../../database/seeds/password-hash';
 import { PrismaService } from '../../../database/prisma.service';
+import { EmailIdentityService } from './email-identity.service';
 
 export interface ActivationRegistrationData {
   email: string;
@@ -28,6 +29,7 @@ export class EmailActivationService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly prisma: PrismaService,
+    private readonly emailIdentity: EmailIdentityService,
   ) {}
 
   createActivationToken(data: ActivationRegistrationData): string {
@@ -70,19 +72,7 @@ export class EmailActivationService {
 
     const accountType = this.resolveAccountType(payload.accountType, pending.accountType);
 
-    const existingEmail = await this.prisma.user.findUnique({
-      where: { email: payload.email },
-    });
-    if (existingEmail) {
-      if (existingEmail.emailVerifiedAt) {
-        return {
-          userId: existingEmail.id,
-          email: existingEmail.email,
-          alreadyActivated: true as const,
-        };
-      }
-      throw new ConflictException('Email is already registered');
-    }
+    await this.emailIdentity.assertAvailableForPublicRegistration(payload.email);
 
     const existingPhone = await this.prisma.userProfile.findUnique({
       where: { phone: payload.phone },
@@ -155,6 +145,8 @@ export class EmailActivationService {
   }
 
   async stageRegistration(data: ActivationRegistrationData) {
+    await this.emailIdentity.assertAvailableForPublicRegistration(data.email);
+
     await this.prisma.pendingRegistration.deleteMany({
       where: {
         OR: [

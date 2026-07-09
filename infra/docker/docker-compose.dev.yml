@@ -10,7 +10,7 @@ x-api-env: &api-env
   REDIS_URL: redis://redis:6379
   MEILISEARCH_HOST: http://meilisearch:7700
   MEILISEARCH_API_KEY: dev-master-key
-  CORS_ORIGIN: http://localhost:3000,http://localhost:3001,http://web.localhost,http://admin.localhost
+  CORS_ORIGIN: http://localhost:3000,http://web.localhost
   JWT_SECRET: dev-jwt-secret-change-in-production
   WEB_APP_URL: http://localhost:3000
   API_PUBLIC_URL: http://localhost:4000

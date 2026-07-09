@@ -26,6 +26,7 @@ import {
   logoutSchema,
   passwordResetPreviewSchema,
   refreshTokenSchema,
+  resendActivationSchema,
   resetPasswordSchema,
 } from '@community-marketplace/validation';
 
@@ -78,6 +79,8 @@ import {
 
 } from './services/email-activation.service';
 
+import { EmailIdentityService } from './services/email-identity.service';
+
 import {
   buildPasswordResetUrl,
   PasswordResetService,
@@ -109,6 +112,8 @@ export class AuthService {
     private readonly jwtAuthService: JwtAuthService,
 
     private readonly emailActivationService: EmailActivationService,
+
+    private readonly emailIdentity: EmailIdentityService,
 
     private readonly passwordResetService: PasswordResetService,
 
@@ -304,11 +309,7 @@ export class AuthService {
 
 
 
-    if (await this.prisma.user.findUnique({ where: { email: parsed.email } })) {
-
-      throw new ConflictException('Email is already registered');
-
-    }
+    await this.emailIdentity.assertAvailableForPublicRegistration(parsed.email);
 
 
 
@@ -502,7 +503,8 @@ export class AuthService {
 
   async resendActivation(dto: ResendActivationDto) {
 
-    const result = await this.emailActivationService.resend(dto.email);
+    const parsed = resendActivationSchema.parse(dto);
+    const result = await this.emailActivationService.resend(parsed.email);
 
     const appBaseUrl = process.env.WEB_APP_URL ?? 'http://localhost:3000';
 

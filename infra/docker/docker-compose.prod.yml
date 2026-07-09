@@ -11,7 +11,7 @@ x-api-env: &api-env
   MEILISEARCH_HOST: http://meilisearch:7700
   MEILISEARCH_API_KEY: ${MEILI_MASTER_KEY}
   JWT_SECRET: ${JWT_SECRET}
-  CORS_ORIGIN: https://${DOMAIN},https://www.${DOMAIN},https://admin.${DOMAIN}
+  CORS_ORIGIN: https://${DOMAIN},https://www.${DOMAIN}
   WEB_APP_URL: https://${DOMAIN}
   API_PUBLIC_URL: https://api.${DOMAIN}
   STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
@@ -165,7 +165,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.services.web.loadbalancer.server.port=3000
-      # One router per hostname so a failing www/admin DNS check cannot block the apex cert
+      # Separate www router so a failing www DNS check cannot block the apex cert
       - traefik.http.routers.web.rule=Host(`${DOMAIN}`)
       - traefik.http.routers.web.entrypoints=websecure
       - traefik.http.routers.web.tls=true
@@ -176,11 +176,6 @@ services:
       - traefik.http.routers.web-www.tls=true
       - traefik.http.routers.web-www.tls.certresolver=letsencrypt
       - traefik.http.routers.web-www.service=web
-      - traefik.http.routers.web-admin.rule=Host(`admin.${DOMAIN}`)
-      - traefik.http.routers.web-admin.entrypoints=websecure
-      - traefik.http.routers.web-admin.tls=true
-      - traefik.http.routers.web-admin.tls.certresolver=letsencrypt
-      - traefik.http.routers.web-admin.service=web
     networks:
       - cm-network
 

@@ -10,6 +10,7 @@ import {
 
 import { AuthorizationService } from '../../../common/authorization/authorization.service';
 import { assertBootstrapSuperAdminImmutable } from '../../../common/constants/bootstrap-users';
+import { assertNoMarketplaceToOperatorPromotion } from '../../../common/constants/role-assignment.policy';
 import { PrismaService } from '../../../database/prisma.service';
 import { SessionService } from '../../auth/services/session.service';
 import { mapUser, mapUserProfile, userProfileInclude } from '../mappers/user.mapper';
@@ -186,6 +187,17 @@ export class UsersAdminService {
     role: RbacRole,
   ): Promise<User> {
     await this.assertCanManageUser(actorId, actorRole, userId);
+
+    const target = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { primaryRole: true },
+    });
+    if (!target) throw new NotFoundException('User not found');
+
+    const nextRole = await this.prisma.role.findUnique({ where: { id: roleId } });
+    if (!nextRole) throw new NotFoundException('Role not found');
+
+    assertNoMarketplaceToOperatorPromotion(target.primaryRole.code, nextRole.code);
 
     const updated = await this.prisma.user.update({
       where: { id: userId },

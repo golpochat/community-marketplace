@@ -13,7 +13,6 @@ flowchart TB
   end
   subgraph apps [Applications]
     Web[Next.js Web :3000]
-    Admin[Next.js Admin :3001]
     API[NestJS API :4000]
     Worker[BullMQ Worker :4001]
   end
@@ -30,7 +29,6 @@ flowchart TB
     OTel[OTel Collector]
   end
   Traefik --> Web
-  Traefik --> Admin
   Traefik --> API
   API --> PG
   API --> Redis
@@ -48,8 +46,7 @@ flowchart TB
 | Image | Dockerfile | Purpose |
 |-------|------------|---------|
 | API | `infra/docker/Dockerfile.api` | NestJS multi-stage build |
-| Web | `infra/docker/Dockerfile.web` | Next.js standalone |
-| Admin | `infra/docker/Dockerfile.admin` | Next.js standalone |
+| Web | `infra/docker/Dockerfile.web` | Next.js standalone (marketplace + all dashboards) |
 | Worker | `infra/docker/Dockerfile.worker` | BullMQ background jobs |
 | Redis | `infra/docker/Dockerfile.redis` | Custom redis.conf + AOF |
 | Meilisearch | `infra/docker/Dockerfile.meilisearch` | Search engine |

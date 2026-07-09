@@ -27,6 +27,7 @@ import {
   assertBootstrapSuperAdminImmutable,
   assertSuperAdminRoleNotAssignable,
 } from '../../../common/constants/bootstrap-users';
+import { assertNoMarketplaceToOperatorPromotion } from '../../../common/constants/role-assignment.policy';
 import { AuthorizationService } from '../../../common/authorization/authorization.service';
 import type { AuthenticatedUser } from '../../../common/decorators/current-user.decorator';
 import { PrismaService } from '../../../database/prisma.service';
@@ -319,7 +320,8 @@ export class RbacManagementService {
     assertBootstrapSuperAdminImmutable(dto.userId);
     await this.scopePolicy.assertCanAssignRole(actor, role.code);
 
-    await this.findUserOrThrow(dto.userId);
+    const user = await this.findUserOrThrow(dto.userId);
+    assertNoMarketplaceToOperatorPromotion(user.role, role.code);
 
     await this.persistUserRole(dto.userId, dto.roleId, role.code);
 

@@ -62,9 +62,10 @@ Target hosts (from `infra/k8s/base/ingress.yaml`):
 
 | Host                                      | Service |
 | ----------------------------------------- | ------- |
-| `community.market` (or your brand domain) | Web     |
+| `community.market` (or your brand domain) | Web (marketplace + `/admin`, `/super-admin`, `/seller`, `/buyer`) |
 | `api.community.market`                    | API     |
-| `admin.community.market`                  | Admin   |
+
+Do **not** create an `admin.` subdomain — operator panels live on path routes on the main web host.
 
 - [ ] Register domain (if not owned)
 - [ ] Create A/CNAME records → load balancer or VPS IP

@@ -10,7 +10,7 @@ data:
   REDIS_URL: redis://redis:6379
   BULLMQ_MODE: producer
   LOG_LEVEL: info
-  CORS_ORIGIN: https://community.market,https://admin.community.market
+  CORS_ORIGIN: https://community.market
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -28,4 +28,4 @@ metadata:
   namespace: community-marketplace
 data:
   NEXT_PUBLIC_API_URL: https://api.community.market/api
-  NEXT_PUBLIC_APP_URL: https://admin.community.market
+  NEXT_PUBLIC_APP_URL: https://community.market

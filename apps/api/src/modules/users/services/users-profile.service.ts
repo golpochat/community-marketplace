@@ -17,7 +17,9 @@ import {
 
 import { EventBusService } from '../../../events/event-bus.service';
 import { AuthorizationService } from '../../../common/authorization/authorization.service';
+import { assertNoMarketplaceToOperatorPromotion } from '../../../common/constants/role-assignment.policy';
 import { PrismaService } from '../../../database/prisma.service';
+import { EmailIdentityService } from '../../auth/services/email-identity.service';
 import { mapUserProfile, userProfileInclude } from '../mappers/user.mapper';
 import { UserAuditService } from './user-audit.service';
 
@@ -28,6 +30,7 @@ export class UsersProfileService {
     private readonly audit: UserAuditService,
     private readonly authorization: AuthorizationService,
     private readonly eventBus: EventBusService,
+    private readonly emailIdentity: EmailIdentityService,
   ) {}
 
   async getProfile(userId: string): Promise<UserProfile> {
@@ -45,10 +48,8 @@ export class UsersProfileService {
     const parsed = updateProfileSchema.parse(input);
 
     if (parsed.email) {
-      const existing = await this.prisma.user.findUnique({ where: { email: parsed.email } });
-      if (existing && existing.id !== targetUserId) {
-        throw new ConflictException('Email is already in use');
-      }
+      const existing = await this.emailIdentity.findUserByEmail(parsed.email);
+      this.emailIdentity.assertProfileEmailAvailable(parsed.email, existing, targetUserId);
     }
 
     if (parsed.phone) {

@@ -41,5 +41,4 @@ Write-Host @"
 Verify in browser:
   https://sellnearby.ie/super-admin/dashboard  -> Super Admin panel
   https://sellnearby.ie/admin/dashboard        -> Admin panel
-  https://admin.sellnearby.ie                  -> 308 redirect to sellnearby.ie (canonical)
 "@ -ForegroundColor Green

@@ -1,10 +1,7 @@
 import {
   canAccessDashboardRoute,
-  getMainSiteOriginFromAdminHost,
   getRoleFromRequest,
-  isAdminSubdomainHost,
   isDashboardPath,
-  resolveAdminSubdomainCanonicalPath,
   resolveDashboardRedirect,
   resolveGuestAuthRedirect,
   resolveSuperAdminAdminNamespaceRedirect,
@@ -13,8 +10,6 @@ import { ROLE_COOKIE_NAME, getWebRoleFromAuthTokenCookie, getWebRoleFromCookie }
 import { getDashboardRouteByRole } from '@community-marketplace/ui-dashboard';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
-const PERMANENT_REDIRECT = 308;
 
 function withLegacyRoleCookieCleanup(
   request: NextRequest,
@@ -27,24 +22,9 @@ function withLegacyRoleCookieCleanup(
   return response;
 }
 
-function redirectPermanent(request: NextRequest, target: URL): NextResponse {
-  return withLegacyRoleCookieCleanup(request, NextResponse.redirect(target, PERMANENT_REDIRECT));
-}
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const host = request.headers.get('host');
   const role = getRoleFromRequest(request.headers.get('cookie'));
-
-  // admin.{domain} is a legacy alias — always canonicalize to the main site.
-  if (isAdminSubdomainHost(host)) {
-    const targetPath =
-      resolveAdminSubdomainCanonicalPath(pathname, host, role) ?? pathname;
-    const mainOrigin =
-      getMainSiteOriginFromAdminHost(host, request.nextUrl.protocol) ?? request.nextUrl.origin;
-    const target = new URL(`${targetPath}${request.nextUrl.search}`, mainOrigin);
-    return redirectPermanent(request, target);
-  }
 
   if (pathname === '/') {
     return withLegacyRoleCookieCleanup(request, NextResponse.next());

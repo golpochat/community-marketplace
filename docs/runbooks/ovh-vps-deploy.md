@@ -1,7 +1,7 @@
 # OVH VPS deploy — SellNearby pilot
 
 > **VPS:** Gravelines · **Domain:** `sellnearby.ie` · **IP:** your VPS IPv4  
-> **Prerequisites:** SSH login, DNS A records → VPS IP
+> **Prerequisites:** SSH login, DNS A records for `sellnearby.ie`, `www`, and `api` → VPS IP (no `admin.` subdomain)
 
 ---
 
@@ -159,7 +159,6 @@ curl -s https://api.sellnearby.ie/api/health/ready
 | https://sellnearby.ie | Marketplace homepage |
 | https://sellnearby.ie/admin | Admin panel (`/admin/dashboard`) |
 | https://sellnearby.ie/super-admin | Super Admin panel (`/super-admin/dashboard`) |
-| https://admin.sellnearby.ie | **301/308 redirect** → canonical URL on `sellnearby.ie` (legacy DNS alias only) |
 | https://api.sellnearby.ie/api/health/ready | JSON `status: ok` |
 
 ---
@@ -247,7 +246,8 @@ SKIP_PULL=1 SKIP_BUILD=1 ./infra/scripts/vps-update.sh
 
 ### TLS / certificate errors
 
-- Confirm DNS A records point to VPS IP (`dig sellnearby.ie +short`)
+- Confirm DNS A records point to VPS IP (`dig sellnearby.ie +short`, `dig api.sellnearby.ie +short`)
+- Remove any `admin.sellnearby.ie` A record in OVH if it still exists
 - Ports 80 and 443 open (`sudo ufw status`)
 - Check Traefik logs: `docker compose ... logs traefik`
 
@@ -265,7 +265,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod stop prometheus g
 
 ### Compose still says `community.market`
 
-Ensure latest code with `DOMAIN` env support, or edit `infra/docker/docker-compose.prod.yml` labels to use `sellnearby.ie` / `api.sellnearby.ie` / `admin.sellnearby.ie`.
+Ensure latest code with `DOMAIN` env support, or edit `infra/docker/docker-compose.prod.yml` labels to use `sellnearby.ie` / `api.sellnearby.ie` (no `admin.` subdomain).
 
 ### Prisma migrate fails
 

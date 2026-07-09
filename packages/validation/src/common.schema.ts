@@ -1,6 +1,15 @@
 import { z } from 'zod';
 
-export const emailSchema = z.string().email('Invalid email address');
+/** Canonical form for identity lookups and storage (trim + lowercase). */
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+export const emailSchema = z
+  .string()
+  .trim()
+  .email('Invalid email address')
+  .transform(normalizeEmail);
 
 export const passwordSchema = z
   .string()

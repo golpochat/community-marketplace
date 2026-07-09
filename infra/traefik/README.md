@@ -11,9 +11,10 @@ Reverse proxy configuration for Community Marketplace.
 
 | Host | Service |
 |------|---------|
-| `localhost` / `community.market` | web (3000) |
-| `admin.localhost` / `admin.community.market` | admin (3001) |
+| `localhost` / `community.market` | web (3000) — marketplace + all role dashboards |
 | `api.localhost` / `api.community.market` | api (4000) |
+
+Admin and Super Admin panels are path-based on the web app (`/admin/*`, `/super-admin/*`). There is no `admin.` subdomain in production.
 
 ## Dashboard
 

@@ -3,9 +3,7 @@ import {
   getRequiredRoleForPath,
   isDashboardRouteAllowed,
 } from '@community-marketplace/ui-dashboard';
-import type { RbacRole, RoleCodeValue } from '@community-marketplace/types';
-import { isAdminPanelRoleCode } from '@community-marketplace/types';
-
+import type { RoleCodeValue } from '@community-marketplace/types';
 import { WEB_APP_ROUTES, getWebDashboardPathForRole, isWebDashboardRouteAllowed } from './rbac-routes';
 import { getWebRoleFromAuthTokenCookie, getWebRoleFromCookie } from './auth';
 
@@ -85,67 +83,6 @@ export function canAccessDashboardRoute(role: RoleCodeValue | null, pathname: st
   if (!requiredRole) return true;
 
   return isDashboardRouteAllowed(role, pathname) && isWebDashboardRouteAllowed(role, pathname);
-}
-
-export function isAdminSubdomainHost(host: string | null | undefined): boolean {
-  const hostname = host?.split(':')[0]?.toLowerCase() ?? '';
-  return hostname === 'admin.localhost' || hostname.startsWith('admin.');
-}
-
-/**
- * Permanent redirect from admin.{domain} to the canonical host (sellnearby.ie).
- * The admin subdomain is a legacy DNS alias only — all panel URLs live on the main domain.
- */
-export function resolveAdminSubdomainCanonicalPath(
-  pathname: string,
-  host: string | null | undefined,
-  role: RoleCodeValue | null,
-): string | null {
-  if (!isAdminSubdomainHost(host)) return null;
-
-  if (pathname === '/' || pathname === '') {
-    if (role === 'SUPER_ADMIN') return '/super-admin/dashboard';
-    if (role && isAdminPanelRoleCode(role)) return '/admin/dashboard';
-    return WEB_APP_ROUTES.login;
-  }
-
-  if (
-    pathname.startsWith('/super-admin') ||
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/auth')
-  ) {
-    return pathname;
-  }
-
-  // Public marketplace paths on the admin host → same path on the main site (not under /admin).
-  return pathname;
-}
-
-/** @deprecated Use resolveAdminSubdomainCanonicalPath */
-export function resolveAdminSubdomainRedirect(
-  pathname: string,
-  host: string | null | undefined,
-  role: RoleCodeValue | null,
-): string | null {
-  return resolveAdminSubdomainCanonicalPath(pathname, host, role);
-}
-
-/** @deprecated Use resolveAdminSubdomainCanonicalPath */
-export function resolveAdminSubdomainRootRedirect(
-  pathname: string,
-  host: string | null | undefined,
-  role: RoleCodeValue | null,
-): string | null {
-  return resolveAdminSubdomainCanonicalPath(pathname, host, role);
-}
-
-export function getMainSiteOriginFromAdminHost(host: string | null | undefined, protocol: string): string | null {
-  const hostname = host?.split(':')[0]?.toLowerCase() ?? '';
-  if (!hostname.startsWith('admin.')) return null;
-  const port = host?.includes(':') ? host.split(':')[1] : '';
-  const mainHost = hostname.slice('admin.'.length);
-  const portSuffix = port ? `:${port}` : '';
-  return `${protocol}//${mainHost}${portSuffix}`;
 }
 
 export function getRoleFromRequest(cookieHeader: string | null | undefined): RoleCodeValue | null {

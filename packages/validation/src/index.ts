@@ -11,6 +11,7 @@ export {
 
 export {
   emailSchema,
+  normalizeEmail,
   passwordSchema,
   uuidSchema,
   paginationSchema,

@@ -262,7 +262,7 @@ Protected API routes use global `AuthGuard` + `RolesPermissionsGuard` with `@Req
 | `400` | Validation error, invalid/expired OTP, missing refresh token |
 | `401` | Invalid credentials, invalid/expired JWT |
 | `403` | Email not activated, account suspended, no pending registration |
-| `409` | Email or phone already registered |
+| `409` | Email or phone already linked to an account (context-specific message) |
 | `429` | OTP rate limit, brute-force lockout, too many OTP attempts |
 
 Example error body:
@@ -299,7 +299,7 @@ Zod schemas (`@community-marketplace/validation`):
 | `JWT_SECRET` | Yes (prod) | Signs access, refresh, activation, and phone verification JWTs |
 | `WEB_APP_URL` | Yes | Base URL for activation links (e.g. `http://localhost:3000`) |
 | `DATABASE_URL` | Yes | PostgreSQL connection |
-| `CORS_ORIGIN` | Yes | Must include web + admin origins; `credentials: true` required for cookies |
+| `CORS_ORIGIN` | Yes | Must include the web app origin(s) (e.g. `https://sellnearby.ie`); `credentials: true` required for cookies |
 
 ---
 

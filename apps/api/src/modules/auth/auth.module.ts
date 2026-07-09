@@ -11,6 +11,7 @@ import { AuthActivationListener } from './listeners/auth-activation.listener';
 import { AuthPasswordResetListener } from './listeners/auth-password-reset.listener';
 import { ActivationEmailService } from './services/activation-email.service';
 import { EmailActivationService } from './services/email-activation.service';
+import { EmailIdentityService } from './services/email-identity.service';
 import { PasswordResetEmailService } from './services/password-reset-email.service';
 import { PasswordResetService } from './services/password-reset.service';
 import { JwtAuthService } from './services/jwt-auth.service';
@@ -33,6 +34,7 @@ import { SessionService } from './services/session.service';
     OtpService,
     JwtAuthService,
     EmailActivationService,
+    EmailIdentityService,
     ActivationEmailService,
     PasswordResetService,
     PasswordResetEmailService,
@@ -43,7 +45,7 @@ import { SessionService } from './services/session.service';
     AuthAuditService,
     AuthSecurityService,
   ],
-  exports: [AuthService, JwtAuthService, SessionService, OtpService],
+  exports: [AuthService, JwtAuthService, SessionService, OtpService, EmailIdentityService],
 })
 export class AuthModule {}
 

@@ -8,7 +8,6 @@ import {
 
 import {
   getPanelLoginRedirectPath,
-  isPrivilegedSystemRole,
   type AdminInvitationAcceptResponse,
   type AdminInvitationPreviewResponse,
   type LoginResponse,
@@ -16,11 +15,13 @@ import {
   type User,
 } from '@community-marketplace/types';
 import { isInviteableRoleCode } from '@community-marketplace/config';
+import { normalizeEmail } from '@community-marketplace/validation';
 
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { hashPassword } from '../../database/seeds/password-hash';
 import { PrismaService } from '../../database/prisma.service';
 import { JwtAuthService } from '../auth/services/jwt-auth.service';
+import { EmailIdentityService } from '../auth/services/email-identity.service';
 import { SessionService } from '../auth/services/session.service';
 import { PlatformGovernanceService } from '../platform/platform-governance.service';
 import { generateSecureToken, generateSessionId, hashToken } from '../auth/utils/token-hash';
@@ -48,6 +49,7 @@ export class AdminInvitationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: AdminInvitationEmailService,
+    private readonly emailIdentity: EmailIdentityService,
     private readonly governance: PlatformGovernanceService,
     private readonly jwtAuth: JwtAuthService,
     private readonly sessions: SessionService,
@@ -93,7 +95,7 @@ export class AdminInvitationsService {
     actor: AuthenticatedUser,
     input: { email: string; displayName: string; roleId: string },
   ) {
-    const email = input.email.trim().toLowerCase();
+    const email = normalizeEmail(input.email);
     const displayName = input.displayName.trim();
 
     const role = await this.prisma.role.findUnique({ where: { id: input.roleId } });
@@ -101,22 +103,7 @@ export class AdminInvitationsService {
       throw new BadRequestException('Selected role cannot be assigned via invitation');
     }
 
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email },
-      include: { primaryRole: true },
-    });
-
-    if (existingUser) {
-      if (existingUser.primaryRole.code === 'SUPER_ADMIN') {
-        throw new ConflictException('This email belongs to the platform super admin');
-      }
-      if (
-        isPrivilegedSystemRole(existingUser.primaryRole.code) ||
-        !['SELLER', 'BUYER'].includes(existingUser.primaryRole.code)
-      ) {
-        throw new ConflictException('This email already has a panel operator account');
-      }
-    }
+    await this.emailIdentity.assertAvailableForAdminInvitation(email);
 
     await this.prisma.adminInvitation.updateMany({
       where: {
@@ -251,51 +238,22 @@ export class AdminInvitationsService {
       throw new BadRequestException('Invalid invitation role');
     }
 
+    await this.emailIdentity.assertInvitationAcceptanceAllowed(invitation.email);
+
     const passwordHash = hashPassword(password);
-    let dbUser = await this.prisma.user.findUnique({
-      where: { email: invitation.email },
+    const dbUser = await this.prisma.user.create({
+      data: {
+        email: invitation.email,
+        displayName: invitation.displayName,
+        passwordHash,
+        primaryRoleId: role.id,
+        status: 'active',
+        emailVerifiedAt: now,
+        emailVerified: true,
+        profileCompleted: true,
+      },
       include: { primaryRole: true },
     });
-
-    if (dbUser) {
-      if (dbUser.primaryRole.code === 'SUPER_ADMIN') {
-        throw new ConflictException('Cannot modify super admin account via invitation');
-      }
-      if (
-        isPrivilegedSystemRole(dbUser.primaryRole.code) ||
-        !['SELLER', 'BUYER'].includes(dbUser.primaryRole.code)
-      ) {
-        throw new ConflictException('This email already has a panel operator account');
-      }
-
-      dbUser = await this.prisma.user.update({
-        where: { id: dbUser.id },
-        data: {
-          displayName: invitation.displayName,
-          passwordHash,
-          primaryRoleId: role.id,
-          status: 'active',
-          emailVerifiedAt: now,
-          emailVerified: true,
-          profileCompleted: true,
-        },
-        include: { primaryRole: true },
-      });
-    } else {
-      dbUser = await this.prisma.user.create({
-        data: {
-          email: invitation.email,
-          displayName: invitation.displayName,
-          passwordHash,
-          primaryRoleId: role.id,
-          status: 'active',
-          emailVerifiedAt: now,
-          emailVerified: true,
-          profileCompleted: true,
-        },
-        include: { primaryRole: true },
-      });
-    }
 
     await this.prisma.adminInvitation.update({
       where: { id: invitation.id },
