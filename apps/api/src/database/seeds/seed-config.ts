@@ -18,6 +18,10 @@ const seedEnvSchema = z.object({
   RBAC_SUPER_ADMIN_EMAIL: z.string().email().default('superadmin@community.market'),
   RBAC_SUPER_ADMIN_PASSWORD: z.string().min(8).default('ChangeMe!SuperAdmin1'),
   RBAC_SUPER_ADMIN_DISPLAY_NAME: z.string().min(1).default('Super Admin'),
+  PILOT_USE_EXISTING_USERS: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((value) => value === 'true'),
 });
 
 export type RbacSeedConfig = ReturnType<typeof loadRbacSeedConfig>;

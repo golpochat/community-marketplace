@@ -63,7 +63,7 @@ export interface PilotStoreSeed {
 
 export interface PilotListingSeed {
   id: string;
-  sellerKey: keyof typeof PILOT_SELLER_IDS;
+  sellerSlot: number;
   categorySlug: string;
   title: string;
   description: string;
@@ -192,58 +192,80 @@ export const PILOT_STORES: PilotStoreSeed[] = [
   },
 ];
 
-export const PILOT_IMAGE_POOLS: Record<string, readonly string[]> = {
-  electronics: [
-    'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?auto=format&fit=crop&w=900&q=80',
-  ],
-  furniture: [
-    'https://images.unsplash.com/photo-1555041469-a586c61e9bc0?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=900&q=80',
-  ],
-  clothing: [
-    'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=900&q=80',
-  ],
-  'sports-outdoors': [
-    'https://images.unsplash.com/photo-1517649763962-0c62306601b7?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?auto=format&fit=crop&w=900&q=80',
-  ],
-  'home-garden': [
-    'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1615529328331-f8917597711f?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1615874959474-d609969a20ed?auto=format&fit=crop&w=900&q=80',
-  ],
-  vehicles: [
-    'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=900&q=80',
-  ],
-  services: [
-    'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=80',
-  ],
-  other: [
-    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1503604475377-5bf86daeff45?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1519682337059-a94d519337bc?auto=format&fit=crop&w=900&q=80',
-    'https://images.unsplash.com/photo-1485955900006-10f4d324d246?auto=format&fit=crop&w=900&q=80',
-  ],
-};
+export const SELLER_LOCATIONS: PilotLocation[] = [
+  LOCATIONS.dublin,
+  LOCATIONS.cork,
+  LOCATIONS.galway,
+  LOCATIONS.limerick,
+  LOCATIONS.kilkenny,
+];
 
-const LISTING_CATALOG: Array<Omit<PilotListingSeed, 'id' | 'sellerKey' | 'location'>> = [
+/** 60 distinct Unsplash photo paths — combined with listing index for 200 unique URLs. */
+const UNIQUE_UNSPLASH_PHOTOS = [
+  'photo-1526170375885-4d8ecf77b99f',
+  'photo-1505740420928-5e560c06d30e',
+  'photo-1523275335684-37898b6baf30',
+  'photo-1572569511254-d8f925fe2cbb',
+  'photo-1555041469-a586c61e9bc0',
+  'photo-1493663284031-b7e3aefcae8e',
+  'photo-1586023492125-27b2c045efd7',
+  'photo-1567538096630-e0c55bd6374c',
+  'photo-1594938298603-c8148c4dae35',
+  'photo-1489987707025-afc232f7ea0f',
+  'photo-1434389677669-e08b4cac3105',
+  'photo-1515372039744-b8f02a3ae446',
+  'photo-1517649763962-0c62306601b7',
+  'photo-1517836357463-d25dfeac3438',
+  'photo-1518611012118-696072aa579a',
+  'photo-1476480862126-209bfaa8edc8',
+  'photo-1584622650111-993a426fbf0a',
+  'photo-1616486338812-3dadae4b4ace',
+  'photo-1615529328331-f8917597711f',
+  'photo-1615874959474-d609969a20ed',
+  'photo-1492144534655-ae79c964c9d7',
+  'photo-1503376780353-7e6692767b70',
+  'photo-1549317661-bd32c8ce0db2',
+  'photo-1552519507-da3b142c6e3d',
+  'photo-1454165804606-c3d57bc86b40',
+  'photo-1521791136064-7986c2920216',
+  'photo-1556761175-5973dc0f32e7',
+  'photo-1551836022-d5d88e9218df',
+  'photo-1503604475377-5bf86daeff45',
+  'photo-1519682337059-a94d519337bc',
+  'photo-1485955900006-10f4d324d246',
+  'photo-1460353581641-37baddab0fa0',
+  'photo-1441986300917-64674bd600d8',
+  'photo-1556906781-9a412961c28c',
+  'photo-1542291026-7eec264c27ff',
+  'photo-1606107557195-0e29a4b5b4aa',
+  'photo-1600185365926-3a2ce3cdb9eb',
+  'photo-1549298916-b41d501d3772',
+  'photo-1560343090-f0409e92791a',
+  'photo-1572635196237-14b3f281503f',
+  'photo-1622560480605-d83c853a3c0c',
+  'photo-1631729371254-42c4f0b765ae',
+  'photo-1602810318383-e386cc2a3ae0',
+  'photo-1599643478518-a784e5dc4af2',
+  'photo-1617032210778-f910bbaf2339',
+  'photo-1585386959984-a4155224a1ad',
+  'photo-1571171637578-41bc2dd41cd2',
+  'photo-1558618666-fcd25c85cd64',
+  'photo-1582735689369-4fe89db7114c',
+  'photo-1607082349566-187342175e2f',
+  'photo-1611312449504-5377a0c5451c',
+  'photo-1620799140408-edc6dcb6d633',
+  'photo-1631049307264-da0ec9d70304',
+  'photo-1593359677879-a7bb80f011ad',
+  'photo-1608043152269-423dbba4e7e3',
+  'photo-1574944985070-8f3ebc6b79d2',
+  'photo-1523275335684-37898b6baf30',
+  'photo-1505740420928-5e560c06d30e',
+  'photo-1511707171634-5f897ff02aa9',
+  'photo-1527814050087-3793815479db',
+  'photo-1531297481791-16a38b3a163e',
+] as const;
+
+const LISTING_CATALOG: Array<Omit<PilotListingSeed, 'id' | 'sellerSlot' | 'location'>> = [
   {
     categorySlug: 'clothing',
     title: "Women's Abaya Navy",
@@ -326,17 +348,6 @@ const LISTING_CATALOG: Array<Omit<PilotListingSeed, 'id' | 'sellerKey' | 'locati
   },
 ];
 
-const SELLER_ROTATION: Array<{
-  sellerKey: keyof typeof PILOT_SELLER_IDS;
-  location: PilotLocation;
-}> = [
-  { sellerKey: 'demo', location: LOCATIONS.dublin },
-  { sellerKey: 'cork', location: LOCATIONS.cork },
-  { sellerKey: 'galway', location: LOCATIONS.galway },
-  { sellerKey: 'limerick', location: LOCATIONS.limerick },
-  { sellerKey: 'kilkenny', location: LOCATIONS.kilkenny },
-];
-
 function pilotListingId(index: number): string {
   return `00000000-0000-4000-a000-${String(100 + index).padStart(12, '0')}`;
 }
@@ -346,18 +357,26 @@ function pilotImageId(listingIndex: number, sortOrder: number): string {
   return `00000000-0000-4000-a000-${String(base).padStart(12, '0')}`;
 }
 
+export function buildUniquePilotImageUrl(listingId: string, listingIndex: number, sortOrder: number): string {
+  const globalIndex = listingIndex * 4 + sortOrder;
+  const photo = UNIQUE_UNSPLASH_PHOTOS[globalIndex % UNIQUE_UNSPLASH_PHOTOS.length]!;
+  const crop = (globalIndex % 5) + 1;
+  return `https://images.unsplash.com/${photo}?auto=format&fit=crop&w=900&h=900&q=80&crop=entropy&cs=tinysrgb&sig=${listingId.slice(-8)}-${sortOrder}-${crop}`;
+}
+
 export function buildPilotListings(): PilotListingSeed[] {
   const listings: PilotListingSeed[] = [];
 
   for (let index = 0; index < 50; index += 1) {
     const template = LISTING_CATALOG[index % LISTING_CATALOG.length]!;
-    const seller = SELLER_ROTATION[index % SELLER_ROTATION.length]!;
+    const sellerSlot = index % SELLER_LOCATIONS.length;
+    const location = SELLER_LOCATIONS[sellerSlot]!;
     const variant = Math.floor(index / LISTING_CATALOG.length) + 1;
 
     listings.push({
       id: pilotListingId(index),
-      sellerKey: seller.sellerKey,
-      location: seller.location,
+      sellerSlot,
+      location,
       categorySlug: template.categorySlug,
       title: `[Pilot] ${template.title}${variant > 1 ? ` #${variant}` : ''}`,
       description: `${template.description} Pilot sample listing for marketplace testing.`,
@@ -374,14 +393,22 @@ export function getPilotListingImages(
   listing: PilotListingSeed,
   listingIndex: number,
 ): Array<{ id: string; url: string; sortOrder: number }> {
-  const pool = PILOT_IMAGE_POOLS[listing.categorySlug] ?? PILOT_IMAGE_POOLS.other!;
   return Array.from({ length: 4 }, (_, sortOrder) => ({
     id: pilotImageId(listingIndex, sortOrder),
-    url: pool[sortOrder % pool.length]!,
+    url: buildUniquePilotImageUrl(listing.id, listingIndex, sortOrder),
     sortOrder,
   }));
 }
 
+export function categoryIdFromMap(slug: string, categoryBySlug: Map<string, string>): string {
+  const categoryId = categoryBySlug.get(slug);
+  if (!categoryId) {
+    throw new Error(`Category slug not found in database: ${slug}`);
+  }
+  return categoryId;
+}
+
+/** @deprecated Use categoryIdFromMap with a DB lookup on production. */
 export function categoryIdForSlug(slug: string): string {
   const row = DEV_CATEGORY_SEED.find((entry) => entry.slug === slug);
   if (!row) {
@@ -392,9 +419,20 @@ export function categoryIdForSlug(slug: string): string {
 
 export const PILOT_LISTINGS = buildPilotListings();
 
+export const PILOT_TARGET_SELLERS = 5;
+export const PILOT_TARGET_BUYERS = 5;
+
 export const PILOT_SUMMARY = {
-  sellers: Object.keys(PILOT_SELLER_IDS).length,
-  buyers: Object.keys(PILOT_BUYER_IDS).length,
+  sellers: PILOT_TARGET_SELLERS,
+  buyers: PILOT_TARGET_BUYERS,
   listings: PILOT_LISTINGS.length,
   imagesPerListing: 4,
 } as const;
+
+export function pilotFillerSellers(): PilotUserSeed[] {
+  return PILOT_ADDITIONAL_USERS.filter((user) => user.role === 'SELLER');
+}
+
+export function pilotFillerBuyers(): PilotUserSeed[] {
+  return PILOT_ADDITIONAL_USERS.filter((user) => user.role === 'BUYER');
+}
