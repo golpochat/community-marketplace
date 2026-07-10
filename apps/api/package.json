@@ -20,6 +20,7 @@
     "seed:rbac": "ts-node -P tsconfig.scripts.json scripts/seed-rbac.ts",
     "seed:dev-users": "ts-node -P tsconfig.scripts.json scripts/seed-dev-users.ts",
     "seed:test-data": "ts-node -P tsconfig.scripts.json scripts/seed-test-data.ts",
+    "seed:pilot-data": "ts-node -P tsconfig.scripts.json scripts/seed-pilot-data.ts",
     "seed:all": "ts-node -P tsconfig.scripts.json scripts/seed-all.ts",
     "seed:monetization": "node scripts/seed-monetization-products.mjs",
     "test": "vitest run",
