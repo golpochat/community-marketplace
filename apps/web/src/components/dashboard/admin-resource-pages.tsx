@@ -56,6 +56,9 @@ function moderationReportTarget(report: {
   return '—';
 }
 
+type UserStatusFilter = 'active' | 'inactive' | 'suspended' | '';
+type UserRoleFilter = 'BUYER' | 'SELLER' | 'ADMIN' | '';
+
 export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
   const { toasts, push, dismiss } = useAdminToast();
   const [actingUserId, setActingUserId] = useState<string | null>(null);
@@ -64,10 +67,21 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
     action: 'suspend' | 'ban';
   } | null>(null);
   const [reinstateTarget, setReinstateTarget] = useState<UserProfile | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<UserRoleFilter>('');
+  const [statusFilter, setStatusFilter] = useState<UserStatusFilter>('');
+  const [pageSize, setPageSize] = useState(10);
 
   const fetchUsers = useCallback(
-    (page: number, limit: number) => adminService.listUsers(role, { page, limit }),
-    [role],
+    (page: number, limit: number) =>
+      adminService.listUsers(role, {
+        page,
+        limit,
+        ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
+        ...(roleFilter ? { role: roleFilter } : {}),
+        ...(statusFilter ? { status: statusFilter } : {}),
+      }),
+    [role, searchQuery, roleFilter, statusFilter],
   );
 
   const {
@@ -79,7 +93,7 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
     error,
     totalPages,
     reload,
-  } = usePaginatedQuery({ fetcher: fetchUsers });
+  } = usePaginatedQuery({ fetcher: fetchUsers, limit: pageSize });
 
   async function handleModerationSubmit(payload: UserModerationSubmitPayload) {
     if (!moderationTarget) return;
@@ -184,6 +198,79 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
         emptyTitle="No users found"
       >
         <Card>
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search name or email"
+              className="min-w-[220px] flex-1 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
+              aria-label="Search users"
+            />
+            <select
+              value={roleFilter}
+              onChange={(e) => {
+                setRoleFilter(e.target.value as UserRoleFilter);
+                setPage(1);
+              }}
+              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
+              aria-label="Filter users by role"
+            >
+              <option value="">All roles</option>
+              <option value="BUYER">Buyer</option>
+              <option value="SELLER">Seller</option>
+              {role === 'SUPER_ADMIN' ? <option value="ADMIN">Admin</option> : null}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value as UserStatusFilter);
+                setPage(1);
+              }}
+              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
+              aria-label="Filter users by status"
+            >
+              <option value="">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+            <label className="flex items-center gap-2">
+              Rows per page
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="rounded-md border border-[hsl(var(--dashboard-sidebar-border))] px-2 py-1 text-[hsl(var(--dashboard-main-fg))]"
+                aria-label="Rows per page"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </label>
+            {(searchQuery || roleFilter || statusFilter) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setRoleFilter('');
+                  setStatusFilter('');
+                  setPage(1);
+                }}
+                className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-1.5 font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
           <DataTable columns={['Name', 'Email', 'Role', 'Status', 'Actions']} rows={rows} />
           <AdminTableFooter
             page={page}
