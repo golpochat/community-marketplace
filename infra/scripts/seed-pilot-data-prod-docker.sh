@@ -39,10 +39,8 @@ for _ in $(seq 1 30); do
   sleep 2
 done
 
-if ! docker image inspect "$MIGRATE_IMAGE" >/dev/null 2>&1; then
-  echo "==> Building $MIGRATE_IMAGE (builder stage)"
-  docker build -f "$ROOT_DIR/infra/docker/Dockerfile.api" --target builder -t "$MIGRATE_IMAGE" "$ROOT_DIR"
-fi
+echo "==> Building $MIGRATE_IMAGE (builder stage) from current checkout"
+docker build -f "$ROOT_DIR/infra/docker/Dockerfile.api" --target builder -t "$MIGRATE_IMAGE" "$ROOT_DIR"
 
 POSTGRES_CID="$(docker compose -f "$COMPOSE_FILE" --env-file .env.prod ps -q postgres | head -1)"
 NETWORK="$(docker inspect "$POSTGRES_CID" -f '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}')"
