@@ -11,6 +11,10 @@ import { BuyerTrustBadges } from '@/components/trust/buyer-trust-badges';
 import { useChatSocket } from '@/hooks/use-chat-socket';
 import { chatService } from '@/services/chat.service';
 import { trustService } from '@/services/trust.service';
+import {
+  canInitiateListingThreadAsBuyer,
+  type MarketplaceChatRole,
+} from '@/lib/marketplace-messaging';
 
 function dedupeMessages(messages: ChatMessage[]): ChatMessage[] {
   const seen = new Set<string>();
@@ -24,7 +28,7 @@ function dedupeMessages(messages: ChatMessage[]): ChatMessage[] {
 interface ChatPageClientProps {
   currentUserId: string;
   accessToken?: string;
-  role: 'BUYER' | 'SELLER';
+  role: MarketplaceChatRole;
   listingId?: string;
   sellerId?: string;
 }
@@ -83,8 +87,8 @@ export function ChatPageClient({
           return;
         }
 
-        if (role === 'BUYER' && sellerId) {
-          const created = await chatService.createThread(listingId!, sellerId);
+        if (canInitiateListingThreadAsBuyer(role, currentUserId, sellerId ?? '')) {
+          const created = await chatService.createThread(listingId!, sellerId!);
           if (created?.id) {
             setActiveThreadId(created.id);
             await loadInbox();
@@ -223,7 +227,7 @@ export function ChatPageClient({
   };
 
   const handleTypingInput = () => {
-    sendTyping(role === 'BUYER' ? 'buyer_typing' : 'seller_typing');
+    sendTyping(role === 'SELLER' ? 'seller_typing' : 'buyer_typing');
   };
 
   const threadHeader =

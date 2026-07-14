@@ -5,11 +5,12 @@ import { useSearchParams } from 'next/navigation';
 
 import { LoadingState } from '@/components/LoadingState';
 import { ChatPageClient } from '@/components/chat/chat-page-client';
+import type { MarketplaceChatRole } from '@/lib/marketplace-messaging';
 
 interface ChatPageShellProps {
   currentUserId: string;
   accessToken?: string;
-  role: 'BUYER' | 'SELLER';
+  role: MarketplaceChatRole;
 }
 
 function ChatPageWithParams({ currentUserId, accessToken, role }: ChatPageShellProps) {

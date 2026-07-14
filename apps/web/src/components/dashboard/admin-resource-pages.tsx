@@ -57,7 +57,7 @@ function moderationReportTarget(report: {
 }
 
 type UserStatusFilter = 'active' | 'inactive' | 'suspended' | '';
-type UserRoleFilter = 'BUYER' | 'SELLER' | 'ADMIN' | '';
+type UserRoleFilter = 'MEMBER' | 'BUYER' | 'SELLER' | 'ADMIN' | '';
 
 export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
   const { toasts, push, dismiss } = useAdminToast();
@@ -220,8 +220,9 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
               aria-label="Filter users by role"
             >
               <option value="">All roles</option>
-              <option value="BUYER">Buyer</option>
-              <option value="SELLER">Seller</option>
+              <option value="MEMBER">Member</option>
+              <option value="BUYER">Buyer (legacy)</option>
+              <option value="SELLER">Seller (legacy)</option>
               {role === 'SUPER_ADMIN' ? <option value="ADMIN">Admin</option> : null}
             </select>
             <select

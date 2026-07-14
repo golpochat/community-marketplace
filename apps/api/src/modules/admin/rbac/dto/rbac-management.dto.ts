@@ -43,8 +43,8 @@ export class CreateCustomRoleDto {
   description?: string;
 
   @IsOptional()
-  @IsEnum(['blank', 'BUYER', 'SELLER', 'ADMIN'])
-  template?: 'blank' | 'BUYER' | 'SELLER' | 'ADMIN';
+  @IsEnum(['blank', 'MEMBER', 'BUYER', 'SELLER', 'ADMIN'])
+  template?: 'blank' | 'MEMBER' | 'BUYER' | 'SELLER' | 'ADMIN';
 }
 
 export class UpdateCustomRoleDto {

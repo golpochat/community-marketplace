@@ -1,9 +1,7 @@
+import type { LoginResponse } from '@community-marketplace/types';
+
 import { API_BASE_URL } from '@/lib/constants';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
-import {
-  setWebAuthTokenCookie,
-  setWebRefreshTokenCookie,
-} from '@/lib/role-cookie';
 import {
   getStoredAccessToken,
   getStoredRefreshToken,
@@ -19,7 +17,7 @@ export function resolveClientRefreshToken(): string | null {
   return getStoredRefreshToken();
 }
 
-async function requestSessionRefresh(body: Record<string, unknown>): Promise<string | null> {
+async function requestSessionRefresh(body: Record<string, unknown>): Promise<LoginResponse | null> {
   const response = await fetch(`${API_BASE_URL}${WEB_API_ROUTES.public.auth.refresh}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -30,22 +28,22 @@ async function requestSessionRefresh(body: Record<string, unknown>): Promise<str
 
   if (!response.ok) return null;
 
-  const json = (await response.json()) as {
-    data?: { accessToken?: string; refreshToken?: string };
-  };
+  const json = (await response.json()) as { data?: LoginResponse };
+  const session = json.data;
+  if (!session?.accessToken || !session.refreshToken || !session.user) return null;
 
-  const accessToken = json.data?.accessToken;
-  const newRefresh = json.data?.refreshToken;
-  if (!accessToken || !newRefresh) return null;
-
-  setWebAuthTokenCookie(accessToken);
-  setWebRefreshTokenCookie(newRefresh);
-  useAuthStore.getState().updateSessionTokens(accessToken, newRefresh);
-  return accessToken;
+  useAuthStore.getState().setAuth(session);
+  return session;
 }
 
 /** Refresh session; returns new access token or null. */
 export async function refreshClientSession(): Promise<string | null> {
+  const session = await reloadAuthenticatedSession();
+  return session?.accessToken ?? null;
+}
+
+/** Refresh tokens and sync the authenticated user in client state. */
+export async function reloadAuthenticatedSession(): Promise<LoginResponse | null> {
   const refreshToken = resolveClientRefreshToken();
   if (refreshToken) {
     const fromStorage = await requestSessionRefresh({ refreshToken });

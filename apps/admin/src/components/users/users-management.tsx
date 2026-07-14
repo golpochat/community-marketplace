@@ -82,8 +82,9 @@ export function UsersManagement({ initialUsers }: Props) {
         />
         <Select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
           <option value="">All roles</option>
-          <option value="BUYER">Buyer</option>
-          <option value="SELLER">Seller</option>
+          <option value="MEMBER">Member</option>
+          <option value="BUYER">Buyer (legacy)</option>
+          <option value="SELLER">Seller (legacy)</option>
           <option value="ADMIN">Admin</option>
         </Select>
       </div>

@@ -68,7 +68,7 @@ export class ChatAccessService {
   async assertCanSendMessage(userId: string, role: RbacRole) {
     this.assertMessagingRole(role);
     await this.assertNotChatBanned(userId);
-    if (role === 'SELLER') {
+    if (role === 'SELLER' || (role === 'MEMBER' && (await this.hasSellerCapability(userId, role)))) {
       await this.assertSellerMessagingAllowed(userId);
     }
   }

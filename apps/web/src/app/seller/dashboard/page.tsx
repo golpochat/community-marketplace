@@ -11,12 +11,14 @@ import { SellerVerificationBanner } from '@/components/seller/seller-verificatio
 import { useSellerDashboardData } from '@/hooks/use-seller-dashboard-data';
 import { Card, PageHeader } from '@community-marketplace/ui-dashboard';
 
+import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
+
 const QUICK_LINKS = [
   { href: '/seller/storefront', label: 'Storefronts' },
-  { href: '/seller/earnings', label: 'Earnings & payouts' },
-  { href: '/seller/notifications', label: 'Notifications' },
-  { href: '/seller/chat', label: 'Messages' },
-  { href: '/seller/settings', label: 'Settings' },
+  { href: WEB_APP_ROUTES.accountEarnings, label: 'Earnings & payouts' },
+  { href: WEB_APP_ROUTES.accountNotifications, label: 'Notifications' },
+  { href: WEB_APP_ROUTES.accountMessages, label: 'Messages' },
+  { href: WEB_APP_ROUTES.accountSettings, label: 'Settings' },
 ] as const;
 
 export default function SellerDashboardPage() {

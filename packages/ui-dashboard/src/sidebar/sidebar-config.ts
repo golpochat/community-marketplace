@@ -304,6 +304,7 @@ export const ACCOUNT_SIDEBAR: SidebarNavItem[] = [
   { id: 'start-selling', label: 'Start selling', href: '/account/start-selling', icon: 'plus' },
   { id: 'earnings', label: 'Earnings', href: '/account/earnings', icon: 'wallet' },
   { id: 'messages', label: 'Messages', href: '/account/messages', icon: 'message-circle' },
+  { id: 'disputes', label: 'Disputes', href: '/account/disputes', icon: 'scale' },
   { id: 'notifications', label: 'Notifications', href: '/account/notifications', icon: 'bell' },
   { id: 'settings', label: 'Settings', href: '/account/settings', icon: 'settings' },
 ];

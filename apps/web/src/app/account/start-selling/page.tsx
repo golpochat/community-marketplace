@@ -12,6 +12,7 @@ import { Button, Label, cn } from '@community-marketplace/ui';
 import { PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
+import { reloadAuthenticatedSession } from '@/lib/web-session';
 import { sellerOnboardingService } from '@/services/seller-onboarding.service';
 
 export default function StartSellingPage() {
@@ -31,6 +32,7 @@ export default function StartSellingPage() {
     setError(null);
     try {
       await sellerOnboardingService.start(sellerKind);
+      await reloadAuthenticatedSession();
       router.push('/account/verification');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not start seller setup');

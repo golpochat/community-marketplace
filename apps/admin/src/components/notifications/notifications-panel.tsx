@@ -11,7 +11,7 @@ export function NotificationsPanel() {
   const [templates, setTemplates] = useState<Array<Record<string, unknown>>>([]);
   const [broadcastTitle, setBroadcastTitle] = useState('');
   const [broadcastBody, setBroadcastBody] = useState('');
-  const [targetRole, setTargetRole] = useState('SELLER');
+  const [targetRole, setTargetRole] = useState('MEMBER');
 
   useEffect(() => {
     void adminService.getNotificationTemplates().then((data) => {
@@ -48,8 +48,9 @@ export function NotificationsPanel() {
             value={targetRole}
             onChange={(e) => setTargetRole(e.target.value)}
           >
-            <option value="SELLER">All sellers</option>
-            <option value="BUYER">All buyers</option>
+            <option value="MEMBER">All members</option>
+            <option value="SELLER">All sellers (legacy)</option>
+            <option value="BUYER">All buyers (legacy)</option>
             <option value="ADMIN">All admins</option>
           </select>
           <Button onClick={() => void sendBroadcast()}>Send broadcast</Button>

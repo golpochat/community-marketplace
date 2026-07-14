@@ -11,13 +11,13 @@ import { DisputesService } from './services/disputes.service';
 export class DisputesController {
   constructor(private readonly disputesService: DisputesService) {}
 
-  @RequireRole('BUYER')
+  @RequireRole('BUYER', 'MEMBER')
   @Post('create')
   create(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     return this.disputesService.create(user.id, body);
   }
 
-  @RequireRole('BUYER', 'SELLER')
+  @RequireRole('BUYER', 'SELLER', 'MEMBER')
   @Post('upload-evidence')
   uploadEvidence(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     return this.disputesService.uploadEvidence(
@@ -27,13 +27,13 @@ export class DisputesController {
     );
   }
 
-  @RequireRole('SELLER')
+  @RequireRole('SELLER', 'MEMBER')
   @Post('respond')
   respond(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     return this.disputesService.respond(user.id, body);
   }
 
-  @RequireRole('BUYER', 'SELLER')
+  @RequireRole('BUYER', 'SELLER', 'MEMBER')
   @Get('mine')
   listMine(@CurrentUser() user: AuthenticatedUser, @Query() query: Record<string, string>) {
     return this.disputesService.listForUser(
@@ -43,7 +43,7 @@ export class DisputesController {
     );
   }
 
-  @RequireRole('BUYER', 'SELLER')
+  @RequireRole('BUYER', 'SELLER', 'MEMBER')
   @Get(':id')
   getDetail(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
     return this.disputesService.getDetail(id, user.id, user.role);

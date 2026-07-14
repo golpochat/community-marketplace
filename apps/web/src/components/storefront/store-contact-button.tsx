@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
+import { buildListingMessageHref } from '@/lib/marketplace-messaging';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
 interface StoreContactButtonProps {
@@ -22,7 +23,7 @@ export function StoreContactButton({
   icon,
   className,
 }: StoreContactButtonProps) {
-  const { isAuthenticated, dashboardPath } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   if (!listingId) {
     return (
@@ -41,11 +42,13 @@ export function StoreContactButton({
     );
   }
 
-  const chatPath = dashboardPath?.includes('seller') ? '/seller/chat' : '/buyer/chat';
+  if (user?.id === sellerId) {
+    return null;
+  }
 
   return (
     <Link
-      href={`${chatPath}?listing=${listingId}&seller=${sellerId}`}
+      href={buildListingMessageHref(listingId, sellerId)}
       className={className ?? 'block w-full'}
     >
       <Button className="w-full">

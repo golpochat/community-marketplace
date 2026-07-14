@@ -35,8 +35,8 @@ How pilot users share suggestions, report bugs, and how you turn replies into pr
 `Email (optional)`
 
 **Question 3** — Multiple choice · required  
-`I mainly used SellNearby as…`  
-Options: `Buyer` · `Seller` · `Both` · `Signed up but haven't used it yet`
+`I mainly used SellNearby to…`  
+Options: `Buy locally` · `Sell items` · `Both buy and sell` · `Signed up but haven't used it yet`
 
 **Question 4** — Paragraph · required  
 `What were you trying to do?`  
@@ -67,7 +67,7 @@ Options: `Yes` · `Maybe` · `No`
 |---|------|----------|-------|
 | 1 | Short answer | Your name (optional) | Not required |
 | 2 | Short answer | Email (optional) | Not required — only if you want a reply |
-| 3 | Multiple choice | I mainly used SellNearby as… | Buyer / Seller / Both / Signed up but haven’t used it yet |
+| 3 | Multiple choice | I mainly used SellNearby to… | Buy locally / Sell items / Both buy and sell / Signed up but haven’t used it yet |
 | 4 | Paragraph | What were you trying to do? | e.g. list a pram, buy locally, set up payments |
 | 5 | Paragraph | What worked well? | |
 | 6 | Paragraph | What was confusing, broken, or missing? | Encourage screenshots in email if needed |
@@ -130,6 +130,7 @@ Hi [Name],
 You're invited to test SellNearby — a local marketplace for buying and selling safely in Ireland.
 
 Sign up: https://sellnearby.ie/auth/register
+Start selling (after sign-up): https://sellnearby.ie/account/start-selling
 Browse listings: https://sellnearby.ie/listings
 
 Pilot password / notes: [if applicable — e.g. OTP codes in pilot mode, or any invite-only detail]

@@ -17,6 +17,7 @@ import {
   NOTIFICATIONS_UPDATED_EVENT,
   type NotificationsUpdatedDetail,
 } from '@/lib/notification-unread-events';
+import { resolveNotificationInboxRole } from '@/lib/marketplace-messaging';
 import { notificationsService } from '@/services/notifications.service';
 import { useAuthStore } from '@/store/auth.store';
 
@@ -25,7 +26,7 @@ const POLL_INTERVAL_MS = 30_000;
 function isNotificationInboxRole(
   role: RbacRole | null | undefined,
 ): role is 'BUYER' | 'SELLER' | 'ADMIN' | 'SUPER_ADMIN' {
-  return role === 'BUYER' || role === 'SELLER' || role === 'ADMIN' || role === 'SUPER_ADMIN';
+  return resolveNotificationInboxRole(role) !== null;
 }
 
 interface NotificationUnreadContextValue {
@@ -42,13 +43,14 @@ export function NotificationUnreadProvider({ children }: { children: ReactNode }
   const [unreadCount, setUnreadCount] = useState(0);
 
   const refresh = useCallback(async () => {
-    if (!isNotificationInboxRole(role)) {
+    const inboxRole = resolveNotificationInboxRole(role);
+    if (!inboxRole) {
       setUnreadCount(0);
       return;
     }
 
     try {
-      const count = await notificationsService.getUnreadCount(role);
+      const count = await notificationsService.getUnreadCount(inboxRole);
       setUnreadCount(count);
     } catch {
       setUnreadCount(0);

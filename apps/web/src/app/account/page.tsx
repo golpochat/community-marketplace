@@ -42,6 +42,13 @@ export default function AccountHomePage() {
             List items locally — choose individual, sole trader, or company.
           </p>
         </Link>
+        <Link
+          href={WEB_APP_ROUTES.accountDisputes}
+          className="rounded-xl border border-border bg-card p-5 shadow-brand-sm transition-colors hover:border-primary/40"
+        >
+          <h2 className="font-semibold text-foreground">Disputes</h2>
+          <p className="mt-1 text-sm text-muted-foreground">View and respond to purchase disputes.</p>
+        </Link>
       </div>
     </>
   );

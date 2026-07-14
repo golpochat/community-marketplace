@@ -6,6 +6,7 @@ import { Card } from '@community-marketplace/ui-dashboard';
 import { cn } from '@community-marketplace/ui';
 
 import type { SellerDashboardStats } from '@/hooks/use-seller-dashboard-stats';
+import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 import { SELLER_ROUTES } from '@/lib/seller-routes';
 
 const CARDS: Array<{
@@ -20,7 +21,7 @@ const CARDS: Array<{
   {
     key: 'activeListings',
     title: 'Active listings',
-    href: SELLER_ROUTES.listings,
+    href: WEB_APP_ROUTES.accountListings,
     description: 'Live on marketplace',
   },
   {
@@ -32,13 +33,13 @@ const CARDS: Array<{
   {
     key: 'totalEarnings',
     title: 'Earnings',
-    href: '/seller/earnings',
+    href: WEB_APP_ROUTES.accountEarnings,
     description: 'Lifetime earnings',
   },
   {
     key: 'unreadMessages',
     title: 'Unread messages',
-    href: '/seller/chat',
+    href: WEB_APP_ROUTES.accountMessages,
     description: 'Buyer conversations',
   },
 ];

@@ -23,7 +23,8 @@ const PURCHASE_BLOCKED_MESSAGE =
 function formatCheckoutError(message: string): string {
   if (
     message.includes('Insufficient role') ||
-    message.includes('Only buyers can initiate payments')
+    message.includes('Only buyers can initiate payments') ||
+    message.includes('Only marketplace members')
   ) {
     return PURCHASE_BLOCKED_MESSAGE;
   }
@@ -79,7 +80,7 @@ export function BuyNowButton({ listing, className }: BuyNowButtonProps) {
         window.location.href = session.checkoutUrl;
         return;
       }
-      router.push('/buyer/purchases');
+      router.push(WEB_APP_ROUTES.accountPurchases);
     } catch (err) {
       setError(formatCheckoutError(err instanceof Error ? err.message : 'Checkout failed'));
     } finally {

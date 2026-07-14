@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import { VERIFICATION_ONBOARDING_COPY } from "@community-marketplace/types";
 import { IRISH_MOBILE_VALIDATION_MESSAGE } from "@community-marketplace/validation";
@@ -10,6 +11,10 @@ import { Button, Input, Label } from "@community-marketplace/ui";
 import { OtpPilotNotice } from "@/components/auth/otp-pilot-notice";
 import { IrishMobileFieldLabel } from "@/components/forms/irish-mobile-field-label";
 import { isOtpPilotMode } from "@/lib/otp-pilot-mode";
+import {
+  parseRegistrationIntent,
+  persistRegistrationIntent,
+} from "@/lib/registration-intent";
 import { authService } from "@/services/auth.service";
 import { formatIrishPhoneHint, normalizeIrishPhoneToE164 } from "@/lib/phone";
 
@@ -32,6 +37,8 @@ function FormSuccess({ message }: { message: string }) {
 }
 
 export function RegisterForm() {
+  const searchParams = useSearchParams();
+  const sellerIntent = parseRegistrationIntent(searchParams.get("intent")) === "seller";
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [normalizedPhone, setNormalizedPhone] = useState("");
@@ -43,6 +50,12 @@ export function RegisterForm() {
   const [success, setSuccess] = useState<string | null>(null);
   const [devOtpCode, setDevOtpCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (sellerIntent) {
+      persistRegistrationIntent("seller");
+    }
+  }, [sellerIntent]);
 
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault();
@@ -108,7 +121,9 @@ export function RegisterForm() {
       <form onSubmit={handleSendOtp} className="mt-6 space-y-4">
         {error && <FormError message={error} />}
         <p className="text-sm text-muted-foreground">
-          One account to buy and sell locally. You can start selling anytime from your account.
+          {sellerIntent
+            ? "Create one account to buy and sell locally. After activation you can continue straight to seller setup."
+            : "One account to buy and sell locally. You can start selling anytime from your account."}
         </p>
         <div className="space-y-2">
           <IrishMobileFieldLabel htmlFor="phone" />

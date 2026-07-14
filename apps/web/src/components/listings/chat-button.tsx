@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
+import { buildListingMessageHref } from '@/lib/marketplace-messaging';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
 interface ChatButtonProps {
@@ -14,7 +15,7 @@ interface ChatButtonProps {
 }
 
 export function ChatButton({ listingId, sellerId }: ChatButtonProps) {
-  const { isAuthenticated, dashboardPath } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const pathname = usePathname();
 
   const loginHref = `${WEB_APP_ROUTES.login}?returnUrl=${encodeURIComponent(pathname)}`;
@@ -29,10 +30,12 @@ export function ChatButton({ listingId, sellerId }: ChatButtonProps) {
     );
   }
 
-  const chatPath = dashboardPath?.includes('seller') ? '/seller/chat' : '/buyer/chat';
+  if (user?.id === sellerId) {
+    return null;
+  }
 
   return (
-    <Link href={`${chatPath}?listing=${listingId}&seller=${sellerId}`} className="block w-full">
+    <Link href={buildListingMessageHref(listingId, sellerId)} className="block w-full">
       <Button type="button" variant="outline" className="w-full">
         Message seller
       </Button>

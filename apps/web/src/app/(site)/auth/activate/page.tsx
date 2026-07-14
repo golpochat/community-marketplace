@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { Button, Label, PasswordInput } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
+import { consumeRegistrationIntent } from '@/lib/registration-intent';
+import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 import { authService } from '@/services/auth.service';
 
 export default function ActivateEmailPage() {
@@ -25,7 +27,6 @@ function ActivateEmailContent() {
 
   const [preview, setPreview] = useState<{
     email: string;
-    accountType: 'buyer' | 'seller';
     alreadyActivated: boolean;
   } | null>(null);
   const [password, setPassword] = useState('');
@@ -47,7 +48,12 @@ function ActivateEmailContent() {
 
     authService
       .previewActivation(token)
-      .then(setPreview)
+      .then((response) =>
+        setPreview({
+          email: response.email,
+          alreadyActivated: response.alreadyActivated,
+        }),
+      )
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, [token]);
@@ -70,14 +76,17 @@ function ActivateEmailContent() {
       const response = await authService.activateAccount(token, password, confirmPassword);
       if (response.login) {
         setAuth(response.login);
-        router.push(response.login.redirectPath);
+        const intent = consumeRegistrationIntent();
+        router.push(
+          intent === 'seller' ? WEB_APP_ROUTES.accountStartSelling : response.login.redirectPath,
+        );
         return;
       }
 
       setPreview((current) =>
         current
           ? { ...current, alreadyActivated: true }
-          : { email: response.email, accountType: 'buyer', alreadyActivated: true },
+          : { email: response.email, alreadyActivated: true },
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Activation failed');
@@ -123,8 +132,7 @@ function ActivateEmailContent() {
     <div className="mx-auto max-w-md py-16">
       <h1 className="text-2xl font-bold text-foreground">Set your password</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Almost done — create a password for your{' '}
-        {preview?.accountType === 'seller' ? 'seller' : 'buyer'} account ({preview?.email}).
+        Almost done — create a password for your SellNearby account ({preview?.email}).
       </p>
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
         <div className="space-y-2">

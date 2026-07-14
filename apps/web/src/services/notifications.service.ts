@@ -2,12 +2,12 @@ import type { Notification, NotificationPreferences, PaginationMeta, RbacRole } 
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
+import { resolveNotificationInboxRole } from '@/lib/marketplace-messaging';
 import { notifyNotificationsUpdated } from '@/lib/notification-unread-events';
 import { asArray, getUnreadCount } from '@/lib/normalize-api-response';
 
-type InboxRole = 'BUYER' | 'SELLER';
 type StaffRole = Extract<RbacRole, 'ADMIN' | 'SUPER_ADMIN'>;
-type NotificationInboxRole = InboxRole | StaffRole;
+type NotificationInboxRole = 'BUYER' | 'SELLER' | StaffRole;
 
 function staffInboxRoutes(_role: StaffRole) {
   return {
@@ -43,6 +43,10 @@ function toListResult(
 }
 
 export const notificationsService = {
+  resolveInboxRole(role: RbacRole | null | undefined) {
+    return resolveNotificationInboxRole(role);
+  },
+
   async getUnreadCount(role: NotificationInboxRole): Promise<number> {
     const path =
       role === 'SELLER'

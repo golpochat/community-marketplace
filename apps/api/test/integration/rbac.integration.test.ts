@@ -32,6 +32,21 @@ describeIfDb('RBAC seed integration', () => {
     expect(codes).toContain('FINANCIAL_ADMIN');
     expect(codes).toContain('SELLER');
     expect(codes).toContain('BUYER');
+    expect(codes).toContain('MEMBER');
+  });
+
+  it('assigns buyer-default permissions to MEMBER', async () => {
+    const prisma = getTestPrisma();
+    const role = await prisma.role.findFirstOrThrow({ where: { code: 'MEMBER' } });
+    const permissions = await prisma.rolePermission.findMany({
+      where: { roleId: role.id },
+      include: { permission: true },
+    });
+    const codes = permissions.map((row) => row.permission.code);
+
+    expect(codes).toContain('purchase_item');
+    expect(codes).toContain('view_listings');
+    expect(codes).not.toContain('create_listing');
   });
 
   it('seeds expected permission catalog size', async () => {
