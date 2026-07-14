@@ -69,15 +69,20 @@ export class DisputesService {
 
   async uploadEvidence(
     userId: string,
-    role: 'BUYER' | 'SELLER' | 'ADMIN',
+    role: 'BUYER' | 'SELLER' | 'MEMBER' | 'ADMIN',
     input: unknown,
   ) {
     const parsed = disputeUploadEvidenceSchema.parse(input);
     const dispute = await this.access.getDisputeOrThrow(parsed.disputeId);
 
-    if (role === 'BUYER') {
+    const participantRole =
+      role === 'MEMBER'
+        ? this.access.resolveParticipantSide(dispute, userId)
+        : role;
+
+    if (participantRole === 'BUYER') {
       this.access.assertBuyer(dispute, userId);
-    } else if (role === 'SELLER') {
+    } else if (participantRole === 'SELLER') {
       this.access.assertSeller(dispute, userId);
     } else {
       throw new BadRequestException('Use the admin endpoint for admin evidence uploads');
@@ -91,7 +96,7 @@ export class DisputesService {
       }
 
       const uploaderRole: DisputeEvidenceUploaderRole =
-        role === 'BUYER' ? 'buyer' : 'seller';
+        participantRole === 'BUYER' ? 'buyer' : 'seller';
 
       const evidence = await this.prisma.disputeEvidence.create({
         data: {
@@ -167,14 +172,20 @@ export class DisputesService {
 
   async listForUser(
     userId: string,
-    role: 'BUYER' | 'SELLER',
+    role: 'BUYER' | 'SELLER' | 'MEMBER',
     query: Record<string, string>,
   ): Promise<PaginatedResult<MarketplaceDispute>> {
     const parsed = disputeListQuerySchema.parse(query);
+    const statusFilter = parsed.status ? { disputeStatus: parsed.status } : {};
     const where =
       role === 'BUYER'
-        ? { buyerId: userId, ...(parsed.status ? { disputeStatus: parsed.status } : {}) }
-        : { sellerId: userId, ...(parsed.status ? { disputeStatus: parsed.status } : {}) };
+        ? { buyerId: userId, ...statusFilter }
+        : role === 'SELLER'
+          ? { sellerId: userId, ...statusFilter }
+          : {
+              OR: [{ buyerId: userId }, { sellerId: userId }],
+              ...statusFilter,
+            };
 
     const [rows, total] = await Promise.all([
       this.prisma.marketplaceDispute.findMany({
@@ -200,11 +211,11 @@ export class DisputesService {
   async getDetail(
     disputeId: string,
     userId: string,
-    role: 'BUYER' | 'SELLER' | 'ADMIN' | 'SUPER_ADMIN',
+    role: 'BUYER' | 'SELLER' | 'MEMBER' | 'ADMIN' | 'SUPER_ADMIN',
   ): Promise<MarketplaceDispute> {
     const dispute = await this.access.getDisputeOrThrow(disputeId);
 
-    if (role === 'BUYER' || role === 'SELLER') {
+    if (role === 'BUYER' || role === 'SELLER' || role === 'MEMBER') {
       this.access.assertParticipant(dispute, userId);
     }
 

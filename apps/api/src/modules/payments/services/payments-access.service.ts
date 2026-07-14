@@ -8,6 +8,8 @@ import {
   isSellerVerified,
   SELLER_VERIFICATION_MESSAGES,
   type RbacRole,
+  canActAsBuyer,
+  canEnterSellerNamespace,
 } from '@community-marketplace/types';
 
 import { PrismaService } from '../../../database/prisma.service';
@@ -38,14 +40,14 @@ export class PaymentsAccessService {
   }
 
   assertBuyerRole(role: RbacRole) {
-    if (role !== 'BUYER') {
-      throw new ForbiddenException('Only buyers can initiate payments');
+    if (!canActAsBuyer(role)) {
+      throw new ForbiddenException('Only marketplace members can initiate payments');
     }
   }
 
   assertSellerRole(role: RbacRole) {
-    if (role !== 'SELLER') {
-      throw new ForbiddenException('Only sellers can access seller payment features');
+    if (!canEnterSellerNamespace(role)) {
+      throw new ForbiddenException('Only marketplace members can access seller payment features');
     }
   }
 

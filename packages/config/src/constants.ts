@@ -2,7 +2,7 @@ export const APP_NAME = 'SellNearby.ie';
 export const APP_SHORT_NAME = 'SellNearby';
 export const APP_BRAND_ABBR = 'SN';
 
-export const RBAC_ROLES = ['SUPER_ADMIN', 'ADMIN', 'SELLER', 'BUYER'] as const;
+export const RBAC_ROLES = ['SUPER_ADMIN', 'ADMIN', 'MEMBER', 'SELLER', 'BUYER'] as const;
 export const USER_ROLES = RBAC_ROLES;
 export const USER_STATUSES = ['active', 'inactive', 'suspended'] as const;
 

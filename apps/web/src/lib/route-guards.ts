@@ -7,7 +7,7 @@ import type { RoleCodeValue } from '@community-marketplace/types';
 import { WEB_APP_ROUTES, getWebDashboardPathForRole, isWebDashboardRouteAllowed } from './rbac-routes';
 import { getWebRoleFromAuthTokenCookie, getWebRoleFromCookie } from './auth';
 
-export const DASHBOARD_PREFIXES = ['/super-admin', '/admin', '/seller', '/buyer'] as const;
+export const DASHBOARD_PREFIXES = ['/super-admin', '/admin', '/account', '/seller', '/buyer'] as const;
 
 export const GUEST_ONLY_AUTH_PATHS = [
   WEB_APP_ROUTES.login,
@@ -28,9 +28,24 @@ export function resolveGuestAuthRedirect(pathname: string, role: RoleCodeValue |
 }
 
 export const LEGACY_DASHBOARD_REDIRECTS: Record<string, string> = {
-  '/seller/dashboard/chat': '/seller/chat',
-  '/buyer/dashboard/chat': '/buyer/chat',
-  '/buyer/payments': '/buyer/purchases',
+  '/buyer/dashboard': '/account',
+  '/seller/dashboard': '/account',
+  '/buyer/purchases': '/account/purchases',
+  '/buyer/favorites': '/account/saved',
+  '/buyer/chat': '/account/messages',
+  '/buyer/settings': '/account/settings',
+  '/buyer/profile': '/account/settings',
+  '/buyer/notifications': '/account/notifications',
+  '/seller/listings': '/account/listings',
+  '/seller/listings/create': '/account/listings/create',
+  '/seller/earnings': '/account/earnings',
+  '/seller/chat': '/account/messages',
+  '/seller/settings': '/account/settings',
+  '/seller/profile': '/account/settings',
+  '/seller/notifications': '/account/notifications',
+  '/seller/dashboard/chat': '/account/messages',
+  '/buyer/dashboard/chat': '/account/messages',
+  '/buyer/payments': '/account/purchases',
   '/super-admin/audit-logs': '/super-admin/audit-log',
   '/admin/reports': '/admin/moderation',
   '/admin/preferences': '/admin/settings',

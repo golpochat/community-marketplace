@@ -6,8 +6,9 @@ export const DASHBOARD_ROLES = RBAC_ROLES;
 export const ROLE_ROUTE_PREFIX: Record<RbacRole, string> = {
   SUPER_ADMIN: '/super-admin',
   ADMIN: '/admin',
-  SELLER: '/seller',
-  BUYER: '/buyer',
+  MEMBER: '/account',
+  SELLER: '/account',
+  BUYER: '/account',
 };
 
 export function isDashboardRole(role: string): role is RbacRole {

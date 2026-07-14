@@ -1,5 +1,6 @@
 import type { RbacRole, RoleCodeValue } from '@community-marketplace/types';
-import { getLoginRedirectPath, isAdminPanelRoleCode } from '@community-marketplace/types';
+import { ACCOUNT_DASHBOARD_PATH, getLoginRedirectPath, isAdminPanelRoleCode } from '@community-marketplace/types';
+import { canActAsBuyer, canEnterSellerNamespace } from '@community-marketplace/types';
 
 /** Backend API path prefixes (after /api) */
 export const API_NAMESPACES = {
@@ -13,6 +14,15 @@ export const WEB_APP_ROUTES = {
   home: '/',
   listings: '/listings',
   chat: '/chat',
+  account: ACCOUNT_DASHBOARD_PATH,
+  accountPurchases: '/account/purchases',
+  accountSaved: '/account/saved',
+  accountListings: '/account/listings',
+  accountMessages: '/account/messages',
+  accountEarnings: '/account/earnings',
+  accountNotifications: '/account/notifications',
+  accountStartSelling: '/account/start-selling',
+  accountSettings: '/account/settings',
   buyerChat: '/buyer/chat',
   buyerPurchases: '/buyer/purchases',
   buyerNotifications: '/buyer/notifications',
@@ -30,8 +40,9 @@ export const WEB_APP_ROUTES = {
 const ROLE_DASHBOARD_PATHS: Partial<Record<RbacRole, string>> = {
   SUPER_ADMIN: '/super-admin/dashboard',
   ADMIN: '/admin/dashboard',
-  SELLER: WEB_APP_ROUTES.sellerDashboard,
-  BUYER: WEB_APP_ROUTES.buyerDashboard,
+  MEMBER: ACCOUNT_DASHBOARD_PATH,
+  SELLER: ACCOUNT_DASHBOARD_PATH,
+  BUYER: ACCOUNT_DASHBOARD_PATH,
 };
 
 export function getWebDashboardPathForRole(role: RoleCodeValue): string {
@@ -46,8 +57,11 @@ export function isWebDashboardRouteAllowed(role: RoleCodeValue | null, pathname:
   if (!role) return false;
   if (pathname.startsWith('/super-admin')) return role === 'SUPER_ADMIN';
   if (pathname.startsWith('/admin')) return isAdminPanelRoleCode(role);
-  if (pathname.startsWith('/seller')) return role === 'SELLER';
-  if (pathname.startsWith('/buyer')) return role === 'BUYER';
+  if (pathname.startsWith('/account')) {
+    return canActAsBuyer(role as RbacRole) || canEnterSellerNamespace(role as RbacRole);
+  }
+  if (pathname.startsWith('/seller')) return canEnterSellerNamespace(role as RbacRole);
+  if (pathname.startsWith('/buyer')) return canActAsBuyer(role as RbacRole);
   return false;
 }
 

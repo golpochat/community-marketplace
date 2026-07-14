@@ -44,11 +44,11 @@ export const authService = {
   },
 
   async completeRegistration(input: {
-    accountType: RegistrationAccountType;
-    sellerKind?: SellerRegistrationKind;
     name: string;
     email: string;
     phoneVerificationToken: string;
+    accountType?: RegistrationAccountType;
+    sellerKind?: SellerRegistrationKind;
   }): Promise<CompleteRegistrationResponse> {
     const response = await apiClient<CompleteRegistrationResponse>(
       WEB_API_ROUTES.public.auth.registerComplete,

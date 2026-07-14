@@ -80,6 +80,18 @@ export class SellerListingGateService {
       throw new NotFoundException('Seller not found');
     }
 
+    if (
+      seller.primaryRoleCode === 'MEMBER' &&
+      !seller.sellerOnboardingStartedAt
+    ) {
+      return {
+        allowed: false,
+        blockMessage:
+          'Start selling from your account before creating listings.',
+        blockCode: 'SELLER_ONBOARDING_REQUIRED',
+      };
+    }
+
     switch (seller.sellerStatus) {
       case 'verified':
       case 'unverified':
@@ -244,8 +256,17 @@ export class SellerListingGateService {
         unverifiedListingCount: true,
         sellerLimit: true,
         verificationRejectedReason: true,
+        sellerOnboardingStartedAt: true,
+        primaryRole: { select: { code: true } },
       },
-    });
+    }).then((row) =>
+      row
+        ? {
+            ...row,
+            primaryRoleCode: row.primaryRole.code,
+          }
+        : null,
+    );
   }
 }
 

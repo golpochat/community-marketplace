@@ -2,6 +2,7 @@ import type { RbacRole, RoleCodeValue } from '@community-marketplace/types';
 import { getPanelLoginRedirectPath } from '@community-marketplace/types';
 
 import {
+  ACCOUNT_SIDEBAR,
   ADMIN_SIDEBAR,
   BUYER_SIDEBAR,
   SELLER_SIDEBAR,
@@ -20,8 +21,9 @@ export {
 const SIDEBAR_BY_ROLE: Record<RbacRole, SidebarNavItem[]> = {
   SUPER_ADMIN: SUPER_ADMIN_SIDEBAR,
   ADMIN: ADMIN_SIDEBAR,
-  SELLER: SELLER_SIDEBAR,
-  BUYER: BUYER_SIDEBAR,
+  MEMBER: ACCOUNT_SIDEBAR,
+  SELLER: ACCOUNT_SIDEBAR,
+  BUYER: ACCOUNT_SIDEBAR,
 };
 
 /** Canonical post-login dashboard path for each role. */

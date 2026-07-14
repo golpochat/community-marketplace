@@ -75,30 +75,14 @@ export const verifyOtpSchema = z
     }
   });
 
-export const completeRegistrationSchema = z
-  .object({
-    accountType: registrationAccountTypeSchema,
-    name: displayNameSchema,
-    email: emailSchema,
-    phoneVerificationToken: z.string().min(1),
-    sellerKind: sellerRegistrationKindSchema.optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.accountType === 'seller' && !value.sellerKind) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Choose how you sell: individual, sole trader, or limited company',
-        path: ['sellerKind'],
-      });
-    }
-    if (value.accountType === 'buyer' && value.sellerKind) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'sellerKind is only valid for seller accounts',
-        path: ['sellerKind'],
-      });
-    }
-  });
+export const completeRegistrationSchema = z.object({
+  name: displayNameSchema,
+  email: emailSchema,
+  phoneVerificationToken: z.string().min(1),
+  /** @deprecated Ignored — all accounts are unified MEMBER. Kept for backward-compatible clients. */
+  accountType: registrationAccountTypeSchema.optional(),
+  sellerKind: sellerRegistrationKindSchema.optional(),
+});
 
 export const activationPreviewSchema = z.object({
   token: z.string().min(1),

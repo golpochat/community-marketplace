@@ -81,7 +81,7 @@ export class EmailActivationService {
       throw new ConflictException('Phone number is already registered');
     }
 
-    const roleCode = accountType === 'seller' ? 'SELLER' : 'BUYER';
+    const roleCode = 'MEMBER';
     const role = await this.prisma.role.findUnique({ where: { code: roleCode } });
     if (!role) {
       throw new ServiceUnavailableException(
@@ -105,9 +105,6 @@ export class EmailActivationService {
         profile: {
           create: {
             phone: payload.phone,
-            ...(accountType === 'seller' && pending.sellerKind
-              ? this.buildSellerProfileFromKind(pending.name, pending.sellerKind)
-              : {}),
           },
         },
       },

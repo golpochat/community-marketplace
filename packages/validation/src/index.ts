@@ -451,6 +451,11 @@ export {
 } from './personal-details.schema';
 
 export {
+  startSellerOnboardingSchema,
+  type StartSellerOnboardingInput,
+} from './seller-onboarding.schema';
+
+export {
   sellerVerificationStartSchema,
   sellerVerificationPhoneSchema,
   sellerVerificationUploadSchema,

@@ -7,7 +7,7 @@ import { isAdminPersonaRoleCode } from './admin-persona-codes';
 
 // ── Roles ─────────────────────────────────────────────────────────────────────
 
-export const RBAC_ROLES = ['SUPER_ADMIN', 'ADMIN', 'SELLER', 'BUYER'] as const;
+export const RBAC_ROLES = ['SUPER_ADMIN', 'ADMIN', 'MEMBER', 'SELLER', 'BUYER'] as const;
 
 /** System role codes (fixed at seed time). Custom roles use other uppercase codes. */
 export type RbacRole = (typeof RBAC_ROLES)[number];
@@ -32,6 +32,11 @@ export const RBAC_ROLE_TEMPLATES = [
     id: 'blank',
     label: 'Blank role',
     description: 'Start with no permissions — pick exactly what this role needs.',
+  },
+  {
+    id: 'MEMBER',
+    label: 'Marketplace member template',
+    description: 'Default unified account — browse and purchase; selling is enabled after onboarding.',
   },
   {
     id: 'BUYER',
@@ -254,6 +259,20 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<RbacRole, readonly Permis
     PERMISSIONS.EXECUTE_ADMIN_ACTION,
   ],
 
+  /** Unified marketplace account — buyer permissions by default; seller perms via onboarding grant. */
+  MEMBER: [
+    PERMISSIONS.VIEW_LISTINGS,
+    PERMISSIONS.PURCHASE_ITEM,
+    PERMISSIONS.VIEW_PAYMENTS,
+    PERMISSIONS.LEAVE_REVIEW,
+    PERMISSIONS.VIEW_REVIEWS,
+    PERMISSIONS.SUBMIT_VERIFICATION,
+    PERMISSIONS.SEND_MESSAGE,
+    PERMISSIONS.VIEW_CONVERSATIONS,
+    PERMISSIONS.FAVORITE_LISTING,
+    PERMISSIONS.REPORT_LISTING,
+  ],
+
   SELLER: [
     PERMISSIONS.CREATE_LISTING,
     PERMISSIONS.EDIT_LISTING,
@@ -261,6 +280,9 @@ export const DEFAULT_ROLE_PERMISSIONS: Readonly<Record<RbacRole, readonly Permis
     PERMISSIONS.VIEW_LISTINGS,
     PERMISSIONS.RECEIVE_PAYMENT,
     PERMISSIONS.VIEW_PAYMENTS,
+    PERMISSIONS.PURCHASE_ITEM,
+    PERMISSIONS.LEAVE_REVIEW,
+    PERMISSIONS.VIEW_REVIEWS,
     PERMISSIONS.SUBMIT_VERIFICATION,
     PERMISSIONS.SEND_MESSAGE,
     PERMISSIONS.VIEW_CONVERSATIONS,

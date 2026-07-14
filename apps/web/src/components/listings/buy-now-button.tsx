@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import type { Listing } from '@community-marketplace/types';
+import { canActAsBuyer } from '@community-marketplace/types';
 import { Button, cn } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -16,15 +17,15 @@ interface BuyNowButtonProps {
   className?: string;
 }
 
-const BUYER_ONLY_PURCHASE_MESSAGE =
-  'Purchases are available on buyer accounts. Sign in with a buyer account or register as a buyer.';
+const PURCHASE_BLOCKED_MESSAGE =
+  'Sign in to purchase this item, or complete registration if your account is not active yet.';
 
 function formatCheckoutError(message: string): string {
   if (
     message.includes('Insufficient role') ||
     message.includes('Only buyers can initiate payments')
   ) {
-    return BUYER_ONLY_PURCHASE_MESSAGE;
+    return PURCHASE_BLOCKED_MESSAGE;
   }
   if (message.includes('Stripe Connect') || message.includes('not ready to receive')) {
     return 'This seller has not finished payout setup yet.';
@@ -35,16 +36,16 @@ function formatCheckoutError(message: string): string {
   return message;
 }
 
-function BuyerOnlyPurchaseHint({ className }: { className?: string }) {
+function PurchaseBlockedHint({ className }: { className?: string }) {
   return (
     <p className={cn('text-center text-xs', className)}>
-      <span className="text-muted-foreground">Purchases are available on buyer accounts. </span>
+      <span className="text-muted-foreground">{PURCHASE_BLOCKED_MESSAGE} </span>
       <Link href={WEB_APP_ROUTES.login} className="font-medium text-primary hover:underline">
         Sign in
       </Link>
-      <span className="text-muted-foreground"> with a buyer account or </span>
+      <span className="text-muted-foreground"> or </span>
       <Link href={WEB_APP_ROUTES.register} className="font-medium text-primary hover:underline">
-        register as a buyer
+        create an account
       </Link>
       <span className="text-muted-foreground">.</span>
     </p>
@@ -60,8 +61,8 @@ export function BuyNowButton({ listing, className }: BuyNowButtonProps) {
   if (listing.status !== 'active') return null;
   if (isAuthenticated && user?.id === listing.sellerId) return null;
 
-  if (isAuthenticated && user?.role !== 'BUYER') {
-    return <BuyerOnlyPurchaseHint className={className} />;
+  if (isAuthenticated && user?.role && !canActAsBuyer(user.role)) {
+    return <PurchaseBlockedHint className={className} />;
   }
 
   async function handleBuy() {

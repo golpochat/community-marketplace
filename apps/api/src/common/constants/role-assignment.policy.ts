@@ -2,7 +2,7 @@ import { ConflictException } from '@nestjs/common';
 
 import { isAdminPanelRoleCode } from '@community-marketplace/types';
 
-const MARKETPLACE_ROLE_CODES = new Set(['BUYER', 'SELLER']);
+const MARKETPLACE_ROLE_CODES = new Set(['MEMBER', 'BUYER', 'SELLER']);
 
 export function isMarketplaceRoleCode(code: string): boolean {
   return MARKETPLACE_ROLE_CODES.has(code);

@@ -18,22 +18,25 @@ import { authService } from '@/services/auth.service';
 const PROFILE_HREF: Record<RbacRole, string> = {
   SUPER_ADMIN: '/super-admin/profile',
   ADMIN: '/admin/profile',
-  SELLER: '/seller/profile',
-  BUYER: '/buyer/profile',
+  MEMBER: '/account/settings',
+  SELLER: '/account/settings',
+  BUYER: '/account/settings',
 };
 
 const SETTINGS_HREF: Record<RbacRole, string | undefined> = {
   SUPER_ADMIN: '/super-admin/settings',
   ADMIN: '/admin/settings',
-  SELLER: '/seller/settings',
-  BUYER: '/buyer/settings',
+  MEMBER: '/account/settings',
+  SELLER: '/account/settings',
+  BUYER: '/account/settings',
 };
 
 const NOTIFICATIONS_HREF: Record<RbacRole, string> = {
   SUPER_ADMIN: '/super-admin/notifications',
   ADMIN: '/admin/notifications',
-  SELLER: '/seller/notifications',
-  BUYER: '/buyer/notifications',
+  MEMBER: '/account/notifications',
+  SELLER: '/account/notifications',
+  BUYER: '/account/notifications',
 };
 
 export interface WebDashboardLayoutProps {

@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Moon,
   Package,
+  Plus,
   Settings,
   Shield,
   Sun,
@@ -48,6 +49,7 @@ const MENU_ICONS: Record<UserMenuIcon, typeof LayoutDashboard> = {
   package: Package,
   settings: Settings,
   shield: Shield,
+  plus: Plus,
 };
 
 export function UserMenuDropdown({ user, menuItems, onSignOut, className }: UserMenuDropdownProps) {

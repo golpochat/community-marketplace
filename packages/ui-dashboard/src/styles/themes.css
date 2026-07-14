@@ -95,7 +95,8 @@
   --dashboard-main-fg: 0 0% 10%;
 }
 
-[data-dashboard-role='BUYER'] {
+[data-dashboard-role='BUYER'],
+[data-dashboard-role='MEMBER'] {
   --dashboard-sidebar-bg: 220 100% 98%;
   --dashboard-sidebar-fg: 0 0% 10%;
   --dashboard-sidebar-muted: 215 16% 40%;

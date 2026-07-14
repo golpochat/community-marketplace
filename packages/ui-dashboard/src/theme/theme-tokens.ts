@@ -89,6 +89,7 @@ const THEME_PROP_TO_TOKEN: Record<DashboardThemeProp, DashboardThemeToken> = {
 const DEFAULT_THEME_BY_ROLE: Record<RbacRole, DashboardThemeToken> = {
   SUPER_ADMIN: 'superAdmin',
   ADMIN: 'admin',
+  MEMBER: 'buyer',
   SELLER: 'seller',
   BUYER: 'buyer',
 };
@@ -112,6 +113,11 @@ const DASHBOARD_THEMES: Record<RbacRole, DashboardTheme> = {
     id: 'ADMIN',
     label: adminTheme.label,
     description: adminTheme.description,
+  },
+  MEMBER: {
+    id: 'MEMBER',
+    label: 'Account',
+    description: 'Unified marketplace account',
   },
   SELLER: {
     id: 'SELLER',

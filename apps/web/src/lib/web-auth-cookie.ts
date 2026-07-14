@@ -32,6 +32,7 @@ export function isWebAuthTokenExpired(token: string, skewSeconds = 0): boolean {
 function isKnownWebRole(role: string | undefined): role is RoleCodeValue {
   if (!role) return false;
   return (
+    role === 'MEMBER' ||
     role === 'SELLER' ||
     role === 'BUYER' ||
     role === 'SUPER_ADMIN' ||

@@ -14,6 +14,7 @@ import {
   LogOut,
   MessageSquare,
   Package,
+  Plus,
   Settings,
   Shield,
   ShoppingBag,
@@ -36,6 +37,7 @@ const MOBILE_MENU_ICONS = {
   package: Package,
   settings: Settings,
   shield: Shield,
+  plus: Plus,
 } as const;
 
 interface MobileNavDrawerProps {

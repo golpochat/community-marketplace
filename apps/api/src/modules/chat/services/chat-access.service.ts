@@ -5,12 +5,17 @@ import {
 } from '@nestjs/common';
 
 import type { RbacRole } from '@community-marketplace/types';
+import {
+  canActAsBuyer,
+  canEnterSellerNamespace,
+  hasLegacySellerRole,
+} from '@community-marketplace/types';
 
 import { PrismaService } from '../../../database/prisma.service';
 import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 
-/** Level-3 marketplace participants: buyers and sellers with messaging access. */
-const MESSAGING_ROLES: RbacRole[] = ['BUYER', 'SELLER'];
+/** Level-3 marketplace participants with messaging access. */
+const MARKETPLACE_MESSAGING_ROLES: RbacRole[] = ['MEMBER', 'BUYER', 'SELLER'];
 
 @Injectable()
 export class ChatAccessService {
@@ -20,8 +25,12 @@ export class ChatAccessService {
   ) {}
 
   assertMessagingRole(role: RbacRole) {
-    if (!MESSAGING_ROLES.includes(role)) {
-      throw new ForbiddenException('Only buyers and sellers can use messaging');
+    if (
+      !MARKETPLACE_MESSAGING_ROLES.includes(role) &&
+      !canActAsBuyer(role) &&
+      !canEnterSellerNamespace(role)
+    ) {
+      throw new ForbiddenException('Only marketplace members can use messaging');
     }
   }
 
@@ -76,12 +85,18 @@ export class ChatAccessService {
       throw new ForbiddenException('Cannot start a conversation with yourself');
     }
 
-    if (role === 'BUYER') {
-      if (userId !== buyerId) {
-        throw new ForbiddenException('Buyers can only initiate as themselves');
+    if (role === 'BUYER' || role === 'MEMBER') {
+      if (userId === buyerId) {
+        await this.assertBuyerCanMessageSeller(sellerId);
+        return;
       }
-      await this.assertBuyerCanMessageSeller(sellerId);
-      return;
+      if (userId === sellerId) {
+        await this.assertCanSell(userId, role);
+        await this.assertSellerCanInitiateConversation(sellerId);
+        await this.assertUserCanBeBuyer(buyerId);
+        return;
+      }
+      throw new ForbiddenException('You can only initiate as yourself in this conversation');
     }
 
     if (role === 'SELLER') {
@@ -89,7 +104,7 @@ export class ChatAccessService {
         throw new ForbiddenException('Sellers can only initiate as themselves');
       }
       await this.assertSellerCanInitiateConversation(sellerId);
-      await this.assertUserIsBuyer(buyerId);
+      await this.assertUserCanBeBuyer(buyerId);
     }
   }
 
@@ -98,19 +113,46 @@ export class ChatAccessService {
       where: { id: sellerId },
       select: { primaryRole: { select: { code: true } } },
     });
-    if (!seller || seller.primaryRole.code !== 'SELLER') {
+    if (!seller) {
+      throw new ForbiddenException('Buyers can only message sellers');
+    }
+
+    const sellerRole = seller.primaryRole.code as RbacRole;
+    const canReceiveMessages = await this.hasSellerCapability(sellerId, sellerRole);
+    if (!canReceiveMessages) {
       throw new ForbiddenException('Buyers can only message sellers');
     }
   }
 
-  private async assertUserIsBuyer(buyerId: string) {
+  private async assertUserCanBeBuyer(buyerId: string) {
     const buyer = await this.prisma.user.findUnique({
       where: { id: buyerId },
       select: { primaryRole: { select: { code: true } } },
     });
-    if (!buyer || buyer.primaryRole.code !== 'BUYER') {
+    if (!buyer || !canActAsBuyer(buyer.primaryRole.code as RbacRole)) {
       throw new ForbiddenException('Sellers can only message buyers');
     }
+  }
+
+  private async hasSellerCapability(userId: string, role?: RbacRole): Promise<boolean> {
+    if (role && hasLegacySellerRole(role)) return true;
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { sellerOnboardingStartedAt: true },
+    });
+
+    return Boolean(user?.sellerOnboardingStartedAt);
+  }
+
+  private async assertCanSell(userId: string, role?: RbacRole): Promise<void> {
+    if (await this.hasSellerCapability(userId, role)) return;
+
+    throw new ForbiddenException({
+      message:
+        'Start selling from your account to message buyers as a seller. Complete seller setup first.',
+      code: 'SELLER_ONBOARDING_REQUIRED',
+    });
   }
 
   async assertSellerCanInitiateConversation(sellerId: string) {

@@ -454,6 +454,7 @@ model User {
   sellerLimit                Int          @default(5) @map("seller_limit")
   approvedListingCount       Int          @default(0) @map("approved_listing_count")
   storeSlotLimit             Int          @default(1) @map("store_slot_limit")
+  sellerOnboardingStartedAt  DateTime?    @map("seller_onboarding_started_at")
   customPlatformFeePercent   Decimal?     @map("custom_platform_fee_percent") @db.Decimal(5, 2)
   customCashbackPercent      Decimal?     @map("custom_cashback_percent") @db.Decimal(5, 2)
   createdAt       DateTime   @default(now()) @map("created_at")

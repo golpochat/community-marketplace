@@ -1,49 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 
-import {
-  REGISTRATION_SELLER_KIND_OPTIONS,
-  VERIFICATION_ONBOARDING_COPY,
-  type RegistrationAccountType,
-  type SellerRegistrationKind,
-} from "@community-marketplace/types";
+import { VERIFICATION_ONBOARDING_COPY } from "@community-marketplace/types";
 import { IRISH_MOBILE_VALIDATION_MESSAGE } from "@community-marketplace/validation";
-import {
-  Button,
-  Input,
-  Label,
-  cn,
-} from "@community-marketplace/ui";
+import { Button, Input, Label } from "@community-marketplace/ui";
 
 import { OtpPilotNotice } from "@/components/auth/otp-pilot-notice";
 import { IrishMobileFieldLabel } from "@/components/forms/irish-mobile-field-label";
-import { InfoTooltip } from "@/components/forms/info-tooltip";
 import { isOtpPilotMode } from "@/lib/otp-pilot-mode";
 import { authService } from "@/services/auth.service";
 import { formatIrishPhoneHint, normalizeIrishPhoneToE164 } from "@/lib/phone";
 
 type Step = "phone" | "otp" | "details" | "done";
-
-const ACCOUNT_OPTIONS: Array<{
-  value: RegistrationAccountType;
-  label: string;
-  tooltip: string;
-}> = [
-  {
-    value: "buyer",
-    label: "I want to buy locally",
-    tooltip: "Browse listings, message sellers, and purchase items near you.",
-  },
-  {
-    value: "seller",
-    label: "I want to sell on SellNearby",
-    tooltip:
-      "Create listings and message buyers. You can publish a limited number of listings before identity verification. Stripe payouts require seller verification.",
-  },
-];
 
 function FormError({ message }: { message: string }) {
   return (
@@ -62,12 +32,7 @@ function FormSuccess({ message }: { message: string }) {
 }
 
 export function RegisterForm() {
-  const searchParams = useSearchParams();
   const [step, setStep] = useState<Step>("phone");
-  const [accountType, setAccountType] = useState<RegistrationAccountType | "">(
-    "",
-  );
-  const [sellerKind, setSellerKind] = useState<SellerRegistrationKind | "">("");
   const [phone, setPhone] = useState("");
   const [normalizedPhone, setNormalizedPhone] = useState("");
   const [code, setCode] = useState("");
@@ -79,20 +44,9 @@ export function RegisterForm() {
   const [devOtpCode, setDevOtpCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (searchParams.get("intent") === "seller") {
-      setAccountType("seller");
-    }
-  }, [searchParams]);
-
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-
-    if (!accountType) {
-      setError("Choose whether you are signing up as a buyer or a seller.");
-      return;
-    }
 
     const e164 = normalizeIrishPhoneToE164(phone);
     if (!e164) {
@@ -133,21 +87,9 @@ export function RegisterForm() {
     setError(null);
     setSuccess(null);
 
-    if (!accountType) {
-      setError("Choose whether you are signing up as a buyer or a seller.");
-      return;
-    }
-
-    if (accountType === "seller" && !sellerKind) {
-      setError("Choose how you sell: individual, sole trader, or limited company.");
-      return;
-    }
-
     setLoading(true);
     try {
       const result = await authService.completeRegistration({
-        accountType,
-        sellerKind: accountType === "seller" ? (sellerKind as SellerRegistrationKind) : undefined,
         name,
         email,
         phoneVerificationToken,
@@ -165,39 +107,9 @@ export function RegisterForm() {
     return (
       <form onSubmit={handleSendOtp} className="mt-6 space-y-4">
         {error && <FormError message={error} />}
-
-        <fieldset className="space-y-2">
-          <legend className="text-sm font-medium text-foreground">
-            Account type
-          </legend>
-          {ACCOUNT_OPTIONS.map((option) => (
-            <label
-              key={option.value}
-              className={cn(
-                "flex cursor-pointer items-start gap-3 rounded-lg border border-border px-3 py-3 transition-colors duration-150",
-                "hover:bg-muted/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5",
-              )}
-            >
-              <input
-                type="radio"
-                name="account-type"
-                value={option.value}
-                checked={accountType === option.value}
-                onChange={() => setAccountType(option.value)}
-                className="mt-1 accent-primary"
-              />
-              <span className="flex items-center gap-1.5">
-                <span className="text-sm font-medium text-foreground">
-                  {option.label}
-                </span>
-                <InfoTooltip ariaLabel={`About: ${option.label}`} wide>
-                  {option.tooltip}
-                </InfoTooltip>
-              </span>
-            </label>
-          ))}
-        </fieldset>
-
+        <p className="text-sm text-muted-foreground">
+          One account to buy and sell locally. You can start selling anytime from your account.
+        </p>
         <div className="space-y-2">
           <IrishMobileFieldLabel htmlFor="phone" />
           <Input
@@ -210,12 +122,7 @@ export function RegisterForm() {
             onChange={(e) => setPhone(e.target.value)}
           />
         </div>
-
-        <Button
-          type="submit"
-          disabled={loading || !accountType}
-          className="w-full"
-        >
+        <Button type="submit" disabled={loading} className="w-full">
           {loading ? "Sending code..." : "Send verification code"}
         </Button>
       </form>
@@ -260,46 +167,10 @@ export function RegisterForm() {
       <form onSubmit={handleCompleteRegistration} className="mt-6 space-y-4">
         {error && <FormError message={error} />}
         <p className="text-sm text-muted-foreground">
-          Last step — enter your details to create your{" "}
-          {accountType === "seller" ? "seller" : "buyer"} account.
+          Last step — enter your details to create your SellNearby account.
         </p>
-
-        {accountType === "seller" && (
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-medium text-foreground">How do you sell?</legend>
-            {REGISTRATION_SELLER_KIND_OPTIONS.map((option) => (
-              <label
-                key={option.value}
-                className={cn(
-                  "flex cursor-pointer items-start gap-3 rounded-lg border border-border px-3 py-3 transition-colors duration-150",
-                  "hover:bg-muted/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5",
-                )}
-              >
-                <input
-                  type="radio"
-                  name="seller-kind"
-                  value={option.value}
-                  checked={sellerKind === option.value}
-                  onChange={() => setSellerKind(option.value)}
-                  className="mt-1 accent-primary"
-                />
-                <span>
-                  <span className="block text-sm font-medium text-foreground">{option.label}</span>
-                  <span className="block text-xs text-muted-foreground">{option.description}</span>
-                </span>
-              </label>
-            ))}
-          </fieldset>
-        )}
-
         <div className="space-y-2">
-          <Label htmlFor="name">
-            {accountType === "seller"
-              ? sellerKind === "individual"
-                ? "Name buyers will see"
-                : "Business name buyers will see"
-              : "Full name"}
-          </Label>
+          <Label htmlFor="name">Full name</Label>
           <Input
             id="name"
             type="text"
@@ -308,15 +179,7 @@ export function RegisterForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          {accountType === "seller" && (
-            <p className="text-xs text-muted-foreground">
-              {sellerKind === "individual"
-                ? VERIFICATION_ONBOARDING_COPY.REGISTRATION_PUBLIC_NAME
-                : VERIFICATION_ONBOARDING_COPY.REGISTRATION_BUSINESS_NAME}
-            </p>
-          )}
         </div>
-
         <div className="space-y-2">
           <Label htmlFor="email">Email address</Label>
           <Input
@@ -331,12 +194,7 @@ export function RegisterForm() {
             {VERIFICATION_ONBOARDING_COPY.REGISTRATION_EMAIL_PRIVATE}
           </p>
         </div>
-
-        <Button
-          type="submit"
-          disabled={loading || (accountType === "seller" && !sellerKind)}
-          className="w-full"
-        >
+        <Button type="submit" disabled={loading} className="w-full">
           {loading ? "Sending activation email..." : "Create account"}
         </Button>
       </form>
@@ -348,13 +206,11 @@ export function RegisterForm() {
       {success && <FormSuccess message={success} />}
       <p className="text-sm text-muted-foreground">
         We sent an activation link to{" "}
-        <span className="font-medium text-foreground">{email}</span>. Open the
-        email and click the link to set your password and finish creating your
-        account.
+        <span className="font-medium text-foreground">{email}</span>. Open the email and click the
+        link to set your password and finish creating your account.
       </p>
       <p className="text-sm text-muted-foreground">
-        The link expires in 24 hours. Didn&apos;t receive it? Check your spam
-        folder.
+        The link expires in 24 hours. Didn&apos;t receive it? Check your spam folder.
       </p>
       <Button variant="outline" className="w-full" asChild>
         <Link href="/auth/login">Go to sign in</Link>

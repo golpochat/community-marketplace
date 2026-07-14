@@ -20,7 +20,11 @@ export class DisputesController {
   @RequireRole('BUYER', 'SELLER')
   @Post('upload-evidence')
   uploadEvidence(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
-    return this.disputesService.uploadEvidence(user.id, user.role as 'BUYER' | 'SELLER', body);
+    return this.disputesService.uploadEvidence(
+      user.id,
+      user.role as 'BUYER' | 'SELLER' | 'MEMBER' | 'ADMIN',
+      body,
+    );
   }
 
   @RequireRole('SELLER')
@@ -34,7 +38,7 @@ export class DisputesController {
   listMine(@CurrentUser() user: AuthenticatedUser, @Query() query: Record<string, string>) {
     return this.disputesService.listForUser(
       user.id,
-      user.role as 'BUYER' | 'SELLER',
+      user.role as 'BUYER' | 'SELLER' | 'MEMBER',
       query,
     );
   }

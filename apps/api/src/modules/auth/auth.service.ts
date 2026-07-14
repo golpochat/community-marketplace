@@ -340,33 +340,19 @@ export class AuthService {
 
 
     await this.emailActivationService.stageRegistration({
-
       email: parsed.email,
-
       phone: phonePayload.phone,
-
       name: parsed.name,
-
-      accountType: parsed.accountType,
-
-      sellerKind: parsed.sellerKind,
-
+      accountType: parsed.accountType ?? 'buyer',
+      sellerKind: undefined,
     });
 
-
-
     const activationToken = this.emailActivationService.createActivationToken({
-
       email: parsed.email,
-
       phone: phonePayload.phone,
-
       name: parsed.name,
-
-      accountType: parsed.accountType,
-
-      sellerKind: parsed.sellerKind,
-
+      accountType: parsed.accountType ?? 'buyer',
+      sellerKind: undefined,
     });
 
 

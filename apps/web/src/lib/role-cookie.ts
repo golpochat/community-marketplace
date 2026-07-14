@@ -32,6 +32,7 @@ export function getWebRoleFromCookie(cookieHeader: string | undefined): RoleCode
   const match = cookieHeader.match(new RegExp(`${ROLE_COOKIE_NAME}=([^;]+)`));
   const value = match?.[1];
   if (
+    value === 'MEMBER' ||
     value === 'SELLER' ||
     value === 'BUYER' ||
     value === 'SUPER_ADMIN' ||

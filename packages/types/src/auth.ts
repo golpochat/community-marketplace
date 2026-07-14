@@ -1,4 +1,5 @@
 import type { RbacRole } from './rbac';
+import { ACCOUNT_DASHBOARD_PATH } from './marketplace-account';
 import type { User } from './user';
 
 export type OtpChannel = 'email' | 'phone';
@@ -171,13 +172,15 @@ export interface ChangePasswordResponse {
 const LOGIN_REDIRECT_PATHS: Record<RbacRole, string> = {
   SUPER_ADMIN: '/super-admin/dashboard',
   ADMIN: '/admin/dashboard',
-  SELLER: '/seller/dashboard',
-  BUYER: '/buyer/dashboard',
+  MEMBER: ACCOUNT_DASHBOARD_PATH,
+  SELLER: ACCOUNT_DASHBOARD_PATH,
+  BUYER: ACCOUNT_DASHBOARD_PATH,
 };
 
 const LOGIN_APP_TARGETS: Record<RbacRole, LoginAppTarget> = {
   SUPER_ADMIN: 'web',
   ADMIN: 'web',
+  MEMBER: 'web',
   SELLER: 'web',
   BUYER: 'web',
 };
@@ -189,8 +192,9 @@ export function getLoginRedirectPath(role: RbacRole): string {
 /** Redirect path for panel operators (ADMIN + custom level-2 roles). */
 export function getPanelLoginRedirectPath(roleCode: string): string {
   if (roleCode === 'SUPER_ADMIN') return '/super-admin/dashboard';
-  if (roleCode === 'SELLER') return '/seller/dashboard';
-  if (roleCode === 'BUYER') return '/buyer/dashboard';
+  if (roleCode === 'MEMBER' || roleCode === 'SELLER' || roleCode === 'BUYER') {
+    return ACCOUNT_DASHBOARD_PATH;
+  }
   return '/admin/dashboard';
 }
 

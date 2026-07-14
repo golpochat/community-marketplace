@@ -36,6 +36,8 @@ export const WEB_API_ROUTES = {
     earningsPayouts: `${API_NAMESPACES.SELLER}/earnings/payouts`,
     connectOnboard: `${API_NAMESPACES.SELLER}/earnings/connect/onboard`,
     connectOnboardAlias: '/seller/onboard',
+    onboardingStart: `${API_NAMESPACES.SELLER}/onboarding/start`,
+    onboardingStatus: `${API_NAMESPACES.SELLER}/onboarding/status`,
     connectStatus: `${API_NAMESPACES.SELLER}/earnings/connect/status`,
     connectDashboard: `${API_NAMESPACES.SELLER}/earnings/connect/dashboard`,
     earningsPayments: `${API_NAMESPACES.SELLER}/earnings/payments`,

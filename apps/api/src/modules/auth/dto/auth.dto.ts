@@ -148,8 +148,9 @@ export class LogoutDto {
 }
 
 export class CompleteRegistrationDto {
+  @IsOptional()
   @IsEnum(['buyer', 'seller'])
-  accountType!: RegistrationAccountType;
+  accountType?: RegistrationAccountType;
 
   @IsString()
   @MinLength(1)
@@ -161,7 +162,7 @@ export class CompleteRegistrationDto {
   @IsString()
   phoneVerificationToken!: string;
 
-  @ValidateIf((dto: CompleteRegistrationDto) => dto.accountType === 'seller')
+  @IsOptional()
   @IsEnum(['individual', 'sole_trader', 'limited_company'])
   sellerKind?: SellerRegistrationKind;
 }

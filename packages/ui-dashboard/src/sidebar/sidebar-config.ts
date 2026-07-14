@@ -292,3 +292,18 @@ export const BUYER_SIDEBAR: SidebarNavItem[] = [
   { id: 'chat', label: 'Chat', href: '/buyer/chat', icon: 'message-circle' },
   { id: 'notifications', label: 'Notifications', href: '/buyer/notifications', icon: 'bell' },
 ];
+
+/** Unified marketplace account — replaces separate buyer/seller sidebars. */
+export const ACCOUNT_SIDEBAR: SidebarNavItem[] = [
+  { id: 'home', label: 'Account home', href: '/account', icon: 'home', exact: true },
+  { id: 'browse', label: 'Browse listings', href: '/listings', icon: 'search' },
+  { id: 'purchases', label: 'Purchases', href: '/account/purchases', icon: 'package' },
+  { id: 'saved', label: 'Saved items', href: '/account/saved', icon: 'heart' },
+  { id: 'my-listings', label: 'My listings', href: '/account/listings', icon: 'tag' },
+  { id: 'create', label: 'Create listing', href: '/account/listings/create', icon: 'plus' },
+  { id: 'start-selling', label: 'Start selling', href: '/account/start-selling', icon: 'plus' },
+  { id: 'earnings', label: 'Earnings', href: '/account/earnings', icon: 'wallet' },
+  { id: 'messages', label: 'Messages', href: '/account/messages', icon: 'message-circle' },
+  { id: 'notifications', label: 'Notifications', href: '/account/notifications', icon: 'bell' },
+  { id: 'settings', label: 'Settings', href: '/account/settings', icon: 'settings' },
+];

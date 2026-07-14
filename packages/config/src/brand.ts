@@ -36,7 +36,7 @@ export const BRAND_COLORS = {
 export type BrandColors = typeof BRAND_COLORS;
 
 /** Role codes that cannot be assigned via admin invitation. */
-export const NON_INVITEABLE_ROLE_CODES = ['SUPER_ADMIN', 'SELLER', 'BUYER'] as const;
+export const NON_INVITEABLE_ROLE_CODES = ['SUPER_ADMIN', 'MEMBER', 'SELLER', 'BUYER'] as const;
 
 export function isInviteableRoleCode(code: string): boolean {
   return !(NON_INVITEABLE_ROLE_CODES as readonly string[]).includes(code);

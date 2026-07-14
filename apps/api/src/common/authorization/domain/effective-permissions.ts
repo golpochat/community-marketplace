@@ -3,7 +3,7 @@ import type {
   RbacRole,
   UserEffectivePermissions,
 } from '@community-marketplace/types';
-import { isAdminPanelRoleCode } from '@community-marketplace/types';
+import { canActAsBuyer, canEnterSellerNamespace, isAdminPanelRoleCode } from '@community-marketplace/types';
 
 export interface EffectivePermissionInput {
   userId: string;
@@ -72,5 +72,24 @@ export function hasAnyRole(userRole: RbacRole, required: readonly RbacRole[]): b
     return true;
   }
 
-  return required.includes(userRole);
+  return required.some((requiredRole) => roleSatisfiesRequirement(userRole, requiredRole));
+}
+
+/** Maps unified MEMBER account to legacy namespace role requirements during migration. */
+export function roleSatisfiesRequirement(userRole: RbacRole, requiredRole: RbacRole): boolean {
+  if (userRole === requiredRole) return true;
+
+  if (requiredRole === 'MEMBER') {
+    return canActAsBuyer(userRole) || canEnterSellerNamespace(userRole);
+  }
+
+  if (requiredRole === 'BUYER') {
+    return canActAsBuyer(userRole);
+  }
+
+  if (requiredRole === 'SELLER') {
+    return canEnterSellerNamespace(userRole);
+  }
+
+  return false;
 }

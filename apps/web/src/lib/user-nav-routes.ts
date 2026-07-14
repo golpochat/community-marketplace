@@ -1,8 +1,5 @@
-import {
-  isAdminPanelRoleCode,
-  type RbacRole,
-  type RoleCodeValue,
-} from '@community-marketplace/types';
+import type { RbacRole, RoleCodeValue } from '@community-marketplace/types';
+import { isAdminPanelRoleCode } from '@community-marketplace/types';
 
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
@@ -23,7 +20,8 @@ export type UserMenuIcon =
   | 'heart'
   | 'package'
   | 'settings'
-  | 'shield';
+  | 'shield'
+  | 'plus';
 
 export interface UserMenuItem {
   href: string;
@@ -59,24 +57,17 @@ export function getUserNavLinks(role: RoleCodeValue, dashboardPath: string): Use
   }
 
   switch (role as RbacRole) {
+    case 'MEMBER':
+    case 'BUYER':
     case 'SELLER':
       return {
         dashboard: dashboardPath,
-        myListings: WEB_APP_ROUTES.sellerListings,
-        messages: WEB_APP_ROUTES.sellerChat,
-        notifications: WEB_APP_ROUTES.sellerNotifications,
-        settings: '/seller/settings',
-        sellItem: '/seller/listings/create',
-      };
-    case 'BUYER':
-      return {
-        dashboard: dashboardPath,
-        myListings: WEB_APP_ROUTES.buyerPurchases,
-        messages: WEB_APP_ROUTES.buyerChat,
-        notifications: WEB_APP_ROUTES.buyerNotifications,
-        settings: '/buyer/settings',
-        sellItem: '/seller/listings/create',
-        savedItems: '/buyer/favorites',
+        myListings: WEB_APP_ROUTES.accountListings,
+        messages: WEB_APP_ROUTES.accountMessages,
+        notifications: WEB_APP_ROUTES.accountNotifications,
+        settings: WEB_APP_ROUTES.accountSettings,
+        sellItem: '/account/listings/create',
+        savedItems: WEB_APP_ROUTES.accountSaved,
       };
     default:
       return {
@@ -112,22 +103,15 @@ export function getUserMenuItems(role: RoleCodeValue, dashboardPath: string): Us
     ];
   }
 
-  if (role === 'SELLER') {
+  if (role === 'MEMBER' || role === 'BUYER' || role === 'SELLER') {
     return [
-      { href: dashboardPath, label: 'Seller dashboard', icon: 'dashboard' },
-      { href: WEB_APP_ROUTES.sellerListings, label: 'My listings', icon: 'list' },
-      { href: WEB_APP_ROUTES.sellerChat, label: 'Messages', icon: 'messages' },
-      { href: '/seller/settings', label: 'Settings', icon: 'settings' },
-    ];
-  }
-
-  if (role === 'BUYER') {
-    return [
-      { href: dashboardPath, label: 'Buyer dashboard', icon: 'dashboard' },
-      { href: WEB_APP_ROUTES.buyerPurchases, label: 'Purchases', icon: 'package' },
-      { href: '/buyer/favorites', label: 'Saved items', icon: 'heart' },
-      { href: WEB_APP_ROUTES.buyerChat, label: 'Messages', icon: 'messages' },
-      { href: '/buyer/settings', label: 'Settings', icon: 'settings' },
+      { href: dashboardPath, label: 'Account home', icon: 'dashboard' },
+      { href: WEB_APP_ROUTES.accountPurchases, label: 'Purchases', icon: 'package' },
+      { href: WEB_APP_ROUTES.accountSaved, label: 'Saved items', icon: 'heart' },
+      { href: WEB_APP_ROUTES.accountListings, label: 'My listings', icon: 'list' },
+      { href: WEB_APP_ROUTES.accountStartSelling, label: 'Start selling', icon: 'plus' },
+      { href: WEB_APP_ROUTES.accountMessages, label: 'Messages', icon: 'messages' },
+      { href: WEB_APP_ROUTES.accountSettings, label: 'Settings', icon: 'settings' },
     ];
   }
 

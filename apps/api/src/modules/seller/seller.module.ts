@@ -25,6 +25,9 @@ import { SellerStatusHistoryController } from './seller-status-history.controlle
 import { SellerVerificationController } from './seller-verification.controller';
 import { SellerStoresController } from './seller-stores.controller';
 import { SellerStoresService } from './services/seller-stores.service';
+import { SellerCapabilityService } from './services/seller-capability.service';
+import { SellerOnboardingService } from './services/seller-onboarding.service';
+import { SellerOnboardingController } from './seller-onboarding.controller';
 import { SellerVerificationModule } from './seller-verification.module';
 
 @Module({
@@ -55,8 +58,14 @@ import { SellerVerificationModule } from './seller-verification.module';
     SellerStatusHistoryController,
     SellerVerificationController,
     SellerStoresController,
+    SellerOnboardingController,
   ],
-  providers: [SellerBuyerReviewsService, SellerStoresService],
-  exports: [SellerStoresService],
+  providers: [
+    SellerBuyerReviewsService,
+    SellerStoresService,
+    SellerCapabilityService,
+    SellerOnboardingService,
+  ],
+  exports: [SellerStoresService, SellerCapabilityService],
 })
 export class SellerModule {}

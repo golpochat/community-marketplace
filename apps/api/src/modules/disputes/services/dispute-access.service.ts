@@ -60,6 +60,15 @@ export class DisputeAccessService {
     }
   }
 
+  resolveParticipantSide(
+    dispute: { buyerId: string; sellerId: string },
+    userId: string,
+  ): 'BUYER' | 'SELLER' {
+    if (dispute.buyerId === userId) return 'BUYER';
+    if (dispute.sellerId === userId) return 'SELLER';
+    throw new ForbiddenException('You do not have access to this dispute');
+  }
+
   assertBuyer(dispute: { buyerId: string }, userId: string) {
     if (dispute.buyerId !== userId) {
       throw new ForbiddenException('Only the buyer can perform this action');

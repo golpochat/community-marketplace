@@ -26,6 +26,15 @@ export {
 } from './rbac';
 
 export {
+  MARKETPLACE_ROLES,
+  ACCOUNT_DASHBOARD_PATH,
+  canActAsBuyer,
+  canEnterSellerNamespace,
+  hasLegacySellerRole,
+  type MarketplaceRole,
+} from './marketplace-account';
+
+export {
   ADMIN_PERSONA_ROLE_CODES,
   isAdminPersonaRoleCode,
   isAdminPanelRoleCode,
