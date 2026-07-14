@@ -32,6 +32,24 @@ Repeat for `web`, `admin`, `worker` deployments.
 docker compose -f infra/docker/docker-compose.prod.yml up -d api web admin
 ```
 
+## Unified marketplace account rollback
+
+If the **unified account** feature (MEMBER role, `/account/*` routes) causes a regression, use the dedicated runbook:
+
+**[unified-account-rollback.md](./unified-account-rollback.md)**
+
+Quick git restore point:
+
+```bash
+git fetch origin
+git checkout main
+git reset --hard pre-unified-account-v1
+```
+
+Tag `pre-unified-account-v1` = last `main` before unified-account work. See the linked runbook for VPS redeploy and DB notes.
+
+---
+
 ## Database rollback
 
 Prisma migrations are **forward-only**. To revert schema:

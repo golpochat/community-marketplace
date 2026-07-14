@@ -11,6 +11,7 @@ Step-by-step procedures for deployments and incidents.
 | [Troubleshooting](../troubleshooting.md) | Local dev: ports, API, DB, Prisma, Docker |
 | [Deploy](./deploy.md) | Deploy to dev, staging, production |
 | [Rollback](./rollback.md) | Revert a bad deployment |
+| **[Unified account rollback](./unified-account-rollback.md)** | Git tag `pre-unified-account-v1`, VPS redeploy, DB notes |
 | [Restore backup](./restore-backup.md) | Disaster recovery |
 | [Scaling](./scaling.md) | Horizontal scaling & capacity |
 
