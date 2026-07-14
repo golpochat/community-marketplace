@@ -186,6 +186,7 @@ Not code — required before inviting outsiders:
 - [ ] Invite-only signup (manual approval or hidden link)
 - [ ] One geographic focus if possible (e.g. one Irish city)
 - [ ] Daily admin queue check (reports, verification, payments)
+- [ ] [Pilot feedback](./pilot-feedback.md): Google Form, invite email, optional WhatsApp group
 
 **Acceptable gaps during pilot:** FCM push, keyword automation, full category tree, wallet spend, status page.
 

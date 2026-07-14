@@ -7,6 +7,10 @@ export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_URL;
 /** Public support inbox shown on /contact, schema.org, and help content. */
 export const PLATFORM_SUPPORT_EMAIL = 'support@sellnearby.ie';
 
+/** Optional Google Form URL for closed-pilot feedback (see docs/runbooks/pilot-feedback.md). */
+export const PILOT_FEEDBACK_FORM_URL =
+  process.env.NEXT_PUBLIC_PILOT_FEEDBACK_FORM_URL?.trim() ?? '';
+
 export { WEB_APP_ROUTES, API_NAMESPACES, getWebDashboardPathForRole } from './rbac-routes';
 export { WEB_API_ROUTES } from './api-routes';
 
