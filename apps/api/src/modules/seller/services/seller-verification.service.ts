@@ -5,8 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { Prisma, SellerStatus, SellerVerificationRequest, VerificationStatus } from '@prisma/client';
+import { Prisma as PrismaNamespace } from '@prisma/client';
 
 import {
+  canEnterSellerNamespace,
+  computeFastTrackReviewDueAt,
   SELLER_VERIFICATION_MESSAGES,
   type SellerVerificationNextStep,
   type SellerVerificationRequest as SellerVerificationRequestDto,
@@ -14,6 +17,7 @@ import {
   type SellerVerificationStatus,
   type AdminSellerVerificationRow,
   type AdminSellerVerificationDetail,
+  type RbacRole,
 } from '@community-marketplace/types';
 import {
   sellerLimitSchema,
@@ -188,6 +192,15 @@ export class SellerVerificationService {
 
     const now = new Date();
     const request = await this.prisma.$transaction(async (tx) => {
+      await this.supersedeSiblingPendingRequests(
+        tx,
+        userId,
+        draft.id,
+        userId,
+        'Superseded by current verification submission',
+        now,
+      );
+
       const updated = await tx.sellerVerificationRequest.update({
         where: { id: draft.id },
         data: {
@@ -230,13 +243,27 @@ export class SellerVerificationService {
 
     await this.fastTrackFulfillment.applyPendingFastTrackOnSubmit(userId, request.id);
 
+    const finalRequest = await this.prisma.sellerVerificationRequest.findUniqueOrThrow({
+      where: { id: request.id },
+      select: { priority: true, slaDueAt: true },
+    });
+
     await this.audit.record('verification_submitted', userId, userId, {
       verificationId: request.id,
     });
 
+    const reviewDueAt =
+      finalRequest.slaDueAt?.toISOString() ??
+      (finalRequest.priority ? computeFastTrackReviewDueAt(now) : undefined);
+
     this.eventBus.publish({
       type: 'user.verification_requested',
-      payload: { userId, verificationId: request.id },
+      payload: {
+        userId,
+        verificationId: request.id,
+        priority: finalRequest.priority,
+        reviewDueAt,
+      },
       timestamp: now,
     });
 
@@ -249,7 +276,7 @@ export class SellerVerificationService {
 
   async listAdmin(input: unknown) {
     const query = adminSellerVerificationListSchema.parse(input);
-    const { page, limit, view, search, fromDate, toDate } = query;
+    const { page, limit, view, search, fromDate, toDate, track } = query;
     const skip = (page - 1) * limit;
 
     const dateFilter =
@@ -275,7 +302,7 @@ export class SellerVerificationService {
       const sellerStatus: SellerStatus =
         view === 'suspended' ? 'suspended' : 'under_review';
       const where: Prisma.UserWhereInput = {
-        primaryRole: { code: 'SELLER' },
+        primaryRole: { code: { in: ['SELLER', 'MEMBER'] } },
         sellerStatus,
         ...searchFilter,
         ...(fromDate || toDate
@@ -323,8 +350,10 @@ export class SellerVerificationService {
 
     const where: Prisma.SellerVerificationRequestWhereInput = {
       status: requestStatus,
+      ...(track === 'fast_track' ? { priority: true } : {}),
+      ...(track === 'standard' ? { priority: false } : {}),
       user: {
-        primaryRole: { code: 'SELLER' },
+        primaryRole: { code: { in: ['SELLER', 'MEMBER'] } },
         ...searchFilter,
         ...(view === 'pending'
           ? {
@@ -411,7 +440,7 @@ export class SellerVerificationService {
       },
     });
 
-    if (!user || user.primaryRole.code !== 'SELLER') {
+    if (!user || !canEnterSellerNamespace(user.primaryRole.code as RbacRole)) {
       throw new NotFoundException('Seller not found');
     }
 
@@ -475,9 +504,15 @@ export class SellerVerificationService {
       userId: row.userId,
       email: row.user.email,
       phone: row.phoneNumber ?? row.user.profile?.phone ?? undefined,
-      submittedAt: row.createdAt.toISOString(),
+      submittedAt: (row.user.verificationRequestedAt ?? row.createdAt).toISOString(),
       requestStatus: row.status as AdminSellerVerificationRow['requestStatus'],
       priority: row.priority,
+      reviewDueAt:
+        row.slaDueAt?.toISOString() ??
+        (row.priority && row.user.verificationRequestedAt
+          ? computeFastTrackReviewDueAt(row.user.verificationRequestedAt)
+          : undefined),
+      priorityActivatedAt: row.priorityActivatedAt?.toISOString(),
       sellerStatus: row.user.sellerStatus as AdminSellerVerificationRow['sellerStatus'],
       verificationRequestedAt: row.user.verificationRequestedAt?.toISOString(),
       verificationCompletedAt: row.user.verificationCompletedAt?.toISOString(),
@@ -565,19 +600,14 @@ export class SellerVerificationService {
         },
       });
 
-      await tx.sellerVerificationRequest.updateMany({
-        where: {
-          userId: request.userId,
-          status: 'pending',
-          id: { not: parsed.requestId },
-        },
-        data: {
-          status: 'rejected',
-          reviewedById: reviewerId,
-          reviewedAt: now,
-          rejectionReason: 'Superseded by approved verification',
-        },
-      });
+      await this.supersedeSiblingPendingRequests(
+        tx,
+        request.userId,
+        parsed.requestId,
+        reviewerId,
+        'Superseded by approved verification',
+        now,
+      );
 
       await this.statusHistory.logChange(
         {
@@ -616,6 +646,7 @@ export class SellerVerificationService {
     }
 
     const request = await this.findRequestOrThrow(parsed.requestId);
+    const hadPriority = request.priority;
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: request.userId },
       select: { sellerStatus: true },
@@ -632,6 +663,15 @@ export class SellerVerificationService {
           rejectionReason: parsed.reason,
         },
       });
+
+      await this.supersedeSiblingPendingRequests(
+        tx,
+        request.userId,
+        parsed.requestId,
+        reviewerId,
+        'Superseded by rejected verification decision',
+        now,
+      );
 
       await tx.user.update({
         where: { id: request.userId },
@@ -662,19 +702,25 @@ export class SellerVerificationService {
       reason: parsed.reason,
     });
 
+    const priorityRequeueGranted =
+      hadPriority && (await this.fastTrackFulfillment.grantPriorityRequeue(request.userId));
+
     this.eventBus.publish({
       type: 'user.verification_rejected',
       payload: {
         userId: request.userId,
         verificationId: parsed.requestId,
         reason: parsed.reason,
+        priorityRequeueGranted,
       },
       timestamp: now,
     });
 
     return {
       request: this.statusService.mapRequest(updated),
-      message: `${SELLER_VERIFICATION_MESSAGES.REJECTED_PREFIX} ${parsed.reason}`,
+      message: priorityRequeueGranted
+        ? `${SELLER_VERIFICATION_MESSAGES.REJECTED_PREFIX} ${parsed.reason} ${SELLER_VERIFICATION_MESSAGES.FAST_TRACK_REQUEUE_GRANTED}`
+        : `${SELLER_VERIFICATION_MESSAGES.REJECTED_PREFIX} ${parsed.reason}`,
     };
   }
 
@@ -803,6 +849,21 @@ export class SellerVerificationService {
     const reason = parsed.reason;
 
     await this.prisma.$transaction(async (tx) => {
+      const now = new Date();
+
+      await tx.sellerVerificationRequest.updateMany({
+        where: {
+          userId: parsed.userId,
+          status: 'pending',
+        },
+        data: {
+          status: 'rejected',
+          reviewedById: actorId,
+          reviewedAt: now,
+          rejectionReason: 'Superseded by force re-verification',
+        },
+      });
+
       await tx.user.update({
         where: { id: parsed.userId },
         data: {
@@ -993,46 +1054,87 @@ export class SellerVerificationService {
       throw new BadRequestException('You are already a verified seller');
     }
 
-    const existing = await this.findDraftRequest(userId);
+    const existing = await this.findOpenPendingRequest(userId);
     if (existing) return existing;
 
-    return this.prisma.$transaction(async (tx) => {
-      const created = await tx.sellerVerificationRequest.create({
-        data: {
-          userId,
-          status: 'pending',
-        },
-      });
-
-      if (user.sellerStatus !== 'under_review') {
-        await tx.user.update({
-          where: { id: userId },
-          data: { sellerStatus: 'under_review' },
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const insideTx = await tx.sellerVerificationRequest.findFirst({
+          where: { userId, status: 'pending' },
+          orderBy: { createdAt: 'desc' },
         });
-        await this.statusHistory.logChange(
-          {
-            userId,
-            oldStatus: user.sellerStatus,
-            newStatus: 'under_review',
-            changedBy: userId,
-            reason: 'Seller verification started',
-          },
-          tx,
-        );
-      }
+        if (insideTx) return insideTx;
 
-      return created;
-    });
+        const created = await tx.sellerVerificationRequest.create({
+          data: {
+            userId,
+            status: 'pending',
+          },
+        });
+
+        if (user.sellerStatus !== 'under_review') {
+          await tx.user.update({
+            where: { id: userId },
+            data: { sellerStatus: 'under_review' },
+          });
+          await this.statusHistory.logChange(
+            {
+              userId,
+              oldStatus: user.sellerStatus,
+              newStatus: 'under_review',
+              changedBy: userId,
+              reason: 'Seller verification started',
+            },
+            tx,
+          );
+        }
+
+        return created;
+      });
+    } catch (error) {
+      // Partial unique index: concurrent creators recover the winning row.
+      if (
+        error instanceof PrismaNamespace.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        const recovered = await this.findOpenPendingRequest(userId);
+        if (recovered) return recovered;
+      }
+      throw error;
+    }
   }
 
-  private findDraftRequest(userId: string): Promise<DraftRequest | null> {
+  /** Canonical open case for a seller — at most one pending row (DB-enforced). */
+  private findOpenPendingRequest(userId: string): Promise<DraftRequest | null> {
     return this.prisma.sellerVerificationRequest.findFirst({
       where: {
         userId,
         status: 'pending',
-        user: { verificationRequestedAt: null },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
+    });
+  }
+
+  private async supersedeSiblingPendingRequests(
+    tx: Prisma.TransactionClient,
+    userId: string,
+    keepRequestId: string,
+    reviewerId: string | null,
+    reason: string,
+    reviewedAt: Date,
+  ) {
+    await tx.sellerVerificationRequest.updateMany({
+      where: {
+        userId,
+        status: 'pending',
+        id: { not: keepRequestId },
+      },
+      data: {
+        status: 'rejected',
+        reviewedById: reviewerId,
+        reviewedAt,
+        rejectionReason: reason,
+      },
     });
   }
 

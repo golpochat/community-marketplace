@@ -7,9 +7,26 @@ import {
   resolveSuperAdminAdminNamespaceRedirect,
 } from '@/lib/route-guards';
 import { ROLE_COOKIE_NAME, getWebRoleFromAuthTokenCookie, getWebRoleFromCookie } from '@/lib/role-cookie';
+import { rewriteLegacyListingRouteParam } from '@/lib/listing-slug';
 import { getDashboardRouteByRole } from '@community-marketplace/ui-dashboard';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+
+/** Compact legacy `/listings/{title}-{full-uuid}` URLs before the page renders (avoids address-bar flash). */
+function redirectLegacyListingUrl(request: NextRequest): NextResponse | null {
+  const { pathname } = request.nextUrl;
+  if (!pathname.startsWith('/listings/')) return null;
+
+  const param = pathname.slice('/listings/'.length);
+  if (!param || param.includes('/')) return null;
+
+  const rewritten = rewriteLegacyListingRouteParam(param);
+  if (!rewritten) return null;
+
+  const url = request.nextUrl.clone();
+  url.pathname = `/listings/${rewritten}`;
+  return NextResponse.redirect(url, 308);
+}
 
 function withLegacyRoleCookieCleanup(
   request: NextRequest,
@@ -25,6 +42,11 @@ function withLegacyRoleCookieCleanup(
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const role = getRoleFromRequest(request.headers.get('cookie'));
+
+  const listingRedirect = redirectLegacyListingUrl(request);
+  if (listingRedirect) {
+    return withLegacyRoleCookieCleanup(request, listingRedirect);
+  }
 
   if (pathname === '/') {
     return withLegacyRoleCookieCleanup(request, NextResponse.next());

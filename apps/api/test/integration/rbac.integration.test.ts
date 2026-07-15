@@ -2,18 +2,20 @@ import { describe, expect, it, beforeAll, afterAll } from 'vitest';
 
 import { PERMISSION_CODES } from '@community-marketplace/types';
 
+import { BOOTSTRAP_USERS } from '../../src/database/bootstrap-users.seed.data';
+
 import {
   disconnectTestPrisma,
   getTestPrisma,
   hasDatabase,
-  seedFullTestDatabase,
+  seedBootstrapDatabase,
 } from '../helpers/db';
 
 const describeIfDb = hasDatabase ? describe : describe.skip;
 
 describeIfDb('RBAC seed integration', () => {
   beforeAll(async () => {
-    await seedFullTestDatabase();
+    await seedBootstrapDatabase();
   }, 120_000);
 
   afterAll(async () => {
@@ -80,5 +82,34 @@ describeIfDb('RBAC seed integration', () => {
 
     expect(codes).toContain('view_payments');
     expect(codes).not.toContain('view_reports');
+  });
+
+  it('creates bootstrap accounts for each operator tier', async () => {
+    const prisma = getTestPrisma();
+
+    for (const entry of BOOTSTRAP_USERS) {
+      const email =
+        entry.role === 'SUPER_ADMIN'
+          ? (process.env.RBAC_SUPER_ADMIN_EMAIL ?? entry.email)
+          : entry.email;
+      const user = await prisma.user.findUnique({
+        where: { email },
+        include: { primaryRole: true },
+      });
+
+      expect(user, `missing ${email}`).not.toBeNull();
+      expect(user?.primaryRole.code).toBe(entry.role);
+    }
+  });
+
+  it('seeds level-3 MEMBER marketplace account', async () => {
+    const prisma = getTestPrisma();
+    const member = await prisma.user.findUniqueOrThrow({
+      where: { email: 'member@sellnearby.ie' },
+      include: { primaryRole: true, profile: true },
+    });
+
+    expect(member.primaryRole.code).toBe('MEMBER');
+    expect(member.profile?.phone).toBe('+353871000099');
   });
 });

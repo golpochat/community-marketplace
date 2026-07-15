@@ -60,6 +60,10 @@ export class ListingsService {
     return this.crud.findById(id, incrementView);
   }
 
+  resolveListingIdByCompact(compactId: string) {
+    return this.crud.resolveListingIdByCompact(compactId);
+  }
+
   findSimilar(listingId: string, limit = 4) {
     return this.crud.findSimilar(listingId, limit);
   }

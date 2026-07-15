@@ -31,6 +31,17 @@ export {
   listingTitleValidationMessage,
 } from './listing-title';
 export { isNonEmptyString, slugify, truncate, capitalize, getInitials } from './string';
+export {
+  LISTING_COMPACT_ID_LENGTH,
+  buildListingSlug,
+  extractListingCompactId,
+  isBareListingId,
+  isCanonicalListingRouteParam,
+  isLegacyFullUuidListingRouteParam,
+  listingCompactId,
+  parseListingRouteParam,
+  rewriteLegacyListingRouteParam,
+} from './listing-slug';
 export { sleep, retry, pick, omit } from './async';
 export {
   resolveListingVehicleSpecs,

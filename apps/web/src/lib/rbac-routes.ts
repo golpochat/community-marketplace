@@ -22,6 +22,8 @@ export const WEB_APP_ROUTES = {
   accountEarnings: '/account/earnings',
   accountNotifications: '/account/notifications',
   accountStartSelling: '/account/start-selling',
+  accountSelling: '/account/selling',
+  accountVerification: '/account/verification',
   accountSettings: '/account/settings',
   accountDisputes: '/account/disputes',
   buyerChat: '/buyer/chat',
@@ -36,6 +38,7 @@ export const WEB_APP_ROUTES = {
   buyerDashboard: '/buyer/dashboard',
   login: '/auth/login',
   register: '/auth/register',
+  registerSeller: '/auth/register?intent=seller',
 } as const;
 
 const ROLE_DASHBOARD_PATHS: Partial<Record<RbacRole, string>> = {

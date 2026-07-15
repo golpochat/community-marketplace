@@ -1,9 +1,6 @@
 import { PrismaClient } from '../../generated/prisma';
 
-import { runDevCategoriesSeed } from '../../src/database/seeds/dev-categories.seed';
-import { runDevUsersSeed } from '../../src/database/seeds/dev-users.seed';
 import { runRbacSeed } from '../../src/database/seeds/rbac.seed';
-import { runTestDataSeed } from '../../src/database/seeds/test-data.seed';
 
 export const hasDatabase = Boolean(process.env.DATABASE_URL);
 
@@ -23,10 +20,11 @@ export async function disconnectTestPrisma(): Promise<void> {
   }
 }
 
-export async function seedFullTestDatabase(): Promise<void> {
+/** Seeds RBAC catalog + bootstrap operator/marketplace accounts. */
+export async function seedBootstrapDatabase(): Promise<void> {
   const prisma = getTestPrisma();
   await runRbacSeed(prisma, { skipEnvironmentCheck: true });
-  await runDevUsersSeed(prisma);
-  await runDevCategoriesSeed(prisma);
-  await runTestDataSeed(prisma, { skipEnvironmentCheck: true });
 }
+
+/** @deprecated Use seedBootstrapDatabase */
+export const seedFullTestDatabase = seedBootstrapDatabase;

@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma, SellerStatus } from '@prisma/client';
 
-import type { SellerStatusHistoryEntry } from '@community-marketplace/types';
+import type { RbacRole, SellerStatusHistoryEntry } from '@community-marketplace/types';
+import { canEnterSellerNamespace } from '@community-marketplace/types';
 
 import { PrismaService } from '../../../database/prisma.service';
 
@@ -37,7 +38,7 @@ export class SellerStatusHistoryService {
       where: { id: userId },
       select: { id: true, primaryRole: { select: { code: true } } },
     });
-    if (!seller || seller.primaryRole.code !== 'SELLER') {
+    if (!seller || !canEnterSellerNamespace(seller.primaryRole.code as RbacRole)) {
       throw new NotFoundException('Seller not found');
     }
 

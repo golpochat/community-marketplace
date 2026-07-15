@@ -58,6 +58,7 @@
 | Analytics | Seller insights, platform metrics |
 | Compliance | GDPR tooling, data export |
 | Integrations | Webhooks, public API, partner SDK |
+| Advertising | Self-serve display ads for external brands/sponsors (creatives into existing slots) |
 
 ## Milestone timeline
 

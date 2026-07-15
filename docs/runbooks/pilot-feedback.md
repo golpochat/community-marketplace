@@ -186,6 +186,22 @@ After **2 weeks**, review with the table in [pilot-kickoff Phase C](./pilot-kick
 
 ---
 
+## Seller verification (L2 admin)
+
+During pilot, **Accounts Admin** / **Platform Admin** should monitor:
+
+| Signal | Where |
+|--------|--------|
+| Pending seller KYC | Dashboard → **Pending Verifications** |
+| Paid queue | **Fast-track pending** / **Fast-track overdue** |
+| Bell alerts | Submit (standard or urgent), fast-track upgrade, SLA overdue |
+
+Queue: **Admin → Seller Verification → Pending**. Filter **Fast-track** first; SLA target is **24 hours from submission**. Rejecting a paid case grants the seller **one complimentary priority re-queue** on resubmit — payment covers review speed, not approval.
+
+See [seller-verification.md](../admin/seller-verification.md).
+
+---
+
 ## Checklist
 
 - [ ] Google Form created and link saved

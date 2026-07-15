@@ -2,6 +2,7 @@
 
 import { APP_SHORT_NAME } from '@community-marketplace/config';
 import type { RbacRole } from '@community-marketplace/types';
+import type { SidebarNavItem } from '@community-marketplace/ui-dashboard';
 import {
   DashboardLayout as UIDashboardLayout,
   getDashboardRouteByRole,
@@ -43,16 +44,18 @@ export interface WebDashboardLayoutProps {
   role: RbacRole;
   theme: DashboardThemeProp;
   children: React.ReactNode;
+  sidebarItems?: SidebarNavItem[];
 }
 
-export default function DashboardLayout({ role, theme, children }: WebDashboardLayoutProps) {
+export default function DashboardLayout({ role, theme, children, sidebarItems: sidebarItemsProp }: WebDashboardLayoutProps) {
   const { user, session, clearUser } = useAuth();
   const { profile, permissions } = useUserProfile();
 
   const sidebarItems =
-    role === 'ADMIN' || role === 'SUPER_ADMIN'
+    sidebarItemsProp ??
+    (role === 'ADMIN' || role === 'SUPER_ADMIN'
       ? filterSidebarItems(role, permissions?.effective ?? [])
-      : undefined;
+      : undefined);
 
   async function handleLogout() {
     try {

@@ -11,7 +11,7 @@ import type {
   StoreOpeningHours,
   StorePolicy,
 } from '@community-marketplace/types';
-import { Button, Input, Label } from '@community-marketplace/ui';
+import { Button, Input, Label, useAppFeedback } from '@community-marketplace/ui';
 import { Card } from '@community-marketplace/ui-dashboard';
 
 import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
@@ -57,6 +57,7 @@ export function SellerStorefrontSettings({
   onSaved,
 }: SellerStorefrontSettingsProps) {
   const searchParams = useSearchParams();
+  const feedback = useAppFeedback();
   const storeIdFromUrl = searchParams.get('storeId');
 
   const [stores, setStores] = useState(initialStores);
@@ -75,7 +76,6 @@ export function SellerStorefrontSettings({
   const [createLocation, setCreateLocation] = useState('');
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const activeStore = useMemo(
@@ -115,14 +115,12 @@ export function SellerStorefrontSettings({
   const selectStore = useCallback((storeId: string) => {
     setActiveStoreId(storeId);
     setShowCreateForm(false);
-    setMessage(null);
     setError(null);
   }, []);
 
   const handleCreate = useCallback(async () => {
     setCreating(true);
     setError(null);
-    setMessage(null);
     try {
       const created = await sellerService.createStore({
         name: createName.trim(),
@@ -135,20 +133,19 @@ export function SellerStorefrontSettings({
       setCreateName('');
       setCreateDescription('');
       setCreateLocation('');
-      setMessage('Storefront created.');
+      feedback.success('Storefront created');
       onSaved?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create storefront');
     } finally {
       setCreating(false);
     }
-  }, [createDescription, createLocation, createName, onSaved]);
+  }, [createDescription, createLocation, createName, feedback, onSaved]);
 
   const handleSave = useCallback(async () => {
     if (!activeStore) return;
     setSaving(true);
     setError(null);
-    setMessage(null);
     try {
       const updated = await sellerService.updateStore(activeStore.id, {
         name: name.trim(),
@@ -169,14 +166,14 @@ export function SellerStorefrontSettings({
         },
       });
       setStores((current) => current.map((store) => (store.id === updated.id ? updated : store)));
-      setMessage('Storefront updated.');
+      feedback.success('Storefront updated');
       onSaved?.();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save storefront');
     } finally {
       setSaving(false);
     }
-  }, [activeStore, contact, description, location, name, openingHours, policies, onSaved]);
+  }, [activeStore, contact, description, feedback, location, name, openingHours, policies, onSaved]);
 
   const limitsLabel = formatStoreLimits(limits);
   const canAddStore = limits?.canCreateStore === true;
@@ -185,7 +182,6 @@ export function SellerStorefrontSettings({
     return (
       <div className="max-w-2xl space-y-6">
         {error && <p className="text-sm text-destructive">{error}</p>}
-        {message && <p className="text-sm text-emerald-700">{message}</p>}
         <Card title="Create your storefront">
           <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
             Your shop brand is separate from your login profile. Buyers see this name on your
@@ -243,7 +239,6 @@ export function SellerStorefrontSettings({
   return (
     <div className="max-w-2xl space-y-6">
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {message && <p className="text-sm text-emerald-700">{message}</p>}
 
       <Card title="Storefronts">
         {limitsLabel && (
@@ -266,7 +261,6 @@ export function SellerStorefrontSettings({
               onClick={() => {
                 setShowCreateForm(true);
                 setError(null);
-                setMessage(null);
               }}
             >
               + Add
@@ -358,7 +352,7 @@ export function SellerStorefrontSettings({
                       ),
                     );
                     setError(null);
-                    setMessage('Storefront banner updated.');
+                    feedback.success('Storefront banner updated');
                     onSaved?.();
                   }}
                 />
@@ -374,7 +368,7 @@ export function SellerStorefrontSettings({
                       ),
                     );
                     setError(null);
-                    setMessage('Store logo updated.');
+                    feedback.success('Store logo updated');
                     onSaved?.();
                   }}
                 />

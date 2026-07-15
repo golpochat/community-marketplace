@@ -41,6 +41,7 @@ export {
   ADMIN_SIDEBAR,
   SELLER_SIDEBAR,
   BUYER_SIDEBAR,
+  ACCOUNT_SIDEBAR,
 } from './sidebar/sidebar-config';
 export type { SidebarNavItem, SidebarNavChildItem } from './sidebar/sidebar-config';
 export { SELLER_VERIFICATION_SIDEBAR_CHILDREN } from './sidebar/sidebar-config';

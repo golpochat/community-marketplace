@@ -5,4 +5,5 @@ export * from './email-layout';
 export * from './env';
 export * from './platform';
 export * from './stripe';
+export * from './stripe-connect-branding';
 export * from './ads-system';

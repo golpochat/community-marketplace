@@ -5,9 +5,10 @@ import { useCallback, useMemo, useState } from 'react';
 import type {
   AdminSellerVerificationDetail,
   AdminSellerVerificationRow,
+  AdminSellerVerificationTrackFilter,
   AdminSellerVerificationView,
 } from '@community-marketplace/types';
-import { PERMISSIONS } from '@community-marketplace/types';
+import { formatFastTrackSlaLabel, PERMISSIONS } from '@community-marketplace/types';
 import { formatDateTime } from '@community-marketplace/utils';
 import {
   Card,
@@ -16,7 +17,8 @@ import {
   Tooltip,
 } from '@community-marketplace/ui-dashboard';
 
-import { AdminToastStack, useAdminToast } from '@/components/admin/seller-verification/admin-toast';
+import { useAppFeedback } from '@community-marketplace/ui';
+import { EmptyState } from '@/components/EmptyState';
 import { ConfirmDialog } from '@/components/admin/seller-verification/confirm-dialog';
 import { ForceReverifyModal } from '@/components/admin/seller-verification/force-reverify-modal';
 import { ReactivateSellerModal } from '@/components/admin/seller-verification/reactivate-seller-modal';
@@ -66,13 +68,14 @@ export function AdminSellerVerificationPage({
   view: AdminSellerVerificationView;
 }) {
   const { permissions, role: userRole, loading: permissionsLoading, can } = usePermissions();
-  const { toasts, push, dismiss } = useAdminToast();
+  const feedback = useAppFeedback();
 
   const activeView = view;
   const [search, setSearch] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [pageSize, setPageSize] = useState(20);
+  const [trackFilter, setTrackFilter] = useState<AdminSellerVerificationTrackFilter>('all');
 
   const [reviewRequestId, setReviewRequestId] = useState<string | undefined>();
   const [reviewUserId, setReviewUserId] = useState<string | undefined>();
@@ -81,6 +84,7 @@ export function AdminSellerVerificationPage({
   const [approveRequestId, setApproveRequestId] = useState<string | null>(null);
   const [rejectRequestId, setRejectRequestId] = useState<string | null>(null);
   const [rejectSellerName, setRejectSellerName] = useState('');
+  const [rejectIsFastTrack, setRejectIsFastTrack] = useState(false);
 
   const [suspendDetail, setSuspendDetail] = useState<AdminSellerVerificationDetail | null>(null);
   const [reactivateDetail, setReactivateDetail] = useState<AdminSellerVerificationDetail | null>(null);
@@ -107,8 +111,9 @@ export function AdminSellerVerificationPage({
         search: search.trim() || undefined,
         fromDate: fromDate || undefined,
         toDate: toDate || undefined,
+        ...(activeView === 'pending' && trackFilter !== 'all' ? { track: trackFilter } : {}),
       }),
-    [role, activeView, search, fromDate, toDate],
+    [role, activeView, search, fromDate, toDate, trackFilter],
   );
 
   const { page, setPage, data, meta, loading, error, totalPages, reload } =
@@ -131,7 +136,7 @@ export function AdminSellerVerificationPage({
   const handleReverifyStable = useCallback(
     (item: AdminSellerVerificationRow) => void handleReverify(item),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stable enough for table actions
-    [role, reload, push],
+    [role, reload],
   );
 
   const rows = useMemo(() => {
@@ -159,40 +164,51 @@ export function AdminSellerVerificationPage({
             ? (
                 <TruncatedTableCell key={`${item.userId}-reason`} text={item.rejectionReason ?? '—'} />
               )
-            : '—',
+            : activeView === 'pending'
+              ? (
+                  <div key={`${item.userId}-track`} className="space-y-0.5 text-xs">
+                    <span
+                      className={
+                        item.priority
+                          ? 'inline-flex rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 font-medium text-indigo-900'
+                          : 'text-[hsl(var(--dashboard-sidebar-muted))]'
+                      }
+                    >
+                      {item.priority ? 'Fast-track' : 'Standard'}
+                    </span>
+                    {item.priority && item.reviewDueAt ? (
+                      <p
+                        className={
+                          new Date(item.reviewDueAt) < new Date()
+                            ? 'font-medium text-destructive'
+                            : 'text-[hsl(var(--dashboard-sidebar-muted))]'
+                        }
+                      >
+                        {formatFastTrackSlaLabel(item.reviewDueAt)}
+                      </p>
+                    ) : null}
+                  </div>
+                )
+              : '—',
         <div key={`${item.userId}-actions`} className="flex flex-wrap gap-2">
           <IconActionGroup>
             <IconActionButton
               icon="eye"
-              label="View"
+              label={
+                canReview &&
+                item.requestId &&
+                item.requestStatus === 'pending' &&
+                item.sellerStatus !== 'verified'
+                  ? 'Review documents'
+                  : 'View'
+              }
               onClick={() => {
                 setReviewRequestId(item.requestId);
                 setReviewUserId(item.userId);
                 setReviewSellerName(item.sellerName);
+                setRejectIsFastTrack(Boolean(item.priority));
               }}
             />
-            {canReview &&
-            item.requestId &&
-            item.requestStatus === 'pending' &&
-            item.sellerStatus !== 'verified' ? (
-              <>
-                <IconActionButton
-                  icon="check"
-                  label="Approve"
-                  variant="accent"
-                  onClick={() => setApproveRequestId(item.requestId!)}
-                />
-                <IconActionButton
-                  icon="x"
-                  label="Reject"
-                  variant="danger"
-                  onClick={() => {
-                    setRejectRequestId(item.requestId!);
-                    setRejectSellerName(item.sellerName ?? item.email);
-                  }}
-                />
-              </>
-            ) : null}
             {canForceReverify && activeView === 'rejected' ? (
               <IconActionButton
                 icon="pencil"
@@ -204,20 +220,23 @@ export function AdminSellerVerificationPage({
         </div>,
       ];
     });
-  }, [data, activeView, canReview, handleReverifyStable]);
+  }, [data, activeView, canReview, canForceReverify, handleReverifyStable]);
 
   async function handleApproveConfirm() {
     if (!approveRequestId) return;
     setActing(true);
     try {
       await adminSellerVerificationService.approve(role, approveRequestId);
-      push('Seller verified successfully.', 'success');
+      feedback.success('Seller verified', 'The seller can now list and receive payouts.');
       setApproveRequestId(null);
       setReviewRequestId(undefined);
       setReviewUserId(undefined);
       await reload();
     } catch (err) {
-      push(err instanceof Error ? err.message : 'Failed to approve verification', 'error');
+      feedback.error(
+        'Failed to approve verification',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActing(false);
     }
@@ -228,13 +247,16 @@ export function AdminSellerVerificationPage({
     setActing(true);
     try {
       await adminSellerVerificationService.reject(role, rejectRequestId, reason);
-      push('Verification rejected.', 'error');
+      feedback.success('Verification rejected', 'The seller has been notified.');
       setRejectRequestId(null);
       setReviewRequestId(undefined);
       setReviewUserId(undefined);
       await reload();
     } catch (err) {
-      push(err instanceof Error ? err.message : 'Failed to reject verification', 'error');
+      feedback.error(
+        'Failed to reject verification',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActing(false);
     }
@@ -252,11 +274,14 @@ export function AdminSellerVerificationPage({
         reason: payload.reason,
         duration: payload.duration,
       });
-      push('Seller suspended.', 'success');
+      feedback.success('Seller suspended', 'Selling privileges have been restricted.');
       setSuspendDetail(null);
       await reload();
     } catch (err) {
-      push(err instanceof Error ? err.message : 'Failed to suspend seller', 'error');
+      feedback.error(
+        'Failed to suspend seller',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActing(false);
     }
@@ -270,13 +295,16 @@ export function AdminSellerVerificationPage({
         userId: reactivateDetail.userId,
         reason: payload.reason,
       });
-      push('Seller reactivated.', 'success');
+      feedback.success('Seller reactivated', 'Selling privileges have been restored.');
       setReactivateDetail(null);
       setReviewRequestId(undefined);
       setReviewUserId(undefined);
       await reload();
     } catch (err) {
-      push(err instanceof Error ? err.message : 'Failed to reactivate seller', 'error');
+      feedback.error(
+        'Failed to reactivate seller',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActing(false);
     }
@@ -290,13 +318,16 @@ export function AdminSellerVerificationPage({
         userId: forceReverifyDetail.userId,
         reason: payload.reason,
       });
-      push('Re-verification required.', 'success');
+      feedback.success('Re-verification required', 'The seller must submit documents again.');
       setForceReverifyDetail(null);
       setReviewRequestId(undefined);
       setReviewUserId(undefined);
       await reload();
     } catch (err) {
-      push(err instanceof Error ? err.message : 'Failed to force re-verification', 'error');
+      feedback.error(
+        'Failed to force re-verification',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActing(false);
     }
@@ -311,11 +342,14 @@ export function AdminSellerVerificationPage({
         sellerLimit: payload.sellerLimit,
         reason: payload.reason,
       });
-      push('Listing limit updated.', 'success');
+      feedback.success('Listing limit updated', "The seller's listing cap has changed.");
       setLimitDetail(null);
       await reload();
     } catch (err) {
-      push(err instanceof Error ? err.message : 'Failed to update listing limit', 'error');
+      feedback.error(
+        'Failed to update listing limit',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActing(false);
     }
@@ -349,8 +383,7 @@ export function AdminSellerVerificationPage({
         description={`${ADMIN_SELLER_VERIFICATION_VIEW_LABELS[activeView]} — review seller identity documents, manage verification status, and enforce seller limits.`}
         loading={loading || permissionsLoading}
         error={error}
-        empty={!loading && !error && rows.length === 0}
-        emptyTitle={`No ${ADMIN_SELLER_VERIFICATION_VIEW_LABELS[activeView].toLowerCase()}`}
+        empty={false}
       >
         <Card>
           <div className="mb-4 grid gap-3 md:grid-cols-4">
@@ -374,6 +407,39 @@ export function AdminSellerVerificationPage({
               className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
             />
           </div>
+          {activeView === 'pending' ? (
+            <div
+              className="mb-4 flex flex-wrap gap-2"
+              role="tablist"
+              aria-label="Verification track filter"
+            >
+              {(
+                [
+                  ['all', 'All'],
+                  ['fast_track', 'Fast-track'],
+                  ['standard', 'Standard'],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="tab"
+                  aria-selected={trackFilter === value}
+                  onClick={() => {
+                    setTrackFilter(value);
+                    setPage(1);
+                  }}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    trackFilter === value
+                      ? 'bg-[hsl(var(--dashboard-accent))] text-white'
+                      : 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-sidebar-muted))] hover:text-[hsl(var(--dashboard-main-fg))]'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <div className="mb-4 flex items-center justify-between gap-3 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
             <label className="flex items-center gap-2">
               Rows per page
@@ -404,13 +470,31 @@ export function AdminSellerVerificationPage({
             </p>
           ) : null}
 
-          <DataTable columns={columns} rows={rows} />
-          <AdminTableFooter
-            page={page}
-            totalPages={totalPages}
-            total={meta.total}
-            onPageChange={setPage}
-          />
+          {!loading && !error && rows.length === 0 ? (
+            <EmptyState
+              variant="dashboard"
+              title={
+                activeView === 'pending' && trackFilter !== 'all'
+                  ? `No ${trackFilter === 'fast_track' ? 'fast-track' : 'standard'} pending requests`
+                  : `No ${ADMIN_SELLER_VERIFICATION_VIEW_LABELS[activeView].toLowerCase()}`
+              }
+              description={
+                activeView === 'pending' && trackFilter !== 'all'
+                  ? 'Switch to All or another track filter above to continue reviewing.'
+                  : undefined
+              }
+            />
+          ) : (
+            <>
+              <DataTable columns={columns} rows={rows} />
+              <AdminTableFooter
+                page={page}
+                totalPages={totalPages}
+                total={meta.total}
+                onPageChange={setPage}
+              />
+            </>
+          )}
         </Card>
       </DashboardPageShell>
 
@@ -430,9 +514,10 @@ export function AdminSellerVerificationPage({
           setReviewUserId(undefined);
         }}
         onApprove={(id) => setApproveRequestId(id)}
-        onReject={(id) => {
+        onReject={(id, options) => {
           setRejectRequestId(id);
           setRejectSellerName(reviewSellerName ?? 'Seller');
+          setRejectIsFastTrack(Boolean(options?.isFastTrack));
         }}
         onSuspend={(detail) => setSuspendDetail(detail)}
         onReactivate={(detail) => setReactivateDetail(detail)}
@@ -457,9 +542,13 @@ export function AdminSellerVerificationPage({
       <RejectVerificationModal
         open={rejectRequestId != null}
         sellerName={rejectSellerName}
+        isFastTrack={rejectIsFastTrack}
         loading={acting}
         onSubmit={(reason) => void handleRejectSubmit(reason)}
-        onClose={() => setRejectRequestId(null)}
+        onClose={() => {
+          setRejectRequestId(null);
+          setRejectIsFastTrack(false);
+        }}
       />
 
       <SuspendSellerModal
@@ -502,8 +591,6 @@ export function AdminSellerVerificationPage({
         sellerName={historySellerName}
         onClose={() => setHistoryUserId(null)}
       />
-
-      <AdminToastStack toasts={toasts} onDismiss={dismiss} />
     </>
   );
 }

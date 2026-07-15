@@ -13,7 +13,6 @@ import { UsersAdminService } from './services/users-admin.service';
 import { UsersPhoneService } from './services/users-phone.service';
 import { UsersProfileService } from './services/users-profile.service';
 import { UsersSettingsService } from './services/users-settings.service';
-import { UsersVerificationService } from './services/users-verification.service';
 
 @Injectable()
 export class UsersService {
@@ -23,7 +22,6 @@ export class UsersService {
     private readonly profileService: UsersProfileService,
     private readonly phoneService: UsersPhoneService,
     private readonly settingsService: UsersSettingsService,
-    private readonly verificationService: UsersVerificationService,
     private readonly adminService: UsersAdminService,
     private readonly storageService: R2StorageService,
     private readonly auditService: UserAuditService,
@@ -85,15 +83,6 @@ export class UsersService {
     );
   }
 
-  async createVerificationDocumentUploadUrl(userId: string, dto: unknown) {
-    const parsed = dto as { contentType: string; fileName?: string };
-    return this.storageService.createVerificationDocumentUploadUrl(
-      userId,
-      parsed.contentType,
-      parsed.fileName,
-    );
-  }
-
   async confirmAvatar(actorId: string, userId: string, publicUrl: string) {
     return this.profileService.setAvatarUrl(actorId, userId, publicUrl);
   }
@@ -109,14 +98,6 @@ export class UsersService {
   async confirmPhoneChange(userId: string, dto: unknown) {
     await this.phoneService.confirmChange(userId, dto);
     return this.getProfile(userId);
-  }
-
-  submitSellerVerification(userId: string, dto: unknown) {
-    return this.verificationService.submitSellerVerification(userId, dto);
-  }
-
-  getVerificationStatus(userId: string) {
-    return this.verificationService.getLatestForUser(userId);
   }
 
   async getEffectivePermissions(
@@ -148,18 +129,6 @@ export class UsersService {
 
   unbanUser(actorId: string, actorRole: RbacRole, userId: string, banId: string) {
     return this.adminService.unbanUser(actorId, actorRole, userId, banId);
-  }
-
-  listPendingVerifications(page?: number, limit?: number) {
-    return this.verificationService.listPending(page, limit);
-  }
-
-  approveVerification(verificationId: string, reviewerId: string, dto?: unknown) {
-    return this.verificationService.approve(verificationId, reviewerId, dto);
-  }
-
-  rejectVerification(verificationId: string, reviewerId: string, dto?: unknown) {
-    return this.verificationService.reject(verificationId, reviewerId, dto);
   }
 
   getAuditLogs(query: unknown) {

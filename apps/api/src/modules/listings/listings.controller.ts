@@ -72,6 +72,12 @@ export class ListingsController {
   }
 
   @Public()
+  @Get('resolve/:compactId')
+  resolveCompactId(@Param('compactId') compactId: string) {
+    return this.listingsService.resolveListingIdByCompact(compactId);
+  }
+
+  @Public()
   @Get(':id/similar')
   findSimilar(@Param('id') id: string, @Query('limit') limit?: string) {
     return this.listingsService.findSimilar(

@@ -32,7 +32,7 @@ export function SellerConnectBanner({ className }: SellerConnectBannerProps) {
           : 'Connect your bank account via Stripe before buyers can purchase your listings.'}
       </p>
       <Link
-        href="/seller/earnings"
+        href="/account/earnings"
         className="mt-2 inline-block font-medium text-amber-950 underline hover:no-underline"
       >
         Go to earnings &amp; Stripe Connect →

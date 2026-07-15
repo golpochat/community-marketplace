@@ -300,6 +300,20 @@ API keys alone are not enough. The **platform** Stripe account must enroll in Co
 
 If you see *"You can only create new accounts if you've signed up for Connect"*, this step was skipped.
 
+### Connect onboarding branding (SellNearby look & feel)
+
+The Stripe-hosted payout form (phone, identity, bank) uses **platform branding from your Stripe Dashboard**, not from app code. Until this is configured, sellers see Stripe’s default purple theme.
+
+1. Open [Stripe Dashboard → Connect → Onboarding options → Branding](https://dashboard.stripe.com/settings/connect/onboarding-options) (repeat in **Live** mode before production).
+2. Set **Business name** to `SellNearby` (matches `@community-marketplace/config` `APP_SHORT_NAME`).
+3. Upload your **Icon** (square, at least 128×128 px) — use `/apps/web/public/brand/sellnearby/png/` assets or export from SVG.
+4. Set **Brand color** to `#0D9488` (SellNearby teal — see `packages/config/src/brand.ts` `BRAND_COLORS.primary`).
+5. Save, then run through **Account → Earnings → Continue to secure setup** again.
+
+Our app shows a **branded pre-flight screen** on `/account/earnings` before redirecting to Stripe, and returns sellers to `/account/earnings?connect=return` when finished. Canonical tokens live in `packages/config/src/stripe-connect-branding.ts`.
+
+> **Note:** Identity and bank collection stay on Stripe-hosted pages for compliance. Fully custom in-app KYC would require Stripe Embedded Connect — significantly more engineering for marginal UX gain at pilot stage.
+
 ### End-to-end payment test flow
 
 1. **Seller** — sign in as `seller@community.market`, open **Seller → Earnings**, click **Connect with Stripe**, complete Express onboarding (test business details are fine in test mode).

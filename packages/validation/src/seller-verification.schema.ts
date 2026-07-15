@@ -85,6 +85,7 @@ export const adminSellerVerificationListSchema = z.object({
   search: z.string().max(120).optional(),
   fromDate: z.string().optional(),
   toDate: z.string().optional(),
+  track: z.enum(['all', 'fast_track', 'standard']).optional(),
 });
 
 export const sellerReverificationSchema = z.object({

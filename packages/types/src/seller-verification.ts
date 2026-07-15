@@ -75,6 +75,15 @@ export interface SellerVerificationStatus {
   businessDetailsComplete?: boolean;
   isBusinessAccount?: boolean;
   businessStructure?: import('./verification').SellerBusinessStructure;
+  /**
+   * Own-account only — private legal identity for rehydrating the verification wizard.
+   * Never expose on public/storefront payloads.
+   */
+  legalName?: string;
+  registeredCompanyName?: string;
+  croNumber?: string;
+  /** Own-account phone for wizard rehydrate (E.164 or local format as stored). */
+  phone?: string;
   publicDisplayName?: string;
   businessName?: string;
   nudgeMessage?: string;
@@ -98,6 +107,30 @@ export type AdminSellerVerificationView =
   | 'rejected'
   | 'suspended';
 
+/** Target review window for paid fast-track cases (hours from submission). */
+export const FAST_TRACK_REVIEW_SLA_HOURS = 24;
+
+export function computeFastTrackReviewDueAt(submittedAt: string | Date): string {
+  const base = typeof submittedAt === 'string' ? new Date(submittedAt) : submittedAt;
+  return new Date(
+    base.getTime() + FAST_TRACK_REVIEW_SLA_HOURS * 60 * 60 * 1000,
+  ).toISOString();
+}
+
+/** Human-readable SLA label for admin/seller surfaces. */
+export function formatFastTrackSlaLabel(reviewDueAt: string, now: Date = new Date()): string {
+  const due = new Date(reviewDueAt);
+  const diffMs = due.getTime() - now.getTime();
+  if (diffMs >= 0) {
+    const hours = Math.ceil(diffMs / (60 * 60 * 1000));
+    return hours <= 1 ? 'Due within 1h' : `Due in ${hours}h`;
+  }
+  const overdueHours = Math.ceil(Math.abs(diffMs) / (60 * 60 * 1000));
+  return overdueHours <= 1 ? 'Overdue' : `Overdue ${overdueHours}h`;
+}
+
+export type AdminSellerVerificationTrackFilter = 'all' | 'fast_track' | 'standard';
+
 export interface AdminSellerVerificationRow {
   requestId?: string;
   userId: string;
@@ -114,6 +147,9 @@ export interface AdminSellerVerificationRow {
   submittedAt?: string;
   requestStatus?: 'pending' | 'approved' | 'rejected';
   priority?: boolean;
+  /** ISO timestamp — fast-track SLA target (submission + 24h). */
+  reviewDueAt?: string;
+  priorityActivatedAt?: string;
   sellerStatus: SellerStatus;
   verificationRequestedAt?: string;
   verificationCompletedAt?: string;
@@ -159,6 +195,8 @@ export const SELLER_VERIFICATION_MESSAGES = {
   UNDER_REVIEW: 'Your verification is under review.',
   APPROVED: 'Your verification was approved.',
   REJECTED_PREFIX: 'Your verification was rejected:',
+  FAST_TRACK_REQUEUE_GRANTED:
+    'Your next resubmission will receive one complimentary priority review (fast-track queue). Payment covers review speed, not approval.',
   SUSPENDED: 'Your seller account has been suspended.',
   REACTIVATED: 'Your seller account has been reactivated.',
   FORCE_REVERIFY: 'Your account requires re-verification.',

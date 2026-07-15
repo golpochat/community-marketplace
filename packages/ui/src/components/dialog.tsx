@@ -21,6 +21,8 @@ interface DialogProps {
   confirmDisabled?: boolean;
   /** Replaces the default cancel/confirm footer when provided. */
   footer?: React.ReactNode;
+  /** Renders above standard modals (nested confirmations). */
+  elevated?: boolean;
 }
 
 export function Dialog({
@@ -37,13 +39,15 @@ export function Dialog({
   confirmLoading = false,
   confirmDisabled = false,
   footer,
+  elevated = false,
 }: DialogProps) {
   if (!open) return null;
 
   const titleId = React.useId();
+  const layerClass = elevated ? 'z-[80]' : 'z-50';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className={cn('fixed inset-0 flex items-center justify-center p-4', layerClass)}>
       <button
         type="button"
         className="absolute inset-0 bg-black/50 backdrop-blur-[2px] transition-opacity duration-200"

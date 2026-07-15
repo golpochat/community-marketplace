@@ -28,10 +28,16 @@ export {
 export {
   MARKETPLACE_ROLES,
   ACCOUNT_DASHBOARD_PATH,
+  ACCOUNT_SELLING_PATH,
+  deriveAccountSellingPhase,
+  isSellerIdentityStepComplete,
+  shouldShowSellerNavItems,
   canActAsBuyer,
   canEnterSellerNamespace,
   hasLegacySellerRole,
   type MarketplaceRole,
+  type AccountSellingPhase,
+  type SellerOnboardingSnapshot,
 } from './marketplace-account';
 
 export {
@@ -168,7 +174,11 @@ export {
   SELLER_VERIFICATION_MESSAGES,
   REGISTRATION_SELLER_KIND_OPTIONS,
   isSellerVerified,
+  FAST_TRACK_REVIEW_SLA_HOURS,
+  computeFastTrackReviewDueAt,
+  formatFastTrackSlaLabel,
 } from './seller-verification';
+export type { AdminSellerVerificationTrackFilter } from './seller-verification';
 export type {
   UnifiedVerificationState,
   SellerBusinessStructure,

@@ -8,8 +8,8 @@ import {
   ROLE_PERMISSION_SEED,
   PERSONA_ROLE_PERMISSION_SEED,
   ROLE_SEED,
-  SUPER_ADMIN_BOOTSTRAP_USER_ID,
 } from '../rbac-seed.data';
+import { BOOTSTRAP_USERS } from '../bootstrap-users.seed.data';
 import { hashPassword } from './password-hash';
 import { assertRbacSeedAllowed } from './seed-environment';
 import { loadRbacSeedConfig, type RbacSeedConfig } from './seed-config';
@@ -18,12 +18,13 @@ export interface RbacSeedResult {
   rolesUpserted: number;
   permissionsUpserted: number;
   rolePermissionsUpserted: number;
-  superAdmin: {
+  bootstrapUsers: Array<{
     id: string;
     email: string;
+    role: string;
     created: boolean;
     passwordUpdated: boolean;
-  };
+  }>;
 }
 
 export interface RunRbacSeedOptions {
@@ -47,7 +48,7 @@ export async function runRbacSeed(
   const rolesUpserted = await seedRoles(prisma);
   const permissionsUpserted = await seedPermissions(prisma);
   const rolePermissionsUpserted = await seedRolePermissions(prisma);
-  const superAdmin = await seedSuperAdminUser(prisma, config);
+  const bootstrapUsers = await seedBootstrapUsers(prisma, config);
 
   const rolePermissionCounts = await summarizeRolePermissions(prisma);
 
@@ -55,7 +56,7 @@ export async function runRbacSeed(
     rolesUpserted,
     permissionsUpserted,
     rolePermissionsUpserted,
-    superAdmin,
+    bootstrapUsers,
   };
 
   console.log('[rbac-seed] Complete:', {
@@ -63,13 +64,16 @@ export async function runRbacSeed(
     permissionsUpserted,
     rolePermissionsUpserted,
     rolePermissionCounts,
-    superAdminEmail: superAdmin.email,
-    superAdminCreated: superAdmin.created,
+    bootstrapUsers: bootstrapUsers.map((user) => ({
+      email: user.email,
+      role: user.role,
+      created: user.created,
+    })),
   });
 
   if (config.NODE_ENV !== 'production') {
     console.warn(
-      `[rbac-seed] Bootstrap SUPER_ADMIN: ${superAdmin.email} — change RBAC_SUPER_ADMIN_PASSWORD after first login.`,
+      `[rbac-seed] Bootstrap accounts seeded — change default passwords after first login.`,
     );
   }
 
@@ -172,63 +176,87 @@ async function seedRolePermissions(prisma: PrismaClient): Promise<number> {
   return count;
 }
 
-async function seedSuperAdminUser(
+async function seedBootstrapUsers(
   prisma: PrismaClient,
   config: RbacSeedConfig,
-): Promise<RbacSeedResult['superAdmin']> {
-  const superAdminRole = await prisma.role.findUnique({
-    where: { code: 'SUPER_ADMIN' },
-  });
+): Promise<RbacSeedResult['bootstrapUsers']> {
+  const roles = await prisma.role.findMany();
+  const roleByCode = new Map(roles.map((role) => [role.code, role]));
+  const users: RbacSeedResult['bootstrapUsers'] = [];
 
-  if (!superAdminRole) {
-    throw new Error('SUPER_ADMIN role not found — run role seed first');
-  }
+  for (const entry of BOOTSTRAP_USERS) {
+    const role = roleByCode.get(entry.role);
+    if (!role) {
+      throw new Error(`Role ${entry.role} not found — run role seed first`);
+    }
 
-  const existing = await prisma.user.findUnique({
-    where: { email: config.RBAC_SUPER_ADMIN_EMAIL },
-  });
+    const email =
+      entry.role === 'SUPER_ADMIN' ? config.RBAC_SUPER_ADMIN_EMAIL : entry.email;
+    const password =
+      entry.role === 'SUPER_ADMIN' ? config.RBAC_SUPER_ADMIN_PASSWORD : entry.password;
+    const displayName =
+      entry.role === 'SUPER_ADMIN'
+        ? config.RBAC_SUPER_ADMIN_DISPLAY_NAME
+        : entry.displayName;
 
-  const passwordHash = hashPassword(config.RBAC_SUPER_ADMIN_PASSWORD);
-  const shouldUpdatePassword = config.RBAC_SEED_RESET_PASSWORD || !existing;
+    const existing =
+      (await prisma.user.findUnique({ where: { email } })) ??
+      (await prisma.user.findUnique({ where: { id: entry.id } }));
+    const passwordHash = hashPassword(password);
+    const shouldUpdatePassword = config.RBAC_SEED_RESET_PASSWORD || !existing;
 
-  if (existing) {
-    await prisma.user.update({
-      where: { id: existing.id },
-      data: {
-        primaryRoleId: superAdminRole.id,
-        displayName: config.RBAC_SUPER_ADMIN_DISPLAY_NAME,
-        status: 'active',
-        emailVerifiedAt: existing.emailVerifiedAt ?? new Date(),
-        ...(shouldUpdatePassword ? { passwordHash } : {}),
-      },
-    });
+    if (existing) {
+      await prisma.user.update({
+        where: { id: existing.id },
+        data: {
+          email,
+          primaryRoleId: role.id,
+          displayName,
+          status: 'active',
+          emailVerifiedAt: existing.emailVerifiedAt ?? new Date(),
+          phoneVerifiedAt: entry.phone ? (existing.phoneVerifiedAt ?? new Date()) : existing.phoneVerifiedAt,
+          profileCompleted: true,
+          ...(shouldUpdatePassword ? { passwordHash } : {}),
+        },
+      });
+    } else {
+      await prisma.user.create({
+        data: {
+          id: entry.id,
+          email,
+          passwordHash,
+          displayName,
+          primaryRoleId: role.id,
+          status: 'active',
+          emailVerifiedAt: new Date(),
+          phoneVerifiedAt: entry.phone ? new Date() : undefined,
+          profileCompleted: true,
+        },
+      });
+    }
 
-    return {
-      id: existing.id,
-      email: existing.email,
-      created: false,
+    if (entry.phone) {
+      const userId = existing?.id ?? entry.id;
+      await prisma.userProfile.deleteMany({
+        where: { phone: entry.phone, userId: { not: userId } },
+      });
+      await prisma.userProfile.upsert({
+        where: { userId },
+        create: { userId, phone: entry.phone },
+        update: { phone: entry.phone },
+      });
+    }
+
+    users.push({
+      id: existing?.id ?? entry.id,
+      email,
+      role: entry.role,
+      created: !existing,
       passwordUpdated: shouldUpdatePassword,
-    };
+    });
   }
 
-    const created = await prisma.user.create({
-      data: {
-        id: SUPER_ADMIN_BOOTSTRAP_USER_ID,
-        email: config.RBAC_SUPER_ADMIN_EMAIL,
-        passwordHash,
-        displayName: config.RBAC_SUPER_ADMIN_DISPLAY_NAME,
-        primaryRoleId: superAdminRole.id,
-        status: 'active',
-        emailVerifiedAt: new Date(),
-      },
-    });
-
-  return {
-    id: created.id,
-    email: created.email,
-    created: true,
-    passwordUpdated: true,
-  };
+  return users;
 }
 
 async function summarizeRolePermissions(prisma: PrismaClient): Promise<Record<string, number>> {

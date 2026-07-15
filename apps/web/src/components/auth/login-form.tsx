@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import { Button, Input, Label, PasswordInput } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
+import { navigateAfterAuth } from '@/lib/navigate-after-auth';
+import { getWebDashboardPathForRole } from '@/lib/rbac-routes';
 import { authService } from '@/services/auth.service';
 
 export function LoginForm() {
-  const router = useRouter();
   const { setAuth } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,10 +25,10 @@ export function LoginForm() {
     try {
       const response = await authService.login({ email, password });
       setAuth(response);
-      router.push(response.redirectPath);
+      navigateAfterAuth(response.redirectPath ?? getWebDashboardPathForRole(response.user.role));
+      // Keep loading UI until the browser leaves this page.
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
       setLoading(false);
     }
   }
@@ -70,7 +70,7 @@ export function LoginForm() {
         />
       </div>
       <Button type="submit" disabled={loading} className="w-full">
-        {loading ? 'Signing in...' : 'Sign in'}
+        {loading ? 'Redirecting…' : 'Sign in'}
       </Button>
     </form>
   );

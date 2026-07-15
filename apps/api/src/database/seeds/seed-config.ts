@@ -15,7 +15,7 @@ const seedEnvSchema = z.object({
     .enum(['true', 'false'])
     .default('false')
     .transform((value) => value === 'true'),
-  RBAC_SUPER_ADMIN_EMAIL: z.string().email().default('superadmin@community.market'),
+  RBAC_SUPER_ADMIN_EMAIL: z.string().email().default('superadmin@sellnearby.ie'),
   RBAC_SUPER_ADMIN_PASSWORD: z.string().min(8).default('ChangeMe!SuperAdmin1'),
   RBAC_SUPER_ADMIN_DISPLAY_NAME: z.string().min(1).default('Super Admin'),
   PILOT_USE_EXISTING_USERS: z

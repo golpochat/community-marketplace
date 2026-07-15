@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { EmailPlatformSettings, EmailProviderId, EmailSystemStatus } from '@community-marketplace/types';
-import { cn } from '@community-marketplace/ui';
+import { cn, useAppFeedback } from '@community-marketplace/ui';
 import { DashboardCard } from '@community-marketplace/ui-dashboard';
 
 import { emailAdminService } from '@/services/email-admin.service';
@@ -112,6 +112,7 @@ function SenderOverrideField({
 }
 
 export function AdminEmailSettingsCard() {
+  const feedback = useAppFeedback();
   const [status, setStatus] = useState<EmailSystemStatus | null>(null);
   const [draft, setDraft] = useState<EmailPlatformSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -119,7 +120,6 @@ export function AdminEmailSettingsCard() {
   const [testing, setTesting] = useState(false);
   const [testEmail, setTestEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -148,11 +148,10 @@ export function AdminEmailSettingsCard() {
     if (!draft) return;
     setSaving(true);
     setError(null);
-    setMessage(null);
     try {
       const updated = await emailAdminService.updateSettings(draft);
       setDraft(updated);
-      setMessage('Email settings saved.');
+      feedback.success('Email settings saved');
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save email settings');
@@ -166,13 +165,13 @@ export function AdminEmailSettingsCard() {
     if (!testEmail.trim()) return;
     setTesting(true);
     setError(null);
-    setMessage(null);
     try {
       const result = await emailAdminService.sendTest(testEmail.trim());
-      setMessage(
+      feedback.success(
+        result.sent ? 'Test email sent' : 'Test email logged',
         result.sent
-          ? `Test email sent via ${result.provider}.`
-          : `Test logged in stub mode (${result.provider}). Check API logs or configure provider keys in .env.`,
+          ? `Delivered via ${result.provider}.`
+          : `Logged in stub mode (${result.provider}). Check API logs or configure provider keys in .env.`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send test email');
@@ -320,7 +319,6 @@ export function AdminEmailSettingsCard() {
           </button>
         </div>
 
-        {message && <p className="text-sm text-green-700">{message}</p>}
         {error && <p className="text-sm text-red-600">{error}</p>}
       </form>
 

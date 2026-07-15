@@ -20,10 +20,7 @@
     "clean": "pnpm -r run clean && rimraf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "seed:rbac": "pnpm --filter @community-marketplace/api run seed:rbac",
-    "seed:dev-users": "pnpm --filter @community-marketplace/api run seed:dev-users",
-    "seed:test-data": "pnpm --filter @community-marketplace/api run seed:test-data",
-    "seed:pilot-data": "pnpm --filter @community-marketplace/api run seed:pilot-data",
-    "seed:all": "pnpm --filter @community-marketplace/api run seed:all",
+    "seed": "pnpm --filter @community-marketplace/api run seed",
     "stripe:listen": "stripe listen --forward-to localhost:4000/api/payments/webhooks/stripe",
     "docs:index": "node scripts/generate-docs-index.mjs"
   },

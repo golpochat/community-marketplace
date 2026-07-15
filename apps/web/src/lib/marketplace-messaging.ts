@@ -1,5 +1,5 @@
 import type { RbacRole } from '@community-marketplace/types';
-import { canEnterSellerNamespace } from '@community-marketplace/types';
+import { canEnterSellerNamespace, isAdminPanelRoleCode } from '@community-marketplace/types';
 
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
@@ -37,7 +37,9 @@ export function resolveNotificationInboxRole(
   if (!role) return null;
   if (role === 'MEMBER' || role === 'BUYER') return 'BUYER';
   if (role === 'SELLER') return 'SELLER';
-  if (role === 'ADMIN' || role === 'SUPER_ADMIN') return role;
+  if (role === 'SUPER_ADMIN') return 'SUPER_ADMIN';
+  // L2 personas (ACCOUNTS_ADMIN, etc.) use the shared admin inbox API.
+  if (isAdminPanelRoleCode(role)) return 'ADMIN';
   return null;
 }
 

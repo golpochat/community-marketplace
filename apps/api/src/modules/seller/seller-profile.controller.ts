@@ -1,12 +1,10 @@
-import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Patch } from '@nestjs/common';
 
-import { PERMISSIONS } from '@community-marketplace/types';
-import { updateProfileSchema, verificationDocumentUploadRequestSchema } from '@community-marketplace/validation';
+import { updateProfileSchema } from '@community-marketplace/validation';
 
-import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
+import { RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
-import { SellerVerificationDto } from '../users/dto/users.dto';
 import { UsersService } from '../users/users.service';
 
 @RequireRole('SELLER')
@@ -23,29 +21,5 @@ export class SellerProfileController {
   updateProfile(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     updateProfileSchema.parse(body);
     return this.usersService.updateProfile(user.id, user.role, user.id, body);
-  }
-
-  @RequirePermissions(PERMISSIONS.SUBMIT_VERIFICATION)
-  @Post('verification/upload-url')
-  createVerificationUploadUrl(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() body: unknown,
-  ) {
-    const parsed = verificationDocumentUploadRequestSchema.parse(body);
-    return this.usersService.createVerificationDocumentUploadUrl(user.id, parsed);
-  }
-
-  @RequirePermissions(PERMISSIONS.SUBMIT_VERIFICATION)
-  @Post('verification')
-  submitVerification(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: SellerVerificationDto,
-  ) {
-    return this.usersService.submitSellerVerification(user.id, dto);
-  }
-
-  @Get('verification')
-  getVerificationStatus(@CurrentUser() user: AuthenticatedUser) {
-    return this.usersService.getVerificationStatus(user.id);
   }
 }

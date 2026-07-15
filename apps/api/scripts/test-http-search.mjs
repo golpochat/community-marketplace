@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 config({ path: resolve(process.cwd(), '.env') });
 
 const baseUrl = 'http://localhost:4000/api';
-const email = process.env.RBAC_SUPER_ADMIN_EMAIL ?? 'superadmin@community.market';
+const email = process.env.RBAC_SUPER_ADMIN_EMAIL ?? 'superadmin@sellnearby.ie';
 const password = process.env.RBAC_SUPER_ADMIN_PASSWORD ?? 'ChangeMe!SuperAdmin1';
 
 async function main() {

@@ -1,12 +1,14 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 import { Button, Label, PasswordInput } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
+import { navigateAfterAuth } from '@/lib/navigate-after-auth';
+import { getWebDashboardPathForRole } from '@/lib/rbac-routes';
 import { authService } from '@/services/auth.service';
 
 export default function ResetPasswordPage() {
@@ -18,7 +20,6 @@ export default function ResetPasswordPage() {
 }
 
 function ResetPasswordContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth } = useAuth();
   const token = searchParams.get('token');
@@ -65,10 +66,11 @@ function ResetPasswordContent() {
     try {
       const response = await authService.resetPassword(token, password, confirmPassword);
       setAuth(response.login);
-      router.push(response.login.redirectPath);
+      navigateAfterAuth(
+        response.login.redirectPath ?? getWebDashboardPathForRole(response.login.user.role),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Password reset failed');
-    } finally {
       setSubmitting(false);
     }
   };

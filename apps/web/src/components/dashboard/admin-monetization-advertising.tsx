@@ -19,7 +19,8 @@ const MODULE_META: ModuleMeta[] = [
   {
     code: 'display_advertising',
     label: 'Display advertising',
-    description: 'Banner slots on the homepage, category browse, and search results.',
+    description:
+      'Banner slots on the homepage, category browse, and search results. Slot shell only today — self-serve paid creatives for external brands are future work.',
     settingsField: 'displayAdsEnabled',
     envNote: 'Also requires ADS_SYSTEM_ENABLED=true in API .env. Use ADS_PREVIEW_MODE to test layouts before publishing.',
   },
@@ -253,6 +254,17 @@ export function AdminMonetizationAdvertising({
             checkout.
           </li>
         </ol>
+      </DashboardCard>
+
+      <DashboardCard title="Future — external brand ads">
+        <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+          Self-serve paid display advertising for outside brands/sponsors (upload creative, pick
+          placement, pay) is{' '}
+          <span className="font-medium text-[hsl(var(--dashboard-main-fg))]">not implemented</span>
+          . Today this module only reserves and previews banner slots. Seller boosts and featured
+          placements remain on the Listing promotions tab. Tracked in{' '}
+          <code className="text-xs">docs/product/monetization.md</code>.
+        </p>
       </DashboardCard>
     </div>
   );

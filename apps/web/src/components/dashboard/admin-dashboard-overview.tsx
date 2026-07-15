@@ -24,8 +24,16 @@ export function AdminDashboardOverview({ stats }: AdminDashboardOverviewProps) {
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
           Needs attention
         </h2>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
           <StatCard label="Pending Verifications" value={String(stats.pendingVerifications)} />
+          <StatCard
+            label="Fast-track pending"
+            value={String(stats.pendingFastTrackVerifications ?? 0)}
+          />
+          <StatCard
+            label="Fast-track overdue"
+            value={String(stats.overdueFastTrackVerifications ?? 0)}
+          />
           <StatCard label="Pending Reports" value={String(stats.pendingReports)} />
           <StatCard label="Active Bans" value={String(stats.activeBans)} />
         </div>

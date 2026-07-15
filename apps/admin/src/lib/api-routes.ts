@@ -69,9 +69,6 @@ export const ADMIN_API_ROUTES = {
     userBan: `${API_NAMESPACES.ADMIN}/users/ban`,
     userUnban: (userId: string, banId: string) =>
       `${API_NAMESPACES.ADMIN}/users/${userId}/bans/${banId}/unban`,
-    verificationsPending: `${API_NAMESPACES.ADMIN}/users/verifications/pending`,
-    verificationApprove: (id: string) => `${API_NAMESPACES.ADMIN}/users/verifications/${id}/approve`,
-    verificationReject: (id: string) => `${API_NAMESPACES.ADMIN}/users/verifications/${id}/reject`,
     userAuditLogs: `${API_NAMESPACES.ADMIN}/users/audit-logs`,
     listings: `${API_NAMESPACES.ADMIN}/listings`,
     listing: (id: string) => `${API_NAMESPACES.ADMIN}/listings/${id}`,

@@ -91,6 +91,6 @@ export const PERSONA_ROLE_PERMISSION_SEED: Readonly<
 export const SUPER_ADMIN_BOOTSTRAP_USER_ID = '00000000-0000-4000-8000-000000000010';
 
 export const SUPER_ADMIN_BOOTSTRAP_DEFAULTS = {
-  email: 'superadmin@community.market',
+  email: 'superadmin@sellnearby.ie',
   displayName: 'Super Admin',
 } as const;

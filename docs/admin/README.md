@@ -30,7 +30,7 @@ Credentials: [dev-credentials.md](../dev-credentials.md)
 |--------|-------|------------|
 | Dashboard | — | `view_platform_stats` |
 | [User management](./user-management.md) | Suspend, list, filter | `view_users` |
-| [Seller verification](./seller-verification.md) | Approve/reject KYC | `approve_verification` |
+| [Seller verification](./seller-verification.md) | Approve/reject KYC | `review_seller_verification` |
 | [Listings & moderation](./listings-moderation.md) | Ban listings, reports | `view_listings` |
 | [Payments](./payments.md) | Refunds, disputes | `view_payments` |
 | [Search](./search.md) | Reindex, health | `manage_search_index` |

@@ -15,19 +15,19 @@ const STEPS = [
     id: 'photo',
     title: 'Add a profile photo',
     description: 'Optional — helps neighbours recognise you.',
-    href: '/seller/settings',
+    href: '/account/settings',
   },
   {
     id: 'location',
     title: 'Confirm your area',
     description: 'So we can show listings near you.',
-    href: '/seller/settings',
+    href: '/account/settings',
   },
   {
     id: 'list',
     title: 'Post your first item',
     description: 'List your first item in under 1 minute.',
-    href: '/seller/listings/create',
+    href: '/account/listings/create',
     cta: 'List your first item in under 1 minute',
   },
 ] as const;
@@ -95,7 +95,7 @@ export function OnboardingFlow() {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <Button onClick={() => router.push('/seller/listings/create')}>Start selling</Button>
+          <Button onClick={() => router.push('/account/listings/create')}>Start selling</Button>
           <Button variant="outline" onClick={() => setDismissed(true)}>
             Skip for now
           </Button>

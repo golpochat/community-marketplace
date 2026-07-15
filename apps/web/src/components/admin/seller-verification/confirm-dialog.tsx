@@ -9,6 +9,7 @@ interface ConfirmDialogProps {
   confirmLabel?: string;
   tone?: 'primary' | 'danger';
   loading?: boolean;
+  elevated?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -20,12 +21,14 @@ export function ConfirmDialog({
   confirmLabel = 'Confirm',
   tone = 'primary',
   loading = false,
+  elevated = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
   return (
     <Dialog
       open={open}
+      elevated={elevated}
       onOpenChange={(next) => {
         if (!next) onCancel();
       }}

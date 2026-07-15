@@ -21,7 +21,7 @@ Seeds roles, permissions, role-permission mappings, and a bootstrap `SUPER_ADMIN
 | `RBAC_SEED_ENABLED` | `true` | Master switch |
 | `RBAC_SEED_FORCE` | `false` | Allow seed in production (recovery only) |
 | `RBAC_SEED_RESET_PASSWORD` | `false` | Re-hash super-admin password on re-run |
-| `RBAC_SUPER_ADMIN_EMAIL` | `superadmin@community.market` | Bootstrap admin email |
+| `RBAC_SUPER_ADMIN_EMAIL` | `superadmin@sellnearby.ie` | Bootstrap admin email |
 | `RBAC_SUPER_ADMIN_PASSWORD` | `ChangeMe!SuperAdmin1` | Bootstrap password (change after first login) |
 | `RBAC_SUPER_ADMIN_DISPLAY_NAME` | `Super Admin` | Display name |
 

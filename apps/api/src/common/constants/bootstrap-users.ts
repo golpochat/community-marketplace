@@ -1,11 +1,11 @@
 import { ForbiddenException } from '@nestjs/common';
 
-import { DEV_BOOTSTRAP_USER_IDS } from '../../database/dev-users.seed.data';
+import { BOOTSTRAP_USER_IDS } from '../../database/bootstrap-users.seed.data';
 
-export { DEV_BOOTSTRAP_USER_IDS };
+export { BOOTSTRAP_USER_IDS, DEV_BOOTSTRAP_USER_IDS } from '../../database/bootstrap-users.seed.data';
 
 export function isBootstrapSuperAdmin(userId: string): boolean {
-  return userId === DEV_BOOTSTRAP_USER_IDS.SUPER_ADMIN;
+  return userId === BOOTSTRAP_USER_IDS.SUPER_ADMIN;
 }
 
 /** The seeded SUPER_ADMIN is singleton — cannot be suspended, banned, deleted, or reassigned. */

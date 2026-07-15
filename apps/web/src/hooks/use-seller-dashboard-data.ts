@@ -40,7 +40,8 @@ const EMPTY_STATS: SellerDashboardStats = {
   totalViews: 0,
 };
 
-export function useSellerDashboardData() {
+export function useSellerDashboardData(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true;
   const [data, setData] = useState<SellerDashboardData>({
     profile: null,
     verification: null,
@@ -52,6 +53,19 @@ export function useSellerDashboardData() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (!enabled) {
+      setData({
+        profile: null,
+        verification: null,
+        stores: [],
+        listingsSummary: EMPTY_SUMMARY,
+        stats: EMPTY_STATS,
+      });
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -117,7 +131,7 @@ export function useSellerDashboardData() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     void load();

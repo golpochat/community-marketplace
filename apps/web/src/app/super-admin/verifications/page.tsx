@@ -1,7 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { AdminVerificationsPage } from '@/components/dashboard/admin-resource-pages';
-
-export default function Page() {
-  return <AdminVerificationsPage role="SUPER_ADMIN" />;
+/** Legacy Account Verifications queue removed — seller KYC lives here. */
+export default function SuperAdminVerificationsRedirectPage() {
+  redirect('/super-admin/seller-verification/pending');
 }

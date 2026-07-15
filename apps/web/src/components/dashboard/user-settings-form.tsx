@@ -8,7 +8,7 @@ import type {
   PrivacySettings,
   UserSettings,
 } from '@community-marketplace/types';
-import { Button, Label, Select, cn } from '@community-marketplace/ui';
+import { Button, Label, Select, cn, useAppFeedback } from '@community-marketplace/ui';
 import { Card, PageHeader } from '@community-marketplace/ui-dashboard';
 import { formatListedAgo } from '@community-marketplace/utils';
 
@@ -124,11 +124,11 @@ export function UserSettingsForm({
     [isStaff],
   );
 
+  const feedback = useAppFeedback();
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -189,7 +189,6 @@ export function UserSettingsForm({
     if (!settings) return;
     setSaving(true);
     setError(null);
-    setMessage(null);
     try {
       const updated = await userService.updateMySettings({
         notificationPreferences: settings.notificationPreferences,
@@ -197,7 +196,7 @@ export function UserSettingsForm({
         communicationPreferences: settings.communicationPreferences,
       });
       setSettings(updated);
-      setMessage('Settings saved.');
+      feedback.success('Settings saved');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings');
     } finally {
@@ -342,7 +341,6 @@ export function UserSettingsForm({
               Last updated {formatListedAgo(settings.updatedAt)}
             </p>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              {message && <p className="text-sm text-green-700">{message}</p>}
               <Button type="button" disabled={saving} onClick={() => void handleSave()}>
                 {saving ? 'Saving…' : 'Save settings'}
               </Button>

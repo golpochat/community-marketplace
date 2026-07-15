@@ -8,7 +8,6 @@ import type {
   SellerStore,
   SellerStoresOverview,
   UserProfile,
-  UserVerification,
 } from '@community-marketplace/types';
 
 import { apiClient } from '@/lib/api-client';
@@ -226,39 +225,6 @@ export const sellerService = {
       body: JSON.stringify(body),
     });
     return response.data;
-  },
-
-  getVerification: () => apiClient<UserVerification | null>(`${WEB_API_ROUTES.seller.profile}/verification`),
-
-  async requestVerificationDocumentUploadUrl(file: Pick<File, 'type' | 'name'>) {
-    const response = await apiClient<ListingUploadUrlResponse>(
-      `${WEB_API_ROUTES.seller.profile}/verification/upload-url`,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          contentType: file.type,
-          fileName: file.name,
-        }),
-      },
-    );
-    return response.data;
-  },
-
-  async uploadVerificationDocument(file: File): Promise<string> {
-    const upload = await this.requestVerificationDocumentUploadUrl(file);
-    await fetch(upload.uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type },
-    });
-    return upload.publicUrl;
-  },
-
-  submitVerification(body: Record<string, unknown>) {
-    return apiClient<UserVerification>(`${WEB_API_ROUTES.seller.profile}/verification`, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
   },
 
   async getListingReview(listingId: string): Promise<ListingReviewContext> {

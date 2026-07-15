@@ -89,7 +89,6 @@ interface AdminPlatformGovernanceCardProps {
   status: PlatformGovernanceStatus;
   draft: PlatformGovernanceSettings;
   saving: boolean;
-  message: string | null;
   error: string | null;
   onDraftChange: (draft: PlatformGovernanceSettings) => void;
   onSave: (event: React.FormEvent) => void;
@@ -99,7 +98,6 @@ export function AdminPlatformGovernanceCard({
   status,
   draft,
   saving,
-  message,
   error,
   onDraftChange,
   onSave,
@@ -261,7 +259,6 @@ export function AdminPlatformGovernanceCard({
           {saving ? 'Saving…' : 'Save platform settings'}
         </button>
 
-        {message && <p className="text-sm text-green-700">{message}</p>}
         {error && <p className="text-sm text-red-600">{error}</p>}
       </form>
     </DashboardCard>

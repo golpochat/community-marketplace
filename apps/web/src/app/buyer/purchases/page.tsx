@@ -7,6 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import type { BuyerStatementIntentResponse, BuyerStatementStatusResponse, ListingSummary, Payment, PaymentIntentResponse, PendingReviewItem, CashbackEstimate } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
+import { useAppFeedback } from '@community-marketplace/ui';
 
 import { StripeCheckoutPanel } from '@/components/payments/stripe-checkout-form';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
@@ -54,13 +55,13 @@ export default function BuyerPurchasesPage() {
 
 function BuyerPurchasesContent() {
   const searchParams = useSearchParams();
+  const feedback = useAppFeedback();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [historyTotal, setHistoryTotal] = useState(0);
   const [payableListings, setPayableListings] = useState<PayableListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
   const [selectedListingId, setSelectedListingId] = useState('');
   const [intent, setIntent] = useState<PaymentIntentResponse | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -136,11 +137,15 @@ function BuyerPurchasesContent() {
 
   useEffect(() => {
     if (searchParams.get('checkout') === 'success') {
-      setCheckoutMessage('Payment successful. Your purchase will appear in history shortly.');
+      feedback.success(
+        'Payment successful',
+        'Your purchase will appear in history shortly.',
+      );
       void loadHistory();
     } else if (searchParams.get('checkout') === 'cancelled') {
-      setCheckoutMessage('Checkout was cancelled. You can try again when ready.');
+      feedback.info('Checkout cancelled', 'You can try again when ready.');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- show once per checkout redirect
   }, [searchParams, loadHistory]);
 
   useEffect(() => {
@@ -240,7 +245,10 @@ function BuyerPurchasesContent() {
   async function handleStatementPaymentSuccess() {
     setStatementIntent(null);
     await loadStatementStatus();
-    setCheckoutMessage('Statement unlocked. You can download it below in PDF, CSV, or Excel.');
+    feedback.success(
+      'Statement unlocked',
+      'You can download it below in PDF, CSV, or Excel.',
+    );
   }
 
   async function handleRefundSubmit(reason?: string) {
@@ -265,11 +273,6 @@ function BuyerPurchasesContent() {
       <PageHeader title="Purchases" description="Initiate and track your purchases." />
 
       {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
-      {checkoutMessage && (
-        <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
-          {checkoutMessage}
-        </p>
-      )}
 
       {visiblePendingReview && (
         <div className="mb-6">

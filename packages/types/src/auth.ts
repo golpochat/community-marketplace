@@ -1,5 +1,6 @@
-import type { RbacRole } from './rbac';
+import type { RbacRole, RoleCodeValue } from './rbac';
 import { ACCOUNT_DASHBOARD_PATH } from './marketplace-account';
+import { isAdminPersonaRoleCode } from './admin-persona-codes';
 import type { User } from './user';
 
 export type OtpChannel = 'email' | 'phone';
@@ -185,8 +186,11 @@ const LOGIN_APP_TARGETS: Record<RbacRole, LoginAppTarget> = {
   BUYER: 'web',
 };
 
-export function getLoginRedirectPath(role: RbacRole): string {
-  return LOGIN_REDIRECT_PATHS[role];
+export function getLoginRedirectPath(role: RoleCodeValue): string {
+  if (role in LOGIN_REDIRECT_PATHS) {
+    return LOGIN_REDIRECT_PATHS[role as RbacRole];
+  }
+  return getPanelLoginRedirectPath(role);
 }
 
 /** Redirect path for panel operators (ADMIN + custom level-2 roles). */
@@ -198,6 +202,12 @@ export function getPanelLoginRedirectPath(roleCode: string): string {
   return '/admin/dashboard';
 }
 
-export function getLoginAppTarget(role: RbacRole): LoginAppTarget {
-  return LOGIN_APP_TARGETS[role];
+export function getLoginAppTarget(role: RoleCodeValue): LoginAppTarget {
+  if (role in LOGIN_APP_TARGETS) {
+    return LOGIN_APP_TARGETS[role as RbacRole];
+  }
+  if (role === 'SUPER_ADMIN' || role === 'ADMIN' || isAdminPersonaRoleCode(role)) {
+    return 'web';
+  }
+  return 'web';
 }

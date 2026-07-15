@@ -1,6 +1,7 @@
 import type { ApiResponse, Listing, ListingSummary } from '@community-marketplace/types';
 
 import { unwrapApiResponse } from '@/lib/normalize-api-response';
+import { extractListingCompactId, parseListingRouteParam } from '@/lib/listing-slug';
 
 function getInternalApiBase(): string {
   const internal = process.env.INTERNAL_API_URL;
@@ -17,6 +18,27 @@ export function listingCacheTag(listingId: string): string {
 export interface FetchListingOptions {
   /** When false, skips view-count increment (e.g. OG metadata). Default true. */
   trackView?: boolean;
+}
+
+export async function resolveListingIdFromRouteParam(param: string): Promise<string | null> {
+  const directId = parseListingRouteParam(param);
+  if (directId) return directId;
+
+  const compactId = extractListingCompactId(param);
+  if (!compactId) return null;
+
+  try {
+    const response = await fetch(`${getInternalApiBase()}/listings/resolve/${compactId}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return null;
+
+    const json = (await response.json()) as ApiResponse<{ id: string }>;
+    return unwrapApiResponse(json).data?.id ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchListingById(

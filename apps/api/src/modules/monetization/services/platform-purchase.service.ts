@@ -29,7 +29,14 @@ import type {
   CreateStoreSlotIntentInput,
 } from '@community-marketplace/validation';
 
+import { computeFastTrackReviewDueAt } from '@community-marketplace/types';
+
 import { PrismaService } from '../../../database/prisma.service';
+import {
+  FAST_TRACK_REQUEUE_APPLIED_KEY,
+  FAST_TRACK_REQUEUE_METADATA_KEY,
+  readFastTrackPurchaseMetadata,
+} from '../lib/fast-track-purchase.lib';
 import { EventBusService } from '../../../events/event-bus.service';
 import { LoggerLib } from '../../../libs/logger.lib';
 import { StripeConnectService } from '../../payments/services/stripe-connect.service';
@@ -233,6 +240,16 @@ export class PlatformPurchaseService {
         user: { verificationRequestedAt: { not: null } },
       },
       orderBy: { createdAt: 'desc' },
+      select: { priority: true, slaDueAt: true },
+    });
+
+    const latestFastTrackPurchase = await this.prisma.platformPurchase.findFirst({
+      where: {
+        userId: sellerId,
+        type: 'fast_track_verification',
+        status: 'succeeded',
+      },
+      orderBy: { fulfilledAt: 'desc' },
     });
 
     const pendingPurchase = await this.prisma.platformPurchase.findFirst({
@@ -246,7 +263,7 @@ export class PlatformPurchaseService {
 
     const user = await this.prisma.user.findUniqueOrThrow({
       where: { id: sellerId },
-      select: { sellerStatus: true },
+      select: { sellerStatus: true, verificationRequestedAt: true },
     });
 
     const { eligible, reason, nextEligibleAt } = await this.evaluateFastTrackEligibility(
@@ -255,13 +272,27 @@ export class PlatformPurchaseService {
       enabled,
     );
 
+    const hasPriority = pendingRequest?.priority ?? false;
+    const purchaseMeta = latestFastTrackPurchase
+      ? readFastTrackPurchaseMetadata(latestFastTrackPurchase.metadata)
+      : {};
+    const hasPriorityRequeue =
+      purchaseMeta[FAST_TRACK_REQUEUE_METADATA_KEY] === true &&
+      purchaseMeta[FAST_TRACK_REQUEUE_APPLIED_KEY] !== true;
+
     return {
       enabled,
       currency: settings.pricing.currency,
       price,
       eligible,
       reason,
-      hasPriority: pendingRequest?.priority ?? false,
+      hasPriority,
+      priorityReviewDueAt:
+        pendingRequest?.slaDueAt?.toISOString() ??
+        (hasPriority && user.verificationRequestedAt
+          ? computeFastTrackReviewDueAt(user.verificationRequestedAt)
+          : undefined),
+      hasPriorityRequeue,
       pendingPurchase: pendingPurchase
         ? mapPlatformPurchase(pendingPurchase)
         : undefined,

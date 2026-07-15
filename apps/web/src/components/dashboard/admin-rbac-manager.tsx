@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { RBAC_PERMISSION_SCOPES, RBAC_ROLE_TEMPLATES } from '@community-marketplace/types';
-import { Button, Input, Label } from '@community-marketplace/ui';
+import { Button, Input, Label, useAppFeedback } from '@community-marketplace/ui';
 import { Card, IconActionButton, IconActionGroup } from '@community-marketplace/ui-dashboard';
 
 import { DataTable } from '@/components/dashboard/async-resource';
@@ -240,6 +240,7 @@ const RBAC_MAIN_TABS: Array<{ id: RbacMainTab; label: string }> = [
 ];
 
 export function AdminRbacManager({ role }: AdminRbacManagerProps) {
+  const feedback = useAppFeedback();
   const [roles, setRoles] = useState<AdminRbacRoleRow[]>([]);
   const [permissions, setPermissions] = useState<AdminRbacPermissionRow[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
@@ -250,7 +251,6 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
   const [saving, setSaving] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
@@ -391,7 +391,6 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
   async function handleSavePermissions() {
     if (!selectedRole) return;
     setSaving(true);
-    setMessage(null);
     setError(null);
     try {
       const permissionIds = permissions
@@ -399,7 +398,7 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
         .map((p) => p.id);
       await adminService.syncRbacRolePermissions(role, selectedRole.id, permissionIds);
       setAssignedCodes(new Set(draftCodes));
-      setMessage(`Permissions saved for ${selectedRole.name}.`);
+      feedback.success('Permissions saved', selectedRole.name);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save permissions');
     } finally {
@@ -414,7 +413,6 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
     }
     setCreating(true);
     setError(null);
-    setMessage(null);
     try {
       const created = await adminService.createRbacRole(role, {
         name: newName.trim(),
@@ -430,7 +428,7 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
         setNewCode('');
         setNewDescription('');
         setNewTemplate('blank');
-        setMessage(`Role "${created.name}" created.`);
+        feedback.success('Role created', created.name);
         setActiveMainTab('permissions');
       }
       await loadCatalog();
@@ -451,7 +449,7 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
     setError(null);
     try {
       await adminService.deleteRbacRole(role, selectedRole.id);
-      setMessage(`Role "${selectedRole.name}" deleted.`);
+      feedback.success('Role deleted', selectedRole.name);
       setSelectedRoleId(null);
       setShowDeleteRoleConfirm(false);
       await loadCatalog();
@@ -478,11 +476,6 @@ export function AdminRbacManager({ role }: AdminRbacManagerProps) {
       {error ? (
         <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}
-        </div>
-      ) : null}
-      {message ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          {message}
         </div>
       ) : null}
 

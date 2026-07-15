@@ -30,6 +30,7 @@ import {
   ListingStatusBadge,
   TruncatedText,
 } from "@community-marketplace/ui-dashboard";
+import { useAppFeedback } from "@community-marketplace/ui";
 
 import {
   DashboardPageShell,
@@ -63,6 +64,7 @@ import {
   useSellerListingGate,
 } from "@/hooks/use-seller-listing-gate";
 import { resolveVerificationNudge } from "@/lib/verification-nudge";
+import { WEB_APP_ROUTES } from "@/lib/rbac-routes";
 import {
   ListingFormRouter,
   type SellerCategoryOption,
@@ -100,7 +102,7 @@ function buildListingCreatePayload(
   const categoryId = data.categoryId || categories[0]?.id;
   if (!categoryId) {
     throw new Error(
-      "No categories are available. Run `pnpm seed:dev-users` from the repo root, then refresh this page.",
+      "No categories are available. Run `pnpm seed` from the repo root, then refresh this page.",
     );
   }
   const salePrice = Number(data.salePrice);
@@ -665,6 +667,8 @@ export function SellerVerificationPage() {
     setSubmitting(true);
     setError(null);
     try {
+      await sellerVerificationService.start();
+
       const [idDocumentPath, selfiePath, addressDocumentPath] = await Promise.all([
         sellerVerificationService.uploadDocument(files.idDocument, "id"),
         sellerVerificationService.uploadDocument(files.selfie, "selfie"),
@@ -881,7 +885,7 @@ export function SellerCreateListingPage() {
         setCreateNudge(resolveVerificationNudge(status));
 
         if (blocked && status.sellerStatus === "verification_required") {
-          router.replace("/seller/verification");
+          router.replace(WEB_APP_ROUTES.accountVerification);
         }
       })
       .catch(() => undefined);
@@ -897,7 +901,7 @@ export function SellerCreateListingPage() {
         if (cancelled) return;
         if (cats.length === 0) {
           setCategoriesError(
-            "No categories are configured. Run `pnpm seed:dev-users` from the repo root, then refresh this page.",
+            "No categories are configured. Run `pnpm seed` from the repo root, then refresh this page.",
           );
           setCategories([]);
           return;
@@ -1078,6 +1082,7 @@ export function SellerEditListingPage({
   duplicatedHint?: boolean;
 }) {
   const router = useRouter();
+  const feedback = useAppFeedback();
   const { user } = useAuth();
   const [categories, setCategories] = useState<SellerCategoryOption[]>([]);
   const [initialData, setInitialData] =
@@ -1106,8 +1111,6 @@ export function SellerEditListingPage({
   const [priceReviewNotes, setPriceReviewNotes] = useState<
     string | undefined
   >();
-  const [deliveryMessage, setDeliveryMessage] = useState<string | null>(null);
-  const [pricingMessage, setPricingMessage] = useState<string | null>(null);
   const [existingImages, setExistingImages] = useState<Listing["images"]>([]);
   const [removingImageId, setRemovingImageId] = useState<string | null>(null);
   const [reorderingImages, setReorderingImages] = useState(false);
@@ -1338,16 +1341,6 @@ export function SellerEditListingPage({
           </button>
         </div>
       )}
-      {deliveryMessage && (
-        <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
-          {deliveryMessage}
-        </p>
-      )}
-      {pricingMessage && (
-        <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
-          {pricingMessage}
-        </p>
-      )}
       {listingStatus &&
         (listingStatus === "draft" ||
           listingStatus === "pending_review" ||
@@ -1404,13 +1397,13 @@ export function SellerEditListingPage({
             onGenericSubmit={(data) => void handleGenericSubmit(data)}
             onVehicleSubmit={(data) => void handleVehicleSubmit(data)}
             onDeliveryUpdated={({ message }) => {
-              setDeliveryMessage(message);
+              feedback.success(message);
               setDeliveryReviewStatus(
                 message.includes("pending") ? "pending-review" : "none",
               );
             }}
             onPricingUpdated={({ message, status }) => {
-              setPricingMessage(message);
+              feedback.success(message);
               if (status === "pending-review")
                 setPriceReviewStatus("pending-review");
             }}

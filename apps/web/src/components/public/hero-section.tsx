@@ -75,9 +75,9 @@ export function HeroSection() {
                 </span>
               </Link>
             ) : (
-              <Link href={WEB_APP_ROUTES.register}>
+              <Link href={WEB_APP_ROUTES.registerSeller}>
                 <span className="btn-brand-accent inline-flex h-12 w-full items-center justify-center px-8 text-base sm:w-auto">
-                  Join free
+                  Start selling
                 </span>
               </Link>
             )}

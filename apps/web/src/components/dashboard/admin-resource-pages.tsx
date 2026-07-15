@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import type { Category, ListingStatus, ModerationReport, Payment, PaymentRefund, PlatformGovernanceSettings, PlatformGovernanceStatus, SuperAdminActivityEvent, UserProfile, UserVerification } from '@community-marketplace/types';
+import type { Category, ListingStatus, ModerationReport, Payment, PaymentRefund, PlatformGovernanceSettings, PlatformGovernanceStatus, SuperAdminActivityEvent, UserProfile } from '@community-marketplace/types';
 import { isPrivilegedSystemRole } from '@community-marketplace/types';
 import { formatCurrency, formatDateTime } from '@community-marketplace/utils';
 import {
@@ -13,7 +13,9 @@ import {
   TruncatedText,
 } from '@community-marketplace/ui-dashboard';
 
-import { FraudReasonDialog } from '@/components/admin/fraud/fraud-reason-dialog';
+import { useAppFeedback } from '@community-marketplace/ui';
+
+import { ReasonPromptDialog } from '@/components/shared/reason-prompt-dialog';
 import { AdminRbacManager } from '@/components/dashboard/admin-rbac-manager';
 import { AdminEmailSettingsCard } from '@/components/dashboard/admin-email-settings';
 import { AdminPlatformGovernanceCard } from '@/components/dashboard/admin-platform-governance';
@@ -22,10 +24,6 @@ import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
 import { AdminListingReviewDialog } from '@/components/dashboard/admin-listing-review-dialog';
 import { AdminListingStatusHistoryDialog } from '@/components/dashboard/admin-listing-status-history-dialog';
 import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
-import {
-  AdminToastStack,
-  useAdminToast,
-} from '@/components/admin/seller-verification/admin-toast';
 import { ConfirmDialog } from '@/components/admin/seller-verification/confirm-dialog';
 import {
   UserModerationModal,
@@ -60,7 +58,7 @@ type UserStatusFilter = 'active' | 'inactive' | 'suspended' | '';
 type UserRoleFilter = 'MEMBER' | 'BUYER' | 'SELLER' | 'ADMIN' | '';
 
 export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
-  const { toasts, push, dismiss } = useAdminToast();
+  const feedback = useAppFeedback();
   const [actingUserId, setActingUserId] = useState<string | null>(null);
   const [moderationTarget, setModerationTarget] = useState<{
     user: UserProfile;
@@ -102,7 +100,7 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
     try {
       if (action === 'suspend') {
         await adminService.suspendUser(role, user.id, payload.reason || undefined);
-        push(`${user.email} has been suspended.`, 'success');
+        feedback.success('User suspended', `${user.email} can no longer access the marketplace.`);
       } else {
         await adminService.banUser(
           role,
@@ -111,14 +109,14 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
           payload.reason || undefined,
           payload.expiresAt,
         );
-        push(`${user.email} has been banned.`, 'success');
+        feedback.success('User banned', `${user.email} has been banned.`);
       }
       setModerationTarget(null);
       await reload();
     } catch (err) {
-      push(
-        err instanceof Error ? err.message : `Failed to ${action} user`,
-        'error',
+      feedback.error(
+        `Failed to ${action} user`,
+        err instanceof Error ? err.message : 'Please try again.',
       );
     } finally {
       setActingUserId(null);
@@ -135,11 +133,14 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
         await adminService.unbanUser(role, user.id, ban.id);
       }
       await adminService.unsuspendUser(role, user.id);
-      push(`${user.email} has been reinstated.`, 'success');
+      feedback.success('User reinstated', `${user.email} can sign in again.`);
       setReinstateTarget(null);
       await reload();
     } catch (err) {
-      push(err instanceof Error ? err.message : 'Failed to reinstate user', 'error');
+      feedback.error(
+        'Failed to reinstate user',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActingUserId(null);
     }
@@ -294,7 +295,6 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
         }}
       />
 
-      <AdminToastStack toasts={toasts} onDismiss={dismiss} />
 
       <ConfirmDialog
         open={reinstateTarget != null}
@@ -317,9 +317,16 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
+  const feedback = useAppFeedback();
   const [actingListingId, setActingListingId] = useState<string | null>(null);
   const [reviewListingId, setReviewListingId] = useState<string | null>(null);
   const [historyListing, setHistoryListing] = useState<{ id: string; title: string } | null>(null);
+  const [listingPrompt, setListingPrompt] = useState<
+    | { kind: 'reject'; listingId: string }
+    | { kind: 'remove'; listingId: string }
+    | { kind: 'restore'; listingId: string }
+    | null
+  >(null);
   const [statusFilter, setStatusFilter] = useState<ListingStatus | ''>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -351,10 +358,41 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
     setActingListingId(listingId);
     try {
       await adminService.approveListing(role, listingId);
+      feedback.success('Listing approved', 'The seller can publish once other checks pass.');
       await reload();
       if (reviewListingId === listingId) setReviewListingId(null);
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to approve listing');
+      feedback.error(
+        'Failed to approve listing',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
+    } finally {
+      setActingListingId(null);
+    }
+  }
+
+  async function handleListingPromptConfirm(value: string) {
+    if (!listingPrompt) return;
+    setActingListingId(listingPrompt.listingId);
+    try {
+      if (listingPrompt.kind === 'reject') {
+        await adminService.rejectListing(role, listingPrompt.listingId, value);
+        feedback.success('Listing rejected', 'The seller has been notified.');
+      } else if (listingPrompt.kind === 'remove') {
+        await adminService.removeListing(role, listingPrompt.listingId, value || undefined);
+        feedback.success('Listing removed', 'The listing is no longer visible.');
+      } else {
+        const targetStatus = value === 'draft' ? 'draft' : 'expired';
+        await adminService.restoreListing(role, listingPrompt.listingId, targetStatus);
+        feedback.success('Listing restored', `Restored as ${targetStatus}.`);
+      }
+      setListingPrompt(null);
+      await reload();
+    } catch (err) {
+      feedback.error(
+        'Listing action failed',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActingListingId(null);
     }
@@ -394,14 +432,7 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
               label="Reject listing"
               variant="danger"
               disabled={isActing}
-              onClick={() => {
-                const reason = window.prompt('Rejection reason for the seller:');
-                if (!reason?.trim()) return;
-                void adminService
-                  .rejectListing(role, listing.id, reason.trim())
-                  .then(() => reload())
-                  .catch((err: Error) => window.alert(err.message));
-              }}
+              onClick={() => setListingPrompt({ kind: 'reject', listingId: listing.id })}
             />
           ) : null}
           <IconActionButton
@@ -417,14 +448,7 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
             label="Remove listing"
             variant="danger"
             disabled={isActing}
-            onClick={() => {
-              const reason = window.prompt('Removal reason (policy violation, fraud, etc.):');
-              if (reason === null) return;
-              void adminService
-                .removeListing(role, listing.id, reason.trim() || undefined)
-                .then(() => reload())
-                .catch((err: Error) => window.alert(err.message));
-            }}
+            onClick={() => setListingPrompt({ kind: 'remove', listingId: listing.id })}
           />
           <IconActionButton
             icon="eye"
@@ -439,15 +463,7 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
             label="Restore listing"
             variant="accent"
             disabled={isActing}
-            onClick={() => {
-              const target =
-                window.prompt('Restore to expired or draft?', 'expired')?.trim() ?? 'expired';
-              const targetStatus = target === 'draft' ? 'draft' : 'expired';
-              void adminService
-                .restoreListing(role, listing.id, targetStatus)
-                .then(() => reload())
-                .catch((err: Error) => window.alert(err.message));
-            }}
+            onClick={() => setListingPrompt({ kind: 'restore', listingId: listing.id })}
           />
           <IconActionButton
             icon="eye"
@@ -489,6 +505,54 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
         listingTitle={historyListing?.title}
         role={role}
         onClose={() => setHistoryListing(null)}
+      />
+      <ReasonPromptDialog
+        open={listingPrompt?.kind === 'reject'}
+        elevated
+        title="Reject listing"
+        description="Tell the seller why this listing was rejected."
+        label="Rejection reason"
+        placeholder="Explain what must change before resubmission…"
+        confirmLabel="Reject listing"
+        variant="destructive"
+        required
+        loading={actingListingId === listingPrompt?.listingId}
+        onConfirm={(reason) => void handleListingPromptConfirm(reason)}
+        onClose={() => {
+          if (actingListingId === null) setListingPrompt(null);
+        }}
+      />
+      <ReasonPromptDialog
+        open={listingPrompt?.kind === 'remove'}
+        elevated
+        title="Remove listing"
+        description="This hides the listing from buyers. A reason helps audit and seller communication."
+        label="Removal reason"
+        placeholder="Policy violation, fraud concern, etc."
+        confirmLabel="Remove listing"
+        variant="destructive"
+        required={false}
+        loading={actingListingId === listingPrompt?.listingId}
+        onConfirm={(reason) => void handleListingPromptConfirm(reason)}
+        onClose={() => {
+          if (actingListingId === null) setListingPrompt(null);
+        }}
+      />
+      <ReasonPromptDialog
+        open={listingPrompt?.kind === 'restore'}
+        elevated
+        title="Restore listing"
+        description='Type "expired" or "draft" for the restored status.'
+        label="Target status"
+        defaultValue="expired"
+        placeholder="expired or draft"
+        confirmLabel="Restore listing"
+        required
+        loading={actingListingId === listingPrompt?.listingId}
+        onConfirm={(value) => void handleListingPromptConfirm(value)}
+        onClose={() => {
+          if (actingListingId === null) setListingPrompt(null);
+        }}
       />
       <Card>
         <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -564,6 +628,7 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
+  const feedback = useAppFeedback();
   const [activeTab, setActiveTab] = useState<'payments' | 'refunds'>('payments');
   const [actingRefundId, setActingRefundId] = useState<string | null>(null);
   const [rejectRefundTarget, setRejectRefundTarget] = useState<PaymentRefund | null>(null);
@@ -586,9 +651,18 @@ export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
     setActingRefundId(refund.id);
     try {
       await adminService.resolveRefund(role, { refundId: refund.id, approve, reason });
+      feedback.success(
+        approve ? 'Refund approved' : 'Refund rejected',
+        approve
+          ? 'Stripe refund initiated and payment marked refunded.'
+          : 'The buyer has not been charged back.',
+      );
       await reload();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to update refund');
+      feedback.error(
+        approve ? 'Failed to approve refund' : 'Failed to reject refund',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActingRefundId(null);
     }
@@ -673,8 +747,9 @@ export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
           onPageChange={setPage}
         />
       </Card>
-      <FraudReasonDialog
+      <ReasonPromptDialog
         open={rejectRefundTarget !== null}
+        elevated
         title="Reject refund request"
         description={
           rejectRefundTarget
@@ -702,7 +777,12 @@ export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
+  const feedback = useAppFeedback();
   const [actingReportId, setActingReportId] = useState<string | null>(null);
+  const [moderationPrompt, setModerationPrompt] = useState<{
+    report: ModerationReport;
+    actionType: 'warn' | 'delete_listing' | 'suspend';
+  } | null>(null);
 
   const fetchReports = useCallback(
     (page: number, limit: number) => adminService.listModerationReports(role, { page, limit }),
@@ -720,13 +800,9 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
     reload,
   } = usePaginatedQuery({ fetcher: fetchReports });
 
-  async function handleAction(
-    report: ModerationReport,
-    actionType: 'warn' | 'delete_listing' | 'suspend',
-  ) {
-    const notes = window.prompt(`Notes for ${actionType} on report ${report.id.slice(0, 8)}?`) ?? undefined;
-    if (notes === null) return;
-
+  async function handleModerationAction(notes: string) {
+    if (!moderationPrompt) return;
+    const { report, actionType } = moderationPrompt;
     setActingReportId(report.id);
     try {
       await adminService.takeModerationAction(role, report.id, {
@@ -736,9 +812,14 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
         ...(actionType === 'warn' && notes ? { warnMessage: notes } : {}),
         ...(actionType === 'delete_listing' ? { autoHideListing: true } : {}),
       });
+      feedback.success('Moderation action recorded', `Report ${report.id.slice(0, 8)} updated.`);
+      setModerationPrompt(null);
       await reload();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to take moderation action');
+      feedback.error(
+        'Failed to take moderation action',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActingReportId(null);
     }
@@ -759,7 +840,7 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
             icon="alert-triangle"
             label={isActing ? 'Working…' : 'Warn user'}
             disabled={!canAct || isActing}
-            onClick={() => void handleAction(report, 'warn')}
+            onClick={() => setModerationPrompt({ report, actionType: 'warn' })}
           />
           {report.listingId && (
             <IconActionButton
@@ -767,7 +848,7 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
               label="Remove listing"
               variant="danger"
               disabled={!canAct || isActing}
-              onClick={() => void handleAction(report, 'delete_listing')}
+              onClick={() => setModerationPrompt({ report, actionType: 'delete_listing' })}
             />
           )}
           <IconActionButton
@@ -775,7 +856,7 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
             label="Suspend user"
             variant="danger"
             disabled={!canAct || isActing}
-            onClick={() => void handleAction(report, 'suspend')}
+            onClick={() => setModerationPrompt({ report, actionType: 'suspend' })}
           />
         </IconActionGroup>
       </div>,
@@ -800,6 +881,32 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
           onPageChange={setPage}
         />
       </Card>
+      <ReasonPromptDialog
+        open={moderationPrompt != null}
+        elevated
+        title={
+          moderationPrompt?.actionType === 'warn'
+            ? 'Warn user'
+            : moderationPrompt?.actionType === 'delete_listing'
+              ? 'Remove listing'
+              : 'Suspend user'
+        }
+        description={
+          moderationPrompt
+            ? `Add notes for report ${moderationPrompt.report.id.slice(0, 8)}.`
+            : undefined
+        }
+        label="Moderation notes"
+        placeholder="Explain the action taken…"
+        confirmLabel="Confirm action"
+        variant={moderationPrompt?.actionType === 'warn' ? 'default' : 'destructive'}
+        required={false}
+        loading={actingReportId === moderationPrompt?.report.id}
+        onConfirm={(notes) => void handleModerationAction(notes)}
+        onClose={() => {
+          if (actingReportId === null) setModerationPrompt(null);
+        }}
+      />
     </DashboardPageShell>
   );
 }
@@ -847,102 +954,6 @@ export function AdminReportsPage({ role }: { role: AdminServiceRole }) {
     >
       <Card>
         <DataTable columns={['ID', 'Reason', 'Status', 'Target']} rows={rows} />
-      </Card>
-    </DashboardPageShell>
-  );
-}
-
-export function AdminVerificationsPage({ role }: { role: AdminServiceRole }) {
-  const [actingId, setActingId] = useState<string | null>(null);
-
-  const fetchVerifications = useCallback(
-    (page: number, limit: number) => adminService.listPendingVerifications(role, { page, limit }),
-    [role],
-  );
-
-  const {
-    page,
-    setPage,
-    data: verifications,
-    meta,
-    loading,
-    error,
-    totalPages,
-    reload,
-  } = usePaginatedQuery({ fetcher: fetchVerifications });
-
-  async function handleApprove(verification: UserVerification) {
-    setActingId(verification.id);
-    try {
-      await adminService.approveVerification(role, verification.id);
-      await reload();
-    } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to approve verification');
-    } finally {
-      setActingId(null);
-    }
-  }
-
-  async function handleReject(verification: UserVerification) {
-    const reason = window.prompt('Rejection reason (optional):') ?? undefined;
-    if (reason === null) return;
-    setActingId(verification.id);
-    try {
-      await adminService.rejectVerification(role, verification.id, reason || undefined);
-      await reload();
-    } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to reject verification');
-    } finally {
-      setActingId(null);
-    }
-  }
-
-  const rows = verifications.map((item) => {
-    const isActing = actingId === item.id;
-
-    return [
-      item.userId.slice(0, 8),
-      item.status,
-      item.badgeGranted ? 'Yes' : 'No',
-      new Date(item.createdAt).toLocaleDateString(),
-      <div key={item.id} className="flex flex-wrap gap-2">
-        <IconActionGroup>
-          <IconActionButton
-            icon="check"
-            label={isActing ? 'Working…' : 'Approve verification'}
-            variant="accent"
-            disabled={isActing}
-            onClick={() => void handleApprove(item)}
-          />
-          <IconActionButton
-            icon="x"
-            label="Reject verification"
-            variant="danger"
-            disabled={isActing}
-            onClick={() => void handleReject(item)}
-          />
-        </IconActionGroup>
-      </div>,
-    ];
-  });
-
-  return (
-    <DashboardPageShell
-      title="Account Verifications"
-      description="Review pending user account and badge verification requests."
-      loading={loading}
-      error={error}
-      empty={!loading && !error && rows.length === 0}
-      emptyTitle="No pending verifications"
-    >
-      <Card>
-        <DataTable columns={['User', 'Status', 'Badge', 'Submitted', 'Actions']} rows={rows} />
-        <AdminTableFooter
-          page={page}
-          totalPages={totalPages}
-          total={meta.total}
-          onPageChange={setPage}
-        />
       </Card>
     </DashboardPageShell>
   );
@@ -1120,13 +1131,13 @@ export function AdminRbacPage({ role }: { role: AdminServiceRole }) {
 }
 
 export function SuperAdminSettingsPage() {
+  const feedback = useAppFeedback();
   const [activeTab, setActiveTab] = useState<'governance' | 'email'>('governance');
   const [governanceStatus, setGovernanceStatus] = useState<PlatformGovernanceStatus | null>(null);
   const [governanceDraft, setGovernanceDraft] = useState<PlatformGovernanceSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1151,12 +1162,11 @@ export function SuperAdminSettingsPage() {
     if (!governanceDraft) return;
     setSaving(true);
     setError(null);
-    setMessage(null);
     try {
       const updated = await adminService.updatePlatformGovernanceSettings(governanceDraft);
       setGovernanceStatus(updated);
       setGovernanceDraft(updated.settings);
-      setMessage('Platform settings saved.');
+      feedback.success('Platform settings saved');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save platform settings');
     } finally {
@@ -1188,7 +1198,6 @@ export function SuperAdminSettingsPage() {
               status={governanceStatus}
               draft={governanceDraft}
               saving={saving}
-              message={message}
               error={error}
               onDraftChange={setGovernanceDraft}
               onSave={(e) => void handleGovernanceSave(e)}

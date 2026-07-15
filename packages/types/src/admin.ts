@@ -5,6 +5,8 @@ export interface AdminDashboardStats {
   activeListings: number;
   totalPayments: number;
   pendingVerifications: number;
+  pendingFastTrackVerifications: number;
+  overdueFastTrackVerifications: number;
   pendingReports: number;
   activeBans: number;
   revenue: number;

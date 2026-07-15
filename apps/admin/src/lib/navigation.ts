@@ -23,7 +23,6 @@ export function buildAdminNav(role: RbacRole, permissions: PermissionCode[]): Na
   const items: NavItem[] = [
     { id: 'overview', label: 'Overview', href: base, exact: true, permission: PERMISSIONS.VIEW_PLATFORM_STATS },
     { id: 'users', label: 'Users', href: `${base}/users`, permission: PERMISSIONS.VIEW_USERS },
-    { id: 'verifications', label: 'Verifications', href: `${base}/verifications`, permission: PERMISSIONS.APPROVE_VERIFICATION },
     { id: 'listings', label: 'Listings', href: `${base}/listings`, permission: PERMISSIONS.VIEW_LISTINGS },
     { id: 'moderation', label: 'Moderation', href: `${base}/moderation`, permission: PERMISSIONS.VIEW_REPORTS },
     { id: 'payments', label: 'Payments', href: `${base}/payments`, permission: PERMISSIONS.VIEW_PAYMENTS },
@@ -45,7 +44,6 @@ export function buildAdminNav(role: RbacRole, permissions: PermissionCode[]): Na
 /** Route → required permission for server guard */
 export const ROUTE_PERMISSIONS: Record<string, PermissionCode | undefined> = {
   users: PERMISSIONS.VIEW_USERS,
-  verifications: PERMISSIONS.APPROVE_VERIFICATION,
   listings: PERMISSIONS.VIEW_LISTINGS,
   moderation: PERMISSIONS.VIEW_REPORTS,
   payments: PERMISSIONS.VIEW_PAYMENTS,

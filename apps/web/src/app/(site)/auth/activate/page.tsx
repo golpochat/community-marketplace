@@ -1,14 +1,15 @@
 'use client';
 
 import { Suspense, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 import { Button, Label, PasswordInput } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
+import { navigateAfterAuth } from '@/lib/navigate-after-auth';
 import { consumeRegistrationIntent } from '@/lib/registration-intent';
-import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
+import { WEB_APP_ROUTES, getWebDashboardPathForRole } from '@/lib/rbac-routes';
 import { authService } from '@/services/auth.service';
 
 export default function ActivateEmailPage() {
@@ -20,7 +21,6 @@ export default function ActivateEmailPage() {
 }
 
 function ActivateEmailContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth } = useAuth();
   const token = searchParams.get('token');
@@ -77,8 +77,10 @@ function ActivateEmailContent() {
       if (response.login) {
         setAuth(response.login);
         const intent = consumeRegistrationIntent();
-        router.push(
-          intent === 'seller' ? WEB_APP_ROUTES.accountStartSelling : response.login.redirectPath,
+        navigateAfterAuth(
+          intent === 'seller'
+            ? WEB_APP_ROUTES.accountStartSelling
+            : (response.login.redirectPath ?? getWebDashboardPathForRole(response.login.user.role)),
         );
         return;
       }
@@ -88,9 +90,9 @@ function ActivateEmailContent() {
           ? { ...current, alreadyActivated: true }
           : { email: response.email, alreadyActivated: true },
       );
+      setSubmitting(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Activation failed');
-    } finally {
       setSubmitting(false);
     }
   };

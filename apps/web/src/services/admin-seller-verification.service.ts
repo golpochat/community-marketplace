@@ -18,6 +18,7 @@ export type AdminSellerListParams = {
   search?: string;
   fromDate?: string;
   toDate?: string;
+  track?: 'all' | 'fast_track' | 'standard';
 };
 
 async function adminPath(role: AdminServiceRole, path: string) {
@@ -42,6 +43,7 @@ export const adminSellerVerificationService = {
         ...(params.search ? { search: params.search } : {}),
         ...(params.fromDate ? { fromDate: params.fromDate } : {}),
         ...(params.toDate ? { toDate: params.toDate } : {}),
+        ...(params.track && params.track !== 'all' ? { track: params.track } : {}),
       },
     });
     return normalizePaginated(response, { page, limit });

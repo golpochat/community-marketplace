@@ -9,7 +9,6 @@ import { UsersAdminService } from './services/users-admin.service';
 import { UsersPhoneService } from './services/users-phone.service';
 import { UsersProfileService } from './services/users-profile.service';
 import { UsersSettingsService } from './services/users-settings.service';
-import { UsersVerificationService } from './services/users-verification.service';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
@@ -21,7 +20,6 @@ import { UsersService } from './users.service';
     UsersProfileService,
     UsersPhoneService,
     UsersSettingsService,
-    UsersVerificationService,
     UsersAdminService,
     UserAuditService,
     R2StorageService,
@@ -29,7 +27,6 @@ import { UsersService } from './users.service';
   exports: [
     UsersService,
     UsersProfileService,
-    UsersVerificationService,
     UsersAdminService,
     UserAuditService,
     R2StorageService,

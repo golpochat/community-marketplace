@@ -25,7 +25,6 @@ import type {
   SuspensionDuration,
   UserBan,
   UserProfile,
-  UserVerification,
   PaginatedResult,
   ApiResponse,
 } from '@community-marketplace/types';
@@ -44,6 +43,8 @@ const EMPTY_STATS: AdminDashboardStats = {
   activeListings: 0,
   totalPayments: 0,
   pendingVerifications: 0,
+  pendingFastTrackVerifications: 0,
+  overdueFastTrackVerifications: 0,
   pendingReports: 0,
   activeBans: 0,
   revenue: 0,
@@ -330,22 +331,6 @@ export const adminService = {
     return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
   },
 
-  async listPendingVerifications(
-    role: AdminApiRole,
-    params: ListParams = {},
-  ): Promise<PaginatedResult<UserVerification>> {
-    const response = await apiClient<UserVerification[] | PaginatedResult<UserVerification>>(
-      adminApiPath(role, '/users/verifications/pending'),
-      {
-        params: {
-          page: String(params.page ?? 1),
-          limit: String(params.limit ?? 20),
-        },
-      },
-    );
-    return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
-  },
-
   async listAuditLogs(
     role: AdminApiRole,
     params: { page?: number; limit?: number } = {},
@@ -578,28 +563,6 @@ export const adminService = {
       {
         method: 'PUT',
         body: JSON.stringify({ permissionIds }),
-      },
-    );
-    return response.data;
-  },
-
-  async approveVerification(role: AdminApiRole, verificationId: string, reason?: string) {
-    const response = await apiClient<UserVerification>(
-      adminApiPath(role, `/users/verifications/${verificationId}/approve`),
-      {
-        method: 'POST',
-        body: JSON.stringify(reason ? { reason } : {}),
-      },
-    );
-    return response.data;
-  },
-
-  async rejectVerification(role: AdminApiRole, verificationId: string, reason?: string) {
-    const response = await apiClient<UserVerification>(
-      adminApiPath(role, `/users/verifications/${verificationId}/reject`),
-      {
-        method: 'POST',
-        body: JSON.stringify(reason ? { reason } : {}),
       },
     );
     return response.data;

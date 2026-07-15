@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import { Button, Input, Label } from '@community-marketplace/ui';
+import { Button, Input, Label, useAppFeedback } from '@community-marketplace/ui';
 import { IRISH_MOBILE_VALIDATION_MESSAGE } from '@community-marketplace/validation';
 
 import { IrishMobileFieldLabel } from '@/components/forms/irish-mobile-field-label';
@@ -27,6 +27,7 @@ export function PhoneChangePanel({
   onOpenVerification,
   phoneVerified,
 }: PhoneChangePanelProps) {
+  const feedback = useAppFeedback();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>('idle');
   const [newPhone, setNewPhone] = useState('');
@@ -34,7 +35,6 @@ export function PhoneChangePanel({
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [devOtpCode, setDevOtpCode] = useState<string | null>(null);
 
   function resetFlow() {
@@ -44,13 +44,11 @@ export function PhoneChangePanel({
     setNormalizedPhone('');
     setCode('');
     setError(null);
-    setMessage(null);
     setDevOtpCode(null);
   }
 
   async function handleSendOtp() {
     setError(null);
-    setMessage(null);
 
     const e164 = normalizeIrishPhoneToE164(newPhone);
     if (!e164) {
@@ -64,7 +62,7 @@ export function PhoneChangePanel({
       setNormalizedPhone(e164);
       setDevOtpCode(result.devCode ?? null);
       setStep('otp');
-      setMessage(result.message);
+      feedback.info('Verification code sent', result.message);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to send verification code');
     } finally {
@@ -74,12 +72,11 @@ export function PhoneChangePanel({
 
   async function handleVerifyOtp() {
     setError(null);
-    setMessage(null);
     setLoading(true);
     try {
       const updated = await userService.verifyPhoneChange(normalizedPhone, code);
       onPhoneUpdated(updated.phone ?? normalizedPhone);
-      setMessage('Phone number updated.');
+      feedback.success('Phone number updated');
       resetFlow();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Verification failed');
@@ -119,7 +116,6 @@ export function PhoneChangePanel({
           onClick={() => {
             setOpen(true);
             setError(null);
-            setMessage(null);
           }}
           className="mt-2 text-xs font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
         >
@@ -132,9 +128,6 @@ export function PhoneChangePanel({
           </p>
 
           {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
-          {message && step === 'idle' && (
-            <p className="mt-2 text-sm text-emerald-700">{message}</p>
-          )}
 
           {step === 'idle' ? (
             <div className="mt-3 space-y-3">
@@ -212,7 +205,6 @@ export function PhoneChangePanel({
                     setStep('idle');
                     setCode('');
                     setDevOtpCode(null);
-                    setMessage(null);
                     setError(null);
                   }}
                 >

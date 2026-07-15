@@ -30,7 +30,7 @@ export class StripeConnectService {
   }
 
   private defaultReturnUrl() {
-    return `${process.env.WEB_APP_URL ?? 'http://localhost:3000'}/seller/earnings`;
+    return `${process.env.WEB_APP_URL ?? 'http://localhost:3000'}/account/earnings?connect=return`;
   }
 
   private useDevConnectMock(): boolean {

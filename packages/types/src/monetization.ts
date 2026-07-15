@@ -202,6 +202,10 @@ export interface FastTrackStatusResponse {
   eligible: boolean;
   reason?: string;
   hasPriority: boolean;
+  /** When priority is active and submitted — ISO SLA target. */
+  priorityReviewDueAt?: string;
+  /** Complimentary priority re-queue after a rejected paid case. */
+  hasPriorityRequeue?: boolean;
   pendingPurchase?: PlatformPurchase;
   nextEligibleAt?: string;
 }

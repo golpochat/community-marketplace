@@ -66,21 +66,6 @@ export const adminService = {
   banUser: (body: Record<string, unknown>) =>
     adminApiClient(ADMIN_API_ROUTES.admin.userBan, { method: 'POST', body: JSON.stringify(body) }),
 
-  getPendingVerifications: (role?: RbacRole | null) =>
-    adminApiClient(ADMIN_API_ROUTES.admin.verificationsPending),
-
-  approveVerification: (id: string, body?: Record<string, unknown>) =>
-    adminApiClient(ADMIN_API_ROUTES.admin.verificationApprove(id), {
-      method: 'POST',
-      body: JSON.stringify(body ?? {}),
-    }),
-
-  rejectVerification: (id: string, body: Record<string, unknown>) =>
-    adminApiClient(ADMIN_API_ROUTES.admin.verificationReject(id), {
-      method: 'POST',
-      body: JSON.stringify(body),
-    }),
-
   async getListings(role?: RbacRole | null) {
     try {
       const result = await adminApiClient<{

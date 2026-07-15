@@ -17,7 +17,7 @@ export function SellerVerificationPage() {
         title="Verification"
         description={VERIFICATION_ONBOARDING_COPY.VERIFICATION_PAGE_SUBTITLE}
       />
-      <div className="mb-6">
+      <div className="mb-4">
         <VerificationOnboardingCopy />
       </div>
       {loading && (

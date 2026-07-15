@@ -22,6 +22,8 @@ export async function POST(request: Request, context: RouteContext) {
   revalidateTag(listingCacheTag(id));
   revalidateTag(listingShareCacheTag(id));
   revalidatePath('/listings/[id]', 'page');
+  revalidatePath('/listings', 'page');
+  revalidatePath('/', 'page');
 
   return Response.json({ revalidated: true, listingId: id });
 }

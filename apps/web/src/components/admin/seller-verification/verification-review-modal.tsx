@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import type { AdminSellerVerificationDetail } from '@community-marketplace/types';
+import { formatFastTrackSlaLabel } from '@community-marketplace/types';
 import { formatDateTime } from '@community-marketplace/utils';
 
 import { DocumentPreview } from '@/components/admin/seller-verification/document-preview';
@@ -25,7 +26,7 @@ interface VerificationReviewModalProps {
   canManageLimits: boolean;
   onClose: () => void;
   onApprove: (requestId: string) => void;
-  onReject: (requestId: string) => void;
+  onReject: (requestId: string, options?: { isFastTrack?: boolean }) => void;
   onSuspend: (detail: AdminSellerVerificationDetail) => void;
   onReactivate: (detail: AdminSellerVerificationDetail) => void;
   onForceReverify: (detail: AdminSellerVerificationDetail) => void;
@@ -205,6 +206,34 @@ export function VerificationReviewModal({
                       {detail.unverifiedListingCount}/{detail.sellerLimit}
                     </dd>
                   </div>
+                  {detail.priority ? (
+                    <>
+                      <div>
+                        <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Review track</dt>
+                        <dd className="font-medium text-indigo-900">Fast-track (priority)</dd>
+                      </div>
+                      {detail.priorityActivatedAt ? (
+                        <div>
+                          <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Priority since</dt>
+                          <dd className="font-medium">{formatDateTime(detail.priorityActivatedAt)}</dd>
+                        </div>
+                      ) : null}
+                      {detail.reviewDueAt ? (
+                        <div>
+                          <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">SLA target</dt>
+                          <dd className="font-medium">
+                            {formatDateTime(detail.reviewDueAt)} (
+                            {formatFastTrackSlaLabel(detail.reviewDueAt)})
+                          </dd>
+                        </div>
+                      ) : null}
+                    </>
+                  ) : (
+                    <div>
+                      <dt className="text-[hsl(var(--dashboard-sidebar-muted))]">Review track</dt>
+                      <dd className="font-medium">Standard</dd>
+                    </div>
+                  )}
                 </dl>
               </section>
 
@@ -327,7 +356,9 @@ export function VerificationReviewModal({
               <>
                 <button
                   type="button"
-                  onClick={() => onReject(pendingRequestId!)}
+                  onClick={() =>
+                    onReject(pendingRequestId!, { isFastTrack: Boolean(detail?.priority) })
+                  }
                   className="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
                 >
                   Reject verification

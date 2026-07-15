@@ -2,13 +2,22 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 
 import { LocationBrowsePage } from '@/components/listings/location-browse-page';
+import { ListingCanonicalPathSync } from '@/components/listings/listing-canonical-path-sync';
 import { ListingDetailClient } from '@/components/listings/listing-detail-client';
 import { ListingJsonLd } from '@/components/listings/listing-json-ld';
 import { buildListingMetadataAsync } from '@/lib/listing-og-metadata';
-import { buildListingPath, isBareListingId, parseListingRouteParam } from '@/lib/listing-slug';
+import {
+  buildListingPath,
+  isBareListingId,
+  isCanonicalListingRouteParam,
+} from '@/lib/listing-slug';
 import { getListingLocationBySlug } from '@/lib/seo/content/locations';
 import { buildLocationBrowseMetadata } from '@/lib/seo/location-metadata';
-import { fetchListingById, fetchSimilarListings } from '@/lib/server-listings';
+import {
+  fetchListingById,
+  fetchSimilarListings,
+  resolveListingIdFromRouteParam,
+} from '@/lib/server-listings';
 
 interface ListingDetailPageProps {
   params: Promise<{ id: string }>;
@@ -16,7 +25,7 @@ interface ListingDetailPageProps {
 
 export async function generateMetadata({ params }: ListingDetailPageProps): Promise<Metadata> {
   const { id: param } = await params;
-  const listingId = parseListingRouteParam(param);
+  const listingId = await resolveListingIdFromRouteParam(param);
   if (!listingId) {
     const location = getListingLocationBySlug(param);
     if (location) return buildLocationBrowseMetadata(location);
@@ -31,7 +40,7 @@ export async function generateMetadata({ params }: ListingDetailPageProps): Prom
 
 export default async function ListingDetailPage({ params }: ListingDetailPageProps) {
   const { id: param } = await params;
-  const listingId = parseListingRouteParam(param);
+  const listingId = await resolveListingIdFromRouteParam(param);
 
   if (!listingId) {
     const location = getListingLocationBySlug(param);
@@ -46,12 +55,18 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
   if (!listing) notFound();
 
+  const canonicalPath = buildListingPath(listing);
+
+  // Bare UUID → hard redirect (middleware cannot invent the title slug).
   if (isBareListingId(param)) {
-    permanentRedirect(buildListingPath(listing));
+    permanentRedirect(canonicalPath);
   }
+
+  const needsCanonicalSync = !isCanonicalListingRouteParam(param, listing);
 
   return (
     <>
+      {needsCanonicalSync ? <ListingCanonicalPathSync path={canonicalPath} /> : null}
       <ListingJsonLd listing={listing} />
       <ListingDetailClient id={listingId} initialListing={listing} initialSimilar={similar} />
     </>

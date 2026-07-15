@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 
 import type { Listing, ListingStatus } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
+import { useAppFeedback } from '@community-marketplace/ui';
 import {
   Card,
   IconActionButton,
@@ -16,11 +17,17 @@ import { AdminListingReviewDialog } from '@/components/dashboard/admin-listing-r
 import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
 import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
 import { DashboardPageShell, DataTable } from '@/components/dashboard/async-resource';
+import { ReasonPromptDialog } from '@/components/shared/reason-prompt-dialog';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { ListingMediaImage } from '@/components/listings/listing-media-image';
 import { adminService, type AdminServiceRole } from '@/services/admin.service';
 
 type ModerationQueue = 'pending' | 'flagged' | 'rejected' | 'removed';
+
+type ListingPrompt =
+  | { listingId: string; kind: 'reject' }
+  | { listingId: string; kind: 'remove' }
+  | { listingId: string; kind: 'investigate' };
 
 const QUEUE_TABS: { id: ModerationQueue; label: string; status: ListingStatus }[] = [
   { id: 'pending', label: 'Pending Listings', status: 'pending_review' },
@@ -46,9 +53,11 @@ function ListingThumb({ listing }: { listing: Listing }) {
 }
 
 export function AdminListingModerationPage({ role }: { role: AdminServiceRole }) {
+  const feedback = useAppFeedback();
   const [queue, setQueue] = useState<ModerationQueue>('pending');
   const [actingId, setActingId] = useState<string | null>(null);
   const [reviewListingId, setReviewListingId] = useState<string | null>(null);
+  const [listingPrompt, setListingPrompt] = useState<ListingPrompt | null>(null);
 
   const activeTab = QUEUE_TABS.find((tab) => tab.id === queue)!;
 
@@ -66,51 +75,45 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
     setActingId(listingId);
     try {
       await adminService.approveListingModeration(role, listingId);
+      feedback.success('Listing approved', 'The listing is now live.');
       await reload();
       if (reviewListingId === listingId) setReviewListingId(null);
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to approve listing');
+      feedback.error(
+        'Failed to approve listing',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActingId(null);
     }
   }
 
-  async function handleReject(listingId: string) {
-    const reason = window.prompt('Rejection reason for the seller:');
-    if (!reason?.trim()) return;
+  async function handleListingPromptConfirm(value: string) {
+    if (!listingPrompt) return;
+    const { listingId, kind } = listingPrompt;
     setActingId(listingId);
     try {
-      await adminService.rejectListingModeration(role, listingId, reason.trim());
+      if (kind === 'reject') {
+        await adminService.rejectListingModeration(role, listingId, value);
+        feedback.success('Listing rejected', 'The seller has been notified.');
+      } else if (kind === 'remove') {
+        await adminService.removeListingModeration(role, listingId, value);
+        feedback.success('Listing removed', 'The listing is no longer visible.');
+      } else {
+        await adminService.investigateListing(role, listingId, value || undefined);
+        feedback.success('Marked for investigation', 'Listing flagged for review.');
+      }
+      setListingPrompt(null);
       await reload();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to reject listing');
-    } finally {
-      setActingId(null);
-    }
-  }
-
-  async function handleRemove(listingId: string) {
-    const reason = window.prompt('Removal reason for the seller:');
-    if (!reason?.trim()) return;
-    setActingId(listingId);
-    try {
-      await adminService.removeListingModeration(role, listingId, reason.trim());
-      await reload();
-    } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to remove listing');
-    } finally {
-      setActingId(null);
-    }
-  }
-
-  async function handleInvestigate(listingId: string) {
-    const reason = window.prompt('Investigation notes (optional):') ?? undefined;
-    setActingId(listingId);
-    try {
-      await adminService.investigateListing(role, listingId, reason?.trim() || undefined);
-      await reload();
-    } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to mark for investigation');
+      feedback.error(
+        kind === 'reject'
+          ? 'Failed to reject listing'
+          : kind === 'remove'
+            ? 'Failed to remove listing'
+            : 'Failed to mark for investigation',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActingId(null);
     }
@@ -151,14 +154,14 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
                 icon="alert-triangle"
                 label="Investigate"
                 disabled={isActing}
-                onClick={() => void handleInvestigate(listing.id)}
+                onClick={() => setListingPrompt({ listingId: listing.id, kind: 'investigate' })}
               />
               <IconActionButton
                 icon="x"
                 label="Reject"
                 variant="danger"
                 disabled={isActing}
-                onClick={() => void handleReject(listing.id)}
+                onClick={() => setListingPrompt({ listingId: listing.id, kind: 'reject' })}
               />
             </>
           )}
@@ -168,7 +171,7 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
               label="Remove"
               variant="danger"
               disabled={isActing}
-              onClick={() => void handleRemove(listing.id)}
+              onClick={() => setListingPrompt({ listingId: listing.id, kind: 'remove' })}
             />
           )}
         </IconActionGroup>
@@ -207,6 +210,56 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
           />
         </Card>
       </DashboardPageShell>
+
+      <ReasonPromptDialog
+        open={listingPrompt?.kind === 'reject'}
+        elevated
+        title="Reject listing"
+        description="Provide a reason the seller will see."
+        label="Rejection reason"
+        placeholder="Explain why this listing was rejected…"
+        confirmLabel="Reject listing"
+        variant="destructive"
+        required
+        loading={actingId === listingPrompt?.listingId}
+        onConfirm={(value) => void handleListingPromptConfirm(value)}
+        onClose={() => {
+          if (actingId === null) setListingPrompt(null);
+        }}
+      />
+
+      <ReasonPromptDialog
+        open={listingPrompt?.kind === 'remove'}
+        elevated
+        title="Remove listing"
+        description="Provide a reason the seller will see."
+        label="Removal reason"
+        placeholder="Explain why this listing was removed…"
+        confirmLabel="Remove listing"
+        variant="destructive"
+        required
+        loading={actingId === listingPrompt?.listingId}
+        onConfirm={(value) => void handleListingPromptConfirm(value)}
+        onClose={() => {
+          if (actingId === null) setListingPrompt(null);
+        }}
+      />
+
+      <ReasonPromptDialog
+        open={listingPrompt?.kind === 'investigate'}
+        elevated
+        title="Mark for investigation"
+        description="Add optional notes for the moderation team."
+        label="Investigation notes"
+        placeholder="Describe what needs further review…"
+        confirmLabel="Mark for investigation"
+        required={false}
+        loading={actingId === listingPrompt?.listingId}
+        onConfirm={(value) => void handleListingPromptConfirm(value)}
+        onClose={() => {
+          if (actingId === null) setListingPrompt(null);
+        }}
+      />
 
       {reviewListingId && (
         <AdminListingReviewDialog

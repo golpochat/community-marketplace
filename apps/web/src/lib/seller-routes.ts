@@ -1,10 +1,13 @@
+import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
+
+/** Canonical seller destinations for unified /account experience. */
 export const SELLER_ROUTES = {
-  dashboard: '/seller/dashboard',
-  listings: '/seller/listings',
+  dashboard: WEB_APP_ROUTES.account,
+  listings: WEB_APP_ROUTES.accountListings,
   storefront: '/seller/storefront',
-  verification: '/seller/verification',
-  profile: '/seller/profile',
-  settings: '/seller/settings',
+  verification: '/account/verification',
+  profile: WEB_APP_ROUTES.accountSettings,
+  settings: WEB_APP_ROUTES.accountSettings,
 } as const;
 
 /** Legacy `/seller/profile?tab=` → new destinations */

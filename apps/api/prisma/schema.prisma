@@ -572,6 +572,9 @@ model SellerVerificationRequest {
   addressDocumentPath String?            @map("address_document_path")
   status              VerificationStatus @default(pending)
   priority            Boolean            @default(false)
+  priorityActivatedAt DateTime?          @map("priority_activated_at")
+  slaDueAt            DateTime?          @map("sla_due_at")
+  slaOverdueNotifiedAt DateTime?         @map("sla_overdue_notified_at")
   reviewedById        String?            @map("reviewed_by")
   reviewedAt          DateTime?          @map("reviewed_at")
   rejectionReason     String?            @map("rejection_reason") @db.Text
@@ -583,6 +586,8 @@ model SellerVerificationRequest {
 
   @@index([userId, status])
   @@index([status, createdAt(sort: Desc)])
+  /// Partial unique index enforced in SQL: one pending request per user
+  /// (`seller_verification_requests_one_pending_per_user`).
   @@map("seller_verification_requests")
 }
 

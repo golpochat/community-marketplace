@@ -1,11 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface RejectVerificationModalProps {
   open: boolean;
   sellerName: string;
+  isFastTrack?: boolean;
+  title?: string;
   loading?: boolean;
+  showAdditionalDocsOption?: boolean;
   onSubmit: (reason: string, requestAdditionalDocs: boolean) => void;
   onClose: () => void;
 }
@@ -13,36 +16,56 @@ interface RejectVerificationModalProps {
 export function RejectVerificationModal({
   open,
   sellerName,
+  isFastTrack = false,
+  title,
   loading = false,
+  showAdditionalDocsOption = true,
   onSubmit,
   onClose,
 }: RejectVerificationModalProps) {
   const [reason, setReason] = useState('');
   const [requestAdditionalDocs, setRequestAdditionalDocs] = useState(false);
 
+  useEffect(() => {
+    if (!open) {
+      setReason('');
+      setRequestAdditionalDocs(false);
+    }
+  }, [open]);
+
   if (!open) return null;
 
+  const heading = title ?? `Reject verification – ${sellerName}`;
+
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-lg rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
-          Reject Verification – {sellerName}
-        </h3>
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+      <div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-xl">
+        <h3 className="text-lg font-semibold text-foreground">{heading}</h3>
         <div className="mt-4 space-y-4">
+          {isFastTrack ? (
+            <p className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs text-indigo-900">
+              This is a paid fast-track case. Rejecting will grant the seller one complimentary
+              priority re-queue on their next resubmission (review speed only — not approval).
+            </p>
+          ) : null}
           <div>
-            <label htmlFor="reject-reason" className="mb-1 block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
-              Rejection reason
+            <label htmlFor="reject-reason" className="mb-1 block text-sm font-medium text-foreground">
+              Rejection reason <span className="text-destructive">*</span>
             </label>
             <textarea
               id="reject-reason"
               rows={4}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm"
-              placeholder="Explain why this verification was rejected"
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              placeholder="Explain why this verification was rejected so the user knows what to fix."
             />
+            <p className="mt-1 text-xs text-muted-foreground">
+              A reason is required — this prevents accidental rejections.
+            </p>
           </div>
-          <label className="flex items-center gap-2 text-sm text-[hsl(var(--dashboard-main-fg))]">
+          {showAdditionalDocsOption ? (
+          <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
               checked={requestAdditionalDocs}
@@ -50,13 +73,14 @@ export function RejectVerificationModal({
             />
             Request additional documents
           </label>
+          ) : null}
         </div>
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-4 py-2 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted/50"
           >
             Cancel
           </button>
@@ -64,7 +88,7 @@ export function RejectVerificationModal({
             type="button"
             disabled={loading || !reason.trim()}
             onClick={() => onSubmit(reason.trim(), requestAdditionalDocs)}
-            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+            className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90 disabled:opacity-50"
           >
             {loading ? 'Submitting…' : 'Submit rejection'}
           </button>

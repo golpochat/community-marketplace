@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import type { RbacRole, UserProfile } from '@community-marketplace/types';
 import { isPrivilegedSystemRole } from '@community-marketplace/types';
-import { Input, Label } from '@community-marketplace/ui';
+import { Input, Label, useAppFeedback } from '@community-marketplace/ui';
 import { Card } from '@community-marketplace/ui-dashboard';
 
 import { LoadingState } from '@/components/LoadingState';
@@ -35,10 +35,10 @@ export function ProfileCredentialsSettings({
   emailNote,
   onOpenVerification,
 }: ProfileCredentialsSettingsProps) {
+  const feedback = useAppFeedback();
   const [profile, setProfile] = useState<UserProfile | null>(initialProfile);
   const [deactivating, setDeactivating] = useState(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -48,10 +48,9 @@ export function ProfileCredentialsSettings({
   async function handleDeactivate() {
     setDeactivating(true);
     setError(null);
-    setMessage(null);
     try {
       const result = await userService.requestAccountDeactivation();
-      setMessage(result.message);
+      feedback.info('Deactivation requested', result.message);
       setShowDeactivateConfirm(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to request deactivation');
@@ -69,7 +68,6 @@ export function ProfileCredentialsSettings({
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       {error && <p className="text-sm text-destructive lg:col-span-2">{error}</p>}
-      {message && <p className="text-sm text-emerald-700 lg:col-span-2">{message}</p>}
 
       <Card title="Login & contact">
         <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
@@ -100,7 +98,7 @@ export function ProfileCredentialsSettings({
             onOpenVerification={onOpenVerification}
             onPhoneUpdated={(phone) => {
               setProfile((current) => (current ? { ...current, phone } : current));
-              setMessage('Phone number updated.');
+              feedback.success('Phone number updated');
               onSaved?.();
             }}
           />
@@ -116,10 +114,9 @@ export function ProfileCredentialsSettings({
                 <ChangePasswordPanel
                   onSuccess={(text) => {
                     setError(null);
-                    setMessage(text);
+                    feedback.success('Password updated', text);
                   }}
                   onError={(text) => {
-                    setMessage(null);
                     setError(text);
                   }}
                 />
@@ -141,10 +138,9 @@ export function ProfileCredentialsSettings({
             <ChangePasswordPanel
               onSuccess={(text) => {
                 setError(null);
-                setMessage(text);
+                feedback.success('Password updated', text);
               }}
               onError={(text) => {
-                setMessage(null);
                 setError(text);
               }}
             />

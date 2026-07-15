@@ -111,8 +111,11 @@ Features:
 | `payment.disputed` | `system` |
 | `listing.created` | `listing_created` (favoriters) |
 | `listing.updated` (sold) | `listing_sold` |
-| `user.verification_approved` | `verification_approved` |
-| `user.verification_rejected` | `verification_rejected` |
+| `user.verification_requested` | Staff in-app (`admin_warning`) — urgent if fast-track |
+| `seller.verification_priority_activated` | Staff in-app — fast-track upgrade on pending case |
+| `seller.verification_sla_overdue` | Staff in-app — priority case past 24h SLA |
+| `user.verification_approved` | `verification_approved` (seller) |
+| `user.verification_rejected` | `verification_rejected` (seller; includes re-queue note when applicable) |
 | `seller.warned` | `admin_warning` |
 | `admin.action` | `admin_warning` |
 

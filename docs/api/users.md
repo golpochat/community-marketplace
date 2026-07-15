@@ -130,42 +130,11 @@ In development without R2 credentials, a dev upload placeholder URL is returned.
 
 ## 4.3 — Seller verification
 
-### Submit verification (seller)
+Seller identity (KYC) uses the live **Seller Verification** APIs under `/api/seller/verification/*` and admin review under `/api/admin/seller-verification/*`.
 
-```http
-POST /api/seller/profile/verification
-Authorization: Bearer <access_token>
+See [Seller verification (admin)](../admin/seller-verification.md) and the seller verification module docs.
 
-{
-  "idDocumentFrontUrl": "https://...",
-  "idDocumentBackUrl": "https://...",
-  "selfieUrl": "https://...",
-  "addressProofUrl": "https://..."
-}
-```
-
-Requires `submit_verification` permission.
-
-### Get verification status
-
-```http
-GET /api/seller/profile/verification
-```
-
-Statuses: `pending`, `approved`, `rejected`. Approved submissions set `verificationBadge: true` on profile.
-
-### Admin review
-
-```http
-GET /api/admin/users/verifications/pending
-POST /api/admin/users/verifications/:id/approve
-POST /api/admin/users/verifications/:id/reject
-{ "reason": "Document unreadable" }
-```
-
-Permissions: `approve_verification`, `reject_verification`.
-
-All decisions are written to `user_audit_logs`.
+The legacy `user_verifications` badge endpoints (`POST /seller/profile/verification`, `GET/POST /admin/users/verifications/...`) have been removed.
 
 ---
 

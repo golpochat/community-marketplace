@@ -44,16 +44,69 @@ export class AdminService {
       activeListings,
       totalPayments,
       pendingVerifications,
+      pendingFastTrack,
+      overdueFastTrack,
       reports,
       bans,
       revenueAgg,
     ] = await Promise.all([
       this.prisma.user.count(),
-      this.prisma.user.count({ where: { primaryRole: { code: "SELLER" } } }),
+      this.prisma.user.count({
+        where: {
+          OR: [
+            { primaryRole: { code: "SELLER" } },
+            {
+              primaryRole: { code: "MEMBER" },
+              OR: [
+                { verificationRequestedAt: { not: null } },
+                { listings: { some: {} } },
+                {
+                  sellerStatus: {
+                    in: ["verified", "under_review", "suspended"],
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      }),
       this.prisma.user.count({ where: { primaryRole: { code: "BUYER" } } }),
       this.prisma.listing.count({ where: { status: "active" } }),
       this.prisma.payment.count(),
-      this.prisma.userVerification.count({ where: { status: "pending" } }),
+      // Live seller KYC queue (wizard) — not legacy user_verifications.
+      this.prisma.sellerVerificationRequest.count({
+        where: {
+          status: "pending",
+          user: {
+            primaryRole: { code: { in: ["SELLER", "MEMBER"] } },
+            verificationRequestedAt: { not: null },
+            sellerStatus: { notIn: ["verified"] },
+          },
+        },
+      }),
+      this.prisma.sellerVerificationRequest.count({
+        where: {
+          status: "pending",
+          priority: true,
+          user: {
+            primaryRole: { code: { in: ["SELLER", "MEMBER"] } },
+            verificationRequestedAt: { not: null },
+            sellerStatus: { notIn: ["verified"] },
+          },
+        },
+      }),
+      this.prisma.sellerVerificationRequest.count({
+        where: {
+          status: "pending",
+          priority: true,
+          slaDueAt: { lt: new Date() },
+          user: {
+            primaryRole: { code: { in: ["SELLER", "MEMBER"] } },
+            verificationRequestedAt: { not: null },
+            sellerStatus: { notIn: ["verified"] },
+          },
+        },
+      }),
       this.moderationService.listReports({
         page: 1,
         limit: 1,
@@ -73,6 +126,8 @@ export class AdminService {
       activeListings,
       totalPayments,
       pendingVerifications,
+      pendingFastTrackVerifications: pendingFastTrack,
+      overdueFastTrackVerifications: overdueFastTrack,
       pendingReports: reports.meta.total,
       activeBans: Array.isArray(bans) ? bans.length : 0,
       revenue: revenueAgg._sum.amount?.toNumber() ?? 0,

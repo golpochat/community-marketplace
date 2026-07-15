@@ -66,7 +66,7 @@ export function getUserNavLinks(role: RoleCodeValue, dashboardPath: string): Use
         messages: WEB_APP_ROUTES.accountMessages,
         notifications: WEB_APP_ROUTES.accountNotifications,
         settings: WEB_APP_ROUTES.accountSettings,
-        sellItem: '/account/listings/create',
+        sellItem: WEB_APP_ROUTES.accountSelling,
         savedItems: WEB_APP_ROUTES.accountSaved,
       };
     default:
@@ -108,8 +108,6 @@ export function getUserMenuItems(role: RoleCodeValue, dashboardPath: string): Us
       { href: dashboardPath, label: 'Account home', icon: 'dashboard' },
       { href: WEB_APP_ROUTES.accountPurchases, label: 'Purchases', icon: 'package' },
       { href: WEB_APP_ROUTES.accountSaved, label: 'Saved items', icon: 'heart' },
-      { href: WEB_APP_ROUTES.accountListings, label: 'My listings', icon: 'list' },
-      { href: WEB_APP_ROUTES.accountStartSelling, label: 'Start selling', icon: 'plus' },
       { href: WEB_APP_ROUTES.accountMessages, label: 'Messages', icon: 'messages' },
       { href: WEB_APP_ROUTES.accountSettings, label: 'Settings', icon: 'settings' },
     ];

@@ -52,10 +52,6 @@ export const adminServerService = {
     }));
   },
 
-  async getPendingVerifications() {
-    return serverAdminApiClient(ADMIN_API_ROUTES.admin.verificationsPending);
-  },
-
   async getModerationReports() {
     const role = await resolveRole();
     const ns = role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'ADMIN';

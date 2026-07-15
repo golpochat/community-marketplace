@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 
 import type { AdminMessageFlagItem } from '@community-marketplace/types';
+import { useAppFeedback } from '@community-marketplace/ui';
 
 import {
   Card,
@@ -12,6 +13,7 @@ import {
 
 import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
 import { DashboardPageShell, DataTable } from '@/components/dashboard/async-resource';
+import { ReasonPromptDialog } from '@/components/shared/reason-prompt-dialog';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { adminChatModerationService, type AdminServiceRole } from '@/services/admin-chat-moderation.service';
 
@@ -21,13 +23,19 @@ interface AdminMessageModerationPageProps {
   canSuspendSeller: boolean;
 }
 
+type MessagePrompt =
+  | { flag: AdminMessageFlagItem; kind: 'resolve'; status: 'resolved' | 'dismissed' }
+  | { flag: AdminMessageFlagItem; kind: 'suspend' };
+
 export function AdminMessageModerationPage({
   role,
   canModerate,
   canSuspendSeller,
 }: AdminMessageModerationPageProps) {
+  const feedback = useAppFeedback();
   const [actingId, setActingId] = useState<string | null>(null);
   const [viewThreadId, setViewThreadId] = useState<string | null>(null);
+  const [messagePrompt, setMessagePrompt] = useState<MessagePrompt | null>(null);
   const [threadDetail, setThreadDetail] = useState<Awaited<
     ReturnType<typeof adminChatModerationService.getThread>
   > | null>(null);
@@ -49,14 +57,9 @@ export function AdminMessageModerationPage({
     reload,
   } = usePaginatedQuery({ fetcher: fetchFlags });
 
-  async function handleResolve(flag: AdminMessageFlagItem, status: 'resolved' | 'dismissed') {
-    if (!canModerate) return;
-    const notes =
-      window.prompt(
-        `Notes for marking report as ${status}?`,
-        flag.moderationNotes ?? '',
-      ) ?? undefined;
-    if (notes === null && status === 'resolved') return;
+  async function handleResolveConfirm(notes: string) {
+    if (!messagePrompt || messagePrompt.kind !== 'resolve') return;
+    const { flag, status } = messagePrompt;
 
     setActingId(flag.id);
     try {
@@ -64,9 +67,37 @@ export function AdminMessageModerationPage({
         status,
         ...(notes ? { moderationNotes: notes } : {}),
       });
+      feedback.success(
+        status === 'resolved' ? 'Report resolved' : 'Report dismissed',
+        `Flag ${flag.id.slice(0, 8)} updated.`,
+      );
+      setMessagePrompt(null);
       await reload();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to resolve report');
+      feedback.error(
+        'Failed to resolve report',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
+    } finally {
+      setActingId(null);
+    }
+  }
+
+  async function handleSuspendConfirm(reason: string) {
+    if (!messagePrompt || messagePrompt.kind !== 'suspend') return;
+    const { flag } = messagePrompt;
+
+    setActingId(flag.id);
+    try {
+      await adminChatModerationService.suspendSeller(role, flag.sellerId, reason);
+      feedback.success('Seller suspended', flag.sellerDisplayName ?? flag.sellerId.slice(0, 8));
+      setMessagePrompt(null);
+      await reload();
+    } catch (err) {
+      feedback.error(
+        'Failed to suspend seller',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
     } finally {
       setActingId(null);
     }
@@ -79,25 +110,11 @@ export function AdminMessageModerationPage({
       const detail = await adminChatModerationService.getThread(role, flag.threadId);
       setThreadDetail(detail);
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to load conversation');
+      feedback.error(
+        'Failed to load conversation',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
       setViewThreadId(null);
-    }
-  }
-
-  async function handleSuspendSeller(flag: AdminMessageFlagItem) {
-    if (!canSuspendSeller) return;
-    const reason =
-      window.prompt(`Suspend seller ${flag.sellerDisplayName ?? flag.sellerId}? Reason:`) ?? '';
-    if (!reason.trim()) return;
-
-    setActingId(flag.id);
-    try {
-      await adminChatModerationService.suspendSeller(role, flag.sellerId, reason.trim());
-      await reload();
-    } catch (err) {
-      window.alert(err instanceof Error ? err.message : 'Failed to suspend seller');
-    } finally {
-      setActingId(null);
     }
   }
 
@@ -123,13 +140,17 @@ export function AdminMessageModerationPage({
                 icon="check"
                 label="Mark resolved"
                 disabled={isActing}
-                onClick={() => void handleResolve(flag, 'resolved')}
+                onClick={() =>
+                  setMessagePrompt({ flag, kind: 'resolve', status: 'resolved' })
+                }
               />
               <IconActionButton
                 icon="x"
                 label="Dismiss"
                 disabled={isActing}
-                onClick={() => void handleResolve(flag, 'dismissed')}
+                onClick={() =>
+                  setMessagePrompt({ flag, kind: 'resolve', status: 'dismissed' })
+                }
               />
             </>
           )}
@@ -139,13 +160,18 @@ export function AdminMessageModerationPage({
               label="Suspend seller"
               variant="danger"
               disabled={isActing}
-              onClick={() => void handleSuspendSeller(flag)}
+              onClick={() => setMessagePrompt({ flag, kind: 'suspend' })}
             />
           )}
         </IconActionGroup>
       </div>,
     ];
   });
+
+  const resolvePrompt =
+    messagePrompt?.kind === 'resolve' ? messagePrompt : null;
+  const suspendPrompt =
+    messagePrompt?.kind === 'suspend' ? messagePrompt : null;
 
   return (
     <>
@@ -170,6 +196,50 @@ export function AdminMessageModerationPage({
           />
         </Card>
       </DashboardPageShell>
+
+      <ReasonPromptDialog
+        open={resolvePrompt != null}
+        elevated
+        title={
+          resolvePrompt?.status === 'resolved' ? 'Mark report resolved' : 'Dismiss report'
+        }
+        description={
+          resolvePrompt
+            ? `Add notes for flag ${resolvePrompt.flag.id.slice(0, 8)}.`
+            : undefined
+        }
+        label="Moderation notes"
+        placeholder="Optional notes about this report…"
+        confirmLabel={resolvePrompt?.status === 'resolved' ? 'Mark resolved' : 'Dismiss report'}
+        required={false}
+        defaultValue={resolvePrompt?.flag.moderationNotes ?? ''}
+        loading={actingId === resolvePrompt?.flag.id}
+        onConfirm={(notes) => void handleResolveConfirm(notes)}
+        onClose={() => {
+          if (actingId === null) setMessagePrompt(null);
+        }}
+      />
+
+      <ReasonPromptDialog
+        open={suspendPrompt != null}
+        elevated
+        title="Suspend seller"
+        description={
+          suspendPrompt
+            ? `Suspend ${suspendPrompt.flag.sellerDisplayName ?? suspendPrompt.flag.sellerId.slice(0, 8)} for policy violations.`
+            : undefined
+        }
+        label="Suspension reason"
+        placeholder="Explain why this seller is being suspended…"
+        confirmLabel="Suspend seller"
+        variant="destructive"
+        required
+        loading={actingId === suspendPrompt?.flag.id}
+        onConfirm={(reason) => void handleSuspendConfirm(reason)}
+        onClose={() => {
+          if (actingId === null) setMessagePrompt(null);
+        }}
+      />
 
       {viewThreadId && (
         <div

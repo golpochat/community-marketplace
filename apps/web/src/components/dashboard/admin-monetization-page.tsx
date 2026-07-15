@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { AdsSystemStatus, MonetizationSettings } from '@community-marketplace/types';
+import { useAppFeedback } from '@community-marketplace/ui';
 import { DashboardCard } from '@community-marketplace/ui-dashboard';
 
 import { AdminMonetizationAdvertising } from '@/components/dashboard/admin-monetization-advertising';
@@ -46,6 +47,7 @@ const FEES_SUB_TABS: { id: FeesSubTab; label: string }[] = [
 ];
 
 export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
+  const feedback = useAppFeedback();
   const [settings, setSettings] = useState<MonetizationSettings | null>(null);
   const [adsSystem, setAdsSystem] = useState<AdsSystemStatus | null>(null);
   const [activeTab, setActiveTab] = useState<MonetizationTab>('catalog');
@@ -53,7 +55,6 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,14 +82,13 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
     if (!settings) return;
     setSaving(true);
     setError(null);
-    setMessage(null);
     try {
       const updated = await monetizationService.updateMonetizationSettings(role, {
         defaultPlatformFeePercent: settings.defaultPlatformFeePercent,
         verifiedSellerFeePercent: settings.verifiedSellerFeePercent,
       });
       setSettings(updated);
-      setMessage('Seller fee settings saved.');
+      feedback.success('Seller fee settings saved');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings');
     } finally {
@@ -101,7 +101,6 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
     if (!settings) return;
     setSaving(true);
     setError(null);
-    setMessage(null);
     try {
       const updated = await monetizationService.updateMonetizationSettings(role, {
         cashbackPercent: settings.cashbackPercent,
@@ -112,7 +111,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
         cashbackMinOrderAmount: settings.cashbackMinOrderAmount,
       });
       setSettings(updated);
-      setMessage('Buyer cashback settings saved.');
+      feedback.success('Buyer cashback settings saved');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings');
     } finally {
@@ -125,7 +124,6 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
     if (!settings) return;
     setSaving(true);
     setError(null);
-    setMessage(null);
     try {
       const updated = await monetizationService.updateMonetizationSettings(role, {
         displayAdsEnabled: settings.displayAdsEnabled,
@@ -135,7 +133,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
       setSettings(updated);
       const adsStatus = await adsService.getAdsSystemStatus(role);
       setAdsSystem(adsStatus);
-      setMessage('Module settings saved.');
+      feedback.success('Module settings saved');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings');
     } finally {
@@ -157,7 +155,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
   }
 
   function handlePanelMessage(panelMessage: string) {
-    setMessage(panelMessage);
+    feedback.success(panelMessage);
     setError(null);
   }
 
@@ -170,7 +168,6 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
         error={error}
         empty={false}
       >
-        {message && <p className="mb-4 text-sm text-green-700">{message}</p>}
         {settings && (
           <>
             <DashboardSectionTabs

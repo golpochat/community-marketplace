@@ -137,6 +137,26 @@ export class ListingsCrudService {
     });
   }
 
+  async resolveListingIdByCompact(compactId: string): Promise<{ id: string }> {
+    const normalized = compactId.toLowerCase().replace(/[^0-9a-f]/g, '');
+    if (normalized.length !== 8) {
+      throw new NotFoundException(`Listing ${compactId} not found`);
+    }
+
+    const rows = await this.prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT id
+      FROM listings
+      WHERE RIGHT(REPLACE(id::text, '-', ''), 8) = ${normalized}
+      LIMIT 2
+    `;
+
+    if (rows.length !== 1) {
+      throw new NotFoundException(`Listing ${compactId} not found`);
+    }
+
+    return { id: rows[0]!.id };
+  }
+
   async findById(id: string, incrementView = false): Promise<Listing> {
     const row = await this.prisma.listing.findUnique({
       where: { id },

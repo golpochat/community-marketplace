@@ -5,7 +5,7 @@ import { PERMISSIONS } from '@community-marketplace/types';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
-import { BanUserDto, SuspendUserDto, VerificationReviewDto } from './dto/users.dto';
+import { BanUserDto, SuspendUserDto } from './dto/users.dto';
 import { UsersService } from './users.service';
 
 @RequireRole('ADMIN', 'SUPER_ADMIN')
@@ -33,18 +33,6 @@ export class AdminUsersController {
   @Get('audit-logs')
   getAuditLogs(@Query() query: Record<string, string>) {
     return this.usersService.getAuditLogs(query);
-  }
-
-  @RequirePermissions(PERMISSIONS.APPROVE_VERIFICATION)
-  @Get('verifications/pending')
-  listPendingVerifications(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
-  ) {
-    return this.usersService.listPendingVerifications(
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 20,
-    );
   }
 
   @RequirePermissions(PERMISSIONS.VIEW_USERS)
@@ -79,25 +67,5 @@ export class AdminUsersController {
     @Param('banId') banId: string,
   ) {
     return this.usersService.unbanUser(actor.id, actor.role, userId, banId);
-  }
-
-  @RequirePermissions(PERMISSIONS.APPROVE_VERIFICATION)
-  @Post('verifications/:id/approve')
-  approveVerification(
-    @CurrentUser() actor: AuthenticatedUser,
-    @Param('id') id: string,
-    @Body() dto: VerificationReviewDto,
-  ) {
-    return this.usersService.approveVerification(id, actor.id, dto);
-  }
-
-  @RequirePermissions(PERMISSIONS.REJECT_VERIFICATION)
-  @Post('verifications/:id/reject')
-  rejectVerification(
-    @CurrentUser() actor: AuthenticatedUser,
-    @Param('id') id: string,
-    @Body() dto: VerificationReviewDto,
-  ) {
-    return this.usersService.rejectVerification(id, actor.id, dto);
   }
 }

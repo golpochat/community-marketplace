@@ -154,13 +154,6 @@ export const ADMIN_SIDEBAR: SidebarNavItem[] = [
     permission: PERMISSIONS.VIEW_USERS,
   },
   {
-    id: 'verifications',
-    label: 'Account Verifications',
-    href: '/admin/verifications',
-    icon: 'medal',
-    permission: PERMISSIONS.APPROVE_VERIFICATION,
-  },
-  {
     id: 'seller-verification',
     label: 'Seller Verification',
     href: '/admin/seller-verification/pending',
@@ -293,16 +286,12 @@ export const BUYER_SIDEBAR: SidebarNavItem[] = [
   { id: 'notifications', label: 'Notifications', href: '/buyer/notifications', icon: 'bell' },
 ];
 
-/** Unified marketplace account — replaces separate buyer/seller sidebars. */
+/** Unified marketplace account — buyer-first; seller items are injected per selling phase. */
 export const ACCOUNT_SIDEBAR: SidebarNavItem[] = [
   { id: 'home', label: 'Account home', href: '/account', icon: 'home', exact: true },
   { id: 'browse', label: 'Browse listings', href: '/listings', icon: 'search' },
   { id: 'purchases', label: 'Purchases', href: '/account/purchases', icon: 'package' },
   { id: 'saved', label: 'Saved items', href: '/account/saved', icon: 'heart' },
-  { id: 'my-listings', label: 'My listings', href: '/account/listings', icon: 'tag' },
-  { id: 'create', label: 'Create listing', href: '/account/listings/create', icon: 'plus' },
-  { id: 'start-selling', label: 'Start selling', href: '/account/start-selling', icon: 'plus' },
-  { id: 'earnings', label: 'Earnings', href: '/account/earnings', icon: 'wallet' },
   { id: 'messages', label: 'Messages', href: '/account/messages', icon: 'message-circle' },
   { id: 'disputes', label: 'Disputes', href: '/account/disputes', icon: 'scale' },
   { id: 'notifications', label: 'Notifications', href: '/account/notifications', icon: 'bell' },

@@ -22,7 +22,15 @@ export function SellerStatusHistoryPanel() {
         if (!cancelled) setRows(result.data);
       })
       .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
+        if (cancelled) return;
+        // Early seller setup may not have history yet; treat missing seller rows as empty.
+        const message = err.message || '';
+        if (/seller not found/i.test(message) || /404/.test(message)) {
+          setRows([]);
+          setError(null);
+          return;
+        }
+        setError(message);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

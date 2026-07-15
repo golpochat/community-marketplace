@@ -2,11 +2,13 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { Button, Label, PasswordInput } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
+import { navigateAfterAuth } from '@/lib/navigate-after-auth';
+import { getWebDashboardPathForRole } from '@/lib/rbac-routes';
 import { authService } from '@/services/auth.service';
 
 export default function AdminInviteAcceptPage() {
@@ -22,7 +24,6 @@ export default function AdminInviteAcceptPage() {
 }
 
 function AdminInviteAcceptContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth } = useAuth();
   const token = searchParams.get('token');
@@ -75,10 +76,11 @@ function AdminInviteAcceptContent() {
     try {
       const result = await authService.acceptAdminInvitation(token, password);
       setAuth(result.login);
-      router.push(result.login.redirectPath);
+      navigateAfterAuth(
+        result.login.redirectPath ?? getWebDashboardPathForRole(result.login.user.role),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to complete setup');
-    } finally {
       setSubmitting(false);
     }
   };

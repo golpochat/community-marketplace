@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 
 import type { Payment, Payout, PlatformPurchase, SellerEarningsSummary, SellerPlatformFeeInfo, StripeConnectAccount } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
+import { useAppFeedback } from '@community-marketplace/ui';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { LoadingState } from '@/components/LoadingState';
@@ -16,6 +17,8 @@ import type { StatementExportFormat } from '@/services/monetization.service';
 import { paymentsService } from '@/services/payments.service';
 import { sellerVerificationService } from '@/services/seller-verification.service';
 import { StatementExportButtons } from '@/components/dashboard/statement-export-buttons';
+import { StripeConnectOnboardingPanel } from '@/components/seller/stripe-connect-onboarding-panel';
+import { stripeConnectReturnUrl } from '@/lib/stripe-connect-urls';
 
 const PLATFORM_PURCHASE_LABELS: Record<PlatformPurchase['type'], string> = {
   listing_boost: 'Listing boost',
@@ -34,6 +37,7 @@ function currentStatementDefaults() {
 
 function SellerEarningsContent() {
   const searchParams = useSearchParams();
+  const feedback = useAppFeedback();
   const [summary, setSummary] = useState<SellerEarningsSummary | null>(null);
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [sellerPayments, setSellerPayments] = useState<Payment[]>([]);
@@ -53,7 +57,6 @@ function SellerEarningsContent() {
   const [connectSetupError, setConnectSetupError] = useState<string | null>(null);
   const [onboarding, setOnboarding] = useState(false);
   const [openingDashboard, setOpeningDashboard] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
   const [platformFee, setPlatformFee] = useState<SellerPlatformFeeInfo | null>(null);
   const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
   const [platformPurchases, setPlatformPurchases] = useState<PlatformPurchase[]>([]);
@@ -99,8 +102,12 @@ function SellerEarningsContent() {
 
   useEffect(() => {
     if (searchParams.get('connect') === 'return') {
-      setMessage('Welcome back from Stripe. We refreshed your Connect status below.');
+      feedback.info(
+        'Welcome back from Stripe',
+        'We refreshed your Connect status below.',
+      );
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- show once per return navigation
   }, [searchParams]);
 
   async function handleOnboard() {
@@ -109,9 +116,8 @@ function SellerEarningsContent() {
     setOnboarding(true);
     setError(null);
     setConnectSetupError(null);
-    setMessage(null);
     try {
-      const returnUrl = `${window.location.origin}/seller/earnings?connect=return`;
+      const returnUrl = stripeConnectReturnUrl();
       const account = await paymentsService.startConnectOnboarding(returnUrl, returnUrl);
       if (account.onboardingUrl) {
         window.location.href = account.onboardingUrl;
@@ -203,11 +209,6 @@ function SellerEarningsContent() {
         }
       />
 
-      {message && (
-        <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-800">
-          {message}
-        </p>
-      )}
       {error && !needsStripeConnectSetup && (
         <p className="mb-4 text-sm text-red-600">{error}</p>
       )}
@@ -238,10 +239,15 @@ function SellerEarningsContent() {
               <SellerStripeVerificationGate />
             ) : (
               <>
-            <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-              Irish sellers onboard with Stripe Express. Buyers cannot pay for your listings until
-              charges and payouts are enabled. In test mode, use Stripe&apos;s test business details.
-            </p>
+            {!isReady && !needsStripeConnectSetup && (
+              <div className="mb-4">
+                <StripeConnectOnboardingPanel
+                  connectStarted={Boolean(connect)}
+                  onboarding={onboarding}
+                  onContinue={() => void handleOnboard()}
+                />
+              </div>
+            )}
             {needsStripeConnectSetup && (
               <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
                 <p className="font-medium">Stripe Connect is not enabled on your platform account yet.</p>
@@ -284,7 +290,7 @@ function SellerEarningsContent() {
               </p>
             )}
             <div className="mt-4 flex flex-wrap gap-2">
-              {!isReady && (
+              {!isReady && needsStripeConnectSetup && (
                 <button
                   type="button"
                   onClick={() => void handleOnboard()}

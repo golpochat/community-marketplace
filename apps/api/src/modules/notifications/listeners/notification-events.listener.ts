@@ -1,5 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 
+import { PERMISSIONS, SELLER_VERIFICATION_MESSAGES } from '@community-marketplace/types';
+
 import { EventBusService } from '../../../events/event-bus.service';
 import { PrismaService } from '../../../database/prisma.service';
 import { NotificationDispatcherService } from '../services/notification-dispatcher.service';
@@ -51,6 +53,15 @@ export class NotificationEventsListener implements OnModuleInit {
       void this.onListingUnderInvestigation(e.payload),
     );
     this.eventBus.subscribe('listing.renewed', (e) => void this.onListingRenewed(e.payload));
+    this.eventBus.subscribe('user.verification_requested', (e) =>
+      void this.onVerificationRequested(e.payload),
+    );
+    this.eventBus.subscribe('seller.verification_priority_activated', (e) =>
+      void this.onVerificationPriorityActivated(e.payload),
+    );
+    this.eventBus.subscribe('seller.verification_sla_overdue', (e) =>
+      void this.onVerificationSlaOverdue(e.payload),
+    );
     this.eventBus.subscribe('user.verification_approved', (e) =>
       void this.onVerificationApproved(e.payload),
     );
@@ -318,6 +329,52 @@ export class NotificationEventsListener implements OnModuleInit {
     );
   }
 
+  /** Staff with seller-KYC review capability (ADMIN + L2 accounts persona + SUPER_ADMIN). */
+  private async notifySellerVerificationReviewers(input: {
+    message: string;
+    title: string;
+    actionUrl: string;
+    data?: Record<string, unknown>;
+  }) {
+    const reviewers = await this.prisma.user.findMany({
+      where: {
+        status: 'active',
+        OR: [
+          { primaryRole: { code: { in: ['ADMIN', 'SUPER_ADMIN'] } } },
+          {
+            primaryRole: {
+              permissions: {
+                some: {
+                  permission: { code: PERMISSIONS.REVIEW_SELLER_VERIFICATION },
+                },
+              },
+            },
+          },
+        ],
+      },
+      select: { id: true },
+      distinct: ['id'],
+      take: 50,
+    });
+
+    await Promise.all(
+      reviewers.map((admin) =>
+        this.dispatcher.dispatch({
+          userId: admin.id,
+          type: 'system',
+          templateKey: 'admin_warning',
+          variables: {
+            title: input.title,
+            message: input.message,
+          },
+          actionUrl: input.actionUrl,
+          data: input.data,
+          channels: ['in_app'],
+        }),
+      ),
+    );
+  }
+
   private async onListingSubmittedForReview(payload: Record<string, unknown>) {
     const listingId = payload.listingId as string;
     const listing = await this.prisma.listing.findUnique({
@@ -555,6 +612,85 @@ export class NotificationEventsListener implements OnModuleInit {
     });
   }
 
+  private async onVerificationRequested(payload: Record<string, unknown>) {
+    const userId = payload.userId as string;
+    const verificationId = payload.verificationId as string | undefined;
+    const priority = payload.priority === true;
+    if (!userId) return;
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { displayName: true, email: true },
+    });
+    const name = user?.displayName ?? user?.email ?? 'A seller';
+
+    if (priority) {
+      const dueLabel = this.formatReviewDueLabel(payload.reviewDueAt);
+      await this.notifySellerVerificationReviewers({
+        title: 'Fast-track verification submitted',
+        message: `${name} submitted for priority review. Target decision ${dueLabel}.`,
+        actionUrl: '/admin/seller-verification/pending',
+        data: { userId, verificationId, priority: true, reviewDueAt: payload.reviewDueAt },
+      });
+      return;
+    }
+
+    await this.notifySellerVerificationReviewers({
+      title: 'Seller verification pending',
+      message: `${name} submitted documents for review.`,
+      actionUrl: '/admin/seller-verification/pending',
+      data: { userId, verificationId, priority: false },
+    });
+  }
+
+  private async onVerificationPriorityActivated(payload: Record<string, unknown>) {
+    const userId = payload.userId as string;
+    const verificationId = payload.verificationId as string | undefined;
+    if (!userId) return;
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { displayName: true, email: true },
+    });
+    const name = user?.displayName ?? user?.email ?? 'A seller';
+    const dueLabel = this.formatReviewDueLabel(payload.reviewDueAt);
+
+    await this.notifySellerVerificationReviewers({
+      title: 'Fast-track upgrade on pending case',
+      message: `${name} upgraded to priority review. Target decision ${dueLabel}.`,
+      actionUrl: '/admin/seller-verification/pending',
+      data: { userId, verificationId, priority: true, reviewDueAt: payload.reviewDueAt },
+    });
+  }
+
+  private formatReviewDueLabel(reviewDueAt: unknown): string {
+    if (typeof reviewDueAt !== 'string') {
+      return 'within 24 hours';
+    }
+    const due = new Date(reviewDueAt);
+    if (Number.isNaN(due.getTime())) {
+      return 'within 24 hours';
+    }
+    return `by ${due.toLocaleString(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    })}`;
+  }
+
+  private async onVerificationSlaOverdue(payload: Record<string, unknown>) {
+    const userId = payload.userId as string;
+    const verificationId = payload.verificationId as string | undefined;
+    const sellerName = (payload.sellerName as string) ?? 'A seller';
+    const dueLabel = this.formatReviewDueLabel(payload.reviewDueAt);
+
+    await this.notifySellerVerificationReviewers({
+      title: 'Fast-track SLA overdue',
+      message: `${sellerName}'s priority verification is past the 24-hour target (due ${dueLabel}). Please review urgently.`,
+      actionUrl: '/admin/seller-verification/pending',
+      data: { userId, verificationId, priority: true, overdue: true },
+    });
+  }
+
   private async onVerificationApproved(payload: Record<string, unknown>) {
     const userId = payload.userId as string;
     if (!userId) return;
@@ -569,12 +705,18 @@ export class NotificationEventsListener implements OnModuleInit {
   private async onVerificationRejected(payload: Record<string, unknown>) {
     const userId = payload.userId as string;
     const reason = (payload.reason as string) ?? 'Please resubmit your documents.';
+    const priorityRequeueGranted = payload.priorityRequeueGranted === true;
     if (!userId) return;
+
+    const rejectionMessage = priorityRequeueGranted
+      ? `${reason} ${SELLER_VERIFICATION_MESSAGES.FAST_TRACK_REQUEUE_GRANTED}`
+      : reason;
+
     await this.dispatcher.dispatch({
       userId,
       type: 'verification_rejected',
       templateKey: 'verification_rejected',
-      variables: { reason },
+      variables: { reason: rejectionMessage },
       channels: ['in_app', 'email'],
     });
   }

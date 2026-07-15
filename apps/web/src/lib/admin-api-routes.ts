@@ -10,7 +10,6 @@ const SUPER_ADMIN_ADMIN_NAMESPACE_PATHS = new Set([
   '/payments',
   '/monetization',
   '/finance',
-  '/users/verifications/pending',
   '/users/suspend',
   '/users/ban',
   '/seller-verification/requests',
@@ -35,7 +34,6 @@ function superAdminUsesAdminNamespace(path: string): boolean {
   return (
     SUPER_ADMIN_ADMIN_NAMESPACE_PATHS.has(path) ||
     path.startsWith('/payments') ||
-    path.startsWith('/users/verifications/') ||
     path.startsWith('/seller-verification') ||
     path.startsWith('/seller/') ||
     path.startsWith('/listings') ||
@@ -80,7 +78,6 @@ export const ADMIN_API_ROUTES = {
     listings: `${API_NAMESPACES.ADMIN}/listings`,
     audit: `${API_NAMESPACES.ADMIN}/audit`,
     payments: `${API_NAMESPACES.ADMIN}/payments`,
-    verificationsPending: `${API_NAMESPACES.ADMIN}/users/verifications/pending`,
   },
 } as const;
 
