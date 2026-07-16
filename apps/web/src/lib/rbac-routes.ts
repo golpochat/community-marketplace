@@ -13,7 +13,7 @@ export const API_NAMESPACES = {
 export const WEB_APP_ROUTES = {
   home: '/',
   listings: '/listings',
-  chat: '/chat',
+  chat: '/account/messages',
   account: ACCOUNT_DASHBOARD_PATH,
   accountPurchases: '/account/purchases',
   accountSaved: '/account/saved',

@@ -31,6 +31,7 @@ interface ChatPageClientProps {
   role: MarketplaceChatRole;
   listingId?: string;
   sellerId?: string;
+  initialThreadId?: string;
 }
 
 export function ChatPageClient({
@@ -39,9 +40,10 @@ export function ChatPageClient({
   role,
   listingId,
   sellerId,
+  initialThreadId,
 }: ChatPageClientProps) {
   const [inbox, setInbox] = useState<ChatInboxItem[]>([]);
-  const [activeThreadId, setActiveThreadId] = useState<string>();
+  const [activeThreadId, setActiveThreadId] = useState<string | undefined>(initialThreadId);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typingLabel, setTypingLabel] = useState<string>();
   const [threadError, setThreadError] = useState<string | null>(null);
@@ -65,13 +67,21 @@ export function ChatPageClient({
   useEffect(() => {
     void loadInbox().then((items) => {
       setActiveThreadId((current) => {
+        if (current) {
+          const stillExists = items.some((item) => item.thread.id === current);
+          if (stillExists) return current;
+        }
+        if (initialThreadId) {
+          const fromLink = items.find((item) => item.thread.id === initialThreadId);
+          if (fromLink) return fromLink.thread.id;
+        }
         if (!current && items[0]) {
           return items[0].thread.id;
         }
         return current;
       });
     });
-  }, [loadInbox]);
+  }, [loadInbox, initialThreadId]);
 
   useEffect(() => {
     if (!listingId || autoThreadHandled.current) return;

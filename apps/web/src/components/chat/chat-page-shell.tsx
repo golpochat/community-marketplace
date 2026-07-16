@@ -17,6 +17,7 @@ function ChatPageWithParams({ currentUserId, accessToken, role }: ChatPageShellP
   const searchParams = useSearchParams();
   const listingId = searchParams.get('listing') ?? undefined;
   const sellerId = searchParams.get('seller') ?? undefined;
+  const threadId = searchParams.get('thread') ?? undefined;
 
   return (
     <ChatPageClient
@@ -25,6 +26,7 @@ function ChatPageWithParams({ currentUserId, accessToken, role }: ChatPageShellP
       role={role}
       listingId={listingId}
       sellerId={sellerId}
+      initialThreadId={threadId}
     />
   );
 }

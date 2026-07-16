@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 import { Button, Input, Label, PasswordInput } from '@community-marketplace/ui';
 
@@ -10,8 +11,15 @@ import { navigateAfterAuth } from '@/lib/navigate-after-auth';
 import { getWebDashboardPathForRole } from '@/lib/rbac-routes';
 import { authService } from '@/services/auth.service';
 
+function safeReturnUrl(value: string | null): string | null {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return null;
+  return value;
+}
+
 export function LoginForm() {
   const { setAuth } = useAuth();
+  const searchParams = useSearchParams();
+  const returnUrl = safeReturnUrl(searchParams.get('returnUrl'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +33,9 @@ export function LoginForm() {
     try {
       const response = await authService.login({ email, password });
       setAuth(response);
-      navigateAfterAuth(response.redirectPath ?? getWebDashboardPathForRole(response.user.role));
+      navigateAfterAuth(
+        returnUrl ?? response.redirectPath ?? getWebDashboardPathForRole(response.user.role),
+      );
       // Keep loading UI until the browser leaves this page.
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');

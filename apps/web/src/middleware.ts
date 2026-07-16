@@ -70,10 +70,9 @@ export function middleware(request: NextRequest) {
 
   const redirectTarget = resolveDashboardRedirect(pathname, role);
   if (redirectTarget) {
-    return withLegacyRoleCookieCleanup(
-      request,
-      NextResponse.redirect(new URL(redirectTarget, request.url)),
-    );
+    const url = new URL(redirectTarget, request.url);
+    url.search = request.nextUrl.search;
+    return withLegacyRoleCookieCleanup(request, NextResponse.redirect(url));
   }
 
   if (!isDashboardPath(pathname)) {
@@ -81,9 +80,14 @@ export function middleware(request: NextRequest) {
   }
 
   if (!role) {
+    const loginUrl = new URL('/auth/login', request.url);
+    loginUrl.searchParams.set(
+      'returnUrl',
+      `${pathname}${request.nextUrl.search}`,
+    );
     return withLegacyRoleCookieCleanup(
       request,
-      NextResponse.redirect(new URL('/auth/login', request.url)),
+      NextResponse.redirect(loginUrl),
     );
   }
 

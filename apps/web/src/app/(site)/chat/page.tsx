@@ -1,30 +1,26 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
-import { Button } from '@community-marketplace/ui';
+import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
-import { NOINDEX_ROBOTS } from '@/lib/seo/constants';
+/** Legacy public chat stub — unified inbox is under the account hub. */
+export default async function ChatPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const query = new URLSearchParams();
 
-export const metadata: Metadata = {
-  title: 'Messages',
-  robots: NOINDEX_ROBOTS,
-};
+  for (const [key, value] of Object.entries(params)) {
+    if (typeof value === 'string' && value.length > 0) {
+      query.set(key, value);
+    } else if (Array.isArray(value)) {
+      for (const entry of value) {
+        if (entry) query.append(key, entry);
+      }
+    }
+  }
 
-export default function ChatPage() {
-  return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="text-2xl font-semibold text-foreground">Messages</h1>
-      <p className="mt-2 text-muted-foreground">
-        Chat is available from your role dashboard after signing in.
-      </p>
-      <div className="mt-6 flex gap-4">
-        <Button asChild>
-          <Link href="/buyer/dashboard/chat">Buyer messages</Link>
-        </Button>
-        <Button variant="outline" asChild>
-          <Link href="/seller/dashboard/chat">Seller messages</Link>
-        </Button>
-      </div>
-    </div>
-  );
+  const qs = query.toString();
+  redirect(qs ? `${WEB_APP_ROUTES.accountMessages}?${qs}` : WEB_APP_ROUTES.accountMessages);
 }

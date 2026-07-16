@@ -28,6 +28,7 @@ export function resolveGuestAuthRedirect(pathname: string, role: RoleCodeValue |
 }
 
 export const LEGACY_DASHBOARD_REDIRECTS: Record<string, string> = {
+  '/chat': '/account/messages',
   '/buyer/dashboard': '/account',
   '/seller/dashboard': '/account',
   '/buyer/purchases': '/account/purchases',
