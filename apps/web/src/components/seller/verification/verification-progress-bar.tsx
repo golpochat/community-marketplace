@@ -11,7 +11,7 @@ export function VerificationProgressBar({
   used,
   limit,
   className,
-  label = 'Free listings used',
+  label = 'Unverified live listings used',
 }: VerificationProgressBarProps) {
   const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
   const tone =

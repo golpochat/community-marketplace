@@ -385,7 +385,7 @@ export function ListingForm({
 
   function shouldSkipPricingPreview(): boolean {
     const sale = parseSalePrice();
-    // Free items: no discounts, no review, nothing meaningful to preview.
+    // Free-priced items: no discounts, no review, nothing meaningful to preview.
     if (sale === 0) return true;
     // Draft saves: current and proposed are always identical in the local preview.
     if (!isLiveListing) return true;
@@ -643,7 +643,7 @@ export function ListingForm({
             />
             <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
               {isFreeListing
-                ? "Free items appear in free listings. Collection-only pickup is recommended on the next step."
+                ? "Free-priced items appear with a €0 price. Collection-only pickup is recommended on the next step."
                 : "The price buyers will pay. Enter 0 to give the item away for free."}
             </p>
           </div>
