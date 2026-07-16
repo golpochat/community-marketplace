@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 
 import type { ListingImage, RbacRole } from '@community-marketplace/types';
 import {
@@ -19,6 +20,8 @@ import { ListingAuditService } from './listing-audit.service';
 import { ListingAutoModerationService } from './listing-auto-moderation.service';
 import { ListingImageProcessorService } from './listing-image-processor.service';
 import { ListingR2StorageService } from './listing-r2-storage.service';
+import { DevUploadService } from '../../dev-upload/dev-upload.service';
+import { R2StorageService } from '../../users/services/r2-storage.service';
 
 @Injectable()
 export class ListingImagesService {
@@ -30,6 +33,8 @@ export class ListingImagesService {
     private readonly eventBus: EventBusService,
     private readonly sellerListingGate: SellerListingGateService,
     private readonly autoModeration: ListingAutoModerationService,
+    private readonly r2: R2StorageService,
+    private readonly devUpload: DevUploadService,
   ) {}
 
   async findByListingId(listingId: string): Promise<ListingImage[]> {
@@ -128,6 +133,64 @@ export class ListingImagesService {
     }
 
     return created.map(mapListingImage);
+  }
+
+  /**
+   * Attach a processed marketing image buffer as a new listing photo
+   * (runs through the normal Sharp variant pipeline).
+   */
+  async addImageFromBuffer(
+    listingId: string,
+    sellerId: string,
+    buffer: Buffer,
+  ): Promise<ListingImage[]> {
+    await this.assertSellerOwnsListing(listingId, sellerId);
+
+    const existingCount = await this.prisma.listingImage.count({
+      where: { listingId },
+    });
+    if (existingCount >= this.storage.maxImages) {
+      throw new BadRequestException(
+        `Maximum of ${this.storage.maxImages} images per listing`,
+      );
+    }
+
+    const sourceKey = `listing-images/${sellerId}/${listingId}/${randomUUID()}.webp`;
+    if (this.r2.isConfigured()) {
+      await this.r2.putObject(sourceKey, buffer, 'image/webp');
+    } else {
+      await this.devUpload.save(sourceKey, buffer);
+    }
+
+    let processed: { key: string; publicUrl: string };
+    try {
+      processed = await this.processor.processListingImage(sourceKey);
+    } catch {
+      processed = {
+        key: sourceKey,
+        publicUrl: this.storage.buildPublicUrl(sourceKey),
+      };
+    }
+
+    const created = await this.prisma.listingImage.create({
+      data: {
+        listingId,
+        url: processed.publicUrl,
+        sortOrder: existingCount,
+      },
+    });
+
+    await this.audit.record(listingId, 'image_added', sellerId, {
+      metadata: { source: 'ai_marketing_hub', count: 1 },
+    });
+
+    this.eventBus.publish({
+      type: 'listing.updated',
+      payload: { listingId },
+      timestamp: new Date(),
+    });
+
+    return [mapListingImage(created)];
   }
 
   async reorder(

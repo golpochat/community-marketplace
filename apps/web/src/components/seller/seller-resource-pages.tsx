@@ -1138,6 +1138,7 @@ export function SellerEditListingPage({
   const [removingImageId, setRemovingImageId] = useState<string | null>(null);
   const [reorderingImages, setReorderingImages] = useState(false);
   const [showDuplicatedBanner, setShowDuplicatedBanner] = useState(duplicatedHint);
+  const [boostDialogOpen, setBoostDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!duplicatedHint) return;
@@ -1436,10 +1437,23 @@ export function SellerEditListingPage({
             onReorderExistingImages={(images) =>
               void handleReorderExistingImages(images)
             }
+            onListingImagesChange={setExistingImages}
+            onBoostListing={() => setBoostDialogOpen(true)}
             removingExistingImageId={removingImageId}
             reorderingImages={reorderingImages}
           />
         </Card>
+      )}
+      {boostDialogOpen && (
+        <ListingBoostDialog
+          open
+          listingId={listingId}
+          onClose={() => setBoostDialogOpen(false)}
+          onSuccess={() => {
+            setBoostDialogOpen(false);
+            feedback.success("Boost started", "Your listing boost is being set up.");
+          }}
+        />
       )}
     </DashboardPageShell>
   );

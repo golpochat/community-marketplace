@@ -10,10 +10,13 @@ import { SellerOnboardingProvider, useSellerOnboarding } from '@/providers/selle
 
 function AccountDashboardShell({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const { phase } = useSellerOnboarding();
+  const { phase, loading } = useSellerOnboarding();
   const role: RbacRole = user?.role === 'SELLER' || user?.role === 'BUYER' ? user.role : 'MEMBER';
 
-  const sidebarItems = useMemo(() => buildAccountSidebarItems(phase), [phase]);
+  const sidebarItems = useMemo(
+    () => buildAccountSidebarItems(phase, { loading }),
+    [phase, loading],
+  );
 
   return (
     <DashboardLayout role={role} theme="buyer" sidebarItems={sidebarItems}>

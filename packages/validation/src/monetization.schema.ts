@@ -18,6 +18,7 @@ export const platformSettingsUpdateSchema = z.object({
   boostsEnabled: z.boolean().optional(),
   featuredEnabled: z.boolean().optional(),
   displayAdsEnabled: z.boolean().optional(),
+  aiMarketingEnabled: z.boolean().optional(),
   boostPrice7d: z.number().min(0).max(999).optional(),
   boostPrice30d: z.number().min(0).max(999).optional(),
   featuredHomepagePrice: z.number().min(0).max(999).optional(),
@@ -241,7 +242,7 @@ export const cashbackGrantsAdminFiltersSchema = paginationSchema.extend({
 
 export const walletTransactionsAdminFiltersSchema = paginationSchema.extend({
   userId: uuidSchema.optional(),
-  type: z.enum(['cashback_earned', 'expired']).optional(),
+  type: z.enum(['cashback_earned', 'expired', 'ai_generation']).optional(),
 });
 
 export const cashbackEstimateQuerySchema = z.object({

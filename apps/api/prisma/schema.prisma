@@ -266,6 +266,27 @@ enum PaymentMethod {
 enum WalletTransactionType {
   cashback_earned
   expired
+  ai_generation
+}
+
+enum AiMarketingTask {
+  seo_title
+  description
+  keywords
+  instagram_caption
+  facebook_ad
+  tiktok_script
+  whatsapp_message
+  email_campaign
+  seasonal_promo
+  image_enhance
+  image_bg_remove
+  banner_creator
+}
+
+enum AiBillingMethod {
+  free_quota
+  wallet
 }
 
 enum CashbackGrantStatus {
@@ -529,6 +550,7 @@ model User {
   cashbackGrants             CashbackGrant[]
   buyerCashbackRules         BuyerCashbackRule[]    @relation("BuyerCashbackRules")
   platformPurchases          PlatformPurchase[]
+  aiGenerationLogs           AiGenerationLog[]
   stores                     Store[]
   adminInvitationsSent       AdminInvitation[] @relation("AdminInvitationsSent")
 
@@ -884,6 +906,7 @@ model Listing {
   buyerReviews       BuyerReview[]
   marketplaceDisputes MarketplaceDispute[]
   fraudSignals        FraudSignal[]
+  aiGenerationLogs    AiGenerationLog[]
 
   @@index([status, createdAt(sort: Desc)])
   @@index([status, expiresAt])
@@ -1207,6 +1230,7 @@ model PlatformSettings {
   boostsEnabled            Boolean  @default(true) @map("boosts_enabled")
   featuredEnabled          Boolean  @default(true) @map("featured_enabled")
   displayAdsEnabled        Boolean  @default(false) @map("display_ads_enabled")
+  aiMarketingEnabled       Boolean  @default(false) @map("ai_marketing_enabled")
   emailProvider            String   @default("brevo") @map("email_provider")
   emailFallbackEnabled     Boolean  @default(false) @map("email_fallback_enabled")
   emailFromAddress         String?  @map("email_from_address")
@@ -1344,6 +1368,7 @@ model WalletTransaction {
   payment Payment? @relation(fields: [sourcePaymentId], references: [id], onDelete: SetNull)
   creditSource WalletTransaction?  @relation("WalletCreditExpiry", fields: [creditSourceId], references: [id], onDelete: SetNull)
   expiryEntries WalletTransaction[] @relation("WalletCreditExpiry")
+  aiGenerationLog AiGenerationLog?
 
   @@index([userId, createdAt(sort: Desc)])
   @@index([type, expiresAt])
@@ -1367,6 +1392,32 @@ model CashbackGrant {
   @@index([status, unlockAt])
   @@index([userId, createdAt(sort: Desc)])
   @@map("cashback_grants")
+}
+
+/// Audit + metering for SellNearby AI Marketing Hub generations.
+model AiGenerationLog {
+  id                  String           @id @default(uuid())
+  userId              String           @map("user_id")
+  listingId           String?          @map("listing_id")
+  task                AiMarketingTask
+  provider            String
+  model               String
+  promptVersion       String           @map("prompt_version")
+  billingMethod       AiBillingMethod  @map("billing_method")
+  creditUnits         Int              @map("credit_units")
+  amountEur           Decimal          @default(0) @map("amount_eur") @db.Decimal(12, 2)
+  walletTransactionId String?          @unique @map("wallet_transaction_id")
+  inputSummary        String?          @map("input_summary") @db.Text
+  outputText          String           @map("output_text") @db.Text
+  createdAt           DateTime         @default(now()) @map("created_at")
+
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing           Listing?           @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  walletTransaction WalletTransaction? @relation(fields: [walletTransactionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([listingId])
+  @@map("ai_generation_logs")
 }
 
 model StripeConnectAccount {

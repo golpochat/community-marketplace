@@ -17,6 +17,9 @@ export interface SellerOnboardingSnapshot {
   businessStructure: SellerBusinessStructure | string | null;
   isBusinessAccount?: boolean;
   businessName?: string | null;
+  /** True when the seller has at least one Store row (required before listings). */
+  hasStorefront: boolean;
+  storeCount: number;
 }
 
 export function isMarketplaceRole(role: string): role is MarketplaceRole {
@@ -38,14 +41,18 @@ export function isSellerIdentityStepComplete(
   return sellerStatus === 'verified' || sellerStatus === 'under_review';
 }
 
-/** Derives sidebar and dashboard UX phase from seller onboarding snapshot. */
+/**
+ * Derives sidebar and dashboard UX phase from seller onboarding snapshot.
+ * Storefront unlocks listing tools. Verification alone does not.
+ */
 export function deriveAccountSellingPhase(
   snapshot: SellerOnboardingSnapshot | null | undefined,
 ): AccountSellingPhase {
-  if (!snapshot?.started) return 'buyer_only';
+  if (!snapshot) return 'buyer_only';
   if (snapshot.sellerStatus === 'suspended') return 'suspended';
-  if (snapshot.sellerStatus === 'verified') return 'active_seller';
-  return 'setup_in_progress';
+  if (snapshot.hasStorefront) return 'active_seller';
+  if (snapshot.started) return 'setup_in_progress';
+  return 'buyer_only';
 }
 
 /** True when the user may use buyer checkout, purchases, and favourites. */

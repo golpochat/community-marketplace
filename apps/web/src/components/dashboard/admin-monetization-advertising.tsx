@@ -256,6 +256,50 @@ export function AdminMonetizationAdvertising({
         </ol>
       </DashboardCard>
 
+      <DashboardCard title="AI Marketing Hub">
+        <p className="mb-4 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+          Publish to let sellers use AI copy, image tools, share banners, and price suggestions on
+          listing forms. Unpublish to hide and block the feature without a redeploy. Hard kill
+          switch: set <code className="text-xs">AI_MARKETING_ENABLED=false</code> in API{' '}
+          <code className="text-xs">.env</code> and restart.
+        </p>
+        <form onSubmit={(e) => void onSave(e)} className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-3">
+            <div>
+              <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">
+                AI Marketing Hub for sellers
+              </p>
+              <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                {settings.aiMarketingEnabled
+                  ? 'Published — sellers can use the hub (when deploy env allows).'
+                  : 'Unpublished — seller tools and APIs are blocked.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <StatusBadge
+                tone={settings.aiMarketingEnabled ? 'published' : 'off'}
+                text={settings.aiMarketingEnabled ? 'Live' : 'Off'}
+              />
+              <ModulePublishSwitch
+                checked={Boolean(settings.aiMarketingEnabled)}
+                disabled={saving}
+                label={`${settings.aiMarketingEnabled ? 'Unpublish' : 'Publish'} AI Marketing Hub`}
+                onChange={(checked) =>
+                  onSettingsChange({ ...settings, aiMarketingEnabled: checked })
+                }
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : 'Save AI Marketing settings'}
+          </button>
+        </form>
+      </DashboardCard>
+
       <DashboardCard title="Future — external brand ads">
         <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           Self-serve paid display advertising for outside brands/sponsors (upload creative, pick

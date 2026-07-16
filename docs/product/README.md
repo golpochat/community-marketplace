@@ -18,6 +18,7 @@
 | [user-stories.md](./user-stories.md) | Stories by persona (buyer, seller, admin) |
 | [roadmap.md](./roadmap.md) | Phased delivery plan |
 | **[storefront-model.md](./storefront-model.md)** | **Account vs storefront** — listing limits, verification, paid store slots |
+| **[ai-marketing-hub.md](./ai-marketing-hub.md)** | **AI Marketing Hub plan** — phased roadmap, providers, monetization (planning only) |
 
 ## Redirects
 

@@ -4,7 +4,7 @@ import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 export const SELLER_ROUTES = {
   dashboard: WEB_APP_ROUTES.account,
   listings: WEB_APP_ROUTES.accountListings,
-  storefront: '/seller/storefront',
+  storefront: WEB_APP_ROUTES.accountStorefront,
   verification: '/account/verification',
   profile: WEB_APP_ROUTES.accountSettings,
   settings: WEB_APP_ROUTES.accountSettings,

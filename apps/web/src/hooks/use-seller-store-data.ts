@@ -6,13 +6,21 @@ import type { SellerStore, SellerStoreLimits, SellerStoresOverview } from '@comm
 
 import { sellerService } from '@/services/marketplace.service';
 
-export function useSellerStoreData() {
+export function useSellerStoreData(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true;
   const [overview, setOverview] = useState<SellerStoresOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (options?: { silent?: boolean }) => {
-    const silent = options?.silent ?? false;
+  const load = useCallback(async (loadOptions?: { silent?: boolean }) => {
+    if (!enabled) {
+      setOverview(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    const silent = loadOptions?.silent ?? false;
     if (!silent) {
       setLoading(true);
       setError(null);
@@ -29,7 +37,7 @@ export function useSellerStoreData() {
         setLoading(false);
       }
     }
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     void load();
@@ -45,7 +53,7 @@ export function useSellerStoreData() {
     stores: overview?.stores ?? [],
     limits: overview?.limits ?? null,
     primaryStore,
-    loading,
+    loading: enabled ? loading : false,
     error,
     reload,
   };

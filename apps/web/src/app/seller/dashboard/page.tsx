@@ -14,7 +14,7 @@ import { Card, PageHeader } from '@community-marketplace/ui-dashboard';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
 const QUICK_LINKS = [
-  { href: '/seller/storefront', label: 'Storefronts' },
+  { href: '/account/storefront', label: 'Storefronts' },
   { href: WEB_APP_ROUTES.accountEarnings, label: 'Earnings & payouts' },
   { href: WEB_APP_ROUTES.accountNotifications, label: 'Notifications' },
   { href: WEB_APP_ROUTES.accountMessages, label: 'Messages' },

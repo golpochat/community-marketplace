@@ -47,7 +47,7 @@ const FEES_SUB_TABS: { id: FeesSubTab; label: string }[] = [
 ];
 
 export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
-  const feedback = useAppFeedback();
+  const { success: feedbackSuccess, error: feedbackError } = useAppFeedback();
   const [settings, setSettings] = useState<MonetizationSettings | null>(null);
   const [adsSystem, setAdsSystem] = useState<AdsSystemStatus | null>(null);
   const [activeTab, setActiveTab] = useState<MonetizationTab>('catalog');
@@ -88,7 +88,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
         verifiedSellerFeePercent: settings.verifiedSellerFeePercent,
       });
       setSettings(updated);
-      feedback.success('Seller fee settings saved');
+      feedbackSuccess('Settings saved', 'Seller platform fee defaults updated.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings');
     } finally {
@@ -111,7 +111,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
         cashbackMinOrderAmount: settings.cashbackMinOrderAmount,
       });
       setSettings(updated);
-      feedback.success('Buyer cashback settings saved');
+      feedbackSuccess('Settings saved', 'Buyer cashback settings updated.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings');
     } finally {
@@ -129,11 +129,15 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
         displayAdsEnabled: settings.displayAdsEnabled,
         boostsEnabled: settings.boostsEnabled,
         featuredEnabled: settings.featuredEnabled,
+        aiMarketingEnabled: settings.aiMarketingEnabled,
       });
       setSettings(updated);
       const adsStatus = await adsService.getAdsSystemStatus(role);
       setAdsSystem(adsStatus);
-      feedback.success('Module settings saved');
+      feedbackSuccess(
+        'Settings saved',
+        'Advertising modules and AI Marketing Hub updated.',
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings');
     } finally {
@@ -150,14 +154,20 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
     }
   }
 
-  function handlePanelError(panelError: string) {
-    if (panelError) setError(panelError);
-  }
+  const handlePanelError = useCallback(
+    (panelError: string) => {
+      if (panelError) feedbackError(panelError);
+    },
+    [feedbackError],
+  );
 
-  function handlePanelMessage(panelMessage: string) {
-    feedback.success(panelMessage);
-    setError(null);
-  }
+  const handlePanelMessage = useCallback(
+    (panelMessage: string) => {
+      feedbackSuccess(panelMessage);
+      setError(null);
+    },
+    [feedbackSuccess],
+  );
 
   return (
     <>
@@ -392,7 +402,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
               </div>
             )}
 
-            {activeTab === 'catalog' && (
+            <div hidden={activeTab !== 'catalog'}>
               <AdminMonetizationProductCatalog
                 role={role}
                 boostsEnabled={settings.boostsEnabled}
@@ -401,7 +411,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                 onError={handlePanelError}
                 onGoToAdvertising={() => setActiveTab('advertising')}
               />
-            )}
+            </div>
           </>
         )}
       </DashboardPageShell>

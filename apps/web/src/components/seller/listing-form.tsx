@@ -33,6 +33,7 @@ import {
   useDeliveryCatalog,
   validateDeliveryForm,
 } from "@/components/seller/delivery-options-section";
+import { ListingMarketingHub } from "@/components/seller/marketing-hub/listing-marketing-hub";
 import { DeliveryPreviewModal } from "@/components/seller/DeliveryPreviewModal";
 import { PricingPreviewModal } from "@/components/seller/PricingPreviewModal";
 import {
@@ -109,6 +110,8 @@ interface ListingFormProps {
   onPricingUpdated?: (result: { status: string; message: string }) => void;
   onRemoveExistingImage?: (imageId: string) => void | Promise<void>;
   onReorderExistingImages?: (images: ListingImage[]) => void | Promise<void>;
+  onListingImagesChange?: (images: ListingImage[]) => void;
+  onBoostListing?: () => void;
   removingExistingImageId?: string | null;
   reorderingImages?: boolean;
 }
@@ -131,6 +134,8 @@ export function ListingForm({
   onPricingUpdated,
   onRemoveExistingImage,
   onReorderExistingImages,
+  onListingImagesChange,
+  onBoostListing,
   removingExistingImageId = null,
   reorderingImages = false,
 }: ListingFormProps) {
@@ -562,6 +567,21 @@ export function ListingForm({
 
       {step === 0 && (
         <div className="space-y-4">
+          <ListingMarketingHub
+            step="details"
+            listingId={listingId}
+            title={data.title}
+            description={data.description}
+            categoryId={data.categoryId || undefined}
+            categoryName={
+              categories.find((c) => c.id === data.categoryId)?.name
+            }
+            condition={data.condition}
+            location={data.location}
+            price={data.salePrice}
+            onAcceptTitle={(next) => update({ title: next })}
+            onAcceptDescription={(next) => update({ description: next })}
+          />
           <div>
             <Label htmlFor="title">Title</Label>
             <Input
@@ -611,6 +631,14 @@ export function ListingForm({
 
       {step === 1 && (
         <div className="space-y-4">
+          <ListingMarketingHub
+            step="pricing"
+            listingId={listingId}
+            categoryId={data.categoryId || undefined}
+            condition={data.condition}
+            location={data.location}
+            onApplySuggestedPrice={(price) => update({ salePrice: price })}
+          />
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <Label htmlFor="salePrice">Sale price (EUR)</Label>
@@ -781,6 +809,16 @@ export function ListingForm({
 
       {step === 3 && (
         <div className="space-y-4">
+          {listingId && (
+            <ListingMarketingHub
+              step="photos"
+              listingId={listingId}
+              listingStatus={listingStatus}
+              images={existingImages}
+              onListingImagesChange={onListingImagesChange}
+              onBoostListing={onBoostListing}
+            />
+          )}
           <div>
             <Label htmlFor="images">Photos (optional)</Label>
             <input

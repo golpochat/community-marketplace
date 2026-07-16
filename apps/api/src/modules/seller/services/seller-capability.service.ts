@@ -88,10 +88,15 @@ export class SellerCapabilityService {
             businessName: true,
           },
         },
+        _count: {
+          select: { stores: true },
+        },
       },
     });
 
     if (!user) throw new NotFoundException('User not found');
+
+    const storeCount = user._count.stores;
 
     return {
       started: Boolean(user.sellerOnboardingStartedAt),
@@ -100,6 +105,8 @@ export class SellerCapabilityService {
       businessStructure: user.profile?.businessStructure ?? null,
       isBusinessAccount: user.profile?.isBusinessAccount ?? false,
       businessName: user.profile?.businessName ?? null,
+      storeCount,
+      hasStorefront: storeCount > 0,
     };
   }
 }

@@ -49,6 +49,14 @@ export const apiEnvSchema = baseEnvSchema.extend({
     .enum(['true', 'false'])
     .default('false')
     .transform((value) => value === 'true'),
+  OPENAI_API_KEY: z.string().optional(),
+  OPENAI_EMBEDDING_MODEL: z.string().default('text-embedding-3-small'),
+  OPENAI_CHAT_MODEL: z.string().default('gpt-4o-mini'),
+  AI_MARKETING_ENABLED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((value) => value === 'true'),
+  REMOVE_BG_API_KEY: z.string().optional(),
 });
 
 export const webEnvSchema = z.object({

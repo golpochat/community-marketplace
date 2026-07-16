@@ -24,6 +24,9 @@
     --input: 240 6% 90%;
     --ring: 175 84% 33%;
     --radius: 0.75rem;
+    /* App-wide feedback (toasts). Dashboards override via --dashboard-accent. */
+    --feedback-accent: var(--primary);
+    --feedback-accent-foreground: var(--primary-foreground);
   }
 
   .dark {
@@ -46,6 +49,8 @@
     --border: 24 8% 20%;
     --input: 24 8% 20%;
     --ring: 174 72% 45%;
+    --feedback-accent: var(--primary);
+    --feedback-accent-foreground: var(--primary-foreground);
   }
 
   * {

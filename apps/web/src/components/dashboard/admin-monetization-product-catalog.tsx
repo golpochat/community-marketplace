@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Loader2, Pencil } from 'lucide-react';
 
 import type { MonetizationProduct } from '@community-marketplace/types';
@@ -88,18 +88,20 @@ export function AdminMonetizationProductCatalog({
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<MonetizationProduct | null>(null);
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
 
-  const loadProducts = useCallback(async () => {
-    setLoading(true);
+  const loadProducts = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     try {
       const data = await monetizationService.listMonetizationProducts(role);
       setProducts(data);
     } catch (err) {
-      onError(err instanceof Error ? err.message : 'Failed to load products');
+      onErrorRef.current(err instanceof Error ? err.message : 'Failed to load products');
     } finally {
       setLoading(false);
     }
-  }, [role, onError]);
+  }, [role]);
 
   useEffect(() => {
     void loadProducts();
@@ -139,7 +141,7 @@ export function AdminMonetizationProductCatalog({
       );
       onMessage('Product created.');
     }
-    await loadProducts();
+    await loadProducts({ silent: true });
   }
 
   async function handleToggleStatus(product: MonetizationProduct, checked: boolean) {
@@ -201,7 +203,7 @@ export function AdminMonetizationProductCatalog({
           </button>
         </div>
 
-        {loading ? (
+        {loading && products.length === 0 ? (
           <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading products…</p>
         ) : products.length === 0 ? (
           <div className="rounded-lg border border-dashed border-[hsl(var(--dashboard-sidebar-border))] px-4 py-8 text-center">

@@ -1,7 +1,7 @@
 import type { PaymentMethod } from './payment';
 import type { ListingPackageType } from './listing';
 
-export type WalletTransactionType = 'cashback_earned' | 'expired';
+export type WalletTransactionType = 'cashback_earned' | 'expired' | 'ai_generation';
 
 export type CashbackGrantStatus = 'pending' | 'earned' | 'cancelled';
 
@@ -64,6 +64,8 @@ export interface MonetizationSettings {
   boostsEnabled: boolean;
   featuredEnabled: boolean;
   displayAdsEnabled: boolean;
+  /** Admin publish flag for AI Marketing Hub (sellers). */
+  aiMarketingEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 }

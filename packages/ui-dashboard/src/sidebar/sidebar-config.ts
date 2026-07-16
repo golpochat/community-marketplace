@@ -122,6 +122,13 @@ export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
     permission: PERMISSIONS.VIEW_PLATFORM_STATS,
   },
   {
+    id: 'monetization',
+    label: 'Listing promotions',
+    href: '/super-admin/monetization',
+    icon: 'tag',
+    permission: PERMISSIONS.MANAGE_PAYMENTS,
+  },
+  {
     id: 'finance',
     label: 'Financial reports',
     href: '/super-admin/finance',
@@ -270,7 +277,7 @@ export const SELLER_SIDEBAR: SidebarNavItem[] = [
   { id: 'earnings', label: 'Earnings', href: '/seller/earnings', icon: 'wallet' },
   { id: 'share-analytics', label: 'Share Analytics', href: '/seller/analytics/shares', icon: 'bar-chart' },
   { id: 'chat', label: 'Chat', href: '/seller/chat', icon: 'message-circle' },
-  { id: 'storefront', label: 'Storefront', href: '/seller/storefront', icon: 'eye' },
+  { id: 'storefront', label: 'Storefront', href: '/account/storefront', icon: 'eye' },
   { id: 'verification', label: 'Verification', href: '/seller/verification', icon: 'medal' },
   { id: 'notifications', label: 'Notifications', href: '/seller/notifications', icon: 'bell' },
 ];

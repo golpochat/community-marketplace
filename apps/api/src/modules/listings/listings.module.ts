@@ -88,6 +88,8 @@ import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
   exports: [
     ListingsService,
     ListingLifecycleService,
+    ListingImagesService,
+    ListingVisibilityService,
     CategoriesService,
     DeliveryOptionsService,
     ListingDeliveryService,

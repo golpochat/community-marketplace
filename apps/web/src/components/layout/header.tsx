@@ -80,20 +80,22 @@ export function Header() {
         avatarUrl: profile?.avatarUrl ?? user.avatarUrl,
       }
     : null;
+  const notificationsHref =
+    user?.role === "SUPER_ADMIN"
+      ? "/super-admin/notifications"
+      : user?.role === "ADMIN"
+        ? "/admin/notifications"
+        : WEB_APP_ROUTES.accountNotifications;
+
   const sellHref = getSellHref(hasAuthState, navLinks?.sellItem);
   const buyActive = isBuyRoute(pathname);
-  const sellActive = isSellRoute(pathname);
+  const sellActive =
+    isSellRoute(pathname) ||
+    pathname.startsWith("/account/selling") ||
+    pathname.startsWith("/account/storefront") ||
+    pathname.startsWith("/account/listings");
   const onLoginPage = isAuthLoginRoute(pathname);
   const onRegisterPage = isAuthRegisterRoute(pathname);
-
-  const notificationsHref =
-    user?.role === "SELLER"
-      ? WEB_APP_ROUTES.sellerNotifications
-      : user?.role === "SUPER_ADMIN"
-        ? "/super-admin/notifications"
-        : user?.role === "ADMIN"
-          ? "/admin/notifications"
-          : WEB_APP_ROUTES.buyerNotifications;
 
   async function handleSignOut() {
     try {

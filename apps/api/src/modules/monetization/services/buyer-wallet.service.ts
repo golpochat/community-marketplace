@@ -98,7 +98,7 @@ export class BuyerWalletService {
     page: number;
     limit: number;
     userId?: string;
-    type?: 'cashback_earned' | 'expired';
+    type?: 'cashback_earned' | 'expired' | 'ai_generation';
   }) {
     const where = {
       ...(filters.userId ? { userId: filters.userId } : {}),
