@@ -8,6 +8,7 @@ import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 import { NotificationList } from '@/components/notifications/notification-list';
 import { asArray } from '@/lib/normalize-api-response';
 import { notifyNotificationsUpdated } from '@/lib/notification-unread-events';
+import { notificationsHeaderDescription } from '@/lib/notifications-header';
 import { notificationsService } from '@/services/notifications.service';
 
 type StaffRole = Extract<RbacRole, 'ADMIN' | 'SUPER_ADMIN'>;
@@ -25,7 +26,8 @@ export function StaffNotificationsInboxPage({ role }: StaffNotificationsInboxPag
     setLoading(true);
     try {
       const result = await notificationsService.listStaff(role);
-      setItems(asArray<Notification>(result.notifications));
+      const notifications = asArray<Notification>(result.notifications);
+      setItems(notifications);
       setUnreadCount(result.unreadCount);
       notifyNotificationsUpdated(result.unreadCount);
     } catch {
@@ -54,7 +56,7 @@ export function StaffNotificationsInboxPage({ role }: StaffNotificationsInboxPag
     <>
       <PageHeader
         title="Notifications"
-        description={unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
+        description={notificationsHeaderDescription(unreadCount, items.length)}
       />
       <DashboardCard>
         {unreadCount > 0 && (

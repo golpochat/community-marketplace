@@ -17,7 +17,6 @@ export class NotificationEventsListener implements OnModuleInit {
   onModuleInit() {
     this.eventBus.subscribe('chat.message_sent', (e) => void this.onMessageSent(e.payload));
     this.eventBus.subscribe('chat.thread_created', (e) => void this.onThreadCreated(e.payload));
-    this.eventBus.subscribe('chat.messages_read', (e) => void this.onMessagesRead(e.payload));
     this.eventBus.subscribe('payment.succeeded', (e) => void this.onPaymentSucceeded(e.payload));
     this.eventBus.subscribe('platform_purchase.succeeded', (e) =>
       void this.onPlatformPurchaseSucceeded(e.payload),
@@ -106,7 +105,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'new_message',
       templateKey: 'new_message',
       variables: { sender_name: sender?.displayName ?? sender?.email ?? 'Someone' },
-      actionUrl: `/chat?thread=${threadId}`,
+      actionUrl: `/account/messages?thread=${threadId}`,
       channels: ['in_app', 'push'],
     });
   }
@@ -119,25 +118,8 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'thread_created',
       templateKey: 'new_message',
       variables: { sender_name: 'A buyer' },
-      actionUrl: `/chat?thread=${threadId}`,
+      actionUrl: `/account/messages?thread=${threadId}`,
       channels: ['in_app', 'push'],
-    });
-  }
-
-  private async onMessagesRead(payload: Record<string, unknown>) {
-    const threadId = payload.threadId as string;
-    const readerId = payload.readerId as string;
-    const thread = await this.prisma.chatThread.findUnique({ where: { id: threadId } });
-    if (!thread) return;
-    const notifyUserId = thread.buyerId === readerId ? thread.sellerId : thread.buyerId;
-
-    await this.dispatcher.dispatch({
-      userId: notifyUserId,
-      type: 'message_read',
-      templateKey: 'new_message',
-      variables: { sender_name: 'Recipient' },
-      actionUrl: `/chat?thread=${threadId}`,
-      channels: ['in_app'],
     });
   }
 

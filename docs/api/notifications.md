@@ -101,9 +101,9 @@ Features:
 
 | Event | Notification |
 |-------|--------------|
-| `chat.message_sent` | `new_message` |
-| `chat.thread_created` | `thread_created` |
-| `chat.messages_read` | `message_read` |
+| `chat.message_sent` | `new_message` → `/account/messages?thread=…` |
+| `chat.thread_created` | `thread_created` → `/account/messages?thread=…` |
+| `chat.messages_read` | *(no in-app row — read receipts stay in chat UI)* |
 | `payment.succeeded` | `payment_received` |
 | `payment.failed` | `payment_sent` |
 | `payment.refunded` | `payment_refunded` |
