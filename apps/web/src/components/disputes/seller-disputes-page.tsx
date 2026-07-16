@@ -9,6 +9,7 @@ import { formatListedAgo } from '@community-marketplace/utils';
 import { Card, TruncatedText } from '@community-marketplace/ui-dashboard';
 
 import { DashboardPageShell, DataTable } from '@/components/dashboard/async-resource';
+import { DashboardTableBody } from '@/components/dashboard/dashboard-filtered-empty-state';
 import { DisputeStatusBadge } from '@/components/disputes/dispute-status-badge';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { disputesService } from '@/services/disputes.service';
@@ -45,9 +46,16 @@ export function SellerDisputesPage() {
       loading={loading}
       error={error}
       empty={!loading && !error && rows.length === 0}
+      emptyPreserveFilters
       emptyTitle="No disputes against your listings"
+      emptyDescription="Buyer disputes on your sales will appear here."
     >
       <Card title="Open disputes">
+        <DashboardTableBody
+          isEmpty={rows.length === 0}
+          emptyTitle="No disputes against your listings"
+          emptyDescription="Buyer disputes on your sales will appear here."
+        >
         <DataTable
           columns={['Listing', 'Buyer', 'Reason', 'Status', 'Opened', '']}
           rows={rows}
@@ -75,6 +83,7 @@ export function SellerDisputesPage() {
             </button>
           </div>
         ) : null}
+        </DashboardTableBody>
       </Card>
     </DashboardPageShell>
   );

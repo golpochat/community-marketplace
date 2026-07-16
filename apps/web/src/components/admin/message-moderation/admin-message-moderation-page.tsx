@@ -13,6 +13,7 @@ import {
 
 import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
 import { DashboardPageShell, DataTable } from '@/components/dashboard/async-resource';
+import { DashboardTableBody } from '@/components/dashboard/dashboard-filtered-empty-state';
 import { ReasonPromptDialog } from '@/components/shared/reason-prompt-dialog';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { adminChatModerationService, type AdminServiceRole } from '@/services/admin-chat-moderation.service';
@@ -181,19 +182,27 @@ export function AdminMessageModerationPage({
         loading={loading}
         error={error}
         empty={!loading && !error && rows.length === 0}
+        emptyPreserveFilters
         emptyTitle="No reported messages"
+        emptyDescription="Open message reports will appear here when users flag a conversation."
       >
         <Card>
-          <DataTable
-            columns={['ID', 'Reason', 'Message', 'Listing', 'Reporter', 'Actions']}
-            rows={rows}
-          />
-          <AdminTableFooter
-            page={page}
-            totalPages={totalPages}
-            total={meta.total}
-            onPageChange={setPage}
-          />
+          <DashboardTableBody
+            isEmpty={rows.length === 0}
+            emptyTitle="No reported messages"
+            emptyDescription="Open message reports will appear here when users flag a conversation."
+          >
+            <DataTable
+              columns={['ID', 'Reason', 'Message', 'Listing', 'Reporter', 'Actions']}
+              rows={rows}
+            />
+            <AdminTableFooter
+              page={page}
+              totalPages={totalPages}
+              total={meta.total}
+              onPageChange={setPage}
+            />
+          </DashboardTableBody>
         </Card>
       </DashboardPageShell>
 

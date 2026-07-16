@@ -21,6 +21,10 @@ import { AdminEmailSettingsCard } from '@/components/dashboard/admin-email-setti
 import { AdminPlatformGovernanceCard } from '@/components/dashboard/admin-platform-governance';
 import { DashboardPageShell, DataTable, KeyValueList } from '@/components/dashboard/async-resource';
 import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
+import {
+  DashboardClearFiltersButton,
+  DashboardTableBody,
+} from '@/components/dashboard/dashboard-filtered-empty-state';
 import { AdminListingReviewDialog } from '@/components/dashboard/admin-listing-review-dialog';
 import { AdminListingStatusHistoryDialog } from '@/components/dashboard/admin-listing-status-history-dialog';
 import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
@@ -146,6 +150,14 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
     }
   }
 
+  const hasActiveFilters = Boolean(searchQuery || roleFilter || statusFilter);
+  const clearUserFilters = () => {
+    setSearchQuery('');
+    setRoleFilter('');
+    setStatusFilter('');
+    setPage(1);
+  };
+
   const rows = users.map((user) => {
     const isProtectedRole = isPrivilegedSystemRole(user.role);
     const isActing = actingUserId === user.id;
@@ -196,6 +208,7 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
         loading={loading}
         error={error}
         empty={!loading && !error && rows.length === 0}
+        emptyPreserveFilters
         emptyTitle="No users found"
       >
         <Card>
@@ -259,27 +272,23 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
               </select>
             </label>
             {(searchQuery || roleFilter || statusFilter) && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery('');
-                  setRoleFilter('');
-                  setStatusFilter('');
-                  setPage(1);
-                }}
-                className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-1.5 font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
-              >
-                Clear filters
-              </button>
+              <DashboardClearFiltersButton onClick={clearUserFilters} />
             )}
           </div>
-          <DataTable columns={['Name', 'Email', 'Role', 'Status', 'Actions']} rows={rows} />
-          <AdminTableFooter
-            page={page}
-            totalPages={totalPages}
-            total={meta.total}
-            onPageChange={setPage}
-          />
+          <DashboardTableBody
+            isEmpty={rows.length === 0}
+            emptyTitle="No users found"
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={clearUserFilters}
+          >
+            <DataTable columns={['Name', 'Email', 'Role', 'Status', 'Actions']} rows={rows} />
+            <AdminTableFooter
+              page={page}
+              totalPages={totalPages}
+              total={meta.total}
+              onPageChange={setPage}
+            />
+          </DashboardTableBody>
         </Card>
       </DashboardPageShell>
 
@@ -353,6 +362,17 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
   const { page, setPage, data, meta, loading, error, totalPages, reload } = usePaginatedQuery({
     fetcher: fetchListings,
   });
+
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() || categoryFilter || sellerFilter.trim() || statusFilter,
+  );
+  const clearListingFilters = () => {
+    setSearchQuery('');
+    setCategoryFilter('');
+    setSellerFilter('');
+    setStatusFilter('');
+    setPage(1);
+  };
 
   async function handleApprove(listingId: string) {
     setActingListingId(listingId);
@@ -490,6 +510,7 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
       loading={loading}
       error={error}
       empty={!loading && !error && rows.length === 0}
+      emptyPreserveFilters
       emptyTitle="No listings found"
     >
       <AdminListingReviewDialog
@@ -614,14 +635,24 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
             <option value="removed">Removed</option>
             <option value="rejected">Rejected</option>
           </select>
+          {hasActiveFilters ? (
+            <DashboardClearFiltersButton onClick={clearListingFilters} />
+          ) : null}
         </div>
-        <DataTable columns={['Title', 'Price', 'Status', 'Timestamps', 'Actions']} rows={rows} />
-        <AdminTableFooter
-          page={page}
-          totalPages={totalPages}
-          total={meta.total}
-          onPageChange={setPage}
-        />
+        <DashboardTableBody
+          isEmpty={rows.length === 0}
+          emptyTitle="No listings found"
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={clearListingFilters}
+        >
+          <DataTable columns={['Title', 'Price', 'Status', 'Timestamps', 'Actions']} rows={rows} />
+          <AdminTableFooter
+            page={page}
+            totalPages={totalPages}
+            total={meta.total}
+            onPageChange={setPage}
+          />
+        </DashboardTableBody>
       </Card>
     </DashboardPageShell>
   );
@@ -725,6 +756,7 @@ export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
       loading={loading}
       error={error}
       empty={!loading && !error && rows.length === 0}
+      emptyPreserveFilters
       emptyTitle={activeTab === 'payments' ? 'No payments found' : 'No pending refund requests'}
     >
       <DashboardSectionTabs
@@ -739,13 +771,19 @@ export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
         }}
       />
       <Card>
-        <DataTable columns={columns} rows={rows} />
-        <AdminTableFooter
-          page={page}
-          totalPages={totalPages}
-          total={meta.total}
-          onPageChange={setPage}
-        />
+        <DashboardTableBody
+          isEmpty={rows.length === 0}
+          emptyTitle={activeTab === 'payments' ? 'No payments found' : 'No pending refund requests'}
+          emptyDescription="Switch tabs above to view payments or pending refund requests."
+        >
+          <DataTable columns={columns} rows={rows} />
+          <AdminTableFooter
+            page={page}
+            totalPages={totalPages}
+            total={meta.total}
+            onPageChange={setPage}
+          />
+        </DashboardTableBody>
       </Card>
       <ReasonPromptDialog
         open={rejectRefundTarget !== null}
@@ -870,16 +908,24 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
       loading={loading}
       error={error}
       empty={!loading && !error && rows.length === 0}
+      emptyPreserveFilters
       emptyTitle="No reports found"
+      emptyDescription="Open moderation reports will appear here when users submit them."
     >
       <Card>
-        <DataTable columns={['ID', 'Reason', 'Status', 'Target', 'Actions']} rows={rows} />
-        <AdminTableFooter
-          page={page}
-          totalPages={totalPages}
-          total={meta.total}
-          onPageChange={setPage}
-        />
+        <DashboardTableBody
+          isEmpty={rows.length === 0}
+          emptyTitle="No reports found"
+          emptyDescription="Open moderation reports will appear here when users submit them."
+        >
+          <DataTable columns={['ID', 'Reason', 'Status', 'Target', 'Actions']} rows={rows} />
+          <AdminTableFooter
+            page={page}
+            totalPages={totalPages}
+            total={meta.total}
+            onPageChange={setPage}
+          />
+        </DashboardTableBody>
       </Card>
       <ReasonPromptDialog
         open={moderationPrompt != null}

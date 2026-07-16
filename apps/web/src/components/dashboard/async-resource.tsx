@@ -15,6 +15,13 @@ interface DashboardPageShellProps {
   empty?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
+  /** Optional CTA for full-page empty states (e.g. browse listings). */
+  emptyAction?: React.ReactNode;
+  /**
+   * When true, filters/tabs in children stay visible on empty results.
+   * Use with inline `DashboardTableBody` empty states inside the page content.
+   */
+  emptyPreserveFilters?: boolean;
   children: React.ReactNode;
 }
 
@@ -26,19 +33,29 @@ export function DashboardPageShell({
   empty,
   emptyTitle = 'No data yet',
   emptyDescription,
+  emptyAction,
+  emptyPreserveFilters = false,
   children,
 }: DashboardPageShellProps) {
+  const showFullPageEmpty = Boolean(!loading && !error && empty && !emptyPreserveFilters);
+  const showChildren = Boolean(!loading && !error && (!empty || emptyPreserveFilters));
+
   return (
     <>
       <PageHeader title={title} description={description} />
       {loading && <LoadingState />}
       {error && <ErrorState message={error} />}
-      {!loading && !error && empty && (
+      {showFullPageEmpty && (
         <Card>
-          <EmptyState variant="dashboard" title={emptyTitle} description={emptyDescription} />
+          <EmptyState
+            variant="dashboard"
+            title={emptyTitle}
+            description={emptyDescription}
+            action={emptyAction}
+          />
         </Card>
       )}
-      {!loading && !error && !empty && children}
+      {showChildren && children}
     </>
   );
 }

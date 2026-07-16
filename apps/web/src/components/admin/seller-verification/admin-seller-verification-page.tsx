@@ -18,7 +18,7 @@ import {
 } from '@community-marketplace/ui-dashboard';
 
 import { useAppFeedback } from '@community-marketplace/ui';
-import { EmptyState } from '@/components/EmptyState';
+import { DashboardFilteredEmptyState } from '@/components/dashboard/dashboard-filtered-empty-state';
 import { ConfirmDialog } from '@/components/admin/seller-verification/confirm-dialog';
 import { ForceReverifyModal } from '@/components/admin/seller-verification/force-reverify-modal';
 import { ReactivateSellerModal } from '@/components/admin/seller-verification/reactivate-seller-modal';
@@ -471,8 +471,7 @@ export function AdminSellerVerificationPage({
           ) : null}
 
           {!loading && !error && rows.length === 0 ? (
-            <EmptyState
-              variant="dashboard"
+            <DashboardFilteredEmptyState
               title={
                 activeView === 'pending' && trackFilter !== 'all'
                   ? `No ${trackFilter === 'fast_track' ? 'fast-track' : 'standard'} pending requests`
@@ -481,6 +480,15 @@ export function AdminSellerVerificationPage({
               description={
                 activeView === 'pending' && trackFilter !== 'all'
                   ? 'Switch to All or another track filter above to continue reviewing.'
+                  : undefined
+              }
+              hasActiveFilters={activeView === 'pending' && trackFilter !== 'all'}
+              onClearFilters={
+                activeView === 'pending' && trackFilter !== 'all'
+                  ? () => {
+                      setTrackFilter('all');
+                      setPage(1);
+                    }
                   : undefined
               }
             />

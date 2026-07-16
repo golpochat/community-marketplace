@@ -36,6 +36,10 @@ import {
   DashboardPageShell,
   DataTable,
 } from "@/components/dashboard/async-resource";
+import {
+  DashboardClearFiltersButton,
+  DashboardTableBody,
+} from "@/components/dashboard/dashboard-filtered-empty-state";
 import { ListingPriceDisplay } from "@/components/listings/listing-price-display";
 import { ListingMediaImage } from "@/components/listings/listing-media-image";
 import { IrishMobilePrefixTooltip } from "@/components/forms/irish-mobile-prefix-tooltip";
@@ -317,25 +321,43 @@ export function SellerListingsPage() {
       loading={loading}
       error={error}
       empty={!loading && !error && listings.length === 0}
+      emptyPreserveFilters
       emptyTitle="No listings yet"
       emptyDescription="Create your first listing to start selling."
     >
       <Card>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
-            aria-label="Filter by status"
-          >
-            {STATUS_FILTER_OPTIONS.map((option) => (
-              <option key={option.value || "all"} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
+              aria-label="Filter by status"
+            >
+              {STATUS_FILTER_OPTIONS.map((option) => (
+                <option key={option.value || "all"} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {statusFilter ? (
+              <DashboardClearFiltersButton onClick={() => setStatusFilter("")} />
+            ) : null}
+          </div>
           <CreateListingButton label="Create listing" />
         </div>
+        <DashboardTableBody
+          isEmpty={listings.length === 0}
+          emptyTitle={statusFilter ? "No listings match this filter" : "No listings yet"}
+          emptyDescription={
+            statusFilter
+              ? undefined
+              : "Create your first listing to start selling."
+          }
+          hasActiveFilters={Boolean(statusFilter)}
+          onClearFilters={() => setStatusFilter("")}
+          emptyAction={statusFilter ? undefined : <CreateListingButton label="Create listing" />}
+        >
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-[hsl(var(--dashboard-sidebar-border))] text-sm">
             <thead>
@@ -456,6 +478,7 @@ export function SellerListingsPage() {
             </tbody>
           </table>
         </div>
+        </DashboardTableBody>
       </Card>
       <ListingPackageDialog
         open={packageDialog != null}

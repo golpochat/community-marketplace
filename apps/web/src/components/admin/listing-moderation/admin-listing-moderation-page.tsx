@@ -17,6 +17,7 @@ import { AdminListingReviewDialog } from '@/components/dashboard/admin-listing-r
 import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
 import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
 import { DashboardPageShell, DataTable } from '@/components/dashboard/async-resource';
+import { DashboardTableBody } from '@/components/dashboard/dashboard-filtered-empty-state';
 import { ReasonPromptDialog } from '@/components/shared/reason-prompt-dialog';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { ListingMediaImage } from '@/components/listings/listing-media-image';
@@ -187,6 +188,7 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
         loading={loading}
         error={error}
         empty={!loading && !error && rows.length === 0}
+        emptyPreserveFilters
         emptyTitle={`No ${activeTab.label.toLowerCase()}`}
       >
         <DashboardSectionTabs
@@ -198,16 +200,22 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
           }}
         />
         <Card>
-          <DataTable
-            columns={['', 'Title', 'Seller', 'Price', 'Status', 'Reason', 'Actions']}
-            rows={rows}
-          />
-          <AdminTableFooter
-            page={page}
-            totalPages={totalPages}
-            total={meta.total}
-            onPageChange={setPage}
-          />
+          <DashboardTableBody
+            isEmpty={rows.length === 0}
+            emptyTitle={`No ${activeTab.label.toLowerCase()}`}
+            emptyDescription="Switch to another queue tab above to continue reviewing."
+          >
+            <DataTable
+              columns={['', 'Title', 'Seller', 'Price', 'Status', 'Reason', 'Actions']}
+              rows={rows}
+            />
+            <AdminTableFooter
+              page={page}
+              totalPages={totalPages}
+              total={meta.total}
+              onPageChange={setPage}
+            />
+          </DashboardTableBody>
         </Card>
       </DashboardPageShell>
 

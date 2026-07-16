@@ -8,6 +8,7 @@ import { Card } from '@community-marketplace/ui-dashboard';
 import { SellerStatusBadge } from '@/components/admin/seller-verification/seller-status-badge';
 import { AdminTableFooter } from '@/components/dashboard/admin-table-footer';
 import { DashboardPageShell } from '@/components/dashboard/async-resource';
+import { DashboardFilteredEmptyState } from '@/components/dashboard/dashboard-filtered-empty-state';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
 import { ADMIN_SELLER_VERIFICATION_VIEW_LABELS } from '@/lib/admin-seller-verification-routes';
 import {
@@ -42,6 +43,12 @@ export function AdminSellerStatusHistoryPage({ role }: { role: AdminServiceRole 
     limit: 20,
   });
 
+  const clearSearch = () => {
+    setUserId('');
+    setSearchUserId('');
+    setPage(1);
+  };
+
   return (
     <DashboardPageShell
       title="Seller Verification"
@@ -49,6 +56,7 @@ export function AdminSellerStatusHistoryPage({ role }: { role: AdminServiceRole 
       loading={loading}
       error={error}
       empty={!loading && !error && Boolean(searchUserId) && data.length === 0}
+      emptyPreserveFilters
       emptyTitle="No status history"
       emptyDescription="No status changes were recorded for this seller."
     >
@@ -87,9 +95,14 @@ export function AdminSellerStatusHistoryPage({ role }: { role: AdminServiceRole 
             Enter a seller user ID to view their verification status change history. You can copy
             the ID from any row in the verification queues.
           </p>
-        ) : null}
-
-        {searchUserId && data.length > 0 ? (
+        ) : data.length === 0 ? (
+          <DashboardFilteredEmptyState
+            title="No status history"
+            description="No status changes were recorded for this seller."
+            hasActiveFilters
+            onClearFilters={clearSearch}
+          />
+        ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
@@ -120,9 +133,9 @@ export function AdminSellerStatusHistoryPage({ role }: { role: AdminServiceRole 
               </tbody>
             </table>
           </div>
-        ) : null}
+        )}
 
-        {searchUserId ? (
+        {searchUserId && data.length > 0 ? (
           <AdminTableFooter
             page={page}
             totalPages={totalPages}

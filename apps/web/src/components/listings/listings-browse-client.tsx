@@ -15,6 +15,10 @@ import {
   parseBrowseFiltersFromParams,
   serializeBrowseFilters,
 } from '@/components/listings/browse/browse-url-filters';
+import {
+  hasActiveFilters,
+  resetBrowseFilters,
+} from '@/components/listings/browse/browse-filter-constants';
 import { ListingCard } from '@/components/listings/listing-card';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Pagination } from '@/components/shared/pagination';
@@ -22,6 +26,7 @@ import { ListingCardListSkeleton, ListingCardSkeleton } from '@/components/share
 import { useAuth } from '@/hooks/use-auth';
 import { BROWSE_RESULTS_GRID_CLASS, BROWSE_RESULTS_LIST_CLASS } from '@/lib/listing-browse-layout';
 import { SITE_PAGE_CLASS } from '@/lib/page-layout';
+import { Button } from '@community-marketplace/ui';
 import { buyerService } from '@/services/marketplace.service';
 import { listingsService } from '@/services/listings.service';
 
@@ -174,6 +179,17 @@ export function ListingsBrowseClient({
             <EmptyState
               title="No listings found"
               description="Try adjusting your filters or search terms."
+              action={
+                hasActiveFilters(filters) ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => updateFilters(resetBrowseFilters(filters.limit))}
+                  >
+                    Clear filters
+                  </Button>
+                ) : undefined
+              }
             />
           ) : (
             <div className={viewMode === 'list' ? LIST_CLASS : GRID_CLASS}>

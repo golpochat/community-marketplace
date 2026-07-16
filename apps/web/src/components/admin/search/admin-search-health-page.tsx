@@ -308,6 +308,7 @@ export function AdminSearchPage({ role }: { role: AdminServiceRole }) {
       loading={loading && activeTab === 'overview'}
       error={activeTab === 'overview' ? error : null}
       empty={activeTab === 'overview' && !loading && !error && !health}
+      emptyPreserveFilters
       emptyTitle="Search health unavailable"
     >
       <DashboardSectionTabs items={tabs} activeId={activeTab} onChange={(id) => setActiveTab(id as SearchTabId)} />
