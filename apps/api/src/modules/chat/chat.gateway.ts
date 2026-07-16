@@ -122,7 +122,12 @@ export class ChatGateway
       user.sub,
       user.role,
     );
-    this.realtime.emitTyping(parsed.threadId, user.sub, parsed.event);
+    this.realtime.emitTypingExcept(
+      parsed.threadId,
+      user.sub,
+      parsed.event,
+      client.id,
+    );
     return { ok: true };
   }
 

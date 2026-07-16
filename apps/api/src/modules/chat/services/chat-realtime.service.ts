@@ -31,6 +31,19 @@ export class ChatRealtimeService {
     this.emitToThread(threadId, 'typing', { threadId, userId, event });
   }
 
+  /** Broadcast typing to the thread room, excluding the typer's socket. */
+  emitTypingExcept(
+    threadId: string,
+    userId: string,
+    event: ChatTypingEvent,
+    exceptSocketId: string,
+  ) {
+    this.server
+      ?.to(`thread:${threadId}`)
+      .except(exceptSocketId)
+      .emit('typing', { threadId, userId, event });
+  }
+
   emitReadReceipt(
     threadId: string,
     readerId: string,

@@ -54,8 +54,25 @@ export function ChatPageClient({
   const [blockLoading, setBlockLoading] = useState(false);
   const activeThreadIdRef = useRef(activeThreadId);
   const autoThreadHandled = useRef(false);
+  const typingClearTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   activeThreadIdRef.current = activeThreadId;
+
+  useEffect(() => {
+    return () => {
+      if (typingClearTimeoutRef.current) {
+        clearTimeout(typingClearTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    setTypingLabel(undefined);
+    if (typingClearTimeoutRef.current) {
+      clearTimeout(typingClearTimeoutRef.current);
+      typingClearTimeoutRef.current = null;
+    }
+  }, [activeThreadId]);
 
   const loadInbox = useCallback(async () => {
     const result = await chatService.getInbox();
@@ -165,17 +182,32 @@ export function ChatPageClient({
     void chatService.markRead(message.threadId, [message.id]);
   }, [loadInbox]);
 
-  const handleTyping = useCallback(({ event }: { userId: string; event: string }) => {
-    setTypingLabel(event === 'buyer_typing' ? 'Buyer is typing…' : 'Seller is typing…');
-    setTimeout(() => setTypingLabel(undefined), 2000);
-  }, []);
+  const handleTyping = useCallback(
+    ({ userId }: { userId: string; event: string }) => {
+      // Never show your own typing indicator.
+      if (userId === currentUserId) return;
+
+      const name = activeInboxItem?.participant.displayName?.trim();
+      setTypingLabel(name ? `${name} is typing…` : 'Someone is typing…');
+
+      if (typingClearTimeoutRef.current) {
+        clearTimeout(typingClearTimeoutRef.current);
+      }
+      typingClearTimeoutRef.current = setTimeout(() => {
+        setTypingLabel(undefined);
+        typingClearTimeoutRef.current = null;
+      }, 2000);
+    },
+    [currentUserId, activeInboxItem?.participant.displayName],
+  );
 
   const handleReadReceipt = useCallback(
-    ({ messageIds }: { readerId: string; messageIds: string[] }) => {
+    ({ readerId, messageIds }: { readerId: string; messageIds: string[] }) => {
+      if (readerId === currentUserId) return;
       setMessages((prev) =>
         prev.map((m) =>
           messageIds.includes(m.id)
-            ? { ...m, readBy: [...new Set([...m.readBy, currentUserId])] }
+            ? { ...m, readBy: [...new Set([...m.readBy, readerId])] }
             : m,
         ),
       );
@@ -237,7 +269,13 @@ export function ChatPageClient({
   };
 
   const handleTypingInput = () => {
-    sendTyping(role === 'SELLER' ? 'seller_typing' : 'buyer_typing');
+    const thread = activeInboxItem?.thread;
+    if (!thread) {
+      sendTyping(role === 'SELLER' ? 'seller_typing' : 'buyer_typing');
+      return;
+    }
+    // Emit based on thread membership, not the page/account role label.
+    sendTyping(thread.sellerId === currentUserId ? 'seller_typing' : 'buyer_typing');
   };
 
   const threadHeader =
