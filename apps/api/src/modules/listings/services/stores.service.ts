@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma, SellerStatus } from '@prisma/client';
 
-import type { ListingSummary, SellerStorefront } from '@community-marketplace/types';
+import type {
+  FeaturedStoreSummary,
+  ListingSummary,
+  SellerStorefront,
+} from '@community-marketplace/types';
 
 import { PrismaService } from '../../../database/prisma.service';
 import { resolveOptionalAssetPublicUrl } from '../../../libs/asset-url.lib';
@@ -25,6 +29,7 @@ import {
 import { buildCategoryStoreSections } from '../utils/store-sections.util';
 import { ListingVisibilityService } from './listing-visibility.service';
 import { SellerTrustService } from './seller-trust.service';
+import { buildActiveFeaturedStoreWhere } from '../../monetization/lib/featured.lib';
 
 type StoreSort = 'newest' | 'price_low_to_high' | 'price_high_to_low';
 
@@ -72,6 +77,40 @@ export class StoresService {
     private readonly visibility: ListingVisibilityService,
     private readonly sellerTrust: SellerTrustService,
   ) {}
+
+  async findFeatured(limit = 6): Promise<FeaturedStoreSummary[]> {
+    const take = Math.min(Math.max(limit, 1), 12);
+    const now = new Date();
+    const rows = await this.prisma.store.findMany({
+      where: {
+        ...buildActiveFeaturedStoreWhere(now),
+        user: {
+          sellerStatus: { not: 'suspended' },
+        },
+      },
+      orderBy: [{ featuredUntil: 'desc' }, { createdAt: 'desc' }],
+      take,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        logoUrl: true,
+        bannerUrl: true,
+        location: true,
+        featuredUntil: true,
+      },
+    });
+
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      logoUrl: resolveOptionalAssetPublicUrl(row.logoUrl),
+      bannerUrl: resolveOptionalAssetPublicUrl(row.bannerUrl),
+      location: row.location ?? undefined,
+      featuredUntil: row.featuredUntil?.toISOString(),
+    }));
+  }
 
   async getBySlug(slug: string): Promise<SellerStorefront> {
     const context = await this.resolveStoreContext(slug);

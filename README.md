@@ -30,7 +30,7 @@ Enterprise-grade community marketplace platform built as a **pnpm monorepo**. Bu
 
 Community Marketplace is a full-stack platform for local and niche community trading. A single **web** application (`apps/web`) serves the public marketplace and all role dashboards; the **API** (`apps/api`) powers every client.
 
-Sellers get a native **AI Marketing Hub** on listing create/edit (Phases 0–3 live): credit-metered copy and image tools, free price suggestions and posting-time guidance, plus boost handoff. See [`docs/product/ai-marketing-hub.md`](docs/product/ai-marketing-hub.md).
+Sellers get a native **AI Marketing Hub** on listing create/edit and `/account/marketing` (pilot-ready): credit-metered copy and image tools, free price suggestions and posting-time guidance, AI credit top-ups, Growth Pack, and boost handoff. See [`docs/product/ai-marketing-hub.md`](docs/product/ai-marketing-hub.md).
 
 | Application | Audience | Purpose |
 |-------------|----------|---------|
@@ -231,7 +231,8 @@ pnpm dev
 | `CORS_ORIGIN` | Allowed origins (comma-separated) | `http://localhost:3000` |
 | `WEB_APP_URL` | Activation email base URL | `http://localhost:3000` |
 | `STRIPE_SECRET_KEY` | Stripe API key | |
-| `OPENAI_API_KEY` | AI Marketing Hub text generation | Optional unless hub enabled |
+| `OPENAI_API_KEY` | AI Marketing Hub text (primary) | Optional unless hub enabled |
+| `ANTHROPIC_API_KEY` | AI Marketing Hub text fallback | Optional; used if OpenAI fails or unset |
 | `REMOVE_BG_API_KEY` | Background removal for AI images | Optional; Sharp fallback in non-prod |
 | `AI_MARKETING_ENABLED` | Hard kill switch for AI Marketing Hub (`false` disables) | Omit or `true` to allow |
 | `MEILISEARCH_HOST` | Search server | `http://localhost:7700` |
@@ -302,7 +303,7 @@ Manifests under `infra/k8s/` with `dev` and `prod` overlays. See [`infra/k8s/REA
 
 | Area | Planned work |
 |------|--------------|
-| **AI Marketing Hub (later)** | Video generator, sales forecast, credit packs / Growth Pack SKUs, Zeely/Canva optional links |
+| **AI Marketing Hub (later)** | Template video / forecast, Zeely/Canva links |
 | **Redis** | BullMQ job queues, optional permission cache |
 | **Observability** | OpenAPI generation, structured logging, metrics |
 | **Auth** | Passkey/WebAuthn, social login, SMS provider integration |

@@ -273,6 +273,7 @@ enum WalletTransactionType {
   cashback_earned
   expired
   ai_generation
+  credit_topup
 }
 
 enum AiMarketingTask {
@@ -288,6 +289,7 @@ enum AiMarketingTask {
   image_enhance
   image_bg_remove
   banner_creator
+  store_banner
 }
 
 enum AiBillingMethod {
@@ -309,6 +311,11 @@ enum PlatformPurchaseType {
   store_slot_3
   store_bundle_3
   buyer_statement
+  seller_growth_pack
+  ai_credit_2
+  ai_credit_5
+  ai_credit_10
+  featured_store
 }
 
 enum PlatformPurchaseStatus {
@@ -585,6 +592,8 @@ model Store {
   openingHours    Json?    @map("opening_hours")
   policies        Json?    @map("policies")
   isPrimary       Boolean  @default(true) @map("is_primary")
+  isFeatured      Boolean  @default(false) @map("is_featured")
+  featuredUntil   DateTime? @map("featured_until")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
@@ -592,6 +601,7 @@ model Store {
   listings Listing[]
 
   @@index([userId])
+  @@index([isFeatured, featuredUntil])
   @@map("stores")
 }
 

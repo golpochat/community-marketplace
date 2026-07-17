@@ -7,11 +7,11 @@ import {
 import {
   AI_MARKETING_DAILY_GENERATION_LIMIT,
   AI_MARKETING_FREE_UNITS_MONTHLY,
+  AI_MARKETING_LISTING_DAILY_GENERATION_LIMIT,
   AI_MARKETING_PROMPT_VERSION,
   AI_MARKETING_TASK_UNIT_COSTS,
   AI_MARKETING_UNIT_EUR_COST,
   isSellerVerified,
-  type AiBillingMethod,
   type AiMarketingGenerateResult,
   type AiMarketingQuotaSummary,
   type AiMarketingTask,
@@ -25,6 +25,7 @@ import {
 } from '@community-marketplace/utils';
 
 import { PrismaService } from '../../../database/prisma.service';
+import { computeAiBilling } from '../lib/ai-billing.lib';
 import { AiContextAssemblerService } from './ai-context-assembler.service';
 import { AiCreditMeterService } from './ai-credit-meter.service';
 import { AiMarketingAccessService } from './ai-marketing-access.service';
@@ -113,22 +114,30 @@ export class AiGenerationService {
     }
 
     const context = await this.contextAssembler.assemble(userId, input);
+    if (context.listingId) {
+      const listingUsed = await this.meter.countGenerationsTodayForListing(
+        userId,
+        context.listingId,
+      );
+      if (listingUsed >= AI_MARKETING_LISTING_DAILY_GENERATION_LIMIT) {
+        throw new ForbiddenException(
+          `Daily AI limit for this listing reached (${AI_MARKETING_LISTING_DAILY_GENERATION_LIMIT}). Try again tomorrow or use another listing.`,
+        );
+      }
+    }
+
     this.safety.assertSafeContext(context);
+    const providerContext = this.safety.prepareContextForProvider(context);
 
     const creditUnits = AI_MARKETING_TASK_UNIT_COSTS[input.task];
     const freeUnitsUsed = await this.meter.countFreeUnitsUsedThisMonth(userId);
-    const freeRemaining = sellerVerified
-      ? Math.max(0, AI_MARKETING_FREE_UNITS_MONTHLY - freeUnitsUsed)
-      : 0;
+    const { billingMethod, amountEur } = computeAiBilling({
+      sellerVerified,
+      freeUnitsUsedThisMonth: freeUnitsUsed,
+      creditUnits,
+    });
 
-    let billingMethod: AiBillingMethod;
-    let amountEur = 0;
-
-    if (freeRemaining >= creditUnits) {
-      billingMethod = 'free_quota';
-    } else {
-      billingMethod = 'wallet';
-      amountEur = Number((creditUnits * AI_MARKETING_UNIT_EUR_COST).toFixed(2));
+    if (billingMethod === 'wallet' && amountEur > 0) {
       const balance = await this.meter.getWalletBalance(userId);
       if (balance < amountEur) {
         throw new ForbiddenException(
@@ -141,11 +150,11 @@ export class AiGenerationService {
       }
     }
 
-    const raw = await this.provider.generateText({
+    const generated = await this.provider.generateText({
       task: input.task,
-      context,
+      context: providerContext,
     });
-    const text = this.normalizeOutput(input.task, raw);
+    const text = this.normalizeOutput(input.task, generated.text);
     this.safety.assertSafeOutput(text);
 
     const { generationId, walletBalance, freeUnitsRemaining } =
@@ -153,13 +162,13 @@ export class AiGenerationService {
         userId,
         listingId: context.listingId,
         task: input.task,
-        provider: this.provider.providerName,
-        model: this.provider.modelName,
+        provider: generated.provider,
+        model: generated.model,
         promptVersion: AI_MARKETING_PROMPT_VERSION,
         billingMethod,
         creditUnits,
         amountEur,
-        inputSummary: this.contextAssembler.summarize(context),
+        inputSummary: this.contextAssembler.summarize(providerContext),
         outputText: text,
       });
 
@@ -171,8 +180,8 @@ export class AiGenerationService {
       amountEur,
       walletBalance,
       freeUnitsRemaining,
-      provider: this.provider.providerName,
-      model: this.provider.modelName,
+      provider: generated.provider,
+      model: generated.model,
       generationId,
     };
   }

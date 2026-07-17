@@ -24,6 +24,8 @@ export function mapSellerStore(row: DbStore): SellerStore {
     openingHours: normalizeStoreOpeningHours(row.openingHours),
     policies: parseStorePolicies(row.policies),
     isPrimary: row.isPrimary,
+    isFeatured: row.isFeatured && row.featuredUntil != null && row.featuredUntil > new Date(),
+    featuredUntil: row.featuredUntil?.toISOString(),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

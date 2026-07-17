@@ -10,11 +10,12 @@ export type AiMarketingTask =
   | 'seasonal_promo'
   | 'image_enhance'
   | 'image_bg_remove'
-  | 'banner_creator';
+  | 'banner_creator'
+  | 'store_banner';
 
 export type AiBillingMethod = 'free_quota' | 'wallet';
 
-export type AiBannerFormat = 'feed_square' | 'story' | 'marketplace_card';
+export type AiBannerFormat = 'feed_square' | 'story' | 'marketplace_card' | 'storefront_hero';
 
 export type AiBannerTemplate =
   | 'classic'
@@ -71,6 +72,8 @@ export interface AiMarketingImageResult {
   generationId: string;
   /** True when enhance/bg-remove may be applied as a listing photo. */
   mayApplyToListing: boolean;
+  /** True when store_banner export may be applied as the storefront hero. */
+  mayApplyToStorefront?: boolean;
   note?: string;
 }
 
@@ -78,6 +81,12 @@ export interface AiMarketingApplyImageResult {
   generationId: string;
   listingId: string;
   images: import('./listing').ListingImage[];
+}
+
+export interface AiMarketingApplyStoreBannerResult {
+  generationId: string;
+  storeId: string;
+  bannerUrl: string;
 }
 
 export type AiPriceSuggestionConfidence = 'high' | 'medium' | 'low' | 'insufficient';
@@ -145,6 +154,7 @@ export const AI_MARKETING_TASK_UNIT_COSTS: Record<AiMarketingTask, number> = {
   image_enhance: 3,
   image_bg_remove: 5,
   banner_creator: 4,
+  store_banner: 4,
 };
 
 /** Verified sellers get this many free credit units per calendar month. */
@@ -154,6 +164,9 @@ export const AI_MARKETING_FREE_UNITS_MONTHLY = 10;
 export const AI_MARKETING_UNIT_EUR_COST = 0.05;
 
 export const AI_MARKETING_DAILY_GENERATION_LIMIT = 30;
+
+/** Max billed AI generations per listing per calendar day (when listingId is present). */
+export const AI_MARKETING_LISTING_DAILY_GENERATION_LIMIT = 15;
 
 export const AI_MARKETING_PROMPT_VERSION = 'v3-ie-en';
 
@@ -172,12 +185,14 @@ export const AI_MARKETING_TASK_LABELS: Record<AiMarketingTask, string> = {
   image_enhance: 'Image enhance',
   image_bg_remove: 'Background remove',
   banner_creator: 'Share banner',
+  store_banner: 'Shop banner',
 };
 
 export const AI_BANNER_FORMAT_LABELS: Record<AiBannerFormat, string> = {
   feed_square: 'Feed square (1080×1080)',
   story: 'Story (1080×1920)',
   marketplace_card: 'Share card (1200×630)',
+  storefront_hero: 'Storefront hero (1600×400)',
 };
 
 export const AI_BANNER_TEMPLATE_LABELS: Record<AiBannerTemplate, string> = {

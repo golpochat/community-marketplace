@@ -56,9 +56,23 @@ export const DEFAULT_PLATFORM_PRICING: PlatformPricingConfig = {
     buyer_statement: { amount: 0.99, enabled: true },
     priority_message: { amount: 0.49, enabled: false },
     early_cashback_unlock: { amount: 0.99, enabled: false },
+    seller_growth_pack: {
+      amount: 6.99,
+      enabled: true,
+      walletCreditEur: 5,
+      boostDiscountPercent: 25,
+    },
+    ai_credit_2: { amount: 1.99, enabled: true, walletCreditEur: 2 },
+    ai_credit_5: { amount: 4.99, enabled: true, walletCreditEur: 5 },
+    ai_credit_10: { amount: 9.99, enabled: true, walletCreditEur: 10 },
+    featured_store_homepage: { amount: 2.99, enabled: true },
   },
   promos: { first_boost_discount_percent: 50 },
-  featured: { homepage_slots_per_day: 8, category_slots_per_day: 4 },
+  featured: {
+    homepage_slots_per_day: 8,
+    category_slots_per_day: 4,
+    store_homepage_slots_per_day: 6,
+  },
 };
 
 export function parsePlatformPricing(value: unknown): PlatformPricingConfig {

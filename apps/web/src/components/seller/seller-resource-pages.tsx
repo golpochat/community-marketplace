@@ -51,6 +51,10 @@ import {
 import { ListingPackageDialog } from "@/components/seller/listing-package-dialog";
 import { ListingBoostDialog } from "@/components/seller/listing-boost-dialog";
 import { ListingFeaturedDialog } from "@/components/seller/listing-featured-dialog";
+import {
+  ListingShareSuccessPanel,
+  type ListingShareSuccessContext,
+} from "@/components/seller/listing-share-success-panel";
 import { BoostedBadge } from "@/components/listings/boosted-badge";
 import { FeaturedBadge } from "@/components/listings/featured-badge";
 import { LISTING_PACKAGE_OPTIONS } from "@/lib/listing-package-options";
@@ -94,6 +98,7 @@ import {
 import { titleAmendService } from "@/services/title-amend.service";
 import { sellerService } from "@/services/marketplace.service";
 import { sellerVerificationService } from "@/services/seller-verification.service";
+import { aiMarketingService } from "@/services/ai-marketing.service";
 import { ApiClientError } from "@/lib/api-client";
 import { listingsService } from "@/services/listings.service";
 import { ReviewBuyerPromptDialog } from "@/components/trust/review-buyer-prompt-dialog";
@@ -201,6 +206,7 @@ function SellerListingThumb({ listing }: { listing: Listing }) {
 
 export function SellerListingsPage() {
   const router = useRouter();
+  const feedback = useAppFeedback();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -255,6 +261,10 @@ export function SellerListingsPage() {
               );
             }
             await sellerService.submitForReview(listingId);
+            feedback.success(
+              "Submitted for review",
+              "Open the listing to prepare share captions while you wait for approval.",
+            );
           }
           break;
         case "cancel-review":
@@ -507,6 +517,7 @@ export function SellerListingsPage() {
         <ListingBoostDialog
           open
           listingId={boostDialogListingId}
+          source="listings_table"
           onClose={() => setBoostDialogListingId(null)}
           onSuccess={() => void load()}
         />
@@ -898,11 +909,15 @@ export function SellerVerificationPage() {
 
 export function SellerCreateListingPage() {
   const router = useRouter();
+  const feedback = useAppFeedback();
   const [categories, setCategories] = useState<SellerCategoryOption[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [shareSuccess, setShareSuccess] =
+    useState<ListingShareSuccessContext | null>(null);
+  const [submittingReview, setSubmittingReview] = useState(false);
   const [nudgeMessage, setNudgeMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [verificationBlocked, setVerificationBlocked] = useState(false);
@@ -966,6 +981,7 @@ export function SellerCreateListingPage() {
     setSubmitting(true);
     setError(null);
     setSuccess(null);
+    setShareSuccess(null);
     try {
       const catalog = await deliveryService.getCatalog();
       const deliverySelections = selectionsFromDeliveryState(
@@ -982,15 +998,37 @@ export function SellerCreateListingPage() {
       const nudge = (response.data as { sellerNudgeMessage?: string } | undefined)
         ?.sellerNudgeMessage;
       if (nudge) setNudgeMessage(nudge);
-      if (listingId && data.images.length > 0) {
+      if (!listingId) {
+        throw new Error("Listing was created but no id was returned.");
+      }
+      if (data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
       }
-      setSuccess(
-        nudge
-          ? `Draft saved. ${nudge}`
-          : "Draft saved. An admin will review it before it goes live on the marketplace.",
-      );
-      window.setTimeout(() => router.push("/account/listings"), 1200);
+      let images: ListingShareSuccessContext["images"] = [];
+      try {
+        images = await aiMarketingService.listListingImages(listingId);
+      } catch {
+        images = [];
+      }
+      const message = nudge
+        ? `Draft saved. ${nudge}`
+        : "Draft saved. An admin will review it before it goes live on the marketplace.";
+      setSuccess(message);
+      setShareSuccess({
+        listingId,
+        listingStatus: "draft",
+        title: data.title.trim(),
+        description: data.description.trim(),
+        categoryId: data.categoryId || categories[0]?.id,
+        categoryName: categories.find(
+          (c) => c.id === (data.categoryId || categories[0]?.id),
+        )?.name,
+        condition: data.condition,
+        location: data.location.trim() || "Ireland",
+        price: data.salePrice,
+        images,
+        message,
+      });
     } catch (err) {
       if (err instanceof ApiClientError && err.status === 403) {
         setVerificationBlocked(true);
@@ -1009,6 +1047,7 @@ export function SellerCreateListingPage() {
     setSubmitting(true);
     setError(null);
     setSuccess(null);
+    setShareSuccess(null);
     try {
       const categoryId =
         data.categoryId || categories.find((c) => isVehicleCategory(c))?.id;
@@ -1033,15 +1072,39 @@ export function SellerCreateListingPage() {
       const nudge = (response.data as { sellerNudgeMessage?: string } | undefined)
         ?.sellerNudgeMessage;
       if (nudge) setNudgeMessage(nudge);
-      if (listingId && data.images.length > 0) {
+      if (!listingId) {
+        throw new Error("Listing was created but no id was returned.");
+      }
+      if (data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
       }
-      setSuccess(
-        nudge
-          ? `Draft saved. ${nudge}`
-          : "Draft saved. An admin will review it before it goes live on the marketplace.",
-      );
-      window.setTimeout(() => router.push("/account/listings"), 1200);
+      let images: ListingShareSuccessContext["images"] = [];
+      try {
+        images = await aiMarketingService.listListingImages(listingId);
+      } catch {
+        images = [];
+      }
+      const title =
+        [data.year, data.make, data.model].filter(Boolean).join(" ").trim() ||
+        "Vehicle listing";
+      const message = nudge
+        ? `Draft saved. ${nudge}`
+        : "Draft saved. An admin will review it before it goes live on the marketplace.";
+      setSuccess(message);
+      setShareSuccess({
+        listingId,
+        listingStatus: "draft",
+        title,
+        description: data.sellerNotes.trim(),
+        categoryId,
+        categoryName: "Vehicles",
+        condition: data.condition || data.customCondition || undefined,
+        location: data.location.trim() || "Ireland",
+        price: data.salePrice,
+        images,
+        isVehicle: true,
+        message,
+      });
     } catch (err) {
       if (err instanceof ApiClientError && err.status === 403) {
         setVerificationBlocked(true);
@@ -1056,10 +1119,40 @@ export function SellerCreateListingPage() {
     }
   }
 
+  async function handleShareSubmitForReview() {
+    if (!shareSuccess) return;
+    setSubmittingReview(true);
+    setError(null);
+    try {
+      await sellerService.submitForReview(shareSuccess.listingId);
+      feedback.success(
+        "Submitted for review",
+        "An admin will check your listing before it goes live.",
+      );
+      setShareSuccess({
+        ...shareSuccess,
+        listingStatus: "pending_review",
+        message:
+          "Submitted for review. Keep preparing share assets while you wait.",
+      });
+      setSuccess(
+        "Submitted for review. Keep preparing share assets while you wait.",
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to submit for review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  }
+
   return (
     <DashboardPageShell
-      title="Create Listing"
-      description="Add a new item to your store."
+      title={shareSuccess ? "Share this listing" : "Create Listing"}
+      description={
+        shareSuccess
+          ? "Prepare captions and creatives for your new draft."
+          : "Add a new item to your store."
+      }
     >
       <SellerConnectBanner className="mb-4" />
       <SellerVerificationBanner className="mb-4" />
@@ -1084,6 +1177,19 @@ export function SellerCreateListingPage() {
             </Link>
           </div>
         </Card>
+      ) : shareSuccess ? (
+        <>
+          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          <ListingShareSuccessPanel
+            context={shareSuccess}
+            submittingReview={submittingReview}
+            onSubmitForReview={() => void handleShareSubmitForReview()}
+            onDone={() => router.push(WEB_APP_ROUTES.accountListings)}
+            onImagesChange={(images) =>
+              setShareSuccess((prev) => (prev ? { ...prev, images } : prev))
+            }
+          />
+        </>
       ) : (
         <>
       {createNudge ? (
@@ -1556,6 +1662,7 @@ export function SellerEditListingPage({
         <ListingBoostDialog
           open
           listingId={listingId}
+          source="marketing_hub"
           onClose={() => setBoostDialogOpen(false)}
           onSuccess={() => {
             setBoostDialogOpen(false);

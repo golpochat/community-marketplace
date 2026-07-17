@@ -12,6 +12,7 @@ import { PERMISSIONS } from '@community-marketplace/types';
 import {
   buyerCashbackOverrideSchema,
   cashbackGrantsAdminFiltersSchema,
+  marketingHubAnalyticsQuerySchema,
   monetizationProductUpdateSchema,
   monetizationProductUpsertSchema,
   monetizationSellerSearchSchema,
@@ -122,6 +123,16 @@ export class AdminMonetizationController {
       limit: query.limit,
     });
     return this.monetization.searchBuyersForCashback(parsed.q, parsed.limit);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('marketing-hub-analytics')
+  getMarketingHubAnalytics(@Query() query: Record<string, string>) {
+    const filters = marketingHubAnalyticsQuerySchema.parse({
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
+    });
+    return this.monetization.getMarketingHubAnalytics(filters);
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)

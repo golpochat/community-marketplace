@@ -42,6 +42,17 @@ export class AiCreditMeterService {
     });
   }
 
+  async countGenerationsTodayForListing(
+    userId: string,
+    listingId: string,
+  ): Promise<number> {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    return this.prisma.aiGenerationLog.count({
+      where: { userId, listingId, createdAt: { gte: start } },
+    });
+  }
+
   async recordGeneration(input: {
     userId: string;
     listingId?: string;

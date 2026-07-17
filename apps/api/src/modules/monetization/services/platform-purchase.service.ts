@@ -10,22 +10,32 @@ import {
 } from '@nestjs/common';
 
 import type {
+  AiCreditPackCatalogResponse,
+  AiCreditPackIntentResponse,
   BoostIntentResponse,
   BoostPackageType,
   FastTrackIntentResponse,
   FastTrackStatusResponse,
   FeaturedIntentResponse,
   FeaturedPlacement,
+  FeaturedStoreIntentResponse,
+  GrowthPackCatalogResponse,
+  GrowthPackIntentResponse,
   PlatformPurchase,
   StoreSlotIntentResponse,
 } from '@community-marketplace/types';
 import type {
+  ConfirmAiCreditPackInput,
   ConfirmBoostInput,
   ConfirmFastTrackInput,
   ConfirmFeaturedInput,
+  ConfirmFeaturedStoreInput,
+  ConfirmGrowthPackInput,
   ConfirmStoreSlotInput,
+  CreateAiCreditPackIntentInput,
   CreateBoostIntentInput,
   CreateFeaturedIntentInput,
+  CreateFeaturedStoreIntentInput,
   CreateStoreSlotIntentInput,
 } from '@community-marketplace/validation';
 
@@ -42,6 +52,7 @@ import { LoggerLib } from '../../../libs/logger.lib';
 import { StripeConnectService } from '../../payments/services/stripe-connect.service';
 import { VerificationService } from '../../verification/services/verification.service';
 import {
+  DEFAULT_PLATFORM_PRICING,
   roundMoney,
 } from '../lib/boost.lib';
 import {
@@ -57,12 +68,21 @@ import {
 } from './fast-track-fulfillment.service';
 import { FeaturedCatalogService } from './featured-catalog.service';
 import { FeaturedFulfillmentService } from './featured-fulfillment.service';
+import { FeaturedStoreCatalogService } from './featured-store-catalog.service';
+import { FeaturedStoreFulfillmentService } from './featured-store-fulfillment.service';
+import { GrowthPackFulfillmentService } from './growth-pack-fulfillment.service';
 import { PlatformSettingsService } from './platform-settings.service';
 import { StoreSlotCatalogService } from './store-slot-catalog.service';
 import { StoreSlotFulfillmentService } from './store-slot-fulfillment.service';
 import { PlatformPurchaseReceiptService } from './platform-purchase-receipt.service';
 import { BuyerStatementPurchaseService } from '../../statements/services/buyer-statement-purchase.service';
 import { slotsGrantedBySku, targetStoreSlotLimit } from '../lib/store-slot.lib';
+import {
+  AI_CREDIT_PACK_SKUS,
+  aiCreditPackApproxUnits,
+  aiCreditPackLabel,
+  type AiCreditPackSku as AiCreditPackSkuLib,
+} from '../lib/ai-credit-pack.lib';
 
 const DAILY_INTENT_LIMIT = 10;
 
@@ -75,9 +95,12 @@ export class PlatformPurchaseService {
     private readonly featuredCatalog: FeaturedCatalogService,
     private readonly boostFulfillment: BoostFulfillmentService,
     private readonly featuredFulfillment: FeaturedFulfillmentService,
+    private readonly featuredStoreCatalog: FeaturedStoreCatalogService,
+    private readonly featuredStoreFulfillment: FeaturedStoreFulfillmentService,
     private readonly fastTrackFulfillment: FastTrackFulfillmentService,
     private readonly storeSlotCatalog: StoreSlotCatalogService,
     private readonly storeSlotFulfillment: StoreSlotFulfillmentService,
+    private readonly growthPackFulfillment: GrowthPackFulfillmentService,
     private readonly stripeConnect: StripeConnectService,
     private readonly purchaseReceipts: PlatformPurchaseReceiptService,
     @Inject(forwardRef(() => BuyerStatementPurchaseService))
@@ -102,11 +125,13 @@ export class PlatformPurchaseService {
     }
 
     const settings = await this.settings.get();
-    const amount = await this.resolveBoostPrice(
-      sellerId,
-      dto.packageType,
-      option.price,
-    );
+    const { amount, discountPercent, growthPackPurchaseId, discountKind } =
+      await this.resolveBoostPrice(
+        sellerId,
+        dto.packageType,
+        option.price,
+        dto.source,
+      );
 
     const purchase = await this.prisma.platformPurchase.create({
       data: {
@@ -120,6 +145,11 @@ export class PlatformPurchaseService {
         metadata: {
           boostDays: dto.packageType === 'PAID_7D' ? 7 : 30,
           priceAtPurchase: amount,
+          basePrice: option.price,
+          source: dto.source ?? 'listing_edit',
+          discountPercent,
+          discountKind,
+          growthPackPurchaseId: growthPackPurchaseId ?? null,
         },
       },
     });
@@ -133,6 +163,7 @@ export class PlatformPurchaseService {
         userId: sellerId,
         packageType: dto.packageType,
         platformPurchaseId: purchase.id,
+        source: dto.source ?? 'listing_edit',
       },
       'boost',
     );
@@ -149,8 +180,197 @@ export class PlatformPurchaseService {
   }
 
   async confirmBoost(sellerId: string, dto: ConfirmBoostInput): Promise<PlatformPurchase> {
-    return this.confirmPurchase(sellerId, dto.purchaseId, (id) =>
+    const purchase = await this.confirmPurchase(sellerId, dto.purchaseId, (id) =>
       this.boostFulfillment.fulfillListingBoost(id),
+    );
+    const metadata = (purchase as { metadata?: Record<string, unknown> }).metadata;
+    // mapPlatformPurchase may strip metadata — reload
+    const raw = await this.prisma.platformPurchase.findUnique({
+      where: { id: dto.purchaseId },
+    });
+    const meta = (raw?.metadata ?? metadata ?? {}) as Record<string, unknown>;
+    const growthPackPurchaseId =
+      typeof meta.growthPackPurchaseId === 'string'
+        ? meta.growthPackPurchaseId
+        : null;
+    if (growthPackPurchaseId) {
+      await this.growthPackFulfillment.markBoostDiscountConsumed(
+        growthPackPurchaseId,
+      );
+    }
+    return purchase;
+  }
+
+  async getGrowthPackCatalog(sellerId: string): Promise<GrowthPackCatalogResponse> {
+    const settings = await this.settings.get();
+    const sku =
+      settings.pricing.skus.seller_growth_pack ??
+      DEFAULT_PLATFORM_PRICING.skus.seller_growth_pack!;
+    const enabled = Boolean(sku.enabled);
+    return {
+      currency: settings.pricing.currency,
+      option: {
+        amount: sku.amount,
+        walletCreditEur: sku.walletCreditEur,
+        boostDiscountPercent: sku.boostDiscountPercent,
+        enabled,
+        eligible: enabled,
+        reason: enabled ? undefined : 'growth_pack_disabled',
+      },
+    };
+  }
+
+  async createGrowthPackIntent(
+    sellerId: string,
+  ): Promise<GrowthPackIntentResponse> {
+    await this.assertIntentRateLimit(sellerId, 'seller_growth_pack');
+    const catalog = await this.getGrowthPackCatalog(sellerId);
+    if (!catalog.option.eligible) {
+      throw new BadRequestException(
+        catalog.option.reason ?? 'Growth Pack is not available',
+      );
+    }
+
+    const settings = await this.settings.get();
+    const amount = roundMoney(catalog.option.amount);
+
+    const purchase = await this.prisma.platformPurchase.create({
+      data: {
+        userId: sellerId,
+        type: 'seller_growth_pack',
+        status: 'pending',
+        amount,
+        currency: settings.pricing.currency.toUpperCase(),
+        metadata: {
+          sku: 'seller_growth_pack',
+          walletCreditEur: catalog.option.walletCreditEur,
+          boostDiscountPercent: catalog.option.boostDiscountPercent,
+          boostDiscountConsumed: false,
+          priceAtPurchase: amount,
+        },
+      },
+    });
+
+    const { providerPaymentId, clientSecret } = await this.createStripeIntent(
+      amount,
+      settings.pricing.currency,
+      {
+        type: 'seller_growth_pack',
+        userId: sellerId,
+        platformPurchaseId: purchase.id,
+      },
+      'growth_pack',
+    );
+
+    const updated = await this.prisma.platformPurchase.update({
+      where: { id: purchase.id },
+      data: { providerPaymentId, clientSecret },
+    });
+
+    return {
+      purchase: mapPlatformPurchase(updated),
+      clientSecret,
+    };
+  }
+
+  async confirmGrowthPack(
+    sellerId: string,
+    dto: ConfirmGrowthPackInput,
+  ): Promise<PlatformPurchase> {
+    return this.confirmPurchase(sellerId, dto.purchaseId, (id) =>
+      this.growthPackFulfillment.fulfillGrowthPack(id),
+    );
+  }
+
+  async getAiCreditPackCatalog(
+    _sellerId: string,
+  ): Promise<AiCreditPackCatalogResponse> {
+    const settings = await this.settings.get();
+    const options = AI_CREDIT_PACK_SKUS.map((sku) => {
+      const defaults = DEFAULT_PLATFORM_PRICING.skus[sku]!;
+      const configured = settings.pricing.skus[sku] ?? defaults;
+      const walletCreditEur = Number(
+        configured.walletCreditEur ?? defaults.walletCreditEur,
+      );
+      const enabled = Boolean(configured.enabled);
+      return {
+        sku,
+        label: aiCreditPackLabel(sku),
+        amount: configured.amount,
+        walletCreditEur,
+        approxUnits: aiCreditPackApproxUnits(walletCreditEur),
+        enabled,
+        eligible: enabled,
+        reason: enabled ? undefined : 'ai_credit_pack_disabled',
+      };
+    });
+    return {
+      currency: settings.pricing.currency,
+      options,
+    };
+  }
+
+  async createAiCreditPackIntent(
+    sellerId: string,
+    dto: CreateAiCreditPackIntentInput,
+  ): Promise<AiCreditPackIntentResponse> {
+    const sku = dto.sku as AiCreditPackSkuLib;
+    await this.assertIntentRateLimit(sellerId, sku);
+    const catalog = await this.getAiCreditPackCatalog(sellerId);
+    const option = catalog.options.find((item) => item.sku === sku);
+    if (!option?.eligible) {
+      throw new BadRequestException(
+        option?.reason ?? 'AI credit pack is not available',
+      );
+    }
+
+    const settings = await this.settings.get();
+    const amount = roundMoney(option.amount);
+
+    const purchase = await this.prisma.platformPurchase.create({
+      data: {
+        userId: sellerId,
+        type: sku,
+        status: 'pending',
+        amount,
+        currency: settings.pricing.currency.toUpperCase(),
+        metadata: {
+          sku,
+          walletCreditEur: option.walletCreditEur,
+          approxUnits: option.approxUnits,
+          priceAtPurchase: amount,
+        },
+      },
+    });
+
+    const { providerPaymentId, clientSecret } = await this.createStripeIntent(
+      amount,
+      settings.pricing.currency,
+      {
+        type: sku,
+        userId: sellerId,
+        platformPurchaseId: purchase.id,
+      },
+      'ai_credit',
+    );
+
+    const updated = await this.prisma.platformPurchase.update({
+      where: { id: purchase.id },
+      data: { providerPaymentId, clientSecret },
+    });
+
+    return {
+      purchase: mapPlatformPurchase(updated),
+      clientSecret,
+    };
+  }
+
+  async confirmAiCreditPack(
+    sellerId: string,
+    dto: ConfirmAiCreditPackInput,
+  ): Promise<PlatformPurchase> {
+    return this.confirmPurchase(sellerId, dto.purchaseId, (id) =>
+      this.growthPackFulfillment.fulfillAiCreditPack(id),
     );
   }
 
@@ -224,6 +444,73 @@ export class PlatformPurchaseService {
   ): Promise<PlatformPurchase> {
     return this.confirmPurchase(sellerId, dto.purchaseId, (id) =>
       this.featuredFulfillment.fulfillFeaturedSlot(id),
+    );
+  }
+
+  async createFeaturedStoreIntent(
+    sellerId: string,
+    dto: CreateFeaturedStoreIntentInput,
+  ): Promise<FeaturedStoreIntentResponse> {
+    await this.assertIntentRateLimit(sellerId, 'featured_store');
+    const catalog = await this.featuredStoreCatalog.getCatalog(
+      sellerId,
+      dto.storeId,
+    );
+    if (!catalog.option.eligible) {
+      throw new BadRequestException(
+        catalog.option.reason ?? 'This store is not eligible for featured placement',
+      );
+    }
+
+    const settings = await this.settings.get();
+    const amount = roundMoney(catalog.option.amount);
+
+    const purchase = await this.prisma.platformPurchase.create({
+      data: {
+        userId: sellerId,
+        type: 'featured_store',
+        status: 'pending',
+        amount,
+        currency: settings.pricing.currency.toUpperCase(),
+        metadata: {
+          sku: 'featured_store_homepage',
+          storeId: dto.storeId,
+          placement: 'homepage',
+          durationHours: catalog.option.durationHours,
+          priceAtPurchase: amount,
+        },
+      },
+    });
+
+    const { providerPaymentId, clientSecret } = await this.createStripeIntent(
+      amount,
+      settings.pricing.currency,
+      {
+        type: 'featured_store',
+        userId: sellerId,
+        platformPurchaseId: purchase.id,
+        storeId: dto.storeId,
+      },
+      'featured_store',
+    );
+
+    const updated = await this.prisma.platformPurchase.update({
+      where: { id: purchase.id },
+      data: { providerPaymentId, clientSecret },
+    });
+
+    return {
+      purchase: mapPlatformPurchase(updated),
+      clientSecret,
+    };
+  }
+
+  async confirmFeaturedStore(
+    sellerId: string,
+    dto: ConfirmFeaturedStoreInput,
+  ): Promise<PlatformPurchase> {
+    return this.confirmPurchase(sellerId, dto.purchaseId, (id) =>
+      this.featuredStoreFulfillment.fulfillFeaturedStore(id),
     );
   }
 
@@ -432,9 +719,22 @@ export class PlatformPurchaseService {
     switch (purchase.type) {
       case 'listing_boost':
         fulfilled = await this.boostFulfillment.fulfillListingBoost(purchase.id);
+        if (fulfilled) {
+          const meta = (purchase.metadata ?? {}) as Record<string, unknown>;
+          if (typeof meta.growthPackPurchaseId === 'string') {
+            await this.growthPackFulfillment.markBoostDiscountConsumed(
+              meta.growthPackPurchaseId,
+            );
+          }
+        }
         break;
       case 'featured_slot':
         fulfilled = await this.featuredFulfillment.fulfillFeaturedSlot(purchase.id);
+        break;
+      case 'featured_store':
+        fulfilled = await this.featuredStoreFulfillment.fulfillFeaturedStore(
+          purchase.id,
+        );
         break;
       case 'fast_track_verification':
         fulfilled = await this.fastTrackFulfillment.fulfillFastTrack(purchase.id);
@@ -447,6 +747,18 @@ export class PlatformPurchaseService {
       case 'buyer_statement':
         await this.buyerStatementPurchases.fulfillFromWebhook(purchase.id);
         return true;
+      case 'seller_growth_pack':
+        fulfilled = await this.growthPackFulfillment.fulfillGrowthPack(
+          purchase.id,
+        );
+        break;
+      case 'ai_credit_2':
+      case 'ai_credit_5':
+      case 'ai_credit_10':
+        fulfilled = await this.growthPackFulfillment.fulfillAiCreditPack(
+          purchase.id,
+        );
+        break;
       default:
         return false;
     }
@@ -501,7 +813,12 @@ export class PlatformPurchaseService {
       | 'store_slot_2'
       | 'store_slot_3'
       | 'store_bundle_3'
-      | 'buyer_statement';
+      | 'buyer_statement'
+      | 'seller_growth_pack'
+      | 'ai_credit_2'
+      | 'ai_credit_5'
+      | 'ai_credit_10'
+      | 'featured_store';
     status?: 'pending' | 'succeeded' | 'failed' | 'refunded';
     userId?: string;
   }) {
@@ -627,7 +944,12 @@ export class PlatformPurchaseService {
       | 'fast_track_verification'
       | 'store_slot_2'
       | 'store_slot_3'
-      | 'store_bundle_3',
+      | 'store_bundle_3'
+      | 'seller_growth_pack'
+      | 'ai_credit_2'
+      | 'ai_credit_5'
+      | 'ai_credit_10'
+      | 'featured_store',
   ) {
     const since = new Date();
     since.setHours(since.getHours() - 24);
@@ -650,10 +972,48 @@ export class PlatformPurchaseService {
     sellerId: string,
     packageType: BoostPackageType,
     basePrice: number,
-  ) {
+    source?: CreateBoostIntentInput['source'],
+  ): Promise<{
+    amount: number;
+    discountPercent: number;
+    discountKind: 'none' | 'first_boost' | 'growth_pack';
+    growthPackPurchaseId?: string;
+  }> {
     const settings = await this.settings.get();
+
+    if (source === 'marketing_hub') {
+      const unusedGrowthPack = await this.prisma.platformPurchase.findFirst({
+        where: {
+          userId: sellerId,
+          type: 'seller_growth_pack',
+          status: 'succeeded',
+        },
+        orderBy: { fulfilledAt: 'asc' },
+      });
+      if (unusedGrowthPack) {
+        const meta = (unusedGrowthPack.metadata ?? {}) as Record<string, unknown>;
+        if (meta.boostDiscountConsumed !== true) {
+          const discountPercent = Number(meta.boostDiscountPercent ?? 0);
+          if (discountPercent > 0) {
+            return {
+              amount: roundMoney(basePrice * (1 - discountPercent / 100)),
+              discountPercent,
+              discountKind: 'growth_pack',
+              growthPackPurchaseId: unusedGrowthPack.id,
+            };
+          }
+        }
+      }
+    }
+
     const discountPercent = settings.pricing.promos?.first_boost_discount_percent ?? 0;
-    if (discountPercent <= 0) return roundMoney(basePrice);
+    if (discountPercent <= 0) {
+      return {
+        amount: roundMoney(basePrice),
+        discountPercent: 0,
+        discountKind: 'none',
+      };
+    }
 
     const priorSuccess = await this.prisma.platformPurchase.count({
       where: {
@@ -662,9 +1022,19 @@ export class PlatformPurchaseService {
         status: 'succeeded',
       },
     });
-    if (priorSuccess > 0) return roundMoney(basePrice);
+    if (priorSuccess > 0) {
+      return {
+        amount: roundMoney(basePrice),
+        discountPercent: 0,
+        discountKind: 'none',
+      };
+    }
 
-    return roundMoney(basePrice * (1 - discountPercent / 100));
+    return {
+      amount: roundMoney(basePrice * (1 - discountPercent / 100)),
+      discountPercent,
+      discountKind: 'first_boost',
+    };
   }
 
   private async evaluateFastTrackEligibility(

@@ -36,7 +36,7 @@ const PAGE_TITLES: Record<MonetizationTab, string> = {
 };
 
 const PAGE_DESCRIPTIONS: Record<MonetizationTab, string> = {
-  advertising: 'Turn advertising modules on or off and review deploy flags.',
+  advertising: 'Turn advertising modules on or off, review deploy flags, and Marketing Hub conversion.',
   fees: 'Platform fee defaults, cashback settings, and per-user overrides.',
   catalog: 'Manage listing boosts and featured placement products.',
 };
@@ -188,6 +188,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
 
             {activeTab === 'advertising' && (
               <AdminMonetizationAdvertising
+                role={role}
                 settings={settings}
                 adsSystem={adsSystem}
                 saving={saving}

@@ -20,11 +20,20 @@ import type {
   SellerPlatformFeeInfo,
   StoreSlotCatalogResponse,
   StoreSlotIntentResponse,
+  GrowthPackCatalogResponse,
+  GrowthPackIntentResponse,
+  AiCreditPackCatalogResponse,
+  AiCreditPackIntentResponse,
+  FeaturedStoreCatalogResponse,
+  FeaturedStoreIntentResponse,
+  MarketingHubAnalyticsResponse,
   WalletTransaction,
 } from '@community-marketplace/types';
 import type {
   CreateBoostIntentInput,
   CreateFeaturedIntentInput,
+  CreateAiCreditPackIntentInput,
+  CreateFeaturedStoreIntentInput,
   CreateStoreSlotIntentInput,
   PlatformSettingsUpdateInput,
   MonetizationProductUpsertInput,
@@ -111,6 +120,97 @@ export const monetizationService = {
       method: 'POST',
       body: JSON.stringify({ purchaseId }),
     });
+    return response.data!;
+  },
+
+  async getGrowthPackCatalog(): Promise<GrowthPackCatalogResponse> {
+    const response = await apiClient<GrowthPackCatalogResponse>(
+      WEB_API_ROUTES.seller.growthPackCatalog,
+    );
+    return response.data!;
+  },
+
+  async createGrowthPackIntent(): Promise<GrowthPackIntentResponse> {
+    const response = await apiClient<GrowthPackIntentResponse>(
+      WEB_API_ROUTES.seller.growthPackIntent,
+      {
+        method: 'POST',
+        body: JSON.stringify({}),
+      },
+    );
+    return response.data!;
+  },
+
+  async confirmGrowthPack(purchaseId: string): Promise<PlatformPurchase> {
+    const response = await apiClient<PlatformPurchase>(
+      WEB_API_ROUTES.seller.growthPackConfirm,
+      {
+        method: 'POST',
+        body: JSON.stringify({ purchaseId }),
+      },
+    );
+    return response.data!;
+  },
+
+  async getAiCreditPackCatalog(): Promise<AiCreditPackCatalogResponse> {
+    const response = await apiClient<AiCreditPackCatalogResponse>(
+      WEB_API_ROUTES.seller.aiCreditPackCatalog,
+    );
+    return response.data!;
+  },
+
+  async createAiCreditPackIntent(
+    body: CreateAiCreditPackIntentInput,
+  ): Promise<AiCreditPackIntentResponse> {
+    const response = await apiClient<AiCreditPackIntentResponse>(
+      WEB_API_ROUTES.seller.aiCreditPackIntent,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      },
+    );
+    return response.data!;
+  },
+
+  async confirmAiCreditPack(purchaseId: string): Promise<PlatformPurchase> {
+    const response = await apiClient<PlatformPurchase>(
+      WEB_API_ROUTES.seller.aiCreditPackConfirm,
+      {
+        method: 'POST',
+        body: JSON.stringify({ purchaseId }),
+      },
+    );
+    return response.data!;
+  },
+
+  async getFeaturedStoreCatalog(storeId: string): Promise<FeaturedStoreCatalogResponse> {
+    const response = await apiClient<FeaturedStoreCatalogResponse>(
+      `${WEB_API_ROUTES.seller.featuredStoreCatalog}?storeId=${encodeURIComponent(storeId)}`,
+    );
+    return response.data!;
+  },
+
+  async createFeaturedStoreIntent(
+    body: CreateFeaturedStoreIntentInput,
+  ): Promise<FeaturedStoreIntentResponse> {
+    const response = await apiClient<FeaturedStoreIntentResponse>(
+      WEB_API_ROUTES.seller.featuredStoreIntent,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      },
+    );
+    return response.data!;
+  },
+
+  async confirmFeaturedStore(purchaseId: string): Promise<PlatformPurchase> {
+    const response = await apiClient<PlatformPurchase>(
+      WEB_API_ROUTES.seller.featuredStoreConfirm,
+      {
+        method: 'POST',
+        body: JSON.stringify({ purchaseId }),
+      },
+    );
     return response.data!;
   },
 
@@ -381,6 +481,20 @@ export const monetizationService = {
       `${adminApiPath(role, '/monetization/wallet-transactions')}?${query.toString()}`,
     );
     return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
+  },
+
+  async getMarketingHubAnalytics(
+    role: AdminApiRole,
+    params: { dateFrom: string; dateTo: string },
+  ): Promise<MarketingHubAnalyticsResponse> {
+    const query = new URLSearchParams({
+      dateFrom: params.dateFrom,
+      dateTo: params.dateTo,
+    });
+    const response = await apiClient<MarketingHubAnalyticsResponse>(
+      `${adminApiPath(role, '/monetization/marketing-hub-analytics')}?${query.toString()}`,
+    );
+    return response.data!;
   },
 
   async getFinanceReportSummary(role: AdminApiRole, filters: AdminFinanceReportFilters) {

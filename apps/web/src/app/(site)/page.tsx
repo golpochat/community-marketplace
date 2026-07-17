@@ -1,6 +1,7 @@
 import { HeroSection } from '@/components/public/hero-section';
 import { CategoryShortcuts } from '@/components/public/category-shortcuts';
 import { FeaturedListings } from '@/components/public/featured-listings';
+import { FeaturedStores } from '@/components/public/featured-stores';
 import { HowItWorks } from '@/components/public/how-it-works';
 import { TrustSection } from '@/components/public/trust-section';
 import { SocialProofBar } from '@/components/public/social-proof-bar';
@@ -16,6 +17,7 @@ import {
   DEFAULT_TWITTER,
 } from '@/lib/seo/og-default';
 import { listingsService } from '@/services/listings.service';
+import { storefrontService } from '@/services/storefront.service';
 
 export const metadata = {
   title: {
@@ -31,9 +33,10 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  const [categories, featuredListings, newestFallback] = await Promise.all([
+  const [categories, featuredListings, featuredStores, newestFallback] = await Promise.all([
     listingsService.getCategories(),
     listingsService.getFeatured({ placement: 'homepage', limit: 8 }),
+    storefrontService.getFeaturedStores(6),
     listingsService.search({ page: 1, limit: 8, sort: 'newest' }),
   ]);
 
@@ -48,6 +51,7 @@ export default async function HomePage() {
       <DisplayAdsSection context="homepage" className="container py-4" />
       <CategoryShortcuts categories={categories} />
       <LocalFeedSection />
+      <FeaturedStores stores={featuredStores} />
       <FeaturedListings listings={featured} isPromoted={featuredListings.length > 0} />
       <FounderStorySection />
       <HowItWorks />

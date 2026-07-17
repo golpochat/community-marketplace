@@ -8,6 +8,15 @@ import { StoresService } from './services/stores.service';
 export class StoresController {
   constructor(private readonly storesService: StoresService) {}
 
+  /** Must stay above `:slug` so "featured" is not parsed as a store slug. */
+  @Get('featured')
+  getFeaturedStores(@Query('limit') limit?: string) {
+    const parsed = limit ? parseInt(limit, 10) : 6;
+    return this.storesService.findFeatured(
+      Number.isFinite(parsed) ? parsed : 6,
+    );
+  }
+
   @Get(':slug')
   getStore(@Param('slug') slug: string) {
     return this.storesService.getBySlug(slug);

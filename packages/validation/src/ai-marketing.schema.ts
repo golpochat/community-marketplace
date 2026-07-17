@@ -25,12 +25,14 @@ export const aiMarketingTaskSchema = z.enum([
   'image_enhance',
   'image_bg_remove',
   'banner_creator',
+  'store_banner',
 ]);
 
 export const aiBannerFormatSchema = z.enum([
   'feed_square',
   'story',
   'marketplace_card',
+  'storefront_hero',
 ]);
 
 export const aiBannerTemplateSchema = z.enum([
@@ -85,6 +87,28 @@ export const aiMarketingApplyImageSchema = z.object({
   generationId: z.string().uuid(),
 });
 
+export const aiMarketingStoreBannerSchema = z
+  .object({
+    storeId: z.string().uuid(),
+    listingId: z.string().uuid().optional(),
+    imageId: z.string().uuid().optional(),
+    includeWatermark: z.boolean().optional().default(true),
+  })
+  .superRefine((value, ctx) => {
+    if (Boolean(value.listingId) !== Boolean(value.imageId)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Provide both listingId and imageId to use a listing photo, or neither.',
+        path: ['imageId'],
+      });
+    }
+  });
+
+export const aiMarketingApplyStoreBannerSchema = z.object({
+  generationId: z.string().uuid(),
+  storeId: z.string().uuid(),
+});
+
 export const aiMarketingPriceSuggestSchema = z
   .object({
     listingId: z.string().uuid().optional(),
@@ -104,19 +128,10 @@ export const aiMarketingPriceSuggestSchema = z
     }
   });
 
-export const aiMarketingBestPostingTimeSchema = z
-  .object({
-    listingId: z.string().uuid().optional(),
-    categoryId: z.string().uuid().optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (!value.listingId && !value.categoryId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Provide listingId or categoryId.',
-      });
-    }
-  });
+export const aiMarketingBestPostingTimeSchema = z.object({
+  listingId: z.string().uuid().optional(),
+  categoryId: z.string().uuid().optional(),
+});
 
 export const aiMarketingCampaignPackSchema = z.object({
   listingId: z.string().uuid(),
@@ -125,6 +140,10 @@ export const aiMarketingCampaignPackSchema = z.object({
 export type AiMarketingGenerateInput = z.infer<typeof aiMarketingGenerateSchema>;
 export type AiMarketingImageInput = z.infer<typeof aiMarketingImageSchema>;
 export type AiMarketingApplyImageInput = z.infer<typeof aiMarketingApplyImageSchema>;
+export type AiMarketingStoreBannerInput = z.infer<typeof aiMarketingStoreBannerSchema>;
+export type AiMarketingApplyStoreBannerInput = z.infer<
+  typeof aiMarketingApplyStoreBannerSchema
+>;
 export type AiMarketingPriceSuggestInput = z.infer<typeof aiMarketingPriceSuggestSchema>;
 export type AiMarketingBestPostingTimeInput = z.infer<
   typeof aiMarketingBestPostingTimeSchema

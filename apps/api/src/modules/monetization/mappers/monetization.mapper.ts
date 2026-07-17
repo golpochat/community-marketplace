@@ -170,7 +170,7 @@ export function mapWalletTransaction(row: {
   return {
     id: row.id,
     userId: row.userId,
-    type: row.type as 'cashback_earned' | 'expired' | 'ai_generation',
+    type: row.type as 'cashback_earned' | 'expired' | 'ai_generation' | 'credit_topup',
     amount: Number(row.amount),
     sourcePaymentId: row.sourcePaymentId ?? undefined,
     expiresAt: row.expiresAt?.toISOString(),

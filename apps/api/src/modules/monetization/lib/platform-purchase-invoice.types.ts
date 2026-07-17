@@ -30,6 +30,11 @@ export const PLATFORM_PURCHASE_LABELS: Record<PlatformPurchaseType, string> = {
   store_slot_3: 'Additional store slot (bundle)',
   store_bundle_3: 'Store slot bundle',
   buyer_statement: 'Purchase history statement',
+  seller_growth_pack: 'Seller Growth Pack',
+  ai_credit_2: 'AI Credits (€2)',
+  ai_credit_5: 'AI Credits (€5)',
+  ai_credit_10: 'AI Credits (€10)',
+  featured_store: 'Featured storefront',
 };
 
 export function describePlatformPurchase(
@@ -64,6 +69,22 @@ export function describePlatformPurchase(
       }
       return 'Purchase history statement';
     }
+    case 'seller_growth_pack': {
+      const credit = metadata.walletCreditEur;
+      const discount = metadata.boostDiscountPercent;
+      return `Seller Growth Pack (€${Number(credit ?? 0).toFixed(2)} credit · ${Number(discount ?? 0)}% hub boost discount)`;
+    }
+    case 'ai_credit_2':
+    case 'ai_credit_5':
+    case 'ai_credit_10': {
+      const credit = Number(metadata.walletCreditEur ?? 0);
+      const units = metadata.approxUnits;
+      return units
+        ? `AI credit top-up (€${credit.toFixed(2)} SellNearby Credit · ~${Number(units)} units)`
+        : `AI credit top-up (€${credit.toFixed(2)} SellNearby Credit)`;
+    }
+    case 'featured_store':
+      return 'Homepage featured storefront (24h)';
     default:
       return PLATFORM_PURCHASE_LABELS[type];
   }
