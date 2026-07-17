@@ -489,8 +489,19 @@ AI Hub should increase:
 
 **Surfaces**
 
-- Generic listing create/edit → Details (text + posting time) + Pricing (price suggest) + Photos (images)
-- Vehicle listing create/edit → Condition (text + posting time) + Price & delivery (price suggest) + Photos (images)
+- Generic listing create/edit → **form fields first**, then collapsed Marketing Hub:
+  - Details: Improve this listing (Accept) · Share off SellNearby (Copy, locked until title ≥ 10 chars) · Best posting time (free)
+  - Pricing: price fields first · Suggest price (free, collapsed)
+  - Photos: upload first · photo tools / campaign pack (collapsed)
+- Vehicle listing create/edit → same pattern on Condition / Price & delivery / Photos steps
+
+**Seller UX rules (2026-07-17)**
+
+1. Title & description (or vehicle notes) come **above** the hub.
+2. Hub sections are **collapsed by default** so the form stays primary.
+3. Social/outreach tools stay **locked** until the listing title has at least 10 characters.
+4. Accept fills form fields; Copy is for off-platform paste only.
+5. Free units first; then €0.05/unit from SellNearby Credit (no in-hub checkout).
 
 **Engineering**
 
@@ -543,3 +554,4 @@ AI Hub should increase:
 | 2026-07-16 | Best posting time (free, Europe/Dublin) |
 | 2026-07-16 | Phase 3 wrap: campaign pack zip + boost handoff |
 | 2026-07-17 | Seller-facing pricing consistency: live §9.1, unit/€ on buttons, docs vs README aligned |
+| 2026-07-17 | Hub UX: form-first, Assist vs Share, social locked until title, collapsed by default |

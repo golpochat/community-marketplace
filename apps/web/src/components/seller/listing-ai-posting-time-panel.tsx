@@ -16,6 +16,8 @@ interface ListingAiPostingTimePanelProps {
   listingId?: string;
   categoryId?: string;
   embedded?: boolean;
+  /** Slimmer result list for nested hub widgets. */
+  compact?: boolean;
 }
 
 function confidenceLabel(confidence: AiBestPostingTimeResult["confidence"]) {
@@ -41,6 +43,7 @@ export function ListingAiPostingTimePanel({
   listingId,
   categoryId,
   embedded = false,
+  compact = false,
 }: ListingAiPostingTimePanelProps) {
   const hub = useMarketingHubOptional();
   const [localQuota, setLocalQuota] = useState<AiMarketingQuotaSummary | null>(
@@ -123,18 +126,20 @@ export function ListingAiPostingTimePanel({
       {result && (
         <div className="mt-3 space-y-2 rounded-md border border-[hsl(var(--dashboard-sidebar-border))] p-3">
           <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-            {confidenceLabel(result.confidence)} · {result.source} ·{" "}
-            {result.sampleSize} signals
+            {confidenceLabel(result.confidence)}
             {result.categoryName ? ` · ${result.categoryName}` : ""}
+            {!compact
+              ? ` · ${result.source} · ${result.sampleSize} signals`
+              : ""}
           </p>
           <ul className="space-y-1 text-sm text-[hsl(var(--dashboard-main-fg))]">
-            {result.windows.map((window) => (
+            {result.windows.slice(0, compact ? 2 : undefined).map((window) => (
               <li key={`${window.label}-${window.startHour}`}>
                 {formatWindow(window)}
               </li>
             ))}
           </ul>
-          {result.topSlots.length > 0 && (
+          {!compact && result.topSlots.length > 0 && (
             <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
               Top slots:{" "}
               {result.topSlots
@@ -146,9 +151,11 @@ export function ListingAiPostingTimePanel({
           <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
             {result.explanation}
           </p>
-          <p className="text-[11px] text-[hsl(var(--dashboard-sidebar-muted))]">
-            {result.disclaimer}
-          </p>
+          {!compact && (
+            <p className="text-[11px] text-[hsl(var(--dashboard-sidebar-muted))]">
+              {result.disclaimer}
+            </p>
+          )}
         </div>
       )}
     </>
