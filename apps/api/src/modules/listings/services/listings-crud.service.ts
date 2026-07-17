@@ -374,11 +374,10 @@ export class ListingsCrudService {
         row.id,
         parsed.deliverySelections,
       );
-      const listing = await this.findById(row.id);
-      return { ...listing, sellerNudgeMessage: gateResult.nudgeMessage };
+      return this.findById(row.id);
     }
 
-    return { ...mapListing(row), sellerNudgeMessage: gateResult.nudgeMessage };
+    return mapListing(row);
   }
 
   async update(
