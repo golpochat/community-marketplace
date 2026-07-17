@@ -6,6 +6,8 @@ import {
   AI_BANNER_FORMAT_LABELS,
   AI_BANNER_TEMPLATE_LABELS,
   AI_MARKETING_TASK_LABELS,
+  formatAiMarketingQuotaSummary,
+  formatAiMarketingTaskCostLabel,
   type AiBannerFormat,
   type AiBannerTemplate,
   type AiMarketingImageResult,
@@ -257,7 +259,9 @@ export function ListingAiImagePanel({
           disabled={disabled}
           onClick={() => void run("image_enhance")}
         >
-          {busyTask === "image_enhance" ? "Enhancing…" : "Enhance photo"}
+          {busyTask === "image_enhance"
+            ? "Enhancing…"
+            : `Enhance photo · ${formatAiMarketingTaskCostLabel("image_enhance")}`}
         </Button>
         <Button
           type="button"
@@ -273,7 +277,7 @@ export function ListingAiImagePanel({
         >
           {busyTask === "image_bg_remove"
             ? "Removing background…"
-            : "Remove background"}
+            : `Remove background · ${formatAiMarketingTaskCostLabel("image_bg_remove")}`}
         </Button>
         <Button
           type="button"
@@ -284,7 +288,7 @@ export function ListingAiImagePanel({
         >
           {busyTask === "banner_creator"
             ? "Creating banner…"
-            : "Create share banner"}
+            : `Create share banner · ${formatAiMarketingTaskCostLabel("banner_creator")}`}
         </Button>
       </div>
 
@@ -298,7 +302,8 @@ export function ListingAiImagePanel({
       {result && (
         <div className="mt-3 space-y-2 rounded-md border border-[hsl(var(--dashboard-sidebar-border))] p-3">
           <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
-            Result · {AI_MARKETING_TASK_LABELS[result.task]}
+            Result · {AI_MARKETING_TASK_LABELS[result.task]} ·{" "}
+            {formatAiMarketingTaskCostLabel(result.task)}
             {result.bannerFormat
               ? ` · ${AI_BANNER_FORMAT_LABELS[result.bannerFormat]}`
               : ""}
@@ -362,9 +367,8 @@ export function ListingAiImagePanel({
           </p>
         </div>
         {quota && (
-          <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-            {quota.freeUnitsRemaining} free units · €
-            {quota.walletBalance.toFixed(2)} credit
+          <p className="max-w-xs text-right text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+            {formatAiMarketingQuotaSummary(quota)}
           </p>
         )}
       </div>

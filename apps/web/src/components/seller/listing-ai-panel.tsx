@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@community-marketplace/ui";
 import {
   AI_MARKETING_TASK_LABELS,
+  formatAiMarketingQuotaSummary,
+  formatAiMarketingTaskCostLabel,
   type AiMarketingQuotaSummary,
   type AiMarketingTask,
 } from "@community-marketplace/types";
@@ -43,7 +45,8 @@ const OUTREACH_TASKS: AiMarketingTask[] = [
 ];
 
 function taskButtonLabel(task: AiMarketingTask, busy: boolean): string {
-  if (!busy) {
+  if (busy) return "Generating…";
+  const name = (() => {
     switch (task) {
       case "seo_title":
         return "AI SEO title";
@@ -66,8 +69,8 @@ function taskButtonLabel(task: AiMarketingTask, busy: boolean): string {
       default:
         return AI_MARKETING_TASK_LABELS[task];
     }
-  }
-  return "Generating…";
+  })();
+  return `${name} · ${formatAiMarketingTaskCostLabel(task)}`;
 }
 
 export function ListingAiPanel({
@@ -237,7 +240,8 @@ export function ListingAiPanel({
       {preview && (
         <div className="mt-3 space-y-2 rounded-md border border-[hsl(var(--dashboard-sidebar-border))] bg-white/50 p-3 dark:bg-black/10">
           <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
-            Preview · {AI_MARKETING_TASK_LABELS[preview.task]}
+            Preview · {AI_MARKETING_TASK_LABELS[preview.task]} ·{" "}
+            {formatAiMarketingTaskCostLabel(preview.task)}
           </p>
           <p className="whitespace-pre-wrap text-sm text-[hsl(var(--dashboard-main-fg))]">
             {preview.text}
@@ -261,7 +265,7 @@ export function ListingAiPanel({
               disabled={disabled}
               onClick={() => void runGenerate(preview.task)}
             >
-              Regenerate
+              Regenerate · {formatAiMarketingTaskCostLabel(preview.task)}
             </Button>
             <Button
               type="button"
@@ -293,10 +297,7 @@ export function ListingAiPanel({
         </div>
         {!loadingQuota && quota && (
           <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-            {quota.sellerVerified
-              ? `${quota.freeUnitsRemaining} free units left`
-              : "Verified sellers get free units"}
-            {" · "}€{quota.walletBalance.toFixed(2)} credit
+            {formatAiMarketingQuotaSummary(quota)}
           </p>
         )}
       </div>

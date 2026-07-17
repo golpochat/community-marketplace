@@ -346,6 +346,10 @@ export {
   AI_BANNER_TEMPLATE_LABELS,
   AI_MARKETING_LISTING_APPLY_TASKS,
   AI_MARKETING_IMAGE_TASKS,
+  aiMarketingTaskUnitCost,
+  aiMarketingTaskEurCost,
+  formatAiMarketingTaskCostLabel,
+  formatAiMarketingQuotaSummary,
 } from './ai-marketing';
 export type {
   AdsSystemModuleCode,

@@ -44,15 +44,17 @@ const STEP_COPY: Record<
 > = {
   details: {
     title: "Marketing hub",
-    description: "Improve listing copy, social posts, and when to share",
+    description:
+      "Copy & social use AI credits · posting time is free · costs shown on each button",
   },
   pricing: {
     title: "Marketing hub",
-    description: "Price guidance from similar SellNearby listings",
+    description: "Price guidance from similar SellNearby listings · free",
   },
   photos: {
     title: "Marketing hub",
-    description: "Photo tools, share banners, campaign pack, and boost",
+    description:
+      "Photo tools use AI credits · campaign pack is free · costs shown on each button",
   },
 };
 
@@ -87,7 +89,7 @@ export function ListingMarketingHub({
         <>
           <MarketingHubWidget
             title="Copy & social"
-            description="Apply SEO title and description in-form · copy social posts to paste elsewhere"
+            description="Costs shown on each button · SEO title & description apply in-form · social is copy-only"
           >
             <ListingAiPanel
               embedded
@@ -106,7 +108,7 @@ export function ListingMarketingHub({
           </MarketingHubWidget>
           <MarketingHubWidget
             title="Best posting time"
-            description="Europe/Dublin · free"
+            description="Free · Europe/Dublin · no AI credits"
           >
             <ListingAiPostingTimePanel
               embedded
@@ -120,7 +122,7 @@ export function ListingMarketingHub({
       {step === "pricing" && onApplySuggestedPrice && (
         <MarketingHubWidget
           title="Price suggestion"
-          description="Based on similar active listings · free"
+          description="Free · similar active listings · advisory only"
         >
           <ListingAiPricePanel
             embedded
@@ -141,7 +143,7 @@ export function ListingMarketingHub({
           {images.length > 0 && (
             <MarketingHubWidget
               title="Photos & banners"
-              description="Enhance or remove background for listing use · banners are marketing-only"
+              description="Enhance 3 · bg-remove 5 · banner 4 units · enhance/bg-remove may apply to listing · banners marketing-only"
             >
               <ListingAiImagePanel
                 embedded
@@ -153,7 +155,7 @@ export function ListingMarketingHub({
           )}
           <MarketingHubWidget
             title="Campaign & boost"
-            description="Download latest captions and banners · boost when the listing is live"
+            description="Campaign pack free · boost uses existing listing promotion checkout"
           >
             <ListingAiCampaignPanel
               embedded

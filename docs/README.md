@@ -109,6 +109,9 @@ docs/
 | [Developer Quickstart](./onboarding/quickstart.md) | 15-minute setup |
 | [Launch checklist](./product/launch-checklist.md) | Pilot vs public launch readiness |
 | [SEO audit & roadmap](./product/seo-audit.md) | Current SEO status, gaps, phased plan |
+| [AI Marketing Hub](./product/ai-marketing-hub.md) | Phases 0–3 live: credits, text/image tools, free price & posting guidance |
+| [Storefront model](./product/storefront-model.md) | Account vs storefront, listing limits, verification |
+| [Product index](./product/README.md) | Full product doc index |
 | [Product Requirements](./product/functional-requirements.md) | Functional scope |
 | [Database Schema](./db/README.md) | Prisma schema & ERD |
 

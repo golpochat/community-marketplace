@@ -319,36 +319,51 @@ Listing / Storefront data
 
 Align with SellNearby’s free-to-start, micro-priced philosophy (see master blueprint).
 
-### 9.1 Packaging options
+### 9.1 Live pricing (canonical — what sellers see today)
+
+| Rule | Live value |
+|------|------------|
+| Free monthly quota | **10 credit units / calendar month** for **verified** sellers only |
+| Unverified | **No free units**; wallet debit allowed if balance covers cost |
+| Paid overage | **€0.05 per credit unit** from SellNearby Credit wallet |
+| Daily generation cap | **30** jobs / seller / day (abuse control) |
+| Free tools (0 units) | Price suggestion · best posting time · campaign pack download |
+| Seller visibility | Hub chrome shows free units + wallet € + €/unit; each paid button shows **units · ≈€** |
+
+Unit costs match §14 tables and `AI_MARKETING_TASK_UNIT_COSTS` in `@community-marketplace/types`.
+
+### 9.2 Future packaging options (not live SKUs)
 
 | Package | What sellers get | Suggested price band (IE) | Notes |
 |---------|------------------|---------------------------|-------|
-| Free starter | Limited AI generations / month (e.g. 5–10 text) | €0 | Activation + habit |
-| AI Credits | Pay-as-you-go generations | Micro packs e.g. €1.99 / €4.99 / €9.99 | Fits wallet / credits culture |
-| Seller Growth Pack | Credits + 1 boost discount | e.g. €6.99–€14.99 | Best conversion lever |
+| Free starter | Limited AI generations / month (live: 10 text-equivalent units) | €0 | Already live for verified |
+| AI Credits packs | Pay-as-you-go top-ups | Micro packs e.g. €1.99 / €4.99 / €9.99 | **Not shipped** — sellers top up SellNearby Credit today |
+| Seller Growth Pack | Credits + 1 boost discount | e.g. €6.99–€14.99 | Phase 4 |
 | Pro Seller (optional later) | Higher monthly allowance + image tools | e.g. €9.99–€19.99 / mo | Only if usage proves sticky |
 | Enterprise / agency (later) | Multi-storefront bulk | Custom | Phase 4+ |
 
-### 9.2 Credit cost examples (illustrative)
+### 9.3 Credit cost table (live)
 
-| Action | Suggested credit cost | Approx COGS target |
-|--------|----------------------|--------------------|
-| SEO title | 1 | Very low |
-| Description | 2 | Low |
-| Social caption pack (3 variants) | 2 | Low |
-| Background removal | 3–5 | Med |
-| Banner creative | 4–6 | Med |
-| Short video (15–30s) | 20–40 | High |
+| Action | Credit cost | Approx EUR if paid |
+|--------|------------:|-------------------:|
+| SEO title | 1 | €0.05 |
+| Description | 2 | €0.10 |
+| Social caption / keywords / WhatsApp / seasonal | 1 | €0.05 |
+| TikTok script / email | 2 | €0.10 |
+| Background removal | 5 | €0.25 |
+| Banner creative | 4 | €0.20 |
+| Image enhance | 3 | €0.15 |
+| Short video (15–30s) | 20–40 | High — **not live** |
 
 **Principle:** Gross margin on AI features should stay healthy after provider fees. Increase credit price or reduce free quota if COGS rises.
 
-### 9.3 What not to copy from Zeely
+### 9.4 What not to copy from Zeely
 
 - % fee on seller Meta ad spend as a core revenue line
 - Aggressive trial → auto-upgrade billing patterns
 - Forcing campaign management through a third party
 
-### 9.4 Funnel into existing revenue
+### 9.5 Funnel into existing revenue
 
 AI Hub should increase:
 
@@ -437,6 +452,7 @@ AI Hub should increase:
 - Unverified: no free quota; wallet debit allowed if balance covers cost
 - Never auto-save AI output — Accept (listing fields) or Copy/Download (marketing)
 - Paid overage: **€0.05 per credit unit** from SellNearby Credit wallet
+- **Seller UI:** each paid action shows units + ≈€ before generate; hub chrome shows free remaining + wallet + €/unit rate
 - **Price suggestions are free** (comparable listing stats; not LLM-metered)
 - **Admin publish required:** platform setting `aiMarketingEnabled` (admin / super-admin → Monetization → Advertising). Env `AI_MARKETING_ENABLED=false` remains a hard kill switch.
 
@@ -526,3 +542,4 @@ AI Hub should increase:
 | 2026-07-16 | Admin publish/unpublish toggle for AI Marketing Hub |
 | 2026-07-16 | Best posting time (free, Europe/Dublin) |
 | 2026-07-16 | Phase 3 wrap: campaign pack zip + boost handoff |
+| 2026-07-17 | Seller-facing pricing consistency: live §9.1, unit/€ on buttons, docs vs README aligned |
