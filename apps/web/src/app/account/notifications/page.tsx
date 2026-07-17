@@ -6,15 +6,15 @@ import type { Notification } from '@community-marketplace/types';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { NotificationList } from '@/components/notifications/notification-list';
-import { useAuth } from '@/hooks/use-auth';
 import { asArray } from '@/lib/normalize-api-response';
 import { notifyNotificationsUpdated } from '@/lib/notification-unread-events';
 import { notificationsHeaderDescription } from '@/lib/notifications-header';
+import { useSellerOnboarding } from '@/providers/seller-onboarding-provider';
 import { notificationsService } from '@/services/notifications.service';
 
 export default function AccountNotificationsPage() {
-  const { user } = useAuth();
-  const inboxRole = notificationsService.resolveInboxRole(user?.role) ?? 'BUYER';
+  const { snapshot } = useSellerOnboarding();
+  const inboxRole = snapshot?.started || snapshot?.hasStorefront ? 'SELLER' : 'BUYER';
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);

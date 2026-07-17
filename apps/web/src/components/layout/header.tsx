@@ -22,7 +22,7 @@ const NAV_LINK_CLASS =
   "relative rounded-lg px-3 py-2 text-[15px] font-medium text-foreground/75 transition-colors duration-150 hover:text-primary";
 
 function getSellHref(isAuthenticated: boolean, sellItem?: string): string {
-  const target = sellItem ?? "/seller/listings/create";
+  const target = sellItem ?? WEB_APP_ROUTES.accountSelling;
   if (isAuthenticated) return target;
   return WEB_APP_ROUTES.login;
 }

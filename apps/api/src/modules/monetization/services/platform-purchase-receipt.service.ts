@@ -74,7 +74,7 @@ export class PlatformPurchaseReceiptService {
 
     const emailContent = buildPlatformPurchaseInvoiceEmail(
       docData,
-      `/seller/earnings/purchases/${purchase.id}/invoice`,
+      `/account/earnings`,
     );
 
     try {

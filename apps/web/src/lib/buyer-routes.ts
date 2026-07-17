@@ -1,10 +1,12 @@
+import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
+
 export const BUYER_ROUTES = {
-  dashboard: '/buyer/dashboard',
-  profile: '/buyer/profile',
-  settings: '/buyer/settings',
-  favorites: '/buyer/favorites',
-  purchases: '/buyer/purchases',
-  wallet: '/buyer/wallet',
+  dashboard: WEB_APP_ROUTES.account,
+  profile: WEB_APP_ROUTES.accountSettings,
+  settings: WEB_APP_ROUTES.accountSettings,
+  favorites: WEB_APP_ROUTES.accountSaved,
+  purchases: WEB_APP_ROUTES.accountPurchases,
+  wallet: WEB_APP_ROUTES.accountWallet,
 } as const;
 
 /** Legacy `/buyer/profile?tab=` → dedicated routes */

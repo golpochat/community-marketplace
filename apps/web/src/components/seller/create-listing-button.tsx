@@ -44,7 +44,7 @@ export function CreateListingButton({
 
   if (!blocked && !loading) {
     return (
-      <Link href="/seller/listings/create" className={className}>
+      <Link href="/account/listings/create" className={className}>
         {label}
       </Link>
     );

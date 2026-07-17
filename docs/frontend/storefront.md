@@ -2,6 +2,8 @@
 
 Each seller can have one public storefront at `/store/[sellerSlug]`.
 
+**Managed at** `/account/storefront` (legacy `/seller/storefront` redirects there).
+
 ## Data model
 
 Types live in `packages/types/src/storefront.ts`:

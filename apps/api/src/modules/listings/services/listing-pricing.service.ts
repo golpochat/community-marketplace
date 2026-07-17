@@ -205,7 +205,7 @@ export class ListingPricingService {
       type: 'price_review_pending',
       title: 'Price change pending review',
       body: 'Your price update is under review. Buyers still see your current prices.',
-      actionUrl: `/seller/listings/${listingId}/edit`,
+      actionUrl: `/account/listings/${listingId}/edit`,
     });
 
     return {
@@ -269,7 +269,7 @@ export class ListingPricingService {
       type: 'price_change_approved',
       title: 'Price change approved',
       body: 'Your updated prices are now visible to buyers.',
-      actionUrl: `/seller/listings/${log.listingId}/edit`,
+      actionUrl: `/account/listings/${log.listingId}/edit`,
     });
 
     return { changeLogId, pricing: resultPricing };
@@ -303,7 +303,7 @@ export class ListingPricingService {
       body:
         reviewNotes?.trim() ||
         'Your proposed price change was not approved. Previous prices remain in effect.',
-      actionUrl: `/seller/listings/${log.listingId}/edit`,
+      actionUrl: `/account/listings/${log.listingId}/edit`,
     });
 
     return { changeLogId, pricing };

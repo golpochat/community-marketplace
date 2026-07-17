@@ -173,21 +173,20 @@ export class ChatAccessService {
       return;
     }
 
-    const approvedCount = seller.approvedListingCount ?? seller.unverifiedListingCount ?? 0;
-
     if (
-      seller.sellerStatus === 'unverified' &&
-      approvedCount < seller.sellerLimit
+      seller.sellerStatus === 'verification_required' ||
+      seller.sellerStatus === 'under_review' ||
+      seller.sellerStatus === 'suspended'
     ) {
-      return;
+      throw new ForbiddenException({
+        message:
+          'You cannot start new conversations until your seller account is verified. Complete verification to continue.',
+        code: 'SELLER_INITIATION_BLOCKED',
+      });
     }
 
-    throw new ForbiddenException({
-      message:
-        'Unverified sellers cannot start new conversations after reaching the listing limit. Complete verification to continue.',
-      code: 'SELLER_INITIATION_BLOCKED',
-    });
-  }
+    // unverified: allowed (same predicate as listing create — status-based only)
+    return;
 
   private async assertSellerMessagingAllowed(userId: string) {
     await this.sellerGate.assertSellerNotSuspended(userId);

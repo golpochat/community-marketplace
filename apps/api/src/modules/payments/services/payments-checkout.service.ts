@@ -65,8 +65,8 @@ export class PaymentsCheckoutService {
     const webAppUrl = process.env.WEB_APP_URL ?? 'http://localhost:3000';
     const successUrl =
       dto.successUrl ??
-      `${webAppUrl}/buyer/purchases?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = dto.cancelUrl ?? `${webAppUrl}/buyer/purchases?checkout=cancelled`;
+      `${webAppUrl}/account/purchases?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = dto.cancelUrl ?? `${webAppUrl}/account/purchases?checkout=cancelled`;
 
     const row = await this.prisma.payment.create({
       data: {
@@ -140,7 +140,7 @@ export class PaymentsCheckoutService {
       }
     } else {
       sessionId = `cs_dev_${Date.now()}`;
-      checkoutUrl = `${webAppUrl}/buyer/purchases?checkout=dev&payment_id=${row.id}`;
+      checkoutUrl = `${webAppUrl}/account/purchases?checkout=dev&payment_id=${row.id}`;
       providerPaymentId = `pi_dev_${Date.now()}`;
     }
 

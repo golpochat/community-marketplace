@@ -201,7 +201,7 @@ export class ListingDeliveryService {
       type: 'delivery_review_pending',
       title: 'Delivery changes pending review',
       body: 'Your delivery updates are under review. Your listing stays live with current delivery options.',
-      actionUrl: `/seller/listings/${listingId}/edit`,
+      actionUrl: `/account/listings/${listingId}/edit`,
     });
 
     this.eventBus.publish({
@@ -272,7 +272,7 @@ export class ListingDeliveryService {
       type: 'delivery_change_approved',
       title: 'Delivery changes approved',
       body: 'Your delivery options have been updated and are now visible to buyers.',
-      actionUrl: `/seller/listings/${log.listingId}/edit`,
+      actionUrl: `/account/listings/${log.listingId}/edit`,
     });
 
     return { changeLogId, deliveryOptions };
@@ -300,7 +300,7 @@ export class ListingDeliveryService {
       body:
         reviewNotes?.trim() ||
         'Your proposed delivery changes were not approved. Previous delivery options remain in effect.',
-      actionUrl: `/seller/listings/${log.listingId}/edit`,
+      actionUrl: `/account/listings/${log.listingId}/edit`,
     });
 
     return { changeLogId, deliveryOptions };

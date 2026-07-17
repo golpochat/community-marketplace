@@ -44,7 +44,7 @@ export function SellerCapabilityGate({
   if (loading || phase === 'buyer_only') {
     return (
       <p className="text-sm text-muted-foreground" role="status">
-        Loading seller tools…
+        Redirecting…
       </p>
     );
   }
@@ -52,7 +52,7 @@ export function SellerCapabilityGate({
   if (require === 'storefront' && phase === 'setup_in_progress') {
     return (
       <p className="text-sm text-muted-foreground" role="status">
-        Redirecting to storefront setup…
+        Set up your storefront before using listing tools. Redirecting…
       </p>
     );
   }

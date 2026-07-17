@@ -131,13 +131,12 @@ export class AiGenerationService {
       amountEur = Number((creditUnits * AI_MARKETING_UNIT_EUR_COST).toFixed(2));
       const balance = await this.meter.getWalletBalance(userId);
       if (balance < amountEur) {
-        if (!sellerVerified) {
-          throw new ForbiddenException(
-            'Free AI generations are for verified sellers. Complete verification or top up SellNearby Credit to continue.',
-          );
-        }
         throw new ForbiddenException(
-          `Not enough SellNearby Credit. This generation costs €${amountEur.toFixed(2)}. Your balance is €${balance.toFixed(2)}.`,
+          `Not enough SellNearby Credit. This generation costs €${amountEur.toFixed(2)}. Your balance is €${balance.toFixed(2)}.${
+            sellerVerified
+              ? ''
+              : ' Verified sellers also receive a monthly free AI allowance.'
+          }`,
         );
       }
     }

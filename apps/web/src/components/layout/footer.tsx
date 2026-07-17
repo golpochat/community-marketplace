@@ -42,7 +42,7 @@ export function Footer() {
             <Logo size="footer" variant="dark" linked={false} />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-stone-300">
               Ireland&apos;s trusted community marketplace for {PLATFORM_COUNTRY_NAME}. Trade locally,
-              safely, and commission-free.
+              safely — with transparent optional boosts when you want more reach.
             </p>
           </div>
 

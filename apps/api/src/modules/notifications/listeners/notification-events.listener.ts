@@ -140,14 +140,14 @@ export class NotificationEventsListener implements OnModuleInit {
           title: 'Payment successful',
           message: 'Your purchase is confirmed. Your receipt is in Purchases and was emailed to you.',
         },
-        actionUrl: '/buyer/purchases',
+        actionUrl: '/account/purchases',
         channels: ['in_app', 'push'],
       }),
       this.dispatcher.dispatch({
         userId: payment.sellerId,
         type: 'payment_received',
         templateKey: 'payment_received',
-        actionUrl: '/seller/earnings',
+        actionUrl: '/account/earnings',
         channels: ['in_app', 'push'],
       }),
     ]);
@@ -167,7 +167,7 @@ export class NotificationEventsListener implements OnModuleInit {
         message:
           'Your platform payment was successful. Your invoice is in Earnings and was emailed to you.',
       },
-      actionUrl: '/seller/earnings',
+      actionUrl: '/account/earnings',
       channels: ['in_app', 'push'],
     });
   }
@@ -184,7 +184,7 @@ export class NotificationEventsListener implements OnModuleInit {
       userId: payment.buyerId,
       type: 'payment_sent',
       templateKey: 'payment_failed',
-      actionUrl: '/buyer/payments',
+      actionUrl: '/account/purchases',
       channels: ['in_app', 'push'],
     });
   }
@@ -246,7 +246,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'seller_verification_nudge',
       templateKey: 'seller_verification_nudge',
       variables: { message },
-      actionUrl: '/seller/profile?tab=verification',
+      actionUrl: '/account/verification',
       channels: ['in_app', 'email'],
     });
   }
@@ -407,7 +407,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'listing_changes_requested',
       templateKey: 'listing_changes_requested',
       variables: { listing_title: listing.title, message },
-      actionUrl: `/seller/listings/${listingId}/edit`,
+      actionUrl: `/account/listings/${listingId}/edit`,
       channels: ['in_app', 'push', 'email'],
     });
   }
@@ -469,7 +469,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'listing_rejected',
       templateKey: 'listing_rejected',
       variables: { listing_title: listing.title, reason },
-      actionUrl: `/seller/listings/${listingId}/edit`,
+      actionUrl: `/account/listings/${listingId}/edit`,
       channels: ['in_app', 'push', 'email'],
     });
   }
@@ -489,7 +489,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'listing_changes_requested',
       templateKey: 'listing_changes_requested',
       variables: { listing_title: listing.title, reason },
-      actionUrl: `/seller/listings/${listingId}/edit`,
+      actionUrl: `/account/listings/${listingId}/edit`,
       channels: ['in_app', 'push', 'email'],
     });
   }
@@ -509,7 +509,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'admin_warning',
       templateKey: 'admin_warning',
       variables: { listing_title: listing.title, reason },
-      actionUrl: `/seller/listings/${listingId}/edit`,
+      actionUrl: `/account/listings/${listingId}/edit`,
       channels: ['in_app', 'email'],
     });
   }
@@ -528,7 +528,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'listing_expired',
       templateKey: 'listing_expired',
       variables: { listing_title: listing.title },
-      actionUrl: `/seller/listings/${listingId}/edit`,
+      actionUrl: `/account/listings/${listingId}/edit`,
       channels: ['in_app', 'push', 'email'],
     });
   }
@@ -550,7 +550,7 @@ export class NotificationEventsListener implements OnModuleInit {
         listing_title: listing.title,
         expires_at: listing.expiresAt?.toISOString() ?? '',
       },
-      actionUrl: `/seller/listings/${listingId}/edit`,
+      actionUrl: `/account/listings/${listingId}/edit`,
       channels: ['in_app', 'email'],
     });
   }
@@ -570,7 +570,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'listing_removed',
       templateKey: 'listing_removed',
       variables: { listing_title: listing.title, reason },
-      actionUrl: `/seller/listings`,
+      actionUrl: `/account/listings`,
       channels: ['in_app', 'push', 'email'],
     });
   }
@@ -717,7 +717,7 @@ export class NotificationEventsListener implements OnModuleInit {
         duration: duration ?? 'unspecified',
         message: (payload.message as string) ?? `Your seller account has been suspended. ${reason}`,
       },
-      actionUrl: '/seller/profile?tab=verification',
+      actionUrl: '/account/verification',
       channels: ['in_app', 'email'],
     });
   }
@@ -733,7 +733,7 @@ export class NotificationEventsListener implements OnModuleInit {
         message: (payload.message as string) ?? 'Your seller account has been reactivated.',
         reason: (payload.reason as string) ?? '',
       },
-      actionUrl: '/seller/dashboard',
+      actionUrl: '/account',
       channels: ['in_app', 'email'],
     });
   }
@@ -750,7 +750,7 @@ export class NotificationEventsListener implements OnModuleInit {
           (payload.message as string) ?? 'Your account requires re-verification.',
         reason: (payload.reason as string) ?? '',
       },
-      actionUrl: '/seller/profile?tab=verification',
+      actionUrl: '/account/verification',
       channels: ['in_app', 'email'],
     });
   }

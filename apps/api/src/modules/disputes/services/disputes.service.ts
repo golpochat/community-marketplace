@@ -60,7 +60,7 @@ export class DisputesService {
       variables: {
         listing_title: listing?.title ?? 'your listing',
       },
-      actionUrl: `/seller/disputes/${dispute.id}`,
+      actionUrl: `/account/disputes/${dispute.id}`,
       data: { disputeId: dispute.id, listingId: parsed.listingId },
     });
 
@@ -163,7 +163,7 @@ export class DisputesService {
       variables: {
         listing_title: listing?.title ?? 'your purchase',
       },
-      actionUrl: `/buyer/disputes/${dispute.id}`,
+      actionUrl: `/account/disputes/${dispute.id}`,
       data: { disputeId: dispute.id },
     });
 
@@ -286,7 +286,7 @@ export class DisputesService {
         type: 'admin_warning',
         templateKey: 'dispute_evidence_requested',
         variables: { listing_title: listingTitle },
-        actionUrl: `/buyer/disputes/${disputeId}`,
+        actionUrl: `/account/disputes/${disputeId}`,
         data: { disputeId },
       }),
       this.notifications.dispatch({
@@ -294,7 +294,7 @@ export class DisputesService {
         type: 'admin_warning',
         templateKey: 'dispute_evidence_requested',
         variables: { listing_title: listingTitle },
-        actionUrl: `/seller/disputes/${disputeId}`,
+        actionUrl: `/account/disputes/${disputeId}`,
         data: { disputeId },
       }),
     ]);
@@ -360,7 +360,7 @@ export class DisputesService {
         type: 'admin_warning',
         templateKey: 'dispute_resolved',
         variables: { listing_title: listingTitle, outcome: outcomeLabel },
-        actionUrl: `/buyer/disputes/${disputeId}`,
+        actionUrl: `/account/disputes/${disputeId}`,
         data: { disputeId, outcome: parsed.outcome },
       }),
       this.notifications.dispatch({
@@ -368,7 +368,7 @@ export class DisputesService {
         type: 'admin_warning',
         templateKey: 'dispute_resolved',
         variables: { listing_title: listingTitle, outcome: outcomeLabel },
-        actionUrl: `/seller/disputes/${disputeId}`,
+        actionUrl: `/account/disputes/${disputeId}`,
         data: { disputeId, outcome: parsed.outcome },
       }),
     ]);

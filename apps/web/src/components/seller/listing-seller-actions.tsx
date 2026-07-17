@@ -69,7 +69,7 @@ export function ListingSellerActions({
       icon="pencil"
       label="Edit listing"
       variant="accent"
-      href={`/seller/listings/${listing.id}/edit`}
+      href={`/account/listings/${listing.id}/edit`}
     />
   );
 
@@ -94,7 +94,7 @@ export function ListingSellerActions({
           key="view"
           icon="eye"
           label="View listing"
-          href={`/seller/listings/${listing.id}/edit`}
+          href={`/account/listings/${listing.id}/edit`}
         />,
         <IconActionButton
           key="cancel"
@@ -211,7 +211,7 @@ export function ListingSellerActions({
           key="view"
           icon="eye"
           label="View listing"
-          href={`/seller/listings/${listing.id}/edit`}
+          href={`/account/listings/${listing.id}/edit`}
         />,
       );
       break;
