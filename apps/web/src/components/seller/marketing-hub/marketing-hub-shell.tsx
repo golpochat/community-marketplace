@@ -6,6 +6,7 @@ import {
   MarketingHubProvider,
   useMarketingHub,
 } from "@/components/seller/marketing-hub/marketing-hub-context";
+import { formatAiMarketingQuotaSummary } from "@community-marketplace/types";
 
 function MarketingHubChrome({
   title = "Marketing hub",
@@ -32,11 +33,8 @@ function MarketingHubChrome({
             {description}
           </p>
         </div>
-        <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-          {quota.sellerVerified
-            ? `${quota.freeUnitsRemaining} free units left`
-            : "Verified sellers get free units"}
-          {" · "}€{quota.walletBalance.toFixed(2)} credit
+        <p className="max-w-xs text-right text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+          {formatAiMarketingQuotaSummary(quota)}
         </p>
       </div>
 

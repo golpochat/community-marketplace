@@ -259,7 +259,9 @@ export function AdminMonetizationAdvertising({
       <DashboardCard title="AI Marketing Hub">
         <p className="mb-4 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
           Publish to let sellers use AI copy, image tools, share banners, and price suggestions on
-          listing forms. Unpublish to hide and block the feature without a redeploy. Hard kill
+          listing forms. Unpublish to hide and block the feature without a redeploy. Live seller
+          pricing: verified sellers get 10 free credit units / month; overage is €0.05 per unit from
+          SellNearby Credit; price suggestion, posting time, and campaign pack are free. Hard kill
           switch: set <code className="text-xs">AI_MARKETING_ENABLED=false</code> in API{' '}
           <code className="text-xs">.env</code> and restart.
         </p>

@@ -198,3 +198,32 @@ export const AI_MARKETING_IMAGE_TASKS: ReadonlyArray<AiMarketingTask> = [
   'image_bg_remove',
   'banner_creator',
 ];
+
+export function aiMarketingTaskUnitCost(task: AiMarketingTask): number {
+  return AI_MARKETING_TASK_UNIT_COSTS[task];
+}
+
+export function aiMarketingTaskEurCost(task: AiMarketingTask): number {
+  return Number(
+    (AI_MARKETING_TASK_UNIT_COSTS[task] * AI_MARKETING_UNIT_EUR_COST).toFixed(2),
+  );
+}
+
+/** Seller-facing cost chip, e.g. "2 units · ≈€0.10". */
+export function formatAiMarketingTaskCostLabel(task: AiMarketingTask): string {
+  const units = AI_MARKETING_TASK_UNIT_COSTS[task];
+  const eur = aiMarketingTaskEurCost(task);
+  return `${units} unit${units === 1 ? '' : 's'} · ≈€${eur.toFixed(2)}`;
+}
+
+/** Quota line for Marketing Hub chrome. */
+export function formatAiMarketingQuotaSummary(input: {
+  sellerVerified: boolean;
+  freeUnitsRemaining: number;
+  walletBalance: number;
+}): string {
+  const freePart = input.sellerVerified
+    ? `${input.freeUnitsRemaining} free units left this month`
+    : 'No free units until verified';
+  return `${freePart} · €${input.walletBalance.toFixed(2)} credit · €${AI_MARKETING_UNIT_EUR_COST.toFixed(2)}/unit after free`;
+}

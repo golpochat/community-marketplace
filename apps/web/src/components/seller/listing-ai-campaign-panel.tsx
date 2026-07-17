@@ -74,7 +74,7 @@ export function ListingAiCampaignPanel({
             Campaign pack & boost
           </p>
           <p className="mt-0.5 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-            Zip latest captions + banners · then boost on SellNearby
+            Zip latest captions + banners (free) · then boost on SellNearby
           </p>
         </div>
       )}
@@ -87,7 +87,7 @@ export function ListingAiCampaignPanel({
           disabled={disabled}
           onClick={() => void downloadPack()}
         >
-          {busy ? "Preparing…" : "Download campaign pack"}
+          {busy ? "Preparing…" : "Download campaign pack · free"}
         </Button>
         {canBoost && (
           <Button
