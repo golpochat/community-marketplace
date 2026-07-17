@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from 'react';
 
-import type { BoostCatalogResponse, BoostIntentResponse } from '@community-marketplace/types';
+import type {
+  BoostCatalogResponse,
+  BoostIntentResponse,
+  BoostPurchaseSource,
+} from '@community-marketplace/types';
 
 import { monetizationService } from '@/services/monetization.service';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
@@ -10,6 +14,8 @@ import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
 interface ListingBoostDialogProps {
   open: boolean;
   listingId: string;
+  /** Attribution for hub conversion tracking. */
+  source?: BoostPurchaseSource;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -17,6 +23,7 @@ interface ListingBoostDialogProps {
 export function ListingBoostDialog({
   open,
   listingId,
+  source = 'listing_edit',
   onClose,
   onSuccess,
 }: ListingBoostDialogProps) {
@@ -64,6 +71,7 @@ export function ListingBoostDialog({
       const response = await monetizationService.createBoostIntent({
         listingId,
         packageType,
+        source,
       });
       setIntent(response);
     } catch (err) {
@@ -72,6 +80,15 @@ export function ListingBoostDialog({
       setLoading(false);
     }
   }
+
+  const hubDiscount =
+    source === 'marketing_hub' ? catalog?.growthPackBoostDiscountPercent : undefined;
+  const firstBoostDiscount =
+    source === 'marketing_hub'
+      ? catalog?.growthPackBoostDiscountPercent
+        ? undefined
+        : catalog?.firstBoostDiscountPercent
+      : catalog?.firstBoostDiscountPercent;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -87,6 +104,14 @@ export function ListingBoostDialog({
         <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           Get higher search ranking and a Boosted badge for your listing.
         </p>
+
+        {(hubDiscount || firstBoostDiscount) && !intent && (
+          <p className="mt-2 text-xs text-amber-800">
+            {hubDiscount
+              ? `Growth Pack: ${hubDiscount}% off applies at checkout for Marketing Hub boosts.`
+              : `First boost: ${firstBoostDiscount}% off applies at checkout.`}
+          </p>
+        )}
 
         {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
 

@@ -36,9 +36,40 @@ export const boostPackageTypeSchema = z.enum(['PAID_7D', 'PAID_30D']);
 export const createBoostIntentSchema = z.object({
   listingId: uuidSchema,
   packageType: boostPackageTypeSchema,
+  source: z
+    .enum(['marketing_hub', 'listings_table', 'listing_edit'])
+    .optional(),
 });
 
 export const confirmBoostSchema = z.object({
+  purchaseId: uuidSchema,
+});
+
+export const createGrowthPackIntentSchema = z.object({});
+
+export const confirmGrowthPackSchema = z.object({
+  purchaseId: uuidSchema,
+});
+
+export const aiCreditPackSkuSchema = z.enum([
+  'ai_credit_2',
+  'ai_credit_5',
+  'ai_credit_10',
+]);
+
+export const createAiCreditPackIntentSchema = z.object({
+  sku: aiCreditPackSkuSchema,
+});
+
+export const confirmAiCreditPackSchema = z.object({
+  purchaseId: uuidSchema,
+});
+
+export const createFeaturedStoreIntentSchema = z.object({
+  storeId: uuidSchema,
+});
+
+export const confirmFeaturedStoreSchema = z.object({
   purchaseId: uuidSchema,
 });
 
@@ -179,11 +210,45 @@ export const platformPurchasesAdminFiltersSchema = paginationSchema.extend({
       'store_slot_3',
       'store_bundle_3',
       'buyer_statement',
+      'seller_growth_pack',
+      'ai_credit_2',
+      'ai_credit_5',
+      'ai_credit_10',
+      'featured_store',
     ])
     .optional(),
   status: z.enum(['pending', 'succeeded', 'failed', 'refunded']).optional(),
   userId: uuidSchema.optional(),
 });
+
+const MAX_MARKETING_HUB_ANALYTICS_RANGE_DAYS = 366;
+
+export const marketingHubAnalyticsQuerySchema = z
+  .object({
+    dateFrom: isoDateSchema,
+    dateTo: isoDateSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (data.dateFrom > data.dateTo) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'dateFrom must be on or before dateTo',
+        path: ['dateFrom'],
+      });
+      return;
+    }
+    const start = new Date(`${data.dateFrom}T00:00:00.000Z`);
+    const end = new Date(`${data.dateTo}T23:59:59.999Z`);
+    const days =
+      (end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000);
+    if (days > MAX_MARKETING_HUB_ANALYTICS_RANGE_DAYS) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Date range must be ${MAX_MARKETING_HUB_ANALYTICS_RANGE_DAYS} days or fewer`,
+        path: ['dateTo'],
+      });
+    }
+  });
 
 export const featuredListingsQuerySchema = z
   .object({
@@ -203,6 +268,16 @@ export const featuredListingsQuerySchema = z
 
 export type CreateBoostIntentInput = z.infer<typeof createBoostIntentSchema>;
 export type ConfirmBoostInput = z.infer<typeof confirmBoostSchema>;
+export type CreateGrowthPackIntentInput = z.infer<typeof createGrowthPackIntentSchema>;
+export type ConfirmGrowthPackInput = z.infer<typeof confirmGrowthPackSchema>;
+export type CreateAiCreditPackIntentInput = z.infer<
+  typeof createAiCreditPackIntentSchema
+>;
+export type ConfirmAiCreditPackInput = z.infer<typeof confirmAiCreditPackSchema>;
+export type CreateFeaturedStoreIntentInput = z.infer<
+  typeof createFeaturedStoreIntentSchema
+>;
+export type ConfirmFeaturedStoreInput = z.infer<typeof confirmFeaturedStoreSchema>;
 export type CreateFeaturedIntentInput = z.infer<typeof createFeaturedIntentSchema>;
 export type ConfirmFeaturedInput = z.infer<typeof confirmFeaturedSchema>;
 export type ConfirmFastTrackInput = z.infer<typeof confirmFastTrackSchema>;
@@ -220,6 +295,9 @@ export type AdminFinanceActivityStatementQueryInput = z.infer<
 >;
 export type PlatformPurchasesAdminFiltersInput = z.infer<
   typeof platformPurchasesAdminFiltersSchema
+>;
+export type MarketingHubAnalyticsQueryInput = z.infer<
+  typeof marketingHubAnalyticsQuerySchema
 >;
 export type FeaturedListingsQueryInput = z.infer<typeof featuredListingsQuerySchema>;
 

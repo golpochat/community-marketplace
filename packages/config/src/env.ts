@@ -52,6 +52,8 @@ export const apiEnvSchema = baseEnvSchema.extend({
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_EMBEDDING_MODEL: z.string().default('text-embedding-3-small'),
   OPENAI_CHAT_MODEL: z.string().default('gpt-4o-mini'),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  ANTHROPIC_CHAT_MODEL: z.string().default('claude-haiku-4-5'),
   AI_MARKETING_ENABLED: z
     .enum(['true', 'false'])
     .default('true')

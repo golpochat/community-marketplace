@@ -4,11 +4,13 @@ import type { Response } from 'express';
 import { PERMISSIONS } from '@community-marketplace/types';
 import {
   aiMarketingApplyImageSchema,
+  aiMarketingApplyStoreBannerSchema,
   aiMarketingBestPostingTimeSchema,
   aiMarketingCampaignPackSchema,
   aiMarketingGenerateSchema,
   aiMarketingImageSchema,
   aiMarketingPriceSuggestSchema,
+  aiMarketingStoreBannerSchema,
 } from '@community-marketplace/validation';
 
 import {
@@ -61,6 +63,26 @@ export class SellerAiMarketingController {
   applyImage(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
     const dto = aiMarketingApplyImageSchema.parse(body);
     return this.images.applyToListing(user.id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.EDIT_LISTING)
+  @Post('store-banner')
+  processStoreBanner(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: unknown,
+  ) {
+    const dto = aiMarketingStoreBannerSchema.parse(body);
+    return this.images.processStoreBanner(user.id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.EDIT_LISTING)
+  @Post('store-banner/apply')
+  applyStoreBanner(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: unknown,
+  ) {
+    const dto = aiMarketingApplyStoreBannerSchema.parse(body);
+    return this.images.applyToStore(user.id, dto);
   }
 
   @RequirePermissions(PERMISSIONS.EDIT_LISTING)

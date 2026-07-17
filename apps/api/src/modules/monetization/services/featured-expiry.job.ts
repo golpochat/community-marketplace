@@ -4,7 +4,7 @@ import { JobQueueService } from '../../../jobs/job-queue.service';
 import { LoggerLib } from '../../../libs/logger.lib';
 import { SearchIndexingService } from '../../search/services/search-indexing.service';
 import { PrismaService } from '../../../database/prisma.service';
-import { isListingFeatured } from '../lib/featured.lib';
+import { isListingFeatured, isStoreFeatured } from '../lib/featured.lib';
 
 const FEATURED_EXPIRY_INTERVAL_MS = 60 * 60 * 1000;
 
@@ -21,8 +21,12 @@ export class FeaturedExpiryJobService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     this.jobQueue.registerHandler('monetization.featured_expiry', async () => {
-      const count = await this.expireFeaturedListings();
-      this.logger.log('FeaturedExpiryJob', `Reindexed ${count} listings after featured expiry`);
+      const listingCount = await this.expireFeaturedListings();
+      const storeCount = await this.expireFeaturedStores();
+      this.logger.log(
+        'FeaturedExpiryJob',
+        `Expired featured: ${listingCount} listings, ${storeCount} stores`,
+      );
     });
 
     void this.jobQueue.enqueue({ name: 'monetization.featured_expiry' });
@@ -67,5 +71,34 @@ export class FeaturedExpiryJobService implements OnModuleInit, OnModuleDestroy {
       reindexed += 1;
     }
     return reindexed;
+  }
+
+  private async expireFeaturedStores(): Promise<number> {
+    const now = new Date();
+    const since = new Date(now);
+    since.setDate(since.getDate() - 2);
+
+    const stores = await this.prisma.store.findMany({
+      where: {
+        isFeatured: true,
+        featuredUntil: {
+          lte: now,
+          gte: since,
+        },
+      },
+      select: { id: true, isFeatured: true, featuredUntil: true },
+    });
+
+    let expired = 0;
+    for (const store of stores) {
+      if (isStoreFeatured(store, now)) continue;
+
+      await this.prisma.store.update({
+        where: { id: store.id },
+        data: { isFeatured: false },
+      });
+      expired += 1;
+    }
+    return expired;
   }
 }

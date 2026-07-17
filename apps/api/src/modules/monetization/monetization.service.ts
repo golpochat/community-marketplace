@@ -32,6 +32,8 @@ import { PlatformSettingsService } from './services/platform-settings.service';
 
 import { AdsSystemService } from './services/ads-system.service';
 
+import { MarketingHubAnalyticsService } from './services/marketing-hub-analytics.service';
+
 
 
 @Injectable()
@@ -55,6 +57,8 @@ export class MonetizationService {
     private readonly products: MonetizationProductService,
 
     private readonly buyerCashback: BuyerCashbackService,
+
+    private readonly marketingHubAnalytics: MarketingHubAnalyticsService,
 
   ) {}
 
@@ -219,6 +223,18 @@ export class MonetizationService {
   listPlatformPurchases(filters: Parameters<PlatformPurchaseService['listAdmin']>[0]) {
 
     return this.purchases.listAdmin(filters);
+
+  }
+
+
+
+  getMarketingHubAnalytics(
+
+    filters: Parameters<MarketingHubAnalyticsService['getAnalytics']>[0],
+
+  ) {
+
+    return this.marketingHubAnalytics.getAnalytics(filters);
 
   }
 

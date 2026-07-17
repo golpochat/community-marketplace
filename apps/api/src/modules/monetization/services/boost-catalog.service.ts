@@ -103,6 +103,33 @@ export class BoostCatalogService {
             };
           });
 
+    const firstBoostDiscountPercent =
+      settings.pricing.promos?.first_boost_discount_percent ?? 0;
+    let growthPackBoostDiscountPercent: number | undefined;
+    const unusedGrowthPack = await this.prisma.platformPurchase.findFirst({
+      where: {
+        userId: sellerId,
+        type: 'seller_growth_pack',
+        status: 'succeeded',
+      },
+      orderBy: { fulfilledAt: 'asc' },
+    });
+    if (unusedGrowthPack) {
+      const meta = (unusedGrowthPack.metadata ?? {}) as Record<string, unknown>;
+      if (meta.boostDiscountConsumed !== true) {
+        const pct = Number(meta.boostDiscountPercent ?? 0);
+        if (pct > 0) growthPackBoostDiscountPercent = pct;
+      }
+    }
+
+    const priorBoosts = await this.prisma.platformPurchase.count({
+      where: {
+        userId: sellerId,
+        type: 'listing_boost',
+        status: 'succeeded',
+      },
+    });
+
     return {
       boostsEnabled,
       currency: settings.pricing.currency,
@@ -115,6 +142,11 @@ export class BoostCatalogService {
             isBoosted: isListingBoosted(listing.boostedUntil),
           }
         : undefined,
+      growthPackBoostDiscountPercent,
+      firstBoostDiscountPercent:
+        priorBoosts === 0 && firstBoostDiscountPercent > 0
+          ? firstBoostDiscountPercent
+          : undefined,
     };
   }
 

@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
-import type { BoostIntentResponse } from '@community-marketplace/types';
-
 import { monetizationService } from '@/services/monetization.service';
 
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
@@ -120,7 +118,7 @@ function DevConfirmButton({
 }
 
 interface BoostCheckoutPanelProps {
-  intent: BoostIntentResponse;
+  intent: { purchase: { id: string }; clientSecret: string };
   onSuccess: () => void;
   confirmPurchase?: (purchaseId: string) => Promise<unknown>;
   confirmLabel?: string;

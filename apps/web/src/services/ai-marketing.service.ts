@@ -3,6 +3,7 @@ import type {
   AiBannerTemplate,
   AiBestPostingTimeResult,
   AiMarketingApplyImageResult,
+  AiMarketingApplyStoreBannerResult,
   AiMarketingGenerateResult,
   AiMarketingImageResult,
   AiMarketingQuotaSummary,
@@ -88,6 +89,33 @@ export const aiMarketingService = {
       {
         method: 'POST',
         body: JSON.stringify({ generationId }),
+      },
+    );
+    return response.data!;
+  },
+
+  async processStoreBanner(payload: {
+    storeId: string;
+    listingId?: string;
+    imageId?: string;
+    includeWatermark?: boolean;
+  }) {
+    const response = await apiClient<AiMarketingImageResult>(
+      WEB_API_ROUTES.seller.marketingHubStoreBanner,
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+    );
+    return response.data!;
+  },
+
+  async applyStoreBanner(generationId: string, storeId: string) {
+    const response = await apiClient<AiMarketingApplyStoreBannerResult>(
+      WEB_API_ROUTES.seller.marketingHubStoreBannerApply,
+      {
+        method: 'POST',
+        body: JSON.stringify({ generationId, storeId }),
       },
     );
     return response.data!;

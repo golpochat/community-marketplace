@@ -17,17 +17,76 @@ export type PlatformPurchaseType =
   | 'store_slot_2'
   | 'store_slot_3'
   | 'store_bundle_3'
-  | 'buyer_statement';
+  | 'buyer_statement'
+  | 'seller_growth_pack'
+  | 'ai_credit_2'
+  | 'ai_credit_5'
+  | 'ai_credit_10'
+  | 'featured_store';
 
 export type PlatformPurchaseStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
 export type BoostPackageType = Extract<ListingPackageType, 'PAID_7D' | 'PAID_30D'>;
+
+/** Attribution for boost checkout (hub conversion tracking). */
+export type BoostPurchaseSource =
+  | 'marketing_hub'
+  | 'listings_table'
+  | 'listing_edit';
+
+/** Admin Marketing Hub → boost conversion analytics. */
+export type MarketingHubBoostSourceBucket = BoostPurchaseSource | 'unknown';
+
+export interface MarketingHubBoostSourceStats {
+  source: MarketingHubBoostSourceBucket;
+  count: number;
+  revenueEur: number;
+  withGrowthPackDiscount: number;
+}
+
+export interface MarketingHubAnalyticsResponse {
+  dateFrom: string;
+  dateTo: string;
+  currency: string;
+  generations: {
+    count: number;
+    uniqueSellers: number;
+    uniqueListings: number;
+    creditUnits: number;
+    amountEur: number;
+  };
+  boostsBySource: MarketingHubBoostSourceStats[];
+  boostsTotal: {
+    count: number;
+    revenueEur: number;
+  };
+  growthPacks: {
+    count: number;
+    revenueEur: number;
+    discountConsumed: number;
+    discountUnused: number;
+  };
+  /** Succeeded marketing_hub boosts ÷ generation count; null when no generations. */
+  hubBoostsPerGeneration: number | null;
+}
 
 export type FeaturedPlacement = 'homepage' | 'category';
 
 export interface PlatformSkuConfig {
   amount: number;
   enabled: boolean;
+}
+
+export interface SellerGrowthPackSkuConfig extends PlatformSkuConfig {
+  /** SellNearby Credit granted on purchase (EUR). */
+  walletCreditEur: number;
+  /** One-time % off a marketing-hub boost after purchase. */
+  boostDiscountPercent: number;
+}
+
+/** Face-value SellNearby Credit top-up for AI Marketing Hub overage. */
+export interface AiCreditPackSkuConfig extends PlatformSkuConfig {
+  walletCreditEur: number;
 }
 
 export interface PlatformPricingConfig {
@@ -44,6 +103,11 @@ export interface PlatformPricingConfig {
     buyer_statement?: PlatformSkuConfig;
     priority_message?: PlatformSkuConfig;
     early_cashback_unlock?: PlatformSkuConfig;
+    seller_growth_pack?: SellerGrowthPackSkuConfig;
+    ai_credit_2?: AiCreditPackSkuConfig;
+    ai_credit_5?: AiCreditPackSkuConfig;
+    ai_credit_10?: AiCreditPackSkuConfig;
+    featured_store_homepage?: PlatformSkuConfig;
   };
   promos?: {
     first_boost_discount_percent?: number;
@@ -51,6 +115,7 @@ export interface PlatformPricingConfig {
   featured?: {
     homepage_slots_per_day?: number;
     category_slots_per_day?: number;
+    store_homepage_slots_per_day?: number;
   };
 }
 
@@ -171,6 +236,90 @@ export interface BoostCatalogResponse {
   currency: string;
   options: BoostCatalogOption[];
   listing?: BoostCatalogListing;
+  /** Present when seller has an unused Growth Pack hub-boost discount. */
+  growthPackBoostDiscountPercent?: number;
+  firstBoostDiscountPercent?: number;
+}
+
+export interface GrowthPackCatalogOption {
+  amount: number;
+  walletCreditEur: number;
+  boostDiscountPercent: number;
+  enabled: boolean;
+  eligible: boolean;
+  reason?: string;
+}
+
+export interface GrowthPackCatalogResponse {
+  currency: string;
+  option: GrowthPackCatalogOption;
+}
+
+export interface GrowthPackIntentResponse {
+  purchase: PlatformPurchase;
+  clientSecret: string;
+}
+
+export type AiCreditPackSku = 'ai_credit_2' | 'ai_credit_5' | 'ai_credit_10';
+
+export interface AiCreditPackCatalogOption {
+  sku: AiCreditPackSku;
+  label: string;
+  amount: number;
+  walletCreditEur: number;
+  approxUnits: number;
+  enabled: boolean;
+  eligible: boolean;
+  reason?: string;
+}
+
+export interface AiCreditPackCatalogResponse {
+  currency: string;
+  options: AiCreditPackCatalogOption[];
+}
+
+export interface AiCreditPackIntentResponse {
+  purchase: PlatformPurchase;
+  clientSecret: string;
+}
+
+export interface FeaturedStoreCatalogOption {
+  amount: number;
+  durationHours: number;
+  slotsPerDay: number;
+  slotsUsed: number;
+  slotsRemaining: number;
+  enabled: boolean;
+  eligible: boolean;
+  reason?: string;
+}
+
+export interface FeaturedStoreCatalogResponse {
+  featuredEnabled: boolean;
+  currency: string;
+  option: FeaturedStoreCatalogOption;
+  store: {
+    id: string;
+    name: string;
+    slug: string;
+    isFeatured: boolean;
+    featuredUntil?: string;
+  };
+}
+
+export interface FeaturedStoreIntentResponse {
+  purchase: PlatformPurchase;
+  clientSecret: string;
+}
+
+export interface FeaturedStoreSummary {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl?: string;
+  bannerUrl?: string;
+  location?: string;
+  featuredUntil?: string;
 }
 
 export interface FeaturedCatalogOption {

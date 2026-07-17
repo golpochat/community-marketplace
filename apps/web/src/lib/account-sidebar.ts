@@ -66,6 +66,12 @@ function sellingNavItems(phase: AccountSellingPhase): SidebarNavItem[] {
         },
         STOREFRONT_NAV_ITEM,
         {
+          id: 'marketing',
+          label: 'Marketing Hub',
+          href: WEB_APP_ROUTES.accountMarketing,
+          icon: 'flag',
+        },
+        {
           id: 'earnings',
           label: 'Earnings',
           href: WEB_APP_ROUTES.accountEarnings,

@@ -10,22 +10,24 @@ import sharp from 'sharp';
 
 import {
   AI_MARKETING_DAILY_GENERATION_LIMIT,
-  AI_MARKETING_FREE_UNITS_MONTHLY,
   AI_MARKETING_IMAGE_PROMPT_VERSION,
+  AI_MARKETING_LISTING_DAILY_GENERATION_LIMIT,
   AI_MARKETING_TASK_UNIT_COSTS,
-  AI_MARKETING_UNIT_EUR_COST,
   isSellerVerified,
   type AiBannerFormat,
   type AiBannerTemplate,
   type AiBillingMethod,
   type AiMarketingApplyImageResult,
+  type AiMarketingApplyStoreBannerResult,
   type AiMarketingImageResult,
   type AiMarketingTask,
   type SellerStatus,
 } from '@community-marketplace/types';
 import type {
   AiMarketingApplyImageInput,
+  AiMarketingApplyStoreBannerInput,
   AiMarketingImageInput,
+  AiMarketingStoreBannerInput,
 } from '@community-marketplace/validation';
 
 import { extractStorageKeyFromUrl } from '../../../libs/asset-url.lib';
@@ -33,14 +35,19 @@ import { PrismaService } from '../../../database/prisma.service';
 import { DevUploadService } from '../../dev-upload/dev-upload.service';
 import { ListingImagesService } from '../../listings/services/listing-images.service';
 import { R2StorageService } from '../../users/services/r2-storage.service';
+import { computeAiBilling } from '../lib/ai-billing.lib';
 import { AiCreditMeterService } from './ai-credit-meter.service';
 import { AiMarketingAccessService } from './ai-marketing-access.service';
+import { AiSafetyFilterService } from './ai-safety-filter.service';
 
 const BANNER_SIZES: Record<AiBannerFormat, { width: number; height: number }> = {
   feed_square: { width: 1080, height: 1080 },
   story: { width: 1080, height: 1920 },
   marketplace_card: { width: 1200, height: 630 },
+  storefront_hero: { width: 1600, height: 400 },
 };
+
+const STOREFRONT_HERO = BANNER_SIZES.storefront_hero;
 
 @Injectable()
 export class AiImageService {
@@ -51,6 +58,7 @@ export class AiImageService {
     private readonly devUpload: DevUploadService,
     private readonly listingImages: ListingImagesService,
     private readonly access: AiMarketingAccessService,
+    private readonly safety: AiSafetyFilterService,
   ) {}
 
   isBackgroundRemovalAvailable(): boolean {
@@ -77,19 +85,46 @@ export class AiImageService {
       );
     }
 
+    const listingUsed = await this.meter.countGenerationsTodayForListing(
+      userId,
+      input.listingId,
+    );
+    if (listingUsed >= AI_MARKETING_LISTING_DAILY_GENERATION_LIMIT) {
+      throw new ForbiddenException(
+        `Daily AI limit for this listing reached (${AI_MARKETING_LISTING_DAILY_GENERATION_LIMIT}). Try again tomorrow or use another listing.`,
+      );
+    }
+
     const listing = await this.prisma.listing.findFirst({
       where: { id: input.listingId, sellerId: userId },
       select: {
         id: true,
         title: true,
+        description: true,
         locationLabel: true,
+        condition: true,
         price: true,
         salePrice: true,
         currency: true,
-        store: { select: { logoUrl: true } },
+        category: { select: { name: true } },
+        store: { select: { logoUrl: true, name: true } },
       },
     });
     if (!listing) throw new NotFoundException('Listing not found');
+
+    this.safety.assertSafeContext({
+      listingId: listing.id,
+      title: listing.title,
+      description: listing.description,
+      categoryName: listing.category.name,
+      condition: listing.condition,
+      location: listing.locationLabel,
+      priceLabel: this.formatPrice(
+        Number(listing.salePrice ?? listing.price),
+        listing.currency,
+      ),
+      storeName: listing.store.name,
+    });
 
     const image = await this.prisma.listingImage.findFirst({
       where: { id: input.imageId, listingId: listing.id },
@@ -120,6 +155,20 @@ export class AiImageService {
       }
     }
 
+    const scrubbed = this.safety.prepareContextForProvider({
+      listingId: listing.id,
+      title: listing.title,
+      description: listing.description,
+      categoryName: listing.category.name,
+      condition: listing.condition,
+      location: listing.locationLabel,
+      priceLabel: this.formatPrice(
+        Number(listing.salePrice ?? listing.price),
+        listing.currency,
+      ),
+      storeName: listing.store.name,
+    });
+
     const processed = await this.runOperation({
       task: input.task,
       sourceBuffer,
@@ -127,12 +176,9 @@ export class AiImageService {
       bannerTemplate,
       includeWatermark,
       storeLogoBuffer,
-      title: listing.title,
-      location: listing.locationLabel,
-      priceLabel: this.formatPrice(
-        Number(listing.salePrice ?? listing.price),
-        listing.currency,
-      ),
+      title: scrubbed.title,
+      location: scrubbed.location,
+      priceLabel: scrubbed.priceLabel,
     });
 
     const storageKey = `system-assets/${userId}/marketing/${randomUUID()}.webp`;
@@ -212,6 +258,283 @@ export class AiImageService {
     };
   }
 
+  async processStoreBanner(
+    userId: string,
+    input: AiMarketingStoreBannerInput,
+  ): Promise<AiMarketingImageResult> {
+    await this.access.assertEffective();
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { sellerStatus: true },
+    });
+    if (!user) throw new ForbiddenException('User not found');
+
+    const sellerVerified = isSellerVerified(user.sellerStatus as SellerStatus);
+    const dailyUsed = await this.meter.countGenerationsToday(userId);
+    if (dailyUsed >= AI_MARKETING_DAILY_GENERATION_LIMIT) {
+      throw new ForbiddenException(
+        `Daily AI generation limit reached (${AI_MARKETING_DAILY_GENERATION_LIMIT}). Try again tomorrow.`,
+      );
+    }
+
+    const store = await this.prisma.store.findFirst({
+      where: { id: input.storeId, userId },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        location: true,
+        logoUrl: true,
+        bannerUrl: true,
+      },
+    });
+    if (!store) throw new NotFoundException('Store not found');
+
+    this.safety.assertSafeContext({
+      title: store.name,
+      description: store.description ?? '',
+      categoryName: 'Shop',
+      condition: 'open',
+      location: store.location ?? '',
+      priceLabel: '',
+      storeName: store.name,
+    });
+
+    let listingId: string | undefined;
+    let sourceBuffer: Buffer | null = null;
+    let sourceLabel = 'gradient';
+
+    if (input.listingId && input.imageId) {
+      const listingUsed = await this.meter.countGenerationsTodayForListing(
+        userId,
+        input.listingId,
+      );
+      if (listingUsed >= AI_MARKETING_LISTING_DAILY_GENERATION_LIMIT) {
+        throw new ForbiddenException(
+          `Daily AI limit for this listing reached (${AI_MARKETING_LISTING_DAILY_GENERATION_LIMIT}). Try again tomorrow or use another listing.`,
+        );
+      }
+      const listing = await this.prisma.listing.findFirst({
+        where: {
+          id: input.listingId,
+          sellerId: userId,
+          storeId: store.id,
+        },
+        select: { id: true },
+      });
+      if (!listing) throw new NotFoundException('Listing not found for this store');
+      const image = await this.prisma.listingImage.findFirst({
+        where: { id: input.imageId, listingId: listing.id },
+      });
+      if (!image) throw new NotFoundException('Listing image not found');
+      sourceBuffer = await this.readListingImageBuffer(image.url);
+      listingId = listing.id;
+      sourceLabel = `listing-image=${input.imageId}`;
+    } else if (store.logoUrl) {
+      try {
+        sourceBuffer = await this.readListingImageBuffer(store.logoUrl);
+        sourceLabel = 'store-logo';
+      } catch {
+        sourceBuffer = null;
+      }
+    }
+
+    const creditUnits = AI_MARKETING_TASK_UNIT_COSTS.store_banner;
+    const { billingMethod, amountEur } = await this.resolveBilling(
+      userId,
+      sellerVerified,
+      creditUnits,
+    );
+
+    const scrubbed = this.safety.prepareContextForProvider({
+      title: store.name,
+      description: store.description ?? '',
+      categoryName: 'Shop',
+      condition: 'open',
+      location: store.location ?? '',
+      priceLabel: '',
+      storeName: store.name,
+    });
+
+    const includeWatermark = input.includeWatermark !== false;
+    const buffer = await this.createStoreHeroBanner({
+      sourceBuffer,
+      includeWatermark,
+      storeName: scrubbed.title || scrubbed.storeName || 'Shop',
+      location: scrubbed.location,
+      tagline: (scrubbed.description || '').slice(0, 120),
+    });
+
+    const storageKey = `system-assets/${userId}/marketing/${randomUUID()}.webp`;
+    await this.writeOutput(storageKey, buffer);
+    const publicUrl = this.r2.buildPublicUrl(storageKey);
+
+    const { generationId, walletBalance, freeUnitsRemaining } =
+      await this.meter.recordGeneration({
+        userId,
+        listingId,
+        task: 'store_banner',
+        provider: 'sharp',
+        model: 'storefront-hero-v1',
+        promptVersion: AI_MARKETING_IMAGE_PROMPT_VERSION,
+        billingMethod,
+        creditUnits,
+        amountEur,
+        inputSummary: `store_banner|store=${store.id}|source=${sourceLabel}|wm=${includeWatermark}`,
+        outputText: publicUrl,
+      });
+
+    return {
+      task: 'store_banner',
+      publicUrl,
+      storageKey,
+      bannerFormat: 'storefront_hero',
+      billingMethod,
+      creditUnits,
+      amountEur,
+      walletBalance,
+      freeUnitsRemaining,
+      provider: 'sharp',
+      model: 'storefront-hero-v1',
+      generationId,
+      mayApplyToListing: false,
+      mayApplyToStorefront: true,
+    };
+  }
+
+  async applyToStore(
+    userId: string,
+    input: AiMarketingApplyStoreBannerInput,
+  ): Promise<AiMarketingApplyStoreBannerResult> {
+    await this.access.assertEffective();
+
+    const log = await this.prisma.aiGenerationLog.findFirst({
+      where: { id: input.generationId, userId },
+    });
+    if (!log) throw new NotFoundException('Generation not found');
+    if (log.task !== 'store_banner') {
+      throw new BadRequestException(
+        'Only shop banner generations can be applied to a storefront.',
+      );
+    }
+
+    const summary = log.inputSummary ?? '';
+    const storeMatch = /store=([0-9a-f-]{36})/i.exec(summary);
+    const generationStoreId = storeMatch?.[1];
+    if (!generationStoreId || generationStoreId !== input.storeId) {
+      throw new BadRequestException(
+        'This banner was generated for a different storefront.',
+      );
+    }
+
+    const store = await this.prisma.store.findFirst({
+      where: { id: input.storeId, userId },
+      select: { id: true },
+    });
+    if (!store) throw new NotFoundException('Store not found');
+
+    const key = extractStorageKeyFromUrl(log.outputText);
+    if (!key || !key.startsWith(`system-assets/${userId}/marketing/`)) {
+      throw new BadRequestException('Invalid marketing export for this seller.');
+    }
+
+    const buffer = await this.readMarketingBuffer(key);
+    const bannerKey = `store-banners/${userId}/${randomUUID()}.webp`;
+    await this.writeOutput(bannerKey, buffer);
+    const bannerUrl = this.r2.buildPublicUrl(bannerKey);
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.store.update({
+        where: { id: store.id },
+        data: { bannerUrl },
+      });
+      await tx.userProfile.updateMany({
+        where: { userId },
+        data: { storeBannerUrl: bannerUrl },
+      });
+    });
+
+    return {
+      generationId: log.id,
+      storeId: store.id,
+      bannerUrl,
+    };
+  }
+
+  private async createStoreHeroBanner(input: {
+    sourceBuffer: Buffer | null;
+    includeWatermark: boolean;
+    storeName: string;
+    location: string;
+    tagline: string;
+  }): Promise<Buffer> {
+    const { width, height } = STOREFRONT_HERO;
+    let photo: Buffer;
+    if (input.sourceBuffer) {
+      photo = await sharp(input.sourceBuffer, { failOn: 'none' })
+        .rotate()
+        .resize({ width, height, fit: 'cover', position: 'centre' })
+        .toBuffer();
+    } else {
+      photo = await sharp({
+        create: {
+          width,
+          height,
+          channels: 3,
+          background: { r: 15, g: 23, b: 42 },
+        },
+      })
+        .png()
+        .toBuffer();
+    }
+
+    const name = this.escapeXml(input.storeName).slice(0, 64);
+    const location = this.escapeXml(input.location).slice(0, 48);
+    const tagline = this.escapeXml(input.tagline).slice(0, 96);
+    const overlay = Buffer.from(`
+      <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(15,23,42,0.82)"/>
+            <stop offset="55%" stop-color="rgba(15,23,42,0.45)"/>
+            <stop offset="100%" stop-color="rgba(15,23,42,0.15)"/>
+          </linearGradient>
+        </defs>
+        <rect width="${width}" height="${height}" fill="url(#g)"/>
+        <text x="48" y="150" fill="#99f6e4" font-size="22" font-family="Arial, sans-serif" font-weight="700">SHOP ON SELLNEARBY</text>
+        <text x="48" y="210" fill="#ffffff" font-size="52" font-family="Arial, sans-serif" font-weight="700">${name}</text>
+        ${
+          location
+            ? `<text x="48" y="260" fill="#e2e8f0" font-size="24" font-family="Arial, sans-serif">${location}</text>`
+            : ''
+        }
+        ${
+          tagline
+            ? `<text x="48" y="310" fill="#cbd5e1" font-size="20" font-family="Arial, sans-serif">${tagline}</text>`
+            : ''
+        }
+      </svg>
+    `);
+
+    const layers: sharp.OverlayOptions[] = [{ input: overlay, top: 0, left: 0 }];
+    if (input.includeWatermark) {
+      const wm = Buffer.from(`
+        <svg width="220" height="36" xmlns="http://www.w3.org/2000/svg">
+          <rect width="220" height="36" rx="8" fill="rgba(15,23,42,0.55)"/>
+          <text x="14" y="24" fill="#ffffff" font-size="16" font-family="Arial, sans-serif">SellNearby.ie</text>
+        </svg>
+      `);
+      layers.push({
+        input: wm,
+        left: width - 236,
+        top: height - 52,
+      });
+    }
+
+    return sharp(photo).composite(layers).webp({ quality: 88 }).toBuffer();
+  }
+
   private async readMarketingBuffer(key: string): Promise<Buffer> {
     try {
       if (this.r2.isConfigured()) {
@@ -230,27 +553,26 @@ export class AiImageService {
     creditUnits: number,
   ): Promise<{ billingMethod: AiBillingMethod; amountEur: number }> {
     const freeUsed = await this.meter.countFreeUnitsUsedThisMonth(userId);
-    const freeRemaining = sellerVerified
-      ? Math.max(0, AI_MARKETING_FREE_UNITS_MONTHLY - freeUsed)
-      : 0;
+    const { billingMethod, amountEur } = computeAiBilling({
+      sellerVerified,
+      freeUnitsUsedThisMonth: freeUsed,
+      creditUnits,
+    });
 
-    if (freeRemaining >= creditUnits) {
-      return { billingMethod: 'free_quota', amountEur: 0 };
-    }
-
-    const amountEur = Number((creditUnits * AI_MARKETING_UNIT_EUR_COST).toFixed(2));
-    const balance = await this.meter.getWalletBalance(userId);
-    if (balance < amountEur) {
-      if (!sellerVerified) {
+    if (billingMethod === 'wallet' && amountEur > 0) {
+      const balance = await this.meter.getWalletBalance(userId);
+      if (balance < amountEur) {
         throw new ForbiddenException(
-          'Free AI generations are for verified sellers. Complete verification or top up SellNearby Credit to continue.',
+          `Not enough SellNearby Credit. This generation costs €${amountEur.toFixed(2)}. Your balance is €${balance.toFixed(2)}.${
+            sellerVerified
+              ? ''
+              : ' Verified sellers also receive a monthly free AI allowance.'
+          }`,
         );
       }
-      throw new ForbiddenException(
-        `Not enough SellNearby Credit. This generation costs €${amountEur.toFixed(2)}. Your balance is €${balance.toFixed(2)}.`,
-      );
     }
-    return { billingMethod: 'wallet', amountEur };
+
+    return { billingMethod, amountEur };
   }
 
   private async readListingImageBuffer(storedUrl: string): Promise<Buffer> {

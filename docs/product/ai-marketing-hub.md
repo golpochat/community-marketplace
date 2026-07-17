@@ -1,7 +1,7 @@
 # SellNearby AI Marketing Hub — Product Plan
 
-**Status:** Phases 0–3 implemented (API + listing editor Marketing Hub widgets)  
-**Date:** 2026-07-16  
+**Status:** **Pilot-ready** (Phases 0–4 + Marketing Hub home + shop banner apply + AI credit packs + featured storefront). Publish in admin and smoke. Deferred: video, forecast.  
+**Last reviewed:** 2026-07-17  
 **Related:** [master-blueprint-v1.md](./master-blueprint-v1.md), [monetization.md](./monetization.md), [roadmap.md](./roadmap.md)  
 **External reference:** [Zeely.ai](https://zeely.ai/) (inspiration only — not a core dependency)
 
@@ -78,10 +78,12 @@ If SellNearby helps sellers market listings, we get:
 
 **Hub entry points**
 
-1. Listing editor (goods + vehicles) → per-step **Marketing hub** shell (`ListingMarketingHub`): shared quota chrome; widgets for copy/social + posting time (details), price suggestion (pricing), photos/banners + campaign pack/boost (photos)
-2. Seller dashboard → “AI Marketing Hub” (later)
-3. Storefront settings → “Promote your shop” (later)
-4. Post-publish success screen → “Share this listing” (later)
+| # | Entry point | Status |
+|---|-------------|--------|
+| 1 | Listing editor (goods + vehicles) → per-step **Marketing hub** shell | **Live** — `ListingMarketingHub` on details / pricing / photos (vehicles: condition / price / photos) |
+| 2 | Seller dashboard → “AI Marketing Hub” | **Live** — `/account/marketing` (`SellerMarketingHubPage`) |
+| 3 | Storefront settings → “Promote your shop” | **Live** — `StoreMarketingHub` on `/account/storefront` |
+| 4 | Post-create success → “Share this listing” | **Live** — after Save draft on create; `ListingShareSuccessPanel` + hub `step="share"` |
 
 **Non-goals (v1–v2)**
 
@@ -95,114 +97,109 @@ If SellNearby helps sellers market listings, we get:
 ## 4. Phased feature roadmap
 
 Complexity key: **S** = small · **M** = medium · **L** = large · **XL** = very large  
-Cost key: relative AI/API cost per use (Low / Med / High)
+Cost key: relative AI/API cost per use (Low / Med / High)  
+Status key: **Done** · **Partial** · **Deferred** · **Not started**
 
-### Phase 0 — Foundations (prerequisite)
+### Phase 0 — Foundations (prerequisite) — **Done (minimal viable)**
 
-| Item | Complexity | Notes |
-|------|------------|-------|
-| AI provider abstraction layer | M | Single internal API; swap models without rewriting features |
-| Credit / usage metering | M | Align with SellNearby Credit / wallet concepts |
-| Prompt + safety policy layer | M | Block prohibited categories, PII leakage, misleading claims |
-| Listing context assembler | S–M | Pass listing + storefront + category + location into prompts |
-| Audit log of generations | S | Support moderation and abuse review |
-| Rate limits + abuse controls | S | Per seller / per listing / per day |
+| Item | Complexity | Status | Notes |
+|------|------------|--------|-------|
+| AI provider abstraction layer | M | **Done** | OpenAI primary + Anthropic fallback; non-prod stub |
+| Credit / usage metering | M | **Done** | Free units + `BuyerWallet` debit + `ai_generation` ledger |
+| Prompt + safety policy layer | M | **Done (v1)** | Expanded prohibited patterns + PII scrub before provider/audit |
+| Listing context assembler | S–M | **Done** | Listing id or draft fields + store name |
+| Audit log of generations | S | **Done** | `AiGenerationLog` |
+| Rate limits + abuse controls | S | **Done** | 30 jobs / seller / day · **15 / listing / day** when `listingId` present |
 
-**Exit criteria:** Can generate one safe text asset from a listing with metered usage and logging.
+**Exit criteria:** Can generate one safe text asset from a listing with metered usage and logging. ✅
 
 ---
 
-### Phase 1 — Text marketing (ship first)
+### Phase 1 — Text marketing (ship first) — **Done**
 
 Highest seller value, lowest cost, fastest build.
 
-| Feature | Complexity | AI cost | Priority | Seller outcome |
-|---------|------------|---------|----------|----------------|
-| AI Product Description | S | Low | P0 | Better listing copy |
-| AI SEO Title | S | Low | P0 | Clearer, searchable titles |
-| AI Keywords / tags | S | Low | P0 | Better discovery |
-| AI Instagram Caption | S | Low | P0 | Ready-to-post social |
-| AI Facebook Ad / post copy | S | Low | P0 | Ready-to-post social |
-| AI TikTok Script | S | Low | P1 | Short-form talking points |
-| AI Seasonal Promotions | S–M | Low | P1 | Christmas / Back-to-school / local events |
-| AI Email Campaign draft | S–M | Low | P1 | Store / buyer follow-up drafts |
-| AI WhatsApp Campaign message | S | Low | P1 | Local seller outreach templates |
-| Tone / length / locale controls | S | Low | P1 | Irish English, short/long, friendly/pro |
+| Feature | Complexity | AI cost | Priority | Status | Seller outcome |
+|---------|------------|---------|----------|--------|----------------|
+| AI Product Description | S | Low | P0 | **Done** | Better listing copy |
+| AI SEO Title | S | Low | P0 | **Done** | Clearer, searchable titles |
+| AI Keywords / tags | S | Low | P0 | **Done** | Copy-only |
+| AI Instagram Caption | S | Low | P0 | **Done** | Ready-to-post social |
+| AI Facebook Ad / post copy | S | Low | P0 | **Done** | Ready-to-post social |
+| AI TikTok Script | S | Low | P1 | **Done** | Short-form talking points |
+| AI Seasonal Promotions | S–M | Low | P1 | **Done** | Seasonal / local promo drafts |
+| AI Email Campaign draft | S–M | Low | P1 | **Done** | Follow-up drafts |
+| AI WhatsApp Campaign message | S | Low | P1 | **Done** | Outreach templates |
+| Tone / length / locale controls | S | Low | P1 | **Partial** | Irish English fixed in prompts; no seller tone/length UI |
 
-**Suggested UX**
+**Suggested UX (live)**
 
-- Side panel on listing form: generate → preview → accept / edit / regenerate
-- One-click copy for social / WhatsApp / email
-- “Irish English” default; optional Gaeilge later
+- Form fields first; Marketing Hub below, sections **collapsed by default**
+- Improve listing → Accept into form; Share off SellNearby → Copy (locked until title meets min length)
+- Irish English default; Gaeilge still later
 
-**Exit criteria:** ≥3 text tools live; sellers can apply description + title + one social caption in under 2 minutes.
-
----
-
-### Phase 2 — Image enhancement & banners
-
-| Feature | Complexity | AI cost | Priority | Seller outcome |
-|---------|------------|---------|----------|----------------|
-| AI Background Removal | M | Med | P0 | Cleaner product photos |
-| AI Image Enhancement | M | Med | P0 | Sharper, brighter listing images |
-| AI Banner Creator | M–L | Med | P0 | Story / feed / marketplace banner sizes |
-| AI Logo Placement | M | Low–Med | P1 | Brand consistency on creatives |
-| AI Watermarking | S–M | Low | P1 | Protect seller photos |
-| Template pack (local marketplace) | M | Low | P1 | “For sale near you”, “Collection only”, etc. |
-
-**Suggested UX**
-
-- From listing images: enhance / remove background / create share card
-- Export PNG/WebP at Instagram, Facebook, WhatsApp, and SellNearby card sizes
-- Always keep original image; AI variants are separate assets
-
-**Exit criteria:** Seller can produce one shareable listing card and one enhanced product image from existing photos.
+**Exit criteria:** ≥3 text tools live; sellers can apply description + title + one social caption in under 2 minutes. ✅
 
 ---
 
-### Phase 3 — Video & advanced growth intelligence
+### Phase 2 — Image enhancement & banners — **Done (core)**
 
-| Feature | Complexity | AI cost | Priority | Seller outcome |
-|---------|------------|---------|----------|----------------|
-| AI Video Generator (short) | XL | High | P1 | 15–30s listing promo |
-| AI Talking-head / avatar video | XL | High | P2 | Optional; quality-sensitive |
-| AI Best Posting Time | M | Low | P1 | Based on category + local engagement patterns |
-| AI Price Suggestions | M–L | Low | P0 | Comparable listings + demand signals |
-| AI Sales Forecast | L | Low–Med | P2 | Directional only; never a guarantee |
-| Campaign pack export (zip + captions) | M | Low | P1 | Offline posting kit |
-| Optional “open in Zeely / Canva” deep link | S | — | P3 | Non-core convenience only |
+| Feature | Complexity | AI cost | Priority | Status | Seller outcome |
+|---------|------------|---------|----------|--------|----------------|
+| AI Background Removal | M | Med | P0 | **Done** | remove.bg when keyed; Sharp studio fallback non-prod |
+| AI Image Enhancement | M | Med | P0 | **Done** | Sharp pipeline; may apply to listing |
+| AI Banner Creator | M–L | Med | P0 | **Done** | Feed / story / marketplace card · marketing-only |
+| AI Logo Placement | M | Low–Med | P1 | **Partial** | Optional store logo on banners only |
+| AI Watermarking | S–M | Low | P1 | **Partial** | Optional SellNearby watermark on banners only |
+| Template pack (local marketplace) | M | Low | P1 | **Done** | classic · for sale near you · collection only · priced to sell |
 
-**Exit criteria:** Optional short video from listing images + captions; price suggestion live for major categories.
+**Exit criteria:** Seller can produce one shareable listing card and one enhanced product image from existing photos. ✅
 
 ---
 
-### Phase 4 — Platform-native promotion loop
+### Phase 3 — Growth intelligence (+ video later) — **Core Done · Video Deferred**
+
+| Feature | Complexity | AI cost | Priority | Status | Seller outcome |
+|---------|------------|---------|----------|--------|----------------|
+| AI Video Generator (short) | XL | High | P1 | **Deferred** | 15–30s listing promo |
+| AI Talking-head / avatar video | XL | High | P2 | **Deferred** | Quality-sensitive |
+| AI Best Posting Time | M | Low | P1 | **Done** | Europe/Dublin · free |
+| AI Price Suggestions | M–L | Low | P0 | **Done** | Comps-first · free · advisory |
+| AI Sales Forecast | L | Low–Med | P2 | **Deferred** | Directional only |
+| Campaign pack export (zip + captions) | M | Low | P1 | **Done** | Assembles prior generations |
+| Optional “open in Zeely / Canva” deep link | S | — | P3 | **Deferred** | Non-core convenience |
+
+**Exit criteria (adjusted):** Price suggestion + posting time + campaign pack + boost CTA live. Short video remains later. ✅ (adjusted)
+
+---
+
+### Phase 4 — Platform-native promotion loop — **Core shipped**
 
 Connect AI Hub to existing SellNearby monetization (boosts / featured / storefront).
 
-| Feature | Complexity | Priority |
-|---------|------------|----------|
-| “Generate creative → Boost listing” flow | M | P0 |
-| “Generate shop banner → Feature storefront” | M | P1 |
-| Seller growth packs (credits + boost discount) | M | P0 |
-| Admin analytics: hub usage → boost conversion | M | P1 |
-| Partner / sponsor creatives into display slots later | L | Later |
+| Feature | Complexity | Priority | Status |
+|---------|------------|----------|--------|
+| “Generate creative → Boost listing” flow | M | P0 | **Done** — 3-step funnel in campaign panel + `source` on boost intent |
+| “Generate shop banner → Feature storefront” | M | P1 | **Partial** — AI shop banner + apply live; dedicated featured-store SKU deferred (CTA → listings) |
+| Seller growth packs (credits + boost discount) | M | P0 | **Done** — `seller_growth_pack` SKU (€6.99 · €5 credit · 25% hub boost) |
+| Admin analytics: hub usage → boost conversion | M | P1 | **Done** — Monetization → Advertising analytics panel |
+| Partner / sponsor creatives into display slots later | L | Later | **Not started** |
 
-**Exit criteria:** Measurable uplift from Hub users buying boosts vs non-users.
+**Exit criteria:** Measurable uplift from Hub users buying boosts vs non-users. ✅ attribution + admin UI live; pilot conversion TBD.
 
 ---
 
 ## 5. Recommended build order (summary)
 
 ```text
-Month 0–1   Phase 0 foundations + AI Product Description + SEO Title
-Month 1–2   Captions, keywords, WhatsApp, seasonal prompts
-Month 2–4   Background removal, enhancement, banner creator
-Month 4–6   Price suggestions + best posting time + boost handoff
-Month 6+    Short video generator + forecast + advanced packs
+Month 0–1   Phase 0 foundations + AI Product Description + SEO Title     ✅ shipped
+Month 1–2   Captions, keywords, WhatsApp, seasonal prompts               ✅ shipped
+Month 2–4   Background removal, enhancement, banner creator              ✅ shipped
+Month 4–6   Price + posting time + boost funnel + Growth Pack + analytics ✅ shipped
+Month 6+    Pilot → video · forecast ← demand-gated
 ```
 
-Do **not** start with video. Video is expensive, quality-variable, and slower to ship. Text + image enhancement will cover most sellers first.
+Do **not** start with video. Video is expensive, quality-variable, and slower to ship. Text + image enhancement cover most sellers first. **Next product step is ops: publish the hub and pilot.** Dedicated Marketing Hub page is live at `/account/marketing`.
 
 ---
 
@@ -210,15 +207,15 @@ Do **not** start with video. Video is expensive, quality-variable, and slower to
 
 | Capability | Eng effort | Ops / compliance | Dependency risk | Notes |
 |------------|------------|------------------|-----------------|-------|
-| Text generation suite | Low–Med | Med (claims, prohibited items) | Low | Highest ROI |
-| Image enhance / bg remove | Med | Med (photo rights) | Low–Med | Need reliable image pipeline |
-| Banner templates | Med | Low | Low | Mostly layout + LLM copy |
-| Price suggestions | Med–High | High (must be advisory) | Low | Needs marketplace data quality |
-| Best posting time | Med | Low | Low | Needs engagement telemetry |
-| Sales forecast | High | High | Low | Easy to overpromise — label carefully |
-| Short video | Very High | Med–High | Med | Highest unit cost |
-| Avatar UGC video | Very High | High | High | Brand/trust risk if uncanny |
-| Paid ad account automation | Very High | Very High | Very High | Out of scope for near term |
+| Text generation suite | Low–Med | Med (claims, prohibited items) | Low | Highest ROI — **live** |
+| Image enhance / bg remove | Med | Med (photo rights) | Low–Med | **live**; prod rembg needs API key |
+| Banner templates | Med | Low | Low | **live** |
+| Price suggestions | Med–High | High (must be advisory) | Low | **live** (comps-first) |
+| Best posting time | Med | Low | Low | **live** |
+| Sales forecast | High | High | Low | Deferred — easy to overpromise |
+| Short video | Very High | Med–High | Med | Deferred |
+| Avatar UGC video | Very High | High | High | Deferred |
+| Paid ad account automation | Very High | Very High | Very High | Out of scope |
 
 ---
 
@@ -230,60 +227,54 @@ Prefer an **abstraction layer** so providers can be swapped. Use EU-friendly dat
 
 | Option | Role | Notes |
 |--------|------|-------|
-| **OpenAI GPT-4.1 / GPT-4o-mini** | Primary / fallback | Strong quality; use mini for cheap drafts |
-| **Anthropic Claude** | Primary alternative | Good for long copy and safer tone |
-| **Google Gemini Flash** | Cost-efficient batch | Good for keywords / variants |
+| **OpenAI GPT-4.1 / GPT-4o-mini** | Primary (live: `OPENAI_CHAT_MODEL`, default `gpt-4o-mini`) | Dev stub when no live keys (non-prod) |
+| **Anthropic Claude** | Fallback (live when `ANTHROPIC_API_KEY` set; default `claude-haiku-4-5`) | Used if OpenAI fails or is unset |
+| **Google Gemini Flash** | Cost-efficient batch | **Not wired** |
 | **Self-hosted open model (later)** | Cost control at scale | Only after volume justifies ops |
 
-**Recommendation:** Start with **one primary LLM + one fallback**. Use cheaper models for regenerate / bulk; premium model for “best” generation.
+**Recommendation:** **one primary LLM + one fallback** — live: OpenAI → Anthropic.
 
 ### Image enhancement & background removal
 
 | Option | Best for | Notes |
 |--------|----------|-------|
-| **remove.bg / Photoroom API** | Background removal | Proven, fast |
-| **Cloudinary AI / imgproxy + AI add-ons** | Enhance, crop, watermark | Fits media CDN workflows |
-| **Replicate (BRIA / rembg / GFPGAN-class models)** | Flexible enhance / rembg | Pay-per-use; good for experiments |
-| **Sharp + local pipeline** | Watermark, resize, format | Keep deterministic transforms in-house |
+| **remove.bg / Photoroom API** | Background removal | **remove.bg live** when `REMOVE_BG_API_KEY` set |
+| **Cloudinary AI / imgproxy + AI add-ons** | Enhance, crop, watermark | Not used |
+| **Replicate (BRIA / rembg / GFPGAN-class models)** | Flexible enhance / rembg | Not used |
+| **Sharp + local pipeline** | Watermark, resize, enhance, banners | **Live** for enhance / banners / watermark |
 
-**Recommendation:** In-house for watermark/resize; managed API for rembg/enhance initially.
+**Recommendation:** In-house for watermark/resize; managed API for rembg — matches live stack.
 
 ### Banner / static ad layouts
 
 | Option | Best for | Notes |
 |--------|----------|-------|
-| **In-house template engine** (HTML/Canvas/SVG → image) | Brand control, cost | Preferred long-term |
-| **Canva Connect API** (optional) | Power users | Optional export, not core |
-| **Bannerbear / Placid** | Quick template rendering | Useful MVP shortcut |
-
-**Recommendation:** Start with **in-house templates + LLM copy**. Avoid depending on Canva for core UX.
+| **In-house template engine** (Sharp composite) | Brand control, cost | **Live** |
+| **Canva Connect API** (optional) | Power users | Deferred |
+| **Bannerbear / Placid** | Quick template rendering | Not used |
 
 ### Short video generation
 
 | Option | Best for | Notes |
 |--------|----------|-------|
-| **Runway / Luma / Kling-class APIs** | Generative video clips | Costly; quality varies |
-| **Shotstack / Creatomate / JSON2Video** | Template video from images + captions | Better cost/control for marketplace |
-| **HeyGen / Arcads** | Avatar talking head | Optional later; higher cost |
-
-**Recommendation:** Prefer **template video from listing images + voiceover/captions** before generative avatar video.
+| **Runway / Luma / Kling-class APIs** | Generative video clips | Deferred |
+| **Shotstack / Creatomate / JSON2Video** | Template video from images + captions | Preferred when video starts |
+| **HeyGen / Arcads** | Avatar talking head | Optional later |
 
 ### Price suggestion & forecast
 
 | Option | Best for | Notes |
 |--------|----------|-------|
-| **Internal stats + rules + LLM explanation** | Primary | Own comps from SellNearby data |
+| **Internal stats + rules + LLM explanation** | Primary | **Live** (comps; explanation without metered LLM for price) |
 | LLM alone | Do not use as sole price source | Hallucination risk |
-
-**Recommendation:** Pricing = **marketplace comps first**, LLM only to explain the suggestion.
 
 ### Optional external tools (non-core)
 
-| Tool | Use |
-|------|-----|
-| Zeely | Optional “advanced Meta ads” deep link for power sellers |
-| Canva | Optional design export |
-| Meta Ads Manager | Seller-owned ad accounts only |
+| Tool | Use | Status |
+|------|-----|--------|
+| Zeely | Optional “advanced Meta ads” deep link | Deferred |
+| Canva | Optional design export | Deferred |
+| Meta Ads Manager | Seller-owned ad accounts only | Out of scope |
 
 ---
 
@@ -313,6 +304,13 @@ Listing / Storefront data
 4. Store provider, model, prompt version, and cost for each job.
 5. Prefer EU region endpoints when available.
 
+**Live gating order**
+
+1. Env `AI_MARKETING_ENABLED` ≠ `false` (hard kill switch)
+2. Admin publish `platform_settings.aiMarketingEnabled` (default **off**)
+3. Provider ready (`OPENAI_API_KEY` and/or `ANTHROPIC_API_KEY`; non-prod stub if neither)
+4. Seller RBAC + quota / wallet checks
+
 ---
 
 ## 9. Monetization model
@@ -326,9 +324,9 @@ Align with SellNearby’s free-to-start, micro-priced philosophy (see master blu
 | Free monthly quota | **10 credit units / calendar month** for **verified** sellers only |
 | Unverified | **No free units**; wallet debit allowed if balance covers cost |
 | Paid overage | **€0.05 per credit unit** from SellNearby Credit wallet |
-| Daily generation cap | **30** jobs / seller / day (abuse control) |
+| Daily generation cap | **30** jobs / seller / day · **15** / listing / day (when listing id present) |
 | Free tools (0 units) | Price suggestion · best posting time · campaign pack download |
-| Seller visibility | Hub chrome shows free units + wallet € + €/unit; each paid button shows **units · ≈€** |
+| Seller visibility | Hub chrome shows free units + wallet € + €/unit; paid buttons show **units · ≈€** |
 
 Unit costs match §14 tables and `AI_MARKETING_TASK_UNIT_COSTS` in `@community-marketplace/types`.
 
@@ -337,8 +335,8 @@ Unit costs match §14 tables and `AI_MARKETING_TASK_UNIT_COSTS` in `@community-m
 | Package | What sellers get | Suggested price band (IE) | Notes |
 |---------|------------------|---------------------------|-------|
 | Free starter | Limited AI generations / month (live: 10 text-equivalent units) | €0 | Already live for verified |
-| AI Credits packs | Pay-as-you-go top-ups | Micro packs e.g. €1.99 / €4.99 / €9.99 | **Not shipped** — sellers top up SellNearby Credit today |
-| Seller Growth Pack | Credits + 1 boost discount | e.g. €6.99–€14.99 | Phase 4 |
+| AI Credits packs | Pay-as-you-go top-ups | Micro packs e.g. €1.99 / €4.99 / €9.99 | **Not shipped** — use Growth Pack or cashback Credit |
+| Seller Growth Pack | €5 Credit + 25% off one Marketing Hub boost | **€6.99** (default) | **Live** — campaign funnel step 2 |
 | Pro Seller (optional later) | Higher monthly allowance + image tools | e.g. €9.99–€19.99 / mo | Only if usage proves sticky |
 | Enterprise / agency (later) | Multi-storefront bulk | Custom | Phase 4+ |
 
@@ -434,7 +432,7 @@ AI Hub should increase:
 
 | # | Decision | Resolution |
 |---|----------|------------|
-| 1 | Free monthly AI quota | **Verified sellers only.** Unverified sellers get no free quota (can still buy AI credits later). Suggested starting free allowance for verified: **10 text generations / calendar month** (tunable in platform settings). |
+| 1 | Free monthly AI quota | **Verified sellers only.** Unverified sellers get no free quota (can still buy AI credit packs / use wallet). Free allowance for verified: **10 units / calendar month** (tunable in platform settings). |
 | 2 | Wallet | **Same wallet as SellNearby Credit** (`BuyerWallet`). Debit AI usage from that balance; add ledger types for AI spend / free quota. |
 | 3 | Locale | **Irish English only** at launch. No Gaeilge prompts in Phase 1. |
 | 4 | AI images as listing primary photos | **Recommended hybrid (adopted):** (a) **Seller-photo edits** (enhance / background remove) **may** become listing primary photos — they remain the seller’s real item. (b) **Fully AI-generated creatives** (banners, lifestyle scenes, video frames) are **marketing-only exports** — never auto-set as primary listing photos. Prevents misrepresentation and trust risk. |
@@ -442,100 +440,173 @@ AI Hub should increase:
 
 ---
 
-## 14. Implementation status — Phase 1–3 wrapped
+## 14. Implementation status (as of 2026-07-17)
 
-**Phases 1–3 core seller tools are complete** (text, images, price, posting time, campaign pack, boost handoff, admin publish).
+### 14.0 Summary — where we are
 
-**Credit rules**
+**Verdict:** Native AI Marketing Hub **core is complete**. Sellers can generate text/images, share off-platform, promote a shop, buy Growth Pack / boost from the hub, and admins can measure hub→boost conversion. Dual LLM (OpenAI → Anthropic) is wired.
 
-- Verified sellers: up to **10 free credit units / month**
-- Unverified: no free quota; wallet debit allowed if balance covers cost
-- Never auto-save AI output — Accept (listing fields) or Copy/Download (marketing)
-- Paid overage: **€0.05 per credit unit** from SellNearby Credit wallet
-- **Seller UI:** each paid action shows units + ≈€ before generate; hub chrome shows free remaining + wallet + €/unit rate
-- **Price suggestions are free** (comparable listing stats; not LLM-metered)
-- **Admin publish required:** platform setting `aiMarketingEnabled` (admin / super-admin → Monetization → Advertising). Env `AI_MARKETING_ENABLED=false` remains a hard kill switch.
+| Area | State |
+|------|--------|
+| Listing Marketing Hub (goods + vehicles) | **Live** |
+| Post-create “Share this listing” | **Live** |
+| Storefront “Promote your shop” | **Live** |
+| Credits, safety, rate limits, audit log | **Live** |
+| Boost funnel + Growth Pack + publish gate | **Live** |
+| Admin hub→boost analytics | **Live** |
+| Dual LLM fallback | **Live** |
+| Dedicated `/account/marketing` page | **Live** |
+| Shop banner generate → apply to storefront | **Live** |
+| Featured storefront (homepage, 24h) | **Live** |
+| Dedicated AI credit micro-packs (€2 / €5 / €10) | **Live** |
+| Template / avatar video · sales forecast | **Deferred** |
 
-**Text tasks (Phase 1)**
+**Ops gate before sellers see anything:** Monetization → Advertising → publish **AI Marketing Hub**, plus `AI_MARKETING_ENABLED` not `false`, plus at least one of `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` in production.
+
+### 14.1 What is live
+
+**Surfaces**
+
+- Goods listing create/edit → form fields first, then collapsed Marketing Hub:
+  - **Details:** Improve this listing (Accept) · Share off SellNearby (Copy, locked until title ≥ min length) · Best posting time (free)
+  - **Pricing:** price fields first · Suggest price (free, collapsed)
+  - **Photos:** upload first · photo tools / campaign pack / boost CTA (needs saved `listingId`)
+- Vehicle listing create/edit → same pattern on Condition / Price & delivery / Photos (SEO title task hidden; description → seller notes)
+- Post-create success → `ListingShareSuccessPanel` + hub `step="share"`
+- Storefront settings (`/account/storefront`) → **Promote your shop** (`StoreMarketingHub`: shop URL, AI copy Accept into name/bio, social/outreach, posting time, shop banner + **Feature this shop**)
+- Seller Marketing Hub home (`/account/marketing`) → quota, **Top up credits** / Growth Pack, links into listings / create / storefront promote
+- Homepage → **Featured shops** strip (`GET /stores/featured`) when sellers buy homepage featured storefront
+
+**Admin / ops**
+
+- Publish toggle: Monetization → Advertising → `aiMarketingEnabled` (DB default **off**)
+- Env kill switch: `AI_MARKETING_ENABLED=false`
+- Same gate hard-blocks Growth Pack and AI credit pack APIs (`/seller/monetization/growth-pack/*`, `/seller/monetization/ai-credit-packs/*`) via `assertEffective` — UI alone is not enough
+- Analytics: Monetization → Advertising → “Marketing Hub → boost analytics” (`GET /admin/monetization/marketing-hub-analytics`)
+- Text: `OPENAI_API_KEY` (primary) and/or `ANTHROPIC_API_KEY` (fallback) in production
+- Real bg-remove needs `REMOVE_BG_API_KEY` in production
+
+**API** (`/seller/marketing-hub`)
+
+| Endpoint | Status |
+|----------|--------|
+| `GET /quota` | Done |
+| `POST /generate` | Done (9 text tasks) |
+| `POST /image` | Done (enhance · bg-remove · banner) |
+| `POST /image/apply` | Done |
+| `POST /store-banner` | Done (1600×400 shop hero) |
+| `POST /store-banner/apply` | Done (sets `stores.banner_url`) |
+| `POST /price-suggest` | Done (free) |
+| `POST /best-posting-time` | Done (free; listing, category, or shop-level heuristic) |
+| `POST /campaign-pack` | Done (zip download) |
+
+**Credit rules (live)**
+
+- Verified: up to **10 free units / month**
+- Unverified: no free quota; wallet debit if balance covers cost
+- Paid overage: **€0.05 / unit** from SellNearby Credit
+- Never auto-save AI output — Accept / Copy / Download only
+- Price suggestion · posting time · campaign pack = **free**
+
+**Text tasks**
 
 | Task | Units | Apply |
 |------|-------|-------|
-| SEO title | 1 | Listing form |
-| Description | 2 | Listing form / vehicle seller notes |
+| SEO title | 1 | Listing form / store name |
+| Description | 2 | Listing form / vehicle seller notes / store bio |
 | Keywords | 1 | Copy |
 | Instagram caption | 1 | Copy |
 | Facebook post | 1 | Copy |
-| TikTok script | 2 | Copy |
+| TikTok script | 2 | Copy (spoken script — not rendered video) |
 | WhatsApp message | 1 | Copy |
 | Email campaign | 2 | Copy |
 | Seasonal promo | 1 | Copy |
 
-**Image tasks (Phase 2)**
+**Image tasks**
 
 | Task | Units | Notes |
 |------|-------|-------|
 | Image enhance | 3 | Sharp · may re-upload as listing photo |
-| Background remove | 5 | remove.bg when `REMOVE_BG_API_KEY` set; Sharp studio fallback in non-prod |
-| Share banner | 4 | Sharp composite · marketing-only (feed / story / card) · optional watermark + store logo |
+| Background remove | 5 | remove.bg when keyed; Sharp studio fallback in non-prod |
+| Share banner | 4 | Marketing-only · optional watermark + store logo |
+| Shop banner | 4 | 1600×400 storefront hero · may apply to store |
 
-**Price & timing (Phase 3)**
+**Price, timing & monetization**
 
 | Feature | Cost | Notes |
 |---------|------|-------|
-| Price suggestion | Free | Median / p25–p75 from visible active comps by category (+ area, condition, vehicle attrs when present) |
-| Best posting time | Free | Europe/Dublin windows; Irish category heuristics + chat/favourite hour buckets when sample ≥ 25 |
-| Campaign pack | Free | Zip of latest captions + share banners for the listing (assembly only; no new generation) |
-| Boost handoff | — | CTA on Photos step opens existing listing boost checkout |
+| Price suggestion | Free | Median / p25–p75 from visible active comps |
+| Best posting time | Free | Europe/Dublin; heuristics + chat/favourite hours when sample ≥ 25 |
+| Campaign pack | Free | Zip of **latest existing** captions + banners (no new generation) |
+| Boost handoff | — | Guided funnel when listing is **active**; `source` = `marketing_hub` \| `listings_table` \| `listing_edit` |
+| Seller Growth Pack | Paid SKU | Default €6.99 · €5 Credit · 25% off one hub boost |
+| AI credit micro-packs | Paid SKUs | €1.99→€2 · €4.99→€5 · €9.99→€10 SellNearby Credit (~40 / ~100 / ~200 units) |
+| Featured storefront | Paid SKU | Default €2.99 · 24h homepage · gated by `featuredEnabled` |
 
-**Surfaces**
+### 14.2 What still needs implementing
 
-- Generic listing create/edit → **form fields first**, then collapsed Marketing Hub:
-  - Details: Improve this listing (Accept) · Share off SellNearby (Copy, locked until title ≥ 10 chars) · Best posting time (free)
-  - Pricing: price fields first · Suggest price (free, collapsed)
-  - Photos: upload first · photo tools / campaign pack (collapsed)
-- Vehicle listing create/edit → same pattern on Condition / Price & delivery / Photos steps
+Ordered by recommended next value (not engineering size alone).
 
-**Seller UX rules (2026-07-17)**
+#### A. Hardening & quality
 
-1. Title & description (or vehicle notes) come **above** the hub.
-2. Hub sections are **collapsed by default** so the form stays primary.
-3. Social/outreach tools stay **locked** until the listing title has at least 10 characters.
-4. Accept fills form fields; Copy is for off-platform paste only.
-5. Free units first; then €0.05/unit from SellNearby Credit (no in-hub checkout).
+| Item | Status | Notes |
+|------|--------|-------|
+| Stronger safety (prohibited categories, PII scrub before provider calls) | **Done** | `AiSafetyFilterService` + `scrubPii` · text + image paths |
+| Per-listing rate limits | **Done** | `AI_MARKETING_LISTING_DAILY_GENERATION_LIMIT = 15` |
+| Automated tests (safety / PII / billing / provider chain) | **Done** | `apps/api/test/ai-marketing-safety.test.ts` |
+| Dual LLM provider / fallback | **Done** | OpenAI → Anthropic; logs actual `provider`/`model` |
+| Seller tone / length controls (optional) | Not started | Irish English fixed in prompts |
+| Broader metering / apply-to-listing integration tests | Not started | Pure unit coverage shipped; Nest/DB e2e later |
 
-**Engineering**
+#### B. Alternate hub entry points
 
-| Area | Status |
-|------|--------|
-| `POST /seller/marketing-hub/image` | Done |
-| `POST /seller/marketing-hub/image/apply` | Done |
-| `POST /seller/marketing-hub/price-suggest` | Done |
-| `POST /seller/marketing-hub/best-posting-time` | Done |
-| `POST /seller/marketing-hub/campaign-pack` | Done (zip download) |
-| Admin publish toggle `aiMarketingEnabled` | Done (Monetization → Advertising) |
-| Migrations through `20260716200000_ai_marketing_publish_toggle` | Apply via migrate deploy |
-| Marketing exports under `system-assets/{userId}/marketing/` | Done |
+| Item | Status | Effort |
+|------|--------|--------|
+| Seller dashboard → dedicated AI Marketing Hub page | **Done** | `/account/marketing` · sidebar + dashboard quick link |
+| Post-create / post-draft success → “Share this listing” | **Done** | `ListingShareSuccessPanel` + hub `step="share"` |
+| Storefront settings → “Promote your shop” | **Done** | `StoreMarketingHub` |
 
-**Still deferred (later)**
+#### C. Phase 4 — monetization loop
 
-- Video generator / avatar video
-- Sales forecast
-- Zeely / Canva deep links
+| Item | Status | Effort |
+|------|--------|--------|
+| True “generate creative → boost” funnel (guided, tracked) | **Done** | Campaign panel steps + `source` metadata |
+| Seller Growth Pack SKU (credits + boost discount) | **Done** | `seller_growth_pack` · hub publish gate |
+| Dedicated AI credit top-up packs (optional vs general wallet) | **Done** | `ai_credit_2` / `_5` / `_10` · hub publish gate · `/account/marketing` Top up |
+| Admin analytics: hub usage → boost conversion | **Done** | Advertising tab + API |
+| Generate shop banner → feature storefront | **Done** | `store_banner` generate/apply + `featured_store` homepage SKU + Featured shops strip |
 
-**Phase 2 P1 (done)**
+#### D. Deferred advanced creatives
 
-- One-click **Apply to listing** for enhance / bg-remove
-- Banner templates: classic · for sale near you · collection only · priced to sell
-- Optional **SellNearby watermark** on share banners
+| Item | Status | Effort |
+|------|--------|--------|
+| Short template video (images + captions) | Deferred | XL — use TikTok script text for now |
+| Avatar / talking-head video | Deferred | XL |
+| Sales forecast | Deferred | L |
+| Zeely / Canva optional deep links | Deferred (by decision) | S |
 
-**Phase 3 wrap (done)**
+#### E. Known product gaps (live but thin)
 
-- Stats-first **price suggestions** on Pricing / Price & delivery steps
-- Optional **store logo** on share banners (uses listing store `logoUrl` when present)
-- **Admin / super-admin publish toggle** for the hub (`aiMarketingEnabled`)
-- **Best posting time** (Europe/Dublin heuristics + chat/favourite signals when sample ≥ 25)
-- **Campaign pack export** (zip of latest captions + banners)
-- **Boost handoff** (“Boost this listing” from Photos step → existing boost checkout)
+| Gap | Detail |
+|-----|--------|
+| Photos hub needs saved listing | Image tools + campaign pack unavailable on unsaved drafts |
+| Campaign pack empty if nothing generated | Zip only assembles prior generations |
+| Logo / watermark | Banner options only — not standalone photo tools |
+| Hub off by default | Admin must publish + env must allow |
+
+### 14.3 What’s next (recommended order)
+
+**0. Pilot (ops — do this before more build)**  
+Publish AI Marketing Hub in Monetization → Advertising. Smoke one listing: generate → share → Top up credits / Growth Pack / boost. Confirm credits, unpublished gate, and analytics numbers move.
+
+**1. ~~Dedicated seller Marketing Hub page~~** (`/account/marketing`) ✅ (2026-07-17)
+
+**2. ~~Generate shop banner → feature storefront~~** ✅ generate/apply + `featured_store` homepage SKU (2026-07-17)
+
+**3. ~~Dedicated AI credit micro-packs~~** ✅ `ai_credit_2` / `_5` / `_10` (2026-07-17)
+
+**4. Keep deferred until demand is proven**  
+Template video · avatar video · sales forecast · Gemini · tone/length UI · Zeely/Canva links.
 
 ---
 
@@ -555,3 +626,16 @@ AI Hub should increase:
 | 2026-07-16 | Phase 3 wrap: campaign pack zip + boost handoff |
 | 2026-07-17 | Seller-facing pricing consistency: live §9.1, unit/€ on buttons, docs vs README aligned |
 | 2026-07-17 | Hub UX: form-first, Assist vs Share, social locked until title, collapsed by default |
+| 2026-07-17 | Full status refresh: phase tables marked Done/Partial/Deferred; §14 backlog of what remains |
+| 2026-07-17 | Hardening: expanded policy blocklist, PII scrub, listing daily cap (15), Vitest safety/billing tests |
+| 2026-07-17 | Post-create share: `ListingShareSuccessPanel` + Marketing Hub `step="share"` after Save draft |
+| 2026-07-17 | Phase 4: guided creatives→share→boost funnel, boost `source` attribution, Seller Growth Pack SKU |
+| 2026-07-17 | Growth Pack catalog/intent/confirm gated by `AiMarketingAccessService.assertEffective` |
+| 2026-07-17 | Admin Marketing Hub → boost analytics (Advertising tab + `marketing-hub-analytics` API) |
+| 2026-07-17 | Dual LLM: OpenAI primary + Anthropic Claude fallback (`ANTHROPIC_API_KEY`) |
+| 2026-07-17 | Storefront Promote your shop (`StoreMarketingHub`); posting time allows shop-level heuristic |
+| 2026-07-17 | §14.0 summary + §14.3 next-order refresh (core complete → pilot first) |
+| 2026-07-17 | Dedicated seller Marketing Hub page `/account/marketing` + sidebar/quick link |
+| 2026-07-17 | Shop banner: `store_banner` generate + apply to storefront; feature CTA via listings |
+| 2026-07-17 | AI credit micro-packs (`ai_credit_2` / `_5` / `_10`) + Marketing Hub Top up; hub marked pilot-ready |
+| 2026-07-17 | Featured storefront SKU (`featured_store`) · homepage strip · banner CTA |

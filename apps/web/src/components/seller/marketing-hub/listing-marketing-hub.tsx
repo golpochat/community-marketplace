@@ -13,7 +13,7 @@ import {
   MarketingHubWidget,
 } from "@/components/seller/marketing-hub/marketing-hub-shell";
 
-export type MarketingHubStep = "details" | "pricing" | "photos";
+export type MarketingHubStep = "details" | "pricing" | "photos" | "share";
 
 interface ListingMarketingHubProps {
   step: MarketingHubStep;
@@ -56,6 +56,11 @@ const STEP_COPY: Record<
     title: "Improve photos & share",
     description:
       "Upload photos first · enhance/bg-remove may apply to listing · banners are marketing-only",
+  },
+  share: {
+    title: "Share this listing",
+    description:
+      "Copy social posts · free posting times · photo tools and campaign pack · boost when live",
   },
 };
 
@@ -202,6 +207,81 @@ export function ListingMarketingHub({
             badge="Free pack"
             collapsible
             defaultOpen={false}
+          >
+            <ListingAiCampaignPanel
+              embedded
+              listingId={listingId}
+              listingStatus={listingStatus}
+              onBoostListing={onBoostListing}
+            />
+          </MarketingHubWidget>
+        </>
+      )}
+
+      {step === "share" && listingId && (
+        <>
+          <MarketingHubWidget
+            title="Share off SellNearby"
+            description={
+              titleReady
+                ? "Copy captions for Instagram, TikTok, WhatsApp, and more"
+                : `Add a title (at least ${LISTING_TITLE_MIN_LENGTH} characters) first so posts match your item`
+            }
+            badge="Copy only"
+            collapsible
+            defaultOpen
+          >
+            <ListingAiPanel
+              embedded
+              taskGroup="social"
+              requireTitleMinLength={LISTING_TITLE_MIN_LENGTH}
+              listingId={listingId}
+              title={title}
+              description={description}
+              categoryName={categoryName}
+              condition={condition}
+              location={location}
+              price={price}
+              hiddenTasks={hiddenTasks}
+              onAcceptTitle={onAcceptTitle ?? (() => undefined)}
+              onAcceptDescription={onAcceptDescription ?? (() => undefined)}
+            />
+          </MarketingHubWidget>
+          <MarketingHubWidget
+            title="Best posting time"
+            description="Free · Europe/Dublin"
+            badge="Free"
+            collapsible
+            defaultOpen={false}
+          >
+            <ListingAiPostingTimePanel
+              embedded
+              compact
+              listingId={listingId}
+              categoryId={categoryId}
+            />
+          </MarketingHubWidget>
+          {images.length > 0 && (
+            <MarketingHubWidget
+              title="Photo tools"
+              description="Enhance 3 · bg-remove 5 · banner 4 units"
+              collapsible
+              defaultOpen={false}
+            >
+              <ListingAiImagePanel
+                embedded
+                listingId={listingId}
+                images={images}
+                onListingImagesChange={onListingImagesChange}
+              />
+            </MarketingHubWidget>
+          )}
+          <MarketingHubWidget
+            title="Campaign & boost"
+            description="Campaign pack free · boost when the listing is live"
+            badge="Free pack"
+            collapsible
+            defaultOpen
           >
             <ListingAiCampaignPanel
               embedded

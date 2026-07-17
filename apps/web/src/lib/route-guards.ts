@@ -45,6 +45,7 @@ export const LEGACY_DASHBOARD_REDIRECTS: Record<string, string> = {
   '/seller/earnings': '/account/earnings',
   '/seller/verification': '/account/verification',
   '/seller/storefront': '/account/storefront',
+  '/seller/marketing': '/account/marketing',
   '/seller/chat': '/account/messages',
   '/seller/settings': '/account/settings',
   '/seller/profile': '/account/settings',

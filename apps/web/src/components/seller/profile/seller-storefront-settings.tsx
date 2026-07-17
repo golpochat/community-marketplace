@@ -15,6 +15,7 @@ import { Button, Input, Label, useAppFeedback } from '@community-marketplace/ui'
 import { Card } from '@community-marketplace/ui-dashboard';
 
 import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
+import { StoreMarketingHub } from '@/components/seller/marketing-hub/store-marketing-hub';
 import { formatStoreLimits } from '@/hooks/use-seller-store-data';
 import { getPublicStorefrontPath } from '@/lib/storefront-path';
 import { sellerService } from '@/services/marketplace.service';
@@ -423,6 +424,24 @@ export function SellerStorefrontSettings({
                 >
                   {saving ? 'Saving…' : 'Save storefront'}
                 </Button>
+
+                <StoreMarketingHub
+                  store={activeStore}
+                  name={name}
+                  description={description}
+                  location={location}
+                  onAcceptName={setName}
+                  onAcceptDescription={setDescription}
+                  onBannerApplied={(bannerUrl) => {
+                    setStores((current) =>
+                      current.map((store) =>
+                        store.id === activeStore.id ? { ...store, bannerUrl } : store,
+                      ),
+                    );
+                    feedback.success('Shop banner applied to storefront');
+                    onSaved?.();
+                  }}
+                />
               </div>
             )
           )}

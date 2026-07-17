@@ -67,7 +67,7 @@ export function ListingAiPostingTimePanel({
     return null;
   }
 
-  const canSuggest = Boolean(listingId || categoryId);
+  const canSuggest = true;
   const disabled = busy || quota?.enabled === false || Boolean(hub?.disabled);
 
   async function run() {

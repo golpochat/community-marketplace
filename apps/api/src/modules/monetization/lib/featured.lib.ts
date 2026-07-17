@@ -29,10 +29,37 @@ export function isListingFeatured(
   );
 }
 
+export function isStoreFeatured(
+  store: {
+    isFeatured: boolean;
+    featuredUntil: Date | null | undefined;
+  },
+  now = new Date(),
+): boolean {
+  return (
+    store.isFeatured &&
+    store.featuredUntil != null &&
+    store.featuredUntil > now
+  );
+}
+
 export function featuredSkuKey(
   placement: FeaturedPlacement,
 ): 'featured_homepage' | 'featured_category' {
   return placement === 'homepage' ? 'featured_homepage' : 'featured_category';
+}
+
+export function storeHomepageSlotsPerDay(config: {
+  store_homepage_slots_per_day?: number;
+}): number {
+  return config.store_homepage_slots_per_day ?? 6;
+}
+
+export function buildActiveFeaturedStoreWhere(now: Date) {
+  return {
+    isFeatured: true,
+    featuredUntil: { gt: now },
+  };
 }
 
 export function slotsPerDayForPlacement(

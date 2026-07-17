@@ -93,6 +93,7 @@ export function Header() {
     isSellRoute(pathname) ||
     pathname.startsWith("/account/selling") ||
     pathname.startsWith("/account/storefront") ||
+    pathname.startsWith("/account/marketing") ||
     pathname.startsWith("/account/listings");
   const onLoginPage = isAuthLoginRoute(pathname);
   const onRegisterPage = isAuthRegisterRoute(pathname);

@@ -285,6 +285,7 @@ export const SELLER_SIDEBAR: SidebarNavItem[] = [
   { id: 'share-analytics', label: 'Share Analytics', href: '/account/earnings', icon: 'bar-chart' },
   { id: 'chat', label: 'Chat', href: '/account/messages', icon: 'message-circle' },
   { id: 'storefront', label: 'Storefront', href: '/account/storefront', icon: 'eye' },
+  { id: 'marketing', label: 'Marketing Hub', href: '/account/marketing', icon: 'flag' },
   { id: 'verification', label: 'Verification', href: '/account/verification', icon: 'medal' },
   { id: 'notifications', label: 'Notifications', href: '/account/notifications', icon: 'bell' },
 ];

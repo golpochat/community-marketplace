@@ -5,6 +5,7 @@ export const SELLER_ROUTES = {
   dashboard: WEB_APP_ROUTES.account,
   listings: WEB_APP_ROUTES.accountListings,
   storefront: WEB_APP_ROUTES.accountStorefront,
+  marketing: WEB_APP_ROUTES.accountMarketing,
   verification: '/account/verification',
   profile: WEB_APP_ROUTES.accountSettings,
   settings: WEB_APP_ROUTES.accountSettings,

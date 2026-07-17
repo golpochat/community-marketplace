@@ -4,6 +4,9 @@ import type { AdsSystemModuleCode, AdsSystemStatus, MonetizationSettings } from 
 import { cn } from '@community-marketplace/ui';
 import { DashboardCard } from '@community-marketplace/ui-dashboard';
 
+import { AdminMarketingHubAnalytics } from '@/components/dashboard/admin-marketing-hub-analytics';
+import type { AdminServiceRole } from '@/services/admin.service';
+
 type ModuleSettingsField = 'displayAdsEnabled' | 'boostsEnabled' | 'featuredEnabled';
 
 interface ModuleMeta {
@@ -104,6 +107,7 @@ function ModulePublishSwitch({
 }
 
 interface AdminMonetizationAdvertisingProps {
+  role: AdminServiceRole;
   settings: MonetizationSettings;
   adsSystem: AdsSystemStatus | null;
   saving: boolean;
@@ -113,6 +117,7 @@ interface AdminMonetizationAdvertisingProps {
 }
 
 export function AdminMonetizationAdvertising({
+  role,
   settings,
   adsSystem,
   saving,
@@ -301,6 +306,8 @@ export function AdminMonetizationAdvertising({
           </button>
         </form>
       </DashboardCard>
+
+      <AdminMarketingHubAnalytics role={role} />
 
       <DashboardCard title="Future — external brand ads">
         <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">

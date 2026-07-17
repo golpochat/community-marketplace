@@ -22,7 +22,7 @@ import { AiSafetyFilterService } from './services/ai-safety-filter.service';
     DatabaseModule,
     DevUploadModule,
     UsersModule,
-    MonetizationModule,
+    forwardRef(() => MonetizationModule),
     forwardRef(() => ListingsModule),
   ],
   controllers: [SellerAiMarketingController],
@@ -39,6 +39,7 @@ import { AiSafetyFilterService } from './services/ai-safety-filter.service';
     AiSafetyFilterService,
   ],
   exports: [
+    AiMarketingAccessService,
     AiGenerationService,
     AiImageService,
     AiPriceSuggestionService,

@@ -22,6 +22,8 @@ export interface SellerStore {
   openingHours?: import('./storefront').StoreOpeningHours;
   policies?: import('./storefront').StorePolicy;
   isPrimary: boolean;
+  isFeatured?: boolean;
+  featuredUntil?: string;
   createdAt: string;
   updatedAt: string;
 }
