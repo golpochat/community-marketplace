@@ -20,6 +20,7 @@ import { ListingSearchService } from './services/listing-search.service';
 import { ListingsCrudService } from './services/listings-crud.service';
 import { ListingDeliveryService } from './services/listing-delivery.service';
 import { ListingPricingService } from './services/listing-pricing.service';
+import { ListingTitleService } from './services/listing-title.service';
 import { DeliveryOptionsService } from './services/delivery-options.service';
 import { SellerTrustService } from './services/seller-trust.service';
 import { GeocodingService } from './services/geocoding.service';
@@ -42,6 +43,7 @@ export class ListingsService {
     private readonly analytics: ListingAnalyticsService,
     private readonly delivery: ListingDeliveryService,
     private readonly pricing: ListingPricingService,
+    private readonly titleService: ListingTitleService,
     private readonly deliveryOptions: DeliveryOptionsService,
     private readonly sellerTrust: SellerTrustService,
     private readonly geocoding: GeocodingService,
@@ -336,5 +338,25 @@ export class ListingsService {
 
   rejectPriceChange(changeLogId: string, adminId: string, reviewNotes?: string) {
     return this.pricing.rejectChange(changeLogId, adminId, reviewNotes);
+  }
+
+  getSellerTitleState(listingId: string, sellerId: string, role: RbacRole) {
+    return this.titleService.getSellerTitleState(listingId, sellerId, role);
+  }
+
+  updateTitle(listingId: string, sellerId: string, role: RbacRole, input: unknown) {
+    return this.titleService.updateTitle(listingId, sellerId, role, input);
+  }
+
+  listPendingTitleReviews(page?: number, limit?: number) {
+    return this.titleService.listPendingReviews(page, limit);
+  }
+
+  approveTitleChange(changeLogId: string, adminId: string, reviewNotes?: string) {
+    return this.titleService.approveChange(changeLogId, adminId, reviewNotes);
+  }
+
+  rejectTitleChange(changeLogId: string, adminId: string, reviewNotes?: string) {
+    return this.titleService.rejectChange(changeLogId, adminId, reviewNotes);
   }
 }

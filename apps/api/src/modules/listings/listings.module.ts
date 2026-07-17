@@ -15,6 +15,7 @@ import { CategoriesService } from './services/categories.service';
 import { DeliveryOptionsService } from './services/delivery-options.service';
 import { ListingDeliveryService } from './services/listing-delivery.service';
 import { ListingPricingService } from './services/listing-pricing.service';
+import { ListingTitleService } from './services/listing-title.service';
 import { ListingAnalyticsService } from './services/listing-analytics.service';
 import { ListingAuditService } from './services/listing-audit.service';
 import { ListingFavoritesService } from './services/listing-favorites.service';
@@ -81,6 +82,7 @@ import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
     DeliveryOptionsService,
     ListingDeliveryService,
     ListingPricingService,
+    ListingTitleService,
     ListingAutoModerationService,
     ListingAutoModerationListener,
     ListingOgCacheListener,
@@ -94,6 +96,7 @@ import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
     DeliveryOptionsService,
     ListingDeliveryService,
     ListingPricingService,
+    ListingTitleService,
     SellerTrustService,
   ],
 })

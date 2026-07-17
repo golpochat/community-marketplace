@@ -15,7 +15,9 @@ import {
   computeListingPricing,
   formatCurrency,
   MAX_AUTO_APPROVE_DISCOUNT_PERCENT,
+  TITLE_AMEND_MIN_SIMILARITY,
   buildVehicleDisplayTitle,
+  listingTitleSimilarity,
 } from "@community-marketplace/utils";
 
 import { DeliveryPreviewModal } from "@/components/seller/DeliveryPreviewModal";
@@ -152,8 +154,12 @@ interface VehicleListingFormProps {
   listingStatus?: string;
   deliveryReviewStatus?: "none" | "pending-review" | "rejected";
   priceReviewStatus?: "none" | "pending-review" | "rejected";
+  titleReviewStatus?: "none" | "pending-review" | "rejected";
+  titleAmendRequired?: boolean;
+  liveTitle?: string;
   deliveryReviewNotes?: string;
   priceReviewNotes?: string;
+  titleReviewNotes?: string;
   submitLabel?: string;
   disabled?: boolean;
   onSubmit?: (data: VehicleFormData) => void;
@@ -181,8 +187,12 @@ export function VehicleListingForm({
   listingStatus,
   deliveryReviewStatus,
   priceReviewStatus,
+  titleReviewStatus = "none",
+  titleAmendRequired = false,
+  liveTitle,
   deliveryReviewNotes,
   priceReviewNotes,
+  titleReviewNotes,
   submitLabel = "Save draft",
   disabled = false,
   onSubmit,
@@ -610,11 +620,53 @@ export function VehicleListingForm({
             emptyLabel="Select colour"
             customPlaceholder="Enter colour"
           />
-          {previewTitle && (
+          {titleAmendRequired && liveTitle ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.25)] p-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
+                  Live title (buyers see)
+                </p>
+                <p className="mt-1 text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
+                  {liveTitle}
+                </p>
+              </div>
+              <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] p-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
+                  Proposed from vehicle details
+                </p>
+                <p className="mt-1 text-sm text-[hsl(var(--dashboard-main-fg))]">
+                  {previewTitle || "—"}
+                </p>
+              </div>
+            </div>
+          ) : null}
+          {previewTitle && !titleAmendRequired && (
             <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
               Buyers will see: <span className="font-medium text-[hsl(var(--dashboard-main-fg))]">{previewTitle}</span>
             </p>
           )}
+          {titleAmendRequired && liveTitle && previewTitle ? (
+            <p
+              className={cn(
+                "text-xs",
+                listingTitleSimilarity(liveTitle, previewTitle) >=
+                  TITLE_AMEND_MIN_SIMILARITY
+                  ? "text-emerald-700"
+                  : "text-amber-700",
+              )}
+            >
+              Similarity to live title:{" "}
+              {Math.round(listingTitleSimilarity(liveTitle, previewTitle) * 100)}
+              % · need at least {Math.round(TITLE_AMEND_MIN_SIMILARITY * 100)}%
+              to submit as an amendment
+              {titleReviewStatus === "pending-review"
+                ? " · amendment already pending review"
+                : ""}
+              {titleReviewStatus === "rejected" && titleReviewNotes
+                ? ` · last rejection: ${titleReviewNotes}`
+                : ""}
+            </p>
+          ) : null}
         </div>
       )}
 

@@ -40,8 +40,12 @@ interface ListingFormRouterProps {
   listingStatus?: string;
   deliveryReviewStatus?: 'none' | 'pending-review' | 'rejected';
   priceReviewStatus?: 'none' | 'pending-review' | 'rejected';
+  titleReviewStatus?: 'none' | 'pending-review' | 'rejected';
+  titleAmendRequired?: boolean;
+  liveTitle?: string;
   deliveryReviewNotes?: string;
   priceReviewNotes?: string;
+  titleReviewNotes?: string;
   submitLabel?: string;
   disabled?: boolean;
   onGenericSubmit?: (data: ListingFormData) => void;
@@ -67,8 +71,12 @@ export function ListingFormRouter({
   listingStatus,
   deliveryReviewStatus,
   priceReviewStatus,
+  titleReviewStatus,
+  titleAmendRequired,
+  liveTitle,
   deliveryReviewNotes,
   priceReviewNotes,
+  titleReviewNotes,
   submitLabel,
   disabled,
   onGenericSubmit,
@@ -185,8 +193,12 @@ export function ListingFormRouter({
           listingStatus={listingStatus}
           deliveryReviewStatus={deliveryReviewStatus}
           priceReviewStatus={priceReviewStatus}
+          titleReviewStatus={titleReviewStatus}
+          titleAmendRequired={titleAmendRequired}
+          liveTitle={liveTitle}
           deliveryReviewNotes={deliveryReviewNotes}
           priceReviewNotes={priceReviewNotes}
+          titleReviewNotes={titleReviewNotes}
           submitLabel={submitLabel}
           disabled={formDisabled}
           onSubmit={(data) => onVehicleSubmit?.(withStoreId(data))}
@@ -209,8 +221,12 @@ export function ListingFormRouter({
           listingStatus={listingStatus}
           deliveryReviewStatus={deliveryReviewStatus}
           priceReviewStatus={priceReviewStatus}
+          titleReviewStatus={titleReviewStatus}
+          titleAmendRequired={titleAmendRequired}
+          liveTitle={liveTitle}
           deliveryReviewNotes={deliveryReviewNotes}
           priceReviewNotes={priceReviewNotes}
+          titleReviewNotes={titleReviewNotes}
           submitLabel={submitLabel}
           disabled={formDisabled}
           onSubmit={(data) => onGenericSubmit?.(withStoreId(data))}

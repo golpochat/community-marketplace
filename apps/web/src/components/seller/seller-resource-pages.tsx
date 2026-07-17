@@ -91,6 +91,7 @@ import {
   formPricingFromFields,
   pricingService,
 } from "@/services/pricing.service";
+import { titleAmendService } from "@/services/title-amend.service";
 import { sellerService } from "@/services/marketplace.service";
 import { sellerVerificationService } from "@/services/seller-verification.service";
 import { ApiClientError } from "@/lib/api-client";
@@ -143,6 +144,7 @@ function buildListingUpdatePayload(
   deliverySelections: ListingDeliverySelection[],
   includeDelivery: boolean,
   includePricing: boolean,
+  includeTitle = true,
 ) {
   const payload = buildListingCreatePayload(
     data,
@@ -158,6 +160,9 @@ function buildListingUpdatePayload(
     delete result.price;
     delete result.salePrice;
     delete result.originalPrice;
+  }
+  if (!includeTitle) {
+    delete result.title;
   }
   return result;
 }
@@ -242,7 +247,15 @@ export function SellerListingsPage() {
     try {
       switch (action) {
         case "submit":
-          await sellerService.submitForReview(listingId);
+          {
+            const target = listings.find((item) => item.id === listingId);
+            if (!target?.images?.length) {
+              throw new Error(
+                "Add at least one photo before submitting this listing for review.",
+              );
+            }
+            await sellerService.submitForReview(listingId);
+          }
           break;
         case "cancel-review":
           await sellerService.cancelReview(listingId);
@@ -325,6 +338,7 @@ export function SellerListingsPage() {
       emptyTitle="No listings yet"
       emptyDescription="Create your first listing to start selling."
     >
+      <SellerConnectBanner className="mb-4" />
       <Card>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
@@ -1154,10 +1168,18 @@ export function SellerEditListingPage({
   const [priceReviewStatus, setPriceReviewStatus] = useState<
     "none" | "pending-review" | "rejected"
   >("none");
+  const [titleReviewStatus, setTitleReviewStatus] = useState<
+    "none" | "pending-review" | "rejected"
+  >("none");
+  const [titleAmendRequired, setTitleAmendRequired] = useState(false);
+  const [liveTitle, setLiveTitle] = useState<string | undefined>();
   const [deliveryReviewNotes, setDeliveryReviewNotes] = useState<
     string | undefined
   >();
   const [priceReviewNotes, setPriceReviewNotes] = useState<
+    string | undefined
+  >();
+  const [titleReviewNotes, setTitleReviewNotes] = useState<
     string | undefined
   >();
   const [existingImages, setExistingImages] = useState<Listing["images"]>([]);
@@ -1192,6 +1214,7 @@ export function SellerEditListingPage({
         setDeliverySelections(listing.deliveryOptions ?? []);
 
         setInitialCategoryId(listing.categoryId);
+        let editorTitle = listing.title;
         let pricingFields = formPricingFromFields({
           price: listing.price,
           salePrice: listing.salePrice,
@@ -1199,9 +1222,10 @@ export function SellerEditListingPage({
         });
 
         try {
-          const [deliveryState, pricingState] = await Promise.all([
+          const [deliveryState, pricingState, titleState] = await Promise.all([
             deliveryService.getSellerState(listingId),
             pricingService.getSellerState(listingId),
+            titleAmendService.getSellerState(listingId),
           ]);
           const formDelivery = deliveryState.pendingDeliveryOptions?.length
             ? deliveryState.pendingDeliveryOptions
@@ -1214,9 +1238,18 @@ export function SellerEditListingPage({
           );
           setPriceReviewStatus(pricingState.priceReviewStatus ?? "none");
           setPriceReviewNotes(pricingState.reviewNotes);
+          setTitleAmendRequired(titleState.titleAmendRequired);
+          setLiveTitle(titleState.liveTitle);
+          setTitleReviewStatus(titleState.titleReviewStatus ?? "none");
+          setTitleReviewNotes(titleState.reviewNotes);
+          editorTitle = titleState.pendingTitle ?? titleState.liveTitle;
         } catch {
           setDeliveryReviewStatus("none");
           setPriceReviewStatus("none");
+          setTitleReviewStatus("none");
+          setTitleAmendRequired(Boolean(listing.activatedAt));
+          setLiveTitle(listing.title);
+          editorTitle = listing.title;
         }
 
         const isVehicleListing =
@@ -1229,7 +1262,7 @@ export function SellerEditListingPage({
           setInitialData(null);
         } else {
           setInitialData({
-            title: listing.title,
+            title: editorTitle,
             description: listing.description,
             salePrice: pricingFields.salePrice,
             originalPrice: pricingFields.originalPrice,
@@ -1309,14 +1342,31 @@ export function SellerEditListingPage({
         listingStatus !== "active" && listingStatus !== "paused";
       const includePricing =
         listingStatus !== "active" && listingStatus !== "paused";
+      const includeTitle = !titleAmendRequired;
       const payload = buildListingUpdatePayload(
         data,
         categories,
         selections,
         includeDelivery,
         includePricing,
+        includeTitle,
       );
       await sellerService.updateListing(listingId, payload);
+      if (
+        titleAmendRequired &&
+        liveTitle &&
+        data.title.trim() &&
+        data.title.trim() !== liveTitle.trim()
+      ) {
+        const titleResult = await titleAmendService.updateTitle(
+          listingId,
+          data.title,
+        );
+        if (titleResult.status === "pending-review") {
+          setTitleReviewStatus("pending-review");
+          setLiveTitle(titleResult.liveTitle);
+        }
+      }
       if (data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
       }
@@ -1346,14 +1396,42 @@ export function SellerEditListingPage({
         listingStatus !== "active" && listingStatus !== "paused";
       const includePricing =
         listingStatus !== "active" && listingStatus !== "paused";
+      const includeTitle = !titleAmendRequired;
       const payload = buildVehicleListingUpdatePayload(
         data,
         categoryId,
         selections,
         includeDelivery,
         includePricing,
+        includeTitle,
       );
       await sellerService.updateListing(listingId, payload);
+      if (titleAmendRequired && liveTitle) {
+        const fullPayload = buildVehicleListingUpdatePayload(
+          data,
+          categoryId,
+          selections,
+          false,
+          false,
+          true,
+        );
+        const nextTitle =
+          typeof fullPayload.title === "string" ? fullPayload.title : undefined;
+        if (
+          typeof nextTitle === "string" &&
+          nextTitle.trim() &&
+          nextTitle.trim() !== liveTitle.trim()
+        ) {
+          const titleResult = await titleAmendService.updateTitle(
+            listingId,
+            nextTitle,
+          );
+          if (titleResult.status === "pending-review") {
+            setTitleReviewStatus("pending-review");
+            setLiveTitle(titleResult.liveTitle);
+          }
+        }
+      }
       if (data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
       }
@@ -1441,8 +1519,12 @@ export function SellerEditListingPage({
             listingStatus={listingStatus ?? undefined}
             deliveryReviewStatus={deliveryReviewStatus}
             priceReviewStatus={priceReviewStatus}
+            titleReviewStatus={titleReviewStatus}
+            titleAmendRequired={titleAmendRequired}
+            liveTitle={liveTitle}
             deliveryReviewNotes={deliveryReviewNotes}
             priceReviewNotes={priceReviewNotes}
+            titleReviewNotes={titleReviewNotes}
             submitLabel="Save changes"
             onGenericSubmit={(data) => void handleGenericSubmit(data)}
             onVehicleSubmit={(data) => void handleVehicleSubmit(data)}

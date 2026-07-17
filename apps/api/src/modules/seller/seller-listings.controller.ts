@@ -275,6 +275,22 @@ export class SellerListingsController {
     return this.listingsService.getSellerPricingState(id, user.id, user.role);
   }
 
+  @RequirePermissions(PERMISSIONS.EDIT_LISTING)
+  @Post(':id/title/update')
+  updateTitle(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.listingsService.updateTitle(id, user.id, user.role, body);
+  }
+
+  @RequirePermissions(PERMISSIONS.VIEW_LISTINGS)
+  @Get(':id/title')
+  getTitleState(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
+    return this.listingsService.getSellerTitleState(id, user.id, user.role);
+  }
+
   @RequirePermissions(PERMISSIONS.VIEW_LISTINGS)
   @Get(':id/delivery')
   getDeliveryState(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {

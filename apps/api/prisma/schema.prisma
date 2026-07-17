@@ -181,6 +181,12 @@ enum PriceChangeStatus {
   REJECTED
 }
 
+enum TitleChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum SharePlatform {
   WHATSAPP
   FACEBOOK
@@ -364,6 +370,9 @@ enum NotificationType {
   price_change_approved
   price_change_rejected
   price_review_pending
+  title_change_approved
+  title_change_rejected
+  title_review_pending
   verification_approved
   verification_rejected
   seller_verification_nudge
@@ -536,6 +545,8 @@ model User {
   deliveryChangeLogsReviewed DeliveryChangeLog[]    @relation("DeliveryChangeReviewer")
   priceChangeLogsAsSeller    PriceChangeLog[]       @relation("PriceChangeSeller")
   priceChangeLogsReviewed    PriceChangeLog[]       @relation("PriceChangeReviewer")
+  titleChangeLogsAsSeller    TitleChangeLog[]       @relation("TitleChangeSeller")
+  titleChangeLogsReviewed    TitleChangeLog[]       @relation("TitleChangeReviewer")
   listingSharesAsSeller      ListingShare[]         @relation("ListingShareSeller")
   sellerReviewsReceived      SellerReview[]         @relation("SellerReviewsReceived")
   sellerReviewsGiven         SellerReview[]         @relation("SellerReviewsGiven")
@@ -899,6 +910,7 @@ model Listing {
   platformPurchases PlatformPurchase[]
   deliveryChangeLogs DeliveryChangeLog[]
   priceChangeLogs    PriceChangeLog[]
+  titleChangeLogs    TitleChangeLog[]
   shortLinks         ShortLink[]
   shares             ListingShare[]
   statusChangeLogs   ListingStatusChangeLog[]
@@ -1144,6 +1156,29 @@ model PriceChangeLog {
   @@index([status, createdAt(sort: Desc)])
   @@index([listingId])
   @@map("price_change_logs")
+}
+
+model TitleChangeLog {
+  id               String            @id @default(uuid())
+  listingId        String            @map("listing_id")
+  sellerId         String            @map("seller_id")
+  oldTitle         String            @map("old_title")
+  newTitle         String            @map("new_title")
+  similarityScore  Float             @map("similarity_score")
+  requiresReview   Boolean           @map("requires_review")
+  status           TitleChangeStatus @default(PENDING)
+  reviewNotes      String?           @map("review_notes")
+  reviewedById     String?           @map("reviewed_by_id")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  reviewedAt       DateTime?         @map("reviewed_at")
+
+  listing    Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  seller     User    @relation("TitleChangeSeller", fields: [sellerId], references: [id])
+  reviewedBy User?   @relation("TitleChangeReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([listingId])
+  @@map("title_change_logs")
 }
 
 model ShortLink {
