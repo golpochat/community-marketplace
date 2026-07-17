@@ -174,6 +174,7 @@ export function buildVehicleListingUpdatePayload(
   deliverySelections: ListingDeliverySelection[],
   includeDelivery: boolean,
   includePricing: boolean,
+  includeTitle = true,
 ) {
   const payload = buildVehicleListingCreatePayload(
     data,
@@ -189,6 +190,9 @@ export function buildVehicleListingUpdatePayload(
     delete result.price;
     delete result.salePrice;
     delete result.originalPrice;
+  }
+  if (!includeTitle) {
+    delete result.title;
   }
   return result;
 }

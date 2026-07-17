@@ -31,3 +31,8 @@ Account shell: `AccountDashboardLayout` (`theme` = seller when setup/active).
 1. Storefront (name) before any listing create.
 2. Up to `sellerLimit` (default 5) admin-approved live listings while unverified.
 3. Then `verification_required` — create/submit blocked until verified.
+4. After a listing has been approved once, title changes are **amendments only** (≥60% similarity). Live title stays visible until admin approves (`Title Reviews` admin queue).
+5. Submit for review requires at least one photo.
+6. After identity verification, soft-prompt Stripe Connect (banner on Selling / Listings / Create). Card checkout hard-requires Connect readiness.
+7. Seller status `under_review` blocks new listing create/submit until verification completes.
+8. New accounts (&lt;30 days) also have a fraud rate limit of 5 draft creates per day.

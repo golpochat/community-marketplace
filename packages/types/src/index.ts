@@ -208,6 +208,13 @@ export type {
   PriceChangeLog,
 } from './pricing';
 export type {
+  TitleChangeStatus,
+  TitleUpdateStatus,
+  ListingTitleState,
+  TitleUpdateResult,
+  TitleChangeLog,
+} from './title-amend';
+export type {
   SharePlatform,
   ShortLinkResult,
   ListingShareRecord,

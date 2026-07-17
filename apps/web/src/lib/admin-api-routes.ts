@@ -27,7 +27,11 @@ const SUPER_ADMIN_ADMIN_NAMESPACE_PATHS = new Set([
 
 /** Review endpoints live under super-admin but allow ADMIN role on the API. */
 function usesSuperAdminReviewNamespace(path: string): boolean {
-  return path.startsWith('/delivery-reviews') || path.startsWith('/price-reviews');
+  return (
+    path.startsWith('/delivery-reviews') ||
+    path.startsWith('/price-reviews') ||
+    path.startsWith('/title-reviews')
+  );
 }
 
 function superAdminUsesAdminNamespace(path: string): boolean {

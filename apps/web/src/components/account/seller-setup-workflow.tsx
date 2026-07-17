@@ -22,6 +22,7 @@ import { SELLER_ROUTES } from '@/lib/seller-routes';
 import { reloadAuthenticatedSession } from '@/lib/web-session';
 import { useSellerOnboarding } from '@/providers/seller-onboarding-provider';
 import { sellerOnboardingService } from '@/services/seller-onboarding.service';
+import { SellerConnectBanner } from '@/components/seller/seller-connect-banner';
 
 type StepId = 'seller_type' | 'storefront' | 'first_listing' | 'verification' | 'payouts';
 type StepState = 'complete' | 'current' | 'upcoming';
@@ -148,6 +149,7 @@ function ActiveSellerOverview() {
 
   return (
     <div className="space-y-6">
+      <SellerConnectBanner />
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-xl border border-border bg-card p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

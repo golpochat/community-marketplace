@@ -8,6 +8,8 @@ import {
   LISTING_DESCRIPTION_HARD_MAX,
   LISTING_DESCRIPTION_SOFT_MAX,
   LISTING_TITLE_MAX_LENGTH,
+  TITLE_AMEND_MIN_SIMILARITY,
+  listingTitleSimilarity,
   listingTitleValidationMessage,
   normalizeListingTitle,
 } from "@community-marketplace/utils";
@@ -101,8 +103,12 @@ interface ListingFormProps {
   listingStatus?: string;
   deliveryReviewStatus?: "none" | "pending-review" | "rejected";
   priceReviewStatus?: "none" | "pending-review" | "rejected";
+  titleReviewStatus?: "none" | "pending-review" | "rejected";
+  titleAmendRequired?: boolean;
+  liveTitle?: string;
   deliveryReviewNotes?: string;
   priceReviewNotes?: string;
+  titleReviewNotes?: string;
   submitLabel?: string;
   disabled?: boolean;
   onSubmit?: (data: ListingFormData) => void;
@@ -125,8 +131,12 @@ export function ListingForm({
   listingStatus,
   deliveryReviewStatus,
   priceReviewStatus,
+  titleReviewStatus = "none",
+  titleAmendRequired = false,
+  liveTitle,
   deliveryReviewNotes,
   priceReviewNotes,
+  titleReviewNotes,
   submitLabel = "Save draft",
   disabled = false,
   onSubmit,
@@ -545,6 +555,22 @@ export function ListingForm({
         </p>
       )}
 
+      {titleReviewStatus === "pending-review" && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+          Your title amendment is pending admin review. Buyers still see the
+          live title below.
+        </p>
+      )}
+
+      {titleReviewStatus === "rejected" && (
+        <p className="mb-4 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-red-900">
+          Your last title amendment was rejected.
+          {titleReviewNotes
+            ? ` ${titleReviewNotes}`
+            : " Amend the live title and submit again."}
+        </p>
+      )}
+
       {deliveryReviewStatus === "pending-review" && (
         <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
           Your delivery changes are pending admin review. Buyers still see your
@@ -583,11 +609,34 @@ export function ListingForm({
             onAcceptDescription={(next) => update({ description: next })}
           />
           <div>
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">
+              {titleAmendRequired ? "Proposed title" : "Title"}
+            </Label>
+            {titleAmendRequired && liveTitle ? (
+              <div className="mb-3 mt-1 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.25)] p-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
+                    Live title (buyers see)
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
+                    {liveTitle}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] p-3">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
+                    Your amendment
+                  </p>
+                  <p className="mt-1 text-sm text-[hsl(var(--dashboard-main-fg))]">
+                    {data.title.trim() || "—"}
+                  </p>
+                </div>
+              </div>
+            ) : null}
             <Input
               id="title"
               value={data.title}
               maxLength={LISTING_TITLE_MAX_LENGTH}
+              disabled={titleReviewStatus === "pending-review"}
               onChange={(e) => update({ title: e.target.value })}
               onBlur={() => {
                 const normalized = normalizeListingTitle(data.title);
@@ -597,8 +646,26 @@ export function ListingForm({
             />
             <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
               {data.title.trim().length}/{LISTING_TITLE_MAX_LENGTH} characters ·
-              use a descriptive title
+              {titleAmendRequired
+                ? " amend the live title — a full rewrite will be rejected"
+                : " use a descriptive title"}
             </p>
+            {titleAmendRequired && liveTitle && data.title.trim() ? (
+              <p
+                className={cn(
+                  "mt-1 text-xs",
+                  listingTitleSimilarity(liveTitle, data.title) >=
+                    TITLE_AMEND_MIN_SIMILARITY
+                    ? "text-emerald-700"
+                    : "text-amber-700",
+                )}
+              >
+                Similarity to live title:{" "}
+                {Math.round(listingTitleSimilarity(liveTitle, data.title) * 100)}
+                % · need at least {Math.round(TITLE_AMEND_MIN_SIMILARITY * 100)}%
+                to submit as an amendment
+              </p>
+            ) : null}
           </div>
           <div>
             <Label htmlFor="description">Description</Label>

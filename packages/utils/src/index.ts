@@ -25,10 +25,14 @@ export {
   LISTING_TITLE_MAX_LENGTH,
   LISTING_DESCRIPTION_SOFT_MAX,
   LISTING_DESCRIPTION_HARD_MAX,
+  TITLE_AMEND_MIN_SIMILARITY,
   normalizeListingTitle,
   isBlockedListingTitle,
   isDescriptiveListingTitle,
   listingTitleValidationMessage,
+  tokenizeListingTitle,
+  listingTitleSimilarity,
+  isListingTitleAmendment,
 } from './listing-title';
 export { isNonEmptyString, slugify, truncate, capitalize, getInitials } from './string';
 export {

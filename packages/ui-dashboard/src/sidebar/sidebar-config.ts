@@ -197,6 +197,13 @@ export const ADMIN_SIDEBAR: SidebarNavItem[] = [
     permission: PERMISSIONS.MANAGE_LISTINGS,
   },
   {
+    id: 'title-reviews',
+    label: 'Title Reviews',
+    href: '/admin/title-reviews',
+    icon: 'pencil',
+    permission: PERMISSIONS.MANAGE_LISTINGS,
+  },
+  {
     id: 'moderation',
     label: 'Moderation',
     href: '/admin/moderation',

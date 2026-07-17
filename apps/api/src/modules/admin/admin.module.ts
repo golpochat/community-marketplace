@@ -20,6 +20,7 @@ import { AdminSearchController } from './admin-search.controller';
 import { AdminController } from './admin.controller';
 import { AdminDeliveryReviewsController } from './admin-delivery-reviews.controller';
 import { AdminPriceReviewsController } from './admin-price-reviews.controller';
+import { AdminTitleReviewsController } from './admin-title-reviews.controller';
 import {
   AdminSellerManagementController,
   AdminSellerVerificationController,
@@ -54,6 +55,7 @@ import { RbacScopePolicy } from './rbac/rbac-scope.policy';
     AdminRbacController,
     AdminDeliveryReviewsController,
     AdminPriceReviewsController,
+    AdminTitleReviewsController,
     AdminSellerVerificationController,
     AdminSellerManagementController,
   ],

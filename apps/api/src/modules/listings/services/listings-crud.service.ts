@@ -427,6 +427,16 @@ export class ListingsCrudService {
       );
     }
 
+    if (
+      parsed.title !== undefined &&
+      existing.activatedAt != null &&
+      (existing.status === "active" || existing.status === "paused")
+    ) {
+      throw new BadRequestException(
+        "Use POST /seller/listings/:id/title/update to amend the title on previously approved listings",
+      );
+    }
+
     let pricingData: {
       price?: number;
       originalPrice?: number | null;
@@ -466,12 +476,15 @@ export class ListingsCrudService {
     }
 
     const resolvedTitle =
-      parsed.title !== undefined || mergedAttributes
-        ? resolveVehicleListingTitle(
-            parsed.title ?? existing.title,
-            mergedAttributes ?? parseVehicleAttributes(existing.attributes),
-          )
-        : undefined;
+      existing.activatedAt != null &&
+      (existing.status === "active" || existing.status === "paused")
+        ? undefined
+        : parsed.title !== undefined || mergedAttributes
+          ? resolveVehicleListingTitle(
+              parsed.title ?? existing.title,
+              mergedAttributes ?? parseVehicleAttributes(existing.attributes),
+            )
+          : undefined;
 
     const row = await this.prisma.listing.update({
       where: { id: listingId },

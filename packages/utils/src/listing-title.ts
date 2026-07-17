@@ -87,3 +87,36 @@ export function listingTitleValidationMessage(value: string): string | null {
   }
   return null;
 }
+
+/** Minimum Jaccard token overlap to treat a title change as an amendment (not a rewrite). */
+export const TITLE_AMEND_MIN_SIMILARITY = 0.6;
+
+export function tokenizeListingTitle(title: string): string[] {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((token) => token.length >= 2);
+}
+
+/** Jaccard similarity of significant title tokens (0–1). */
+export function listingTitleSimilarity(a: string, b: string): number {
+  const left = new Set(tokenizeListingTitle(a));
+  const right = new Set(tokenizeListingTitle(b));
+  if (left.size === 0 && right.size === 0) return 1;
+  if (left.size === 0 || right.size === 0) return 0;
+
+  let intersection = 0;
+  for (const token of left) {
+    if (right.has(token)) intersection += 1;
+  }
+  const union = left.size + right.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+export function isListingTitleAmendment(liveTitle: string, proposedTitle: string): boolean {
+  const live = normalizeListingTitle(liveTitle);
+  const proposed = normalizeListingTitle(proposedTitle);
+  if (live === proposed) return true;
+  return listingTitleSimilarity(live, proposed) >= TITLE_AMEND_MIN_SIMILARITY;
+}

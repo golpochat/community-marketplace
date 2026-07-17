@@ -112,6 +112,33 @@ Applies to the **account**, not per storefront.
 
 Hard delete remains available to **admin** for policy violations.
 
+### Title amend after first approval (A1)
+
+Applies only when a listing has been admin-approved at least once (`activatedAt` set) and status is `active` or `paused`.
+
+| Change | Result |
+|--------|--------|
+| Typo / wording amendment (≥60% token similarity) | Live title stays visible; proposed title queued for admin review |
+| Completely different title (&lt;60% similarity) | Hard reject — create a new listing instead |
+| First-time draft / never activated | Free title edit via normal listing update |
+
+Buyers always see the live title until an admin approves the amendment.
+
+### Photos on submit
+
+- Drafts may be saved without photos.
+- Submit for review requires **at least one photo** (API + seller UI).
+
+### Extra fraud cap (not the unverified 5)
+
+- New seller accounts (&lt;30 days) may create at most **5 draft listings per calendar day**.
+- Independent of the 5 admin-approved live listing quota.
+
+### `under_review` seller status
+
+- While identity verification is `under_review`, new listing **create** and **submit/activate** are hard-blocked.
+- Sellers should finish verification before adding more inventory.
+
 ---
 
 ## 6. Multi-storefront monetization

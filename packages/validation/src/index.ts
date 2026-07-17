@@ -233,6 +233,13 @@ export {
 } from './pricing.schema';
 
 export {
+  titleChangeStatusSchema,
+  updateListingTitleSchema,
+  titleReviewDecisionSchema,
+  type UpdateListingTitleInput,
+} from './title-amend.schema';
+
+export {
   sharePlatformSchema,
   shortenListingLinkSchema,
   trackListingShareSchema,

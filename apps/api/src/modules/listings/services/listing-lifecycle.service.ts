@@ -59,6 +59,14 @@ export class ListingLifecycleService {
 
   async submitForReview(listingId: string, sellerId: string): Promise<Listing> {
     await this.sellerListingGate.assertCanSubmitForReview(sellerId);
+    const imageCount = await this.prisma.listingImage.count({
+      where: { listingId },
+    });
+    if (imageCount < 1) {
+      throw new BadRequestException(
+        'Add at least one photo before submitting this listing for review.',
+      );
+    }
     return this.transition({
       listingId,
       actorId: sellerId,
