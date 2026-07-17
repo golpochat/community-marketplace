@@ -11,7 +11,7 @@ import { getUserNavLinks } from '@/lib/user-nav-routes';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
 const TRUST_BADGES = [
-  { icon: Shield, label: 'No commission fees' },
+  { icon: Shield, label: 'Buyer protection' },
   { icon: BadgeCheck, label: 'Verified sellers' },
   { icon: MessageSquare, label: 'Secure messaging' },
   { icon: MapPin, label: 'Hyper-local discovery' },
@@ -23,7 +23,7 @@ export function HeroSection() {
   const sellHref =
     user && dashboardPath
       ? getUserNavLinks(user.role, dashboardPath).sellItem
-      : '/seller/listings/create';
+      : WEB_APP_ROUTES.accountSelling;
 
   return (
     <section className="relative overflow-hidden border-b border-border/50">

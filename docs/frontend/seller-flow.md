@@ -1,31 +1,33 @@
-# Seller Flow
+# Seller flow (unified account)
 
-## Routes
-
-| Route | Page |
-|-------|------|
-| `/seller/dashboard` | Stats cards + weekly chart placeholder |
-| `/seller/listings` | Manage listings |
-| `/seller/listings/create` | Multi-step `ListingForm` |
-| `/seller/sales` | Sales history |
-| `/seller/earnings` | Stripe Connect + payouts |
-| `/seller/chat` | Buyer messaging |
-| `/seller/verification` | Identity verification |
-| `/seller/notifications` | Seller notifications |
-| `/seller/settings` | Store & account settings |
+Canonical paths live under `/account`. Legacy `/seller/*` URLs redirect.
 
 ## Navigation
 
-`SELLER_SIDEBAR` in ui-dashboard. Mobile drawer via `SellerSidebar`.
+Sidebar items for selling are built by `buildAccountSidebarItems` in `apps/web/src/lib/account-sidebar.ts`, driven by `deriveAccountSellingPhase`:
 
-## Listing creation
+| Phase | Selling nav |
+|-------|-------------|
+| `buyer_only` | Start selling |
+| `setup_in_progress` | Continue setup |
+| `active_seller` | My listings, Create listing, Storefront, Earnings |
+| `suspended` | Seller account |
 
-`ListingForm` is a 4-step wizard: Details → Pricing → Location → Review.
+Account shell: `AccountDashboardLayout` (`theme` = seller when setup/active).
 
-## Storefront
+## Core routes
 
-Sellers get a public shop at `/store/[sellerSlug]` (see [storefront.md](./storefront.md)).
+| Path | Purpose |
+|------|---------|
+| `/account/selling` | Guided setup (type → storefront → listing → verify → payouts) |
+| `/account/storefront` | Create/edit storefront (required before listings) |
+| `/account/listings` | Manage listings |
+| `/account/listings/create` | Create listing |
+| `/account/verification` | Identity verification |
+| `/account/earnings` | Earnings & Stripe Connect |
 
-## Auth
+## Rules
 
-Requires `SELLER` role. Middleware enforces route access.
+1. Storefront (name) before any listing create.
+2. Up to `sellerLimit` (default 5) admin-approved live listings while unverified.
+3. Then `verification_required` — create/submit blocked until verified.

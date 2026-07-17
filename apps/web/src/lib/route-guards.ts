@@ -37,6 +37,8 @@ export const LEGACY_DASHBOARD_REDIRECTS: Record<string, string> = {
   '/buyer/settings': '/account/settings',
   '/buyer/profile': '/account/settings',
   '/buyer/notifications': '/account/notifications',
+  '/buyer/listings': '/listings',
+  '/buyer/search': '/listings',
   '/seller/listings': '/account/listings',
   '/seller/listings/create': '/account/listings/create',
   '/account/start-selling': '/account/selling',
@@ -51,18 +53,38 @@ export const LEGACY_DASHBOARD_REDIRECTS: Record<string, string> = {
   '/buyer/dashboard/chat': '/account/messages',
   '/buyer/disputes': '/account/disputes',
   '/seller/disputes': '/account/disputes',
-  '/buyer/wallet': '/account/purchases',
+  '/buyer/wallet': '/account/wallet',
   '/buyer/payments': '/account/purchases',
+  '/seller/sales': '/account/earnings',
+  '/seller/search': '/account/listings',
+  '/seller/analytics/shares': '/account/earnings',
   '/super-admin/audit-logs': '/super-admin/audit-log',
   '/admin/reports': '/admin/moderation',
   '/admin/preferences': '/admin/settings',
   '/super-admin/preferences': '/super-admin/settings',
   '/admin/account': '/admin/profile',
   '/super-admin/account': '/super-admin/profile',
-  '/buyer/account': '/buyer/profile',
-  '/buyer/preferences': '/buyer/settings',
-  '/seller/account': '/seller/profile',
+  '/buyer/account': '/account/settings',
+  '/buyer/preferences': '/account/settings',
+  '/seller/account': '/account/settings',
 };
+
+/** Nested legacy paths that must rewrite into /account (or public listings). */
+function resolveLegacyPrefixRedirect(pathname: string): string | null {
+  if (pathname.startsWith('/buyer/disputes/')) {
+    return `/account/disputes${pathname.slice('/buyer/disputes'.length)}`;
+  }
+  if (pathname.startsWith('/seller/disputes/')) {
+    return `/account/disputes${pathname.slice('/seller/disputes'.length)}`;
+  }
+  if (pathname.startsWith('/seller/listings/') && !pathname.startsWith('/seller/listings/create')) {
+    return `/account/listings${pathname.slice('/seller/listings'.length)}`;
+  }
+  if (pathname.startsWith('/buyer/purchases/')) {
+    return `/account/purchases${pathname.slice('/buyer/purchases'.length)}`;
+  }
+  return null;
+}
 
 export function isDashboardPath(pathname: string): boolean {
   if (pathname === '/admin/invite/accept' || pathname.startsWith('/admin/invite/')) {
@@ -87,6 +109,9 @@ export function resolveSuperAdminAdminNamespaceRedirect(
 export function resolveDashboardRedirect(pathname: string, role: RoleCodeValue | null): string | null {
   const legacyTarget = LEGACY_DASHBOARD_REDIRECTS[pathname];
   if (legacyTarget) return legacyTarget;
+
+  const prefixTarget = resolveLegacyPrefixRedirect(pathname);
+  if (prefixTarget) return prefixTarget;
 
   if (pathname === '/super-admin') return '/super-admin/dashboard';
   if (pathname === '/admin') return '/admin/dashboard';

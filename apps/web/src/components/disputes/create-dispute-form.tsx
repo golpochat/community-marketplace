@@ -12,7 +12,7 @@ import { disputesService } from '@/services/disputes.service';
 export function CreateDisputeForm({
   listingId,
   paymentId,
-  redirectTo = '/buyer/disputes',
+  redirectTo = '/account/disputes',
 }: {
   listingId: string;
   paymentId?: string;

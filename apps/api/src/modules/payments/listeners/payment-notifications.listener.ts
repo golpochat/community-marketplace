@@ -42,7 +42,7 @@ export class PaymentNotificationsListener implements OnModuleInit {
       type: 'payment_received',
       title: 'Payment received',
       body: 'A buyer completed payment for your listing.',
-      actionUrl: '/seller/earnings',
+      actionUrl: '/account/earnings',
     });
   }
 
@@ -61,7 +61,7 @@ export class PaymentNotificationsListener implements OnModuleInit {
       type: 'payment_sent',
       title: 'Payment failed',
       body: 'Your payment could not be processed. Please try again.',
-      actionUrl: '/buyer/payments',
+      actionUrl: '/account/purchases',
     });
   }
 
@@ -74,7 +74,7 @@ export class PaymentNotificationsListener implements OnModuleInit {
       type: 'system',
       title: 'Refund requested',
       body: 'A buyer requested a refund for a recent purchase.',
-      actionUrl: '/seller/earnings',
+      actionUrl: '/account/earnings',
     });
   }
 
@@ -87,7 +87,7 @@ export class PaymentNotificationsListener implements OnModuleInit {
       type: 'system',
       title: 'Payment disputed',
       body: 'A payment dispute was opened. Our team will review it.',
-      actionUrl: '/seller/earnings',
+      actionUrl: '/account/earnings',
     });
   }
 }

@@ -209,6 +209,7 @@ export function SellerSetupWorkflow() {
   const dashboardEnabled = started || phase === 'active_seller';
 
   const { status: verificationStatus, loading: verificationLoading } = useSellerListingGate();
+  const sellerLimit = verificationStatus?.sellerLimit ?? 5;
   const identityComplete = isSellerVerified(verificationStatus?.sellerStatus);
   const identityPending =
     !identityComplete &&
@@ -300,6 +301,7 @@ export function SellerSetupWorkflow() {
     identityComplete,
     identityPending,
     payoutsReady,
+    sellerLimit,
   ]);
 
   const currentStepId = steps.find((step) => step.state === 'current')?.id ?? 'first_listing';
@@ -380,8 +382,8 @@ export function SellerSetupWorkflow() {
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
                   Your storefront is ready. Create your first listing — you can save a draft and
-                  publish when you are happy with it. Unverified sellers can have up to 5 approved
-                  live listings.
+                  publish when you are happy with it. Unverified sellers can have up to{' '}
+                  {sellerLimit} approved live listings.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button asChild>

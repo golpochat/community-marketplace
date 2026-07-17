@@ -49,7 +49,7 @@ export function BuyerDisputeDetailPage({ disputeId }: { disputeId: string }) {
     return (
       <DashboardPageShell title="Dispute" description="Unable to load dispute.">
         <p className="text-sm text-destructive">{error ?? 'Dispute not found'}</p>
-        <Link href="/buyer/disputes" className="mt-4 inline-block text-sm text-blue-600 hover:underline">
+        <Link href="/account/disputes" className="mt-4 inline-block text-sm text-blue-600 hover:underline">
           Back to disputes
         </Link>
       </DashboardPageShell>
@@ -64,7 +64,7 @@ export function BuyerDisputeDetailPage({ disputeId }: { disputeId: string }) {
       description="Review status and upload evidence."
     >
       <div className="mb-4">
-        <Link href="/buyer/disputes" className="text-sm text-blue-600 hover:underline">
+        <Link href="/account/disputes" className="text-sm text-blue-600 hover:underline">
           All disputes
         </Link>
       </div>

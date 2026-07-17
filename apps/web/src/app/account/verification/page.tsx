@@ -5,7 +5,7 @@ import { SellerVerificationPage } from '@/components/seller/profile/seller-verif
 
 export default function AccountVerificationPage() {
   return (
-    <SellerCapabilityGate>
+    <SellerCapabilityGate require="started">
       <SellerVerificationPage />
     </SellerCapabilityGate>
   );

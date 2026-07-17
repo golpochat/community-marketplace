@@ -1,7 +1,12 @@
 import type { PaymentMethod } from './payment';
 import type { ListingPackageType } from './listing';
 
-export type WalletTransactionType = 'cashback_earned' | 'expired' | 'ai_generation';
+export type WalletTransactionType =
+  | 'cashback_earned'
+  | 'expired'
+  | 'ai_generation'
+  | 'credit_topup';
+
 
 export type CashbackGrantStatus = 'pending' | 'earned' | 'cancelled';
 

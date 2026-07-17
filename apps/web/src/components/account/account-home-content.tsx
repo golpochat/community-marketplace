@@ -91,7 +91,7 @@ export function AccountHomeContent() {
                 : phase === 'buyer_only'
                   ? 'Ready to list something? Start here — we will walk you through setup.'
                   : phase === 'setup_in_progress'
-                    ? 'Finish setup to publish listings and receive payouts.'
+                    ? 'Continue seller setup to publish listings and receive payouts.'
                     : 'Manage what you sell on SellNearby.'
             }
           />

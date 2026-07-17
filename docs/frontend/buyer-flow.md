@@ -1,29 +1,22 @@
-# Buyer Flow
+# Buyer flow (unified account)
 
-## Routes
-
-| Route | Page |
-|-------|------|
-| `/buyer/dashboard` | Overview cards + profile summary |
-| `/buyer/listings` | Browse catalog |
-| `/buyer/favorites` | Saved listings |
-| `/buyer/purchases` | Payment history (re-exports payments page) |
-| `/buyer/chat` | Messaging with sellers |
-| `/buyer/notifications` | In-app notifications |
-| `/buyer/settings` | Profile & preferences |
+Canonical paths live under `/account`. Legacy `/buyer/*` URLs redirect.
 
 ## Navigation
 
-Sidebar items are defined in `@community-marketplace/ui-dashboard` (`BUYER_SIDEBAR`). Mobile users get a collapsible drawer via `BuyerSidebar`.
+Base sidebar: `ACCOUNT_SIDEBAR` in `packages/ui-dashboard` — Account home, Browse, Purchases, Saved, Messages, Disputes, Notifications, Settings.
 
-## Key interactions
+## Core routes
 
-1. **Browse** — `/buyer/listings` or public `/listings`
-2. **Save** — `SaveButton` on listing detail (local state; API wiring pending)
-3. **Chat** — `BuyerChatLayout` with authenticated socket token
-4. **Pay** — `/buyer/purchases` → payments service
-5. **Notify** — `BuyerNotificationList` + header `NotificationBell`
+| Path | Purpose |
+|------|---------|
+| `/account` | Account home |
+| `/listings` | Browse marketplace |
+| `/account/purchases` | Orders & payments |
+| `/account/wallet` | SellNearby Credit |
+| `/account/saved` | Favourites |
+| `/account/messages` | Chat |
+| `/account/disputes` | Purchase disputes |
+| `/account/selling` | Opt in to sell |
 
-## Auth
-
-Requires `BUYER` role cookie set at login. Middleware redirects unauthorized users to `/unauthorized`.
+Buying does not require a storefront. Starting to sell uses the seller setup workflow.

@@ -366,7 +366,7 @@ export class ListingLifecycleService {
         where: {
           userId: listing.sellerId,
           type: 'listing_expiring_soon',
-          actionUrl: `/seller/listings/${listing.id}/edit`,
+          actionUrl: `/account/listings/${listing.id}/edit`,
           createdAt: { gte: new Date(now.getTime() - EXPIRY_WARNING_DAYS * 24 * 60 * 60 * 1000) },
         },
         select: { id: true },

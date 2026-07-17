@@ -51,7 +51,7 @@ export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
                     verified={store.verified}
                   />
                 </div>
-                {store.tagline ? (
+                {store.tagline?.trim() ? (
                   <p className="max-w-xl text-sm text-muted-foreground sm:text-base">{store.tagline}</p>
                 ) : null}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">

@@ -36,7 +36,7 @@ function resolveAdminNavLinks(dashboardPath: string): UserNavLinks {
     messages: '/admin/moderation',
     notifications: '/admin/notifications',
     settings: '/admin/settings',
-    sellItem: '/seller/listings/create',
+    sellItem: WEB_APP_ROUTES.accountListingsCreate,
   };
 }
 
@@ -48,7 +48,7 @@ export function getUserNavLinks(role: RoleCodeValue, dashboardPath: string): Use
       messages: '/super-admin/moderation',
       notifications: '/super-admin/notifications',
       settings: '/super-admin/settings',
-      sellItem: '/seller/listings/create',
+      sellItem: WEB_APP_ROUTES.accountSelling,
     };
   }
 
@@ -74,9 +74,9 @@ export function getUserNavLinks(role: RoleCodeValue, dashboardPath: string): Use
         dashboard: dashboardPath,
         myListings: WEB_APP_ROUTES.listings,
         messages: WEB_APP_ROUTES.chat,
-        notifications: WEB_APP_ROUTES.buyerNotifications,
+        notifications: WEB_APP_ROUTES.accountNotifications,
         settings: dashboardPath,
-        sellItem: '/seller/listings/create',
+        sellItem: WEB_APP_ROUTES.accountSelling,
       };
   }
 }

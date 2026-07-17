@@ -38,7 +38,6 @@ function sellingNavItems(phase: AccountSellingPhase): SidebarNavItem[] {
           href: WEB_APP_ROUTES.accountSelling,
           icon: 'hammer',
         },
-        STOREFRONT_NAV_ITEM,
       ];
     case 'suspended':
       return [
@@ -62,7 +61,7 @@ function sellingNavItems(phase: AccountSellingPhase): SidebarNavItem[] {
         {
           id: 'create-listing',
           label: 'Create listing',
-          href: '/account/listings/create',
+          href: WEB_APP_ROUTES.accountListingsCreate,
           icon: 'plus',
         },
         STOREFRONT_NAV_ITEM,

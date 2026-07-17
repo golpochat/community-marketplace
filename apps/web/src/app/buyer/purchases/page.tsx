@@ -448,7 +448,7 @@ function BuyerPurchasesContent() {
                         {downloadingReceiptId === payment.id ? 'Downloading…' : 'Receipt'}
                       </button>
                       <Link
-                        href={`/buyer/disputes/create?listingId=${payment.listingId}&paymentId=${payment.id}`}
+                        href={`/account/disputes/create?listingId=${payment.listingId}&paymentId=${payment.id}`}
                         className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-900 hover:bg-amber-100"
                       >
                         Open dispute

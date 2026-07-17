@@ -51,7 +51,12 @@ export class ListingReviewService {
     const listing = await this.assertCanAccess(listingId, senderId, role);
     const parsed = listingReviewMessageSchema.parse(input);
 
-    if (role === 'SELLER' && !['draft', 'pending_review', 'rejected'].includes(listing.status)) {
+    const isSellerActor = role === 'SELLER' || role === 'MEMBER' || role === 'BUYER';
+    if (
+      isSellerActor &&
+      listing.sellerId === senderId &&
+      !['draft', 'pending_review', 'rejected'].includes(listing.status)
+    ) {
       throw new BadRequestException('Review replies are only allowed during the review process');
     }
 
@@ -63,7 +68,7 @@ export class ListingReviewService {
       },
     });
 
-    if (role === 'SELLER') {
+    if (isSellerActor && listing.sellerId === senderId) {
       const adminId = await this.findLastAdminReviewerId(listingId, listing.sellerId);
       if (adminId) {
         this.eventBus.publish({

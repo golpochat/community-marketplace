@@ -31,7 +31,7 @@ export function BuyerDisputesPage() {
     formatListedAgo(dispute.createdAt),
     <Link
       key={`link-${dispute.id}`}
-      href={`/buyer/disputes/${dispute.id}`}
+      href={`/account/disputes/${dispute.id}`}
       className="text-sm font-medium text-blue-600 hover:underline"
     >
       View

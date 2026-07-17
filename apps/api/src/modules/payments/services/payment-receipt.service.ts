@@ -77,11 +77,11 @@ export class PaymentReceiptService {
 
     const buyerEmailContent = buildBuyerPaymentReceiptEmail(
       docData,
-      `/buyer/payments/${payment.id}/receipt`,
+      `/account/purchases`,
     );
     const sellerEmailContent = buildSellerPaymentRecordEmail(
       docData,
-      `/seller/earnings/payments/${payment.id}/receipt`,
+      `/account/earnings`,
     );
 
     await Promise.allSettled([

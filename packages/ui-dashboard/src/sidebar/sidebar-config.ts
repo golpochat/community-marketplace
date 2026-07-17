@@ -269,28 +269,28 @@ export const ADMIN_SIDEBAR: SidebarNavItem[] = [
 ];
 
 export const SELLER_SIDEBAR: SidebarNavItem[] = [
-  { id: 'home', label: 'Home', href: '/seller/dashboard', icon: 'home', exact: true },
-  { id: 'listings', label: 'My Listings', href: '/seller/listings', icon: 'tag' },
-  { id: 'create', label: 'Create Listing', href: '/seller/listings/create', icon: 'plus' },
-  { id: 'sales', label: 'Sales', href: '/seller/sales', icon: 'shopping-cart' },
-  { id: 'disputes', label: 'Disputes', href: '/seller/disputes', icon: 'scale' },
-  { id: 'earnings', label: 'Earnings', href: '/seller/earnings', icon: 'wallet' },
-  { id: 'share-analytics', label: 'Share Analytics', href: '/seller/analytics/shares', icon: 'bar-chart' },
-  { id: 'chat', label: 'Chat', href: '/seller/chat', icon: 'message-circle' },
+  { id: 'home', label: 'Home', href: '/account', icon: 'home', exact: true },
+  { id: 'listings', label: 'My Listings', href: '/account/listings', icon: 'tag' },
+  { id: 'create', label: 'Create Listing', href: '/account/listings/create', icon: 'plus' },
+  { id: 'sales', label: 'Sales', href: '/account/earnings', icon: 'shopping-cart' },
+  { id: 'disputes', label: 'Disputes', href: '/account/disputes', icon: 'scale' },
+  { id: 'earnings', label: 'Earnings', href: '/account/earnings', icon: 'wallet' },
+  { id: 'share-analytics', label: 'Share Analytics', href: '/account/earnings', icon: 'bar-chart' },
+  { id: 'chat', label: 'Chat', href: '/account/messages', icon: 'message-circle' },
   { id: 'storefront', label: 'Storefront', href: '/account/storefront', icon: 'eye' },
-  { id: 'verification', label: 'Verification', href: '/seller/verification', icon: 'medal' },
-  { id: 'notifications', label: 'Notifications', href: '/seller/notifications', icon: 'bell' },
+  { id: 'verification', label: 'Verification', href: '/account/verification', icon: 'medal' },
+  { id: 'notifications', label: 'Notifications', href: '/account/notifications', icon: 'bell' },
 ];
 
 export const BUYER_SIDEBAR: SidebarNavItem[] = [
-  { id: 'home', label: 'Home', href: '/buyer/dashboard', icon: 'home', exact: true },
-  { id: 'listings', label: 'Browse Listings', href: '/buyer/listings', icon: 'search' },
-  { id: 'favorites', label: 'Favorites', href: '/buyer/favorites', icon: 'heart' },
-  { id: 'purchases', label: 'Purchases', href: '/buyer/purchases', icon: 'package' },
-  { id: 'wallet', label: 'SellNearby Credit', href: '/buyer/wallet', icon: 'wallet' },
-  { id: 'disputes', label: 'Disputes', href: '/buyer/disputes', icon: 'scale' },
-  { id: 'chat', label: 'Chat', href: '/buyer/chat', icon: 'message-circle' },
-  { id: 'notifications', label: 'Notifications', href: '/buyer/notifications', icon: 'bell' },
+  { id: 'home', label: 'Home', href: '/account', icon: 'home', exact: true },
+  { id: 'listings', label: 'Browse Listings', href: '/listings', icon: 'search' },
+  { id: 'favorites', label: 'Favorites', href: '/account/saved', icon: 'heart' },
+  { id: 'purchases', label: 'Purchases', href: '/account/purchases', icon: 'package' },
+  { id: 'wallet', label: 'SellNearby Credit', href: '/account/wallet', icon: 'wallet' },
+  { id: 'disputes', label: 'Disputes', href: '/account/disputes', icon: 'scale' },
+  { id: 'chat', label: 'Chat', href: '/account/messages', icon: 'message-circle' },
+  { id: 'notifications', label: 'Notifications', href: '/account/notifications', icon: 'bell' },
 ];
 
 /** Unified marketplace account — buyer-first; seller items are injected per selling phase. */

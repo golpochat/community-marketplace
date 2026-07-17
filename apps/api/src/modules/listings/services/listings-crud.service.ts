@@ -359,16 +359,6 @@ export class ListingsCrudService {
       timestamp: new Date(),
     });
 
-    const gateResult = await this.sellerListingGate.onListingCreated(sellerId);
-
-    if (gateResult.nudgeMessage) {
-      this.eventBus.publish({
-        type: "seller.verification_nudge",
-        payload: { sellerId, message: gateResult.nudgeMessage },
-        timestamp: new Date(),
-      });
-    }
-
     void this.autoModeration.evaluateOnCreate({
       listingId: row.id,
       sellerId,
@@ -718,18 +708,7 @@ export class ListingsCrudService {
       metadata: { duplicatedFrom: listingId },
     });
 
-    const gateResult = await this.sellerListingGate.onListingCreated(sellerId);
-
-    if (gateResult.nudgeMessage) {
-      this.eventBus.publish({
-        type: "seller.verification_nudge",
-        payload: { sellerId, message: gateResult.nudgeMessage },
-        timestamp: new Date(),
-      });
-    }
-
-    const listing = await this.findById(row.id);
-    return Object.assign(listing, { sellerNudgeMessage: gateResult.nudgeMessage });
+    return mapListing(row);
   }
 
   private async getOwnedOrAdmin(

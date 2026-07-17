@@ -274,7 +274,7 @@ export function SellerListingsPage() {
         case "duplicate": {
           const dup = await sellerService.duplicateListing(listingId);
           if (dup.data?.id) {
-            router.push(`/seller/listings/${dup.data.id}/edit?duplicated=1`);
+            router.push(`/account/listings/${dup.data.id}/edit?duplicated=1`);
             return;
           }
           break;
@@ -909,6 +909,8 @@ export function SellerCreateListingPage() {
 
         if (blocked && status.sellerStatus === "verification_required") {
           router.replace(WEB_APP_ROUTES.accountVerification);
+        } else if (blocked) {
+          router.replace(WEB_APP_ROUTES.accountSelling);
         }
       })
       .catch(() => undefined);
@@ -974,7 +976,7 @@ export function SellerCreateListingPage() {
           ? `Draft saved. ${nudge}`
           : "Draft saved. An admin will review it before it goes live on the marketplace.",
       );
-      window.setTimeout(() => router.push("/seller/listings"), 1200);
+      window.setTimeout(() => router.push("/account/listings"), 1200);
     } catch (err) {
       if (err instanceof ApiClientError && err.status === 403) {
         setVerificationBlocked(true);
@@ -1025,7 +1027,7 @@ export function SellerCreateListingPage() {
           ? `Draft saved. ${nudge}`
           : "Draft saved. An admin will review it before it goes live on the marketplace.",
       );
-      window.setTimeout(() => router.push("/seller/listings"), 1200);
+      window.setTimeout(() => router.push("/account/listings"), 1200);
     } catch (err) {
       if (err instanceof ApiClientError && err.status === 403) {
         setVerificationBlocked(true);
@@ -1047,7 +1049,30 @@ export function SellerCreateListingPage() {
     >
       <SellerConnectBanner className="mb-4" />
       <SellerVerificationBanner className="mb-4" />
-      {createNudge && !verificationBlocked ? (
+      {verificationBlocked ? (
+        <Card className="space-y-3 p-5">
+          <p className="text-sm text-foreground">
+            {blockMessage ??
+              "You cannot create listings right now. Finish seller setup or verification first."}
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href={WEB_APP_ROUTES.accountSelling}
+              className="text-sm font-medium text-[hsl(var(--dashboard-accent))] underline"
+            >
+              Continue seller setup
+            </Link>
+            <Link
+              href={WEB_APP_ROUTES.accountVerification}
+              className="text-sm font-medium text-[hsl(var(--dashboard-accent))] underline"
+            >
+              Verification
+            </Link>
+          </div>
+        </Card>
+      ) : (
+        <>
+      {createNudge ? (
         <VerificationBanner
           type={createNudge.bannerType}
           message={createNudge.message}
@@ -1085,14 +1110,15 @@ export function SellerCreateListingPage() {
           disabled={
             categoriesLoading ||
             !!categoriesError ||
-            categories.length === 0 ||
-            verificationBlocked
+            categories.length === 0
           }
           submitLabel="Save draft"
           onGenericSubmit={(data) => void handleGenericSubmit(data)}
           onVehicleSubmit={(data) => void handleVehicleSubmit(data)}
         />
       </Card>
+        </>
+      )}
     </DashboardPageShell>
   );
 }
@@ -1143,7 +1169,7 @@ export function SellerEditListingPage({
   useEffect(() => {
     if (!duplicatedHint) return;
     setShowDuplicatedBanner(true);
-    router.replace(`/seller/listings/${listingId}/edit`, { scroll: false });
+    router.replace(`/account/listings/${listingId}/edit`, { scroll: false });
   }, [duplicatedHint, listingId, router]);
 
   useEffect(() => {
@@ -1294,7 +1320,7 @@ export function SellerEditListingPage({
       if (data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
       }
-      router.push("/seller/listings");
+      router.push("/account/listings");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update listing");
     } finally {
@@ -1331,7 +1357,7 @@ export function SellerEditListingPage({
       if (data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
       }
-      router.push("/seller/listings");
+      router.push("/account/listings");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update listing");
     } finally {

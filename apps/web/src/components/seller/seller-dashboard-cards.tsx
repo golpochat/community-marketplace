@@ -27,7 +27,7 @@ const CARDS: Array<{
   {
     key: 'totalSales',
     title: 'Total sales',
-    href: '/seller/sales',
+    href: '/account/earnings',
     description: 'Completed sales',
   },
   {

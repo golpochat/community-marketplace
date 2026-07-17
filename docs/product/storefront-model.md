@@ -55,7 +55,7 @@ Seller-facing and public APIs must treat account and storefront as distinct reso
 
 | Rule | Detail |
 |------|--------|
-| First storefront | **Free and mandatory** for sellers; must set store name before first listing submit |
+| First storefront | **Free and mandatory** for sellers; must set store name **before creating** the first listing (draft or submit) |
 | Additional storefronts | **Verified accounts only** + paid store slot |
 | Default limit | `storeSlotLimit = 1` on account |
 | Multi-store UX (v1) | Enforce max 1 store in product; schema supports N |
@@ -79,12 +79,12 @@ Applies to the **account**, not per storefront.
 
 ### Gates
 
-| Action | Unverified at 5 approved |
+| Action | Unverified at 5 approved (`verification_required`) |
 |--------|---------------------------|
-| Create draft | Allow |
+| Create draft | **Block** (status flips to `verification_required` at the 5th activation) |
 | Submit for review | **Block** |
 | Admin approve → active | **Block** |
-| Duplicate listing | No count until new copy is approved |
+| Duplicate listing | **Block** while verification required |
 
 ### After verification
 

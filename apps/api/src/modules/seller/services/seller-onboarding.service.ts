@@ -36,12 +36,18 @@ export class SellerOnboardingService {
     const displayName = user.displayName ?? user.profile?.phone ?? 'Seller';
     const now = new Date();
 
+    const memberRole =
+      user.primaryRole.code === 'BUYER'
+        ? await this.prisma.role.findUnique({ where: { code: 'MEMBER' } })
+        : null;
+
     await this.prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: userId },
         data: {
           sellerOnboardingStartedAt: now,
           sellerStatus: user.sellerStatus === 'verified' ? user.sellerStatus : 'unverified',
+          ...(memberRole ? { primaryRoleId: memberRole.id } : {}),
         },
       });
 
@@ -62,7 +68,8 @@ export class SellerOnboardingService {
       });
     });
 
-    if (user.primaryRole.code === 'MEMBER') {
+    // MEMBER (and legacy BUYER upgraded to MEMBER) need seller capability grants.
+    if (user.primaryRole.code === 'MEMBER' || user.primaryRole.code === 'BUYER') {
       await this.sellerCapability.grantSellerCapabilities(userId, userId);
     }
 
