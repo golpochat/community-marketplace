@@ -186,7 +186,7 @@ export class ChatAccessService {
     }
 
     // unverified: allowed (same predicate as listing create — status-based only)
-    return;
+  }
 
   private async assertSellerMessagingAllowed(userId: string) {
     await this.sellerGate.assertSellerNotSuspended(userId);
