@@ -12,6 +12,8 @@ export interface AdminQueueDetailLayoutProps {
   activeTabId: string;
   onTabChange: (id: string) => void;
   summary?: ReactNode;
+  /** Always visible above the queue table / empty state (e.g. nested filter tabs). */
+  queueToolbar?: ReactNode;
   queueLoading?: boolean;
   queueTotal: number;
   queueEmptyTitle: string;
@@ -30,6 +32,7 @@ export function AdminQueueDetailLayout({
   activeTabId,
   onTabChange,
   summary,
+  queueToolbar,
   queueLoading = false,
   queueTotal,
   queueEmptyTitle,
@@ -58,15 +61,18 @@ export function AdminQueueDetailLayout({
         }
       >
         <Card title="Queue">
-          {showEmptyQueue ? (
-            <EmptyState
-              variant="dashboard"
-              title={queueEmptyTitle}
-              description={queueEmptyDescription}
-            />
-          ) : (
-            queueContent
-          )}
+          <div className={queueToolbar ? 'space-y-4' : undefined}>
+            {queueToolbar}
+            {showEmptyQueue ? (
+              <EmptyState
+                variant="dashboard"
+                title={queueEmptyTitle}
+                description={queueEmptyDescription}
+              />
+            ) : (
+              queueContent
+            )}
+          </div>
           {!showEmptyQueue ? queueFooter : null}
         </Card>
 

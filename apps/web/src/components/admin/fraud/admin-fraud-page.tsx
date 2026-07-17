@@ -748,6 +748,16 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
         queueTotal={queueTotal}
         queueEmptyTitle={emptyCopy.title}
         queueEmptyDescription={emptyCopy.description}
+        queueToolbar={
+          tab === 'signals' ? (
+            <DashboardSectionTabs
+              items={[...SIGNAL_FILTER_TABS]}
+              activeId={signalFilter}
+              onChange={handleSignalFilterChange}
+              variant="nested"
+            />
+          ) : null
+        }
         queueContent={
           tab === 'users' ? (
             <DataTable
@@ -764,20 +774,12 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
               columnClassNames={[...FRAUD_LISTING_COLUMN_CLASSES]}
             />
           ) : (
-            <div className="space-y-4">
-              <DashboardSectionTabs
-                items={[...SIGNAL_FILTER_TABS]}
-                activeId={signalFilter}
-                onChange={handleSignalFilterChange}
-                variant="nested"
-              />
-              <DataTable
-                columns={[...FRAUD_SIGNAL_COLUMNS]}
-                rows={signalRows}
-                columnWidths={[...FRAUD_SIGNAL_COLUMN_WIDTHS]}
-                columnClassNames={[...FRAUD_SIGNAL_COLUMN_CLASSES]}
-              />
-            </div>
+            <DataTable
+              columns={[...FRAUD_SIGNAL_COLUMNS]}
+              rows={signalRows}
+              columnWidths={[...FRAUD_SIGNAL_COLUMN_WIDTHS]}
+              columnClassNames={[...FRAUD_SIGNAL_COLUMN_CLASSES]}
+            />
           )
         }
         queueFooter={

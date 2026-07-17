@@ -371,19 +371,19 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
         queueTotal={queueTotal}
         queueEmptyTitle={emptyCopy.title}
         queueEmptyDescription={emptyCopy.description}
+        queueToolbar={
+          <DashboardSectionTabs
+            items={RESOLVED_TABS}
+            activeId={viewingResolved ? queue : '__none__'}
+            onChange={handleResolvedQueueChange}
+            variant="nested"
+          />
+        }
         queueContent={
-          <div className="space-y-4">
-            <DashboardSectionTabs
-              items={RESOLVED_TABS}
-              activeId={viewingResolved ? queue : '__none__'}
-              onChange={handleResolvedQueueChange}
-              variant="nested"
-            />
-            <DataTable
-              columns={['Listing', 'Buyer', 'Seller', 'Reason', 'Status', 'Opened', '']}
-              rows={rows}
-            />
-          </div>
+          <DataTable
+            columns={['Listing', 'Buyer', 'Seller', 'Reason', 'Status', 'Opened', '']}
+            rows={rows}
+          />
         }
         queueFooter={
           <AdminTableFooter

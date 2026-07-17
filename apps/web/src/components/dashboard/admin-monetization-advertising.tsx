@@ -7,39 +7,54 @@ import { DashboardCard } from '@community-marketplace/ui-dashboard';
 import { AdminMarketingHubAnalytics } from '@/components/dashboard/admin-marketing-hub-analytics';
 import type { AdminServiceRole } from '@/services/admin.service';
 
-type ModuleSettingsField = 'displayAdsEnabled' | 'boostsEnabled' | 'featuredEnabled';
+type ModuleSettingsField =
+  | 'displayAdsEnabled'
+  | 'boostsEnabled'
+  | 'featuredEnabled'
+  | 'aiMarketingEnabled';
 
-interface ModuleMeta {
-  code: AdsSystemModuleCode;
+interface ProductRow {
+  id: string;
   label: string;
-  description: string;
+  hint: string;
   settingsField: ModuleSettingsField;
-  envNote?: string;
-  catalogNote?: string;
+  /** Ads-system module code when Live status comes from deploy + publish. */
+  adsCode?: AdsSystemModuleCode;
+  /** When set, Live badge uses this settings flag only (AI Hub). */
+  liveFromSettings?: boolean;
+  catalogLink?: boolean;
 }
 
-const MODULE_META: ModuleMeta[] = [
+const PRODUCT_ROWS: ProductRow[] = [
   {
-    code: 'display_advertising',
-    label: 'Display advertising',
-    description:
-      'Banner slots on the homepage, category browse, and search results. Slot shell only today — self-serve paid creatives for external brands are future work.',
-    settingsField: 'displayAdsEnabled',
-    envNote: 'Also requires ADS_SYSTEM_ENABLED=true in API .env. Use ADS_PREVIEW_MODE to test layouts before publishing.',
-  },
-  {
-    code: 'listing_boost',
+    id: 'boosts',
     label: 'Listing boosts',
-    description: 'Lets sellers pay to boost listing visibility. Configure individual SKUs on the Listing promotions tab.',
+    hint: 'Paid visibility packages for listings',
     settingsField: 'boostsEnabled',
-    catalogNote: 'Listing promotions',
+    adsCode: 'listing_boost',
+    catalogLink: true,
   },
   {
-    code: 'featured_slots',
-    label: 'Featured slots',
-    description: 'Paid homepage and category featured placement for sellers. Configure SKUs on the Listing promotions tab.',
+    id: 'featured',
+    label: 'Featured placements',
+    hint: 'Homepage & category featured slots · also used for featured shops',
     settingsField: 'featuredEnabled',
-    catalogNote: 'Listing promotions',
+    adsCode: 'featured_slots',
+    catalogLink: true,
+  },
+  {
+    id: 'display',
+    label: 'Display advertising',
+    hint: 'Banner slot shell on homepage & browse',
+    settingsField: 'displayAdsEnabled',
+    adsCode: 'display_advertising',
+  },
+  {
+    id: 'ai-hub',
+    label: 'AI Marketing Hub',
+    hint: 'Seller AI copy, images & credits · 10 free units / month for verified',
+    settingsField: 'aiMarketingEnabled',
+    liveFromSettings: true,
   },
 ];
 
@@ -59,10 +74,11 @@ function StatusBadge({ tone, text }: { tone: 'published' | 'preview' | 'off'; te
   return (
     <span
       className={cn(
-        'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+        'inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-medium',
         tone === 'published' && 'bg-green-100 text-green-800',
         tone === 'preview' && 'bg-amber-100 text-amber-900',
-        tone === 'off' && 'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-sidebar-muted))]',
+        tone === 'off' &&
+          'bg-[hsl(var(--dashboard-sidebar-active)/0.5)] text-[hsl(var(--dashboard-sidebar-muted))]',
       )}
     >
       {text}
@@ -70,7 +86,7 @@ function StatusBadge({ tone, text }: { tone: 'published' | 'preview' | 'off'; te
   );
 }
 
-function ModulePublishSwitch({
+function PublishSwitch({
   checked,
   disabled,
   label,
@@ -129,38 +145,9 @@ export function AdminMonetizationAdvertising({
 
   return (
     <div className="space-y-6">
-      <DashboardCard title="Deploy status">
-        <p className="mb-4 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-          These flags are set in API environment variables and require a server restart to change.
-          They control whether the display-ads shell exists and whether unpublished slots can be
-          previewed.
-        </p>
-        {adsSystem ? (
-          <dl className="grid gap-3 text-sm sm:grid-cols-2">
-            <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2">
-              <dt className="font-medium text-[hsl(var(--dashboard-main-fg))]">ADS_SYSTEM_ENABLED</dt>
-              <dd className="mt-1 text-[hsl(var(--dashboard-sidebar-muted))]">
-                {adsSystem.systemEnabled ? 'true — display ads shell is active' : 'false — display ads shell is off'}
-              </dd>
-            </div>
-            <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2">
-              <dt className="font-medium text-[hsl(var(--dashboard-main-fg))]">ADS_PREVIEW_MODE</dt>
-              <dd className="mt-1 text-[hsl(var(--dashboard-sidebar-muted))]">
-                {adsSystem.previewMode
-                  ? 'true — preview placeholders when display ads are not published'
-                  : 'false — no preview placeholders'}
-              </dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Deploy status unavailable.</p>
-        )}
-      </DashboardCard>
-
-      <DashboardCard title="Module publish toggles">
-        <p className="mb-4 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-          Turn entire product families on or off for sellers and buyers. Individual boost and
-          featured SKUs are managed separately on{' '}
+      <DashboardCard title="Seller products">
+        <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+          Publish products for sellers. Configure boost and featured SKUs on{' '}
           {onGoToCatalog ? (
             <button
               type="button"
@@ -176,148 +163,128 @@ export function AdminMonetizationAdvertising({
         </p>
 
         <form onSubmit={(e) => void onSave(e)} className="space-y-4">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-[hsl(var(--dashboard-sidebar-border))] text-[hsl(var(--dashboard-sidebar-muted))]">
-                  <th className="py-2 pr-4 font-medium">Module</th>
-                  <th className="py-2 pr-4 font-medium">Live status</th>
-                  <th className="py-2 pr-4 font-medium">Published</th>
-                </tr>
-              </thead>
-              <tbody>
-                {MODULE_META.map((meta) => {
-                  const moduleState = moduleByCode.get(meta.code);
-                  const status = moduleStatusLabel(moduleState);
-                  const published = Boolean(settings[meta.settingsField]);
+          <ul className="divide-y divide-[hsl(var(--dashboard-sidebar-border)/0.6)] rounded-lg border border-[hsl(var(--dashboard-sidebar-border))]">
+            {PRODUCT_ROWS.map((row) => {
+              const published = Boolean(settings[row.settingsField]);
+              const status = row.liveFromSettings
+                ? {
+                    text: published ? 'Live' : 'Off',
+                    tone: (published ? 'published' : 'off') as 'published' | 'off',
+                  }
+                : moduleStatusLabel(row.adsCode ? moduleByCode.get(row.adsCode) : undefined);
 
-                  return (
-                    <tr
-                      key={meta.code}
-                      className="border-b border-[hsl(var(--dashboard-sidebar-border)/0.5)] align-top"
-                    >
-                      <td className="py-3 pr-4">
-                        <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">{meta.label}</p>
-                        <p className="mt-1 max-w-md text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-                          {meta.description}
-                        </p>
-                        {meta.envNote && (
-                          <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-                            {meta.envNote}
-                          </p>
-                        )}
-                      </td>
-                      <td className="py-3 pr-4">
-                        <StatusBadge tone={status.tone} text={status.text} />
-                      </td>
-                      <td className="py-3">
-                        <ModulePublishSwitch
-                          checked={published}
-                          disabled={saving}
-                          label={`${published ? 'Unpublish' : 'Publish'} ${meta.label}`}
-                          onChange={(checked) =>
-                            onSettingsChange({ ...settings, [meta.settingsField]: checked })
-                          }
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+              return (
+                <li
+                  key={row.id}
+                  className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">{row.label}</p>
+                      <StatusBadge tone={status.tone} text={status.text} />
+                    </div>
+                    <p className="mt-0.5 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                      {row.hint}
+                      {row.catalogLink && onGoToCatalog ? (
+                        <>
+                          {' · '}
+                          <button
+                            type="button"
+                            onClick={onGoToCatalog}
+                            className="font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+                          >
+                            Edit SKUs
+                          </button>
+                        </>
+                      ) : null}
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 sm:justify-end">
+                    <span className="text-xs text-[hsl(var(--dashboard-sidebar-muted))] sm:hidden">
+                      Published
+                    </span>
+                    <PublishSwitch
+                      checked={published}
+                      disabled={saving}
+                      label={`${published ? 'Unpublish' : 'Publish'} ${row.label}`}
+                      onChange={(checked) =>
+                        onSettingsChange({ ...settings, [row.settingsField]: checked })
+                      }
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              Changes apply after you save. Live status also depends on deploy flags (see Advanced).
+            </p>
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white disabled:opacity-50 sm:w-auto"
+            >
+              {saving ? 'Saving…' : 'Save settings'}
+            </button>
           </div>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {saving ? 'Saving…' : 'Save module settings'}
-          </button>
-        </form>
-      </DashboardCard>
-
-      <DashboardCard title="How it works">
-        <ol className="list-decimal space-y-2 pl-5 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-          <li>
-            <span className="text-[hsl(var(--dashboard-main-fg))]">Deploy</span> — set{' '}
-            <code className="text-xs">ADS_SYSTEM_ENABLED</code> in API <code className="text-xs">.env</code>{' '}
-            and restart the API.
-          </li>
-          <li>
-            <span className="text-[hsl(var(--dashboard-main-fg))]">Preview (optional)</span> — with{' '}
-            <code className="text-xs">ADS_PREVIEW_MODE=true</code>, leave display advertising off to
-            see dashed preview slots on the site.
-          </li>
-          <li>
-            <span className="text-[hsl(var(--dashboard-main-fg))]">Publish modules</span> — use the
-            toggles above to go live with display ads, boosts, and/or featured slots.
-          </li>
-          <li>
-            <span className="text-[hsl(var(--dashboard-main-fg))]">Configure SKUs</span> — on Listing
-            promotions, add or edit boost and featured products; only published SKUs appear in seller
-            checkout.
-          </li>
-        </ol>
-      </DashboardCard>
-
-      <DashboardCard title="AI Marketing Hub">
-        <p className="mb-4 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-          Publish to let sellers use AI copy, image tools, share banners, and price suggestions on
-          listing forms. Unpublish to hide and block the feature without a redeploy. Live seller
-          pricing: verified sellers get 10 free credit units / month; overage is €0.05 per unit from
-          SellNearby Credit; price suggestion, posting time, and campaign pack are free. Hard kill
-          switch: set <code className="text-xs">AI_MARKETING_ENABLED=false</code> in API{' '}
-          <code className="text-xs">.env</code> and restart.
-        </p>
-        <form onSubmit={(e) => void onSave(e)} className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-3">
-            <div>
-              <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">
-                AI Marketing Hub for sellers
-              </p>
-              <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-                {settings.aiMarketingEnabled
-                  ? 'Published — sellers can use the hub (when deploy env allows).'
-                  : 'Unpublished — seller tools and APIs are blocked.'}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <StatusBadge
-                tone={settings.aiMarketingEnabled ? 'published' : 'off'}
-                text={settings.aiMarketingEnabled ? 'Live' : 'Off'}
-              />
-              <ModulePublishSwitch
-                checked={Boolean(settings.aiMarketingEnabled)}
-                disabled={saving}
-                label={`${settings.aiMarketingEnabled ? 'Unpublish' : 'Publish'} AI Marketing Hub`}
-                onChange={(checked) =>
-                  onSettingsChange({ ...settings, aiMarketingEnabled: checked })
-                }
-              />
-            </div>
-          </div>
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {saving ? 'Saving…' : 'Save AI Marketing settings'}
-          </button>
         </form>
       </DashboardCard>
 
       <AdminMarketingHubAnalytics role={role} />
 
-      <DashboardCard title="Future — external brand ads">
-        <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-          Self-serve paid display advertising for outside brands/sponsors (upload creative, pick
-          placement, pay) is{' '}
-          <span className="font-medium text-[hsl(var(--dashboard-main-fg))]">not implemented</span>
-          . Today this module only reserves and previews banner slots. Seller boosts and featured
-          placements remain on the Listing promotions tab. Tracked in{' '}
-          <code className="text-xs">docs/product/monetization.md</code>.
-        </p>
+      <DashboardCard title="Advanced · deploy flags">
+        <details className="group">
+          <summary className="cursor-pointer list-none text-sm text-[hsl(var(--dashboard-sidebar-muted))] marker:content-none [&::-webkit-details-marker]:hidden">
+            <span className="font-medium text-[hsl(var(--dashboard-accent))] group-open:hidden">
+              Show deploy flags
+            </span>
+            <span className="hidden font-medium text-[hsl(var(--dashboard-accent))] group-open:inline">
+              Hide deploy flags
+            </span>
+          </summary>
+          <div className="mt-4 space-y-4">
+            <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              Set in API <code className="text-xs">.env</code> /{' '}
+              <code className="text-xs">.env.prod</code> and restart the API. Read-only here.
+            </p>
+            {adsSystem ? (
+              <dl className="grid gap-3 text-sm sm:grid-cols-2">
+                <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2">
+                  <dt className="text-xs font-medium text-[hsl(var(--dashboard-sidebar-muted))]">
+                    Display ads shell
+                  </dt>
+                  <dd className="mt-1 font-medium text-[hsl(var(--dashboard-main-fg))]">
+                    {adsSystem.systemEnabled ? 'On' : 'Off'}
+                  </dd>
+                  <dd className="mt-0.5 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                    <code className="text-xs">ADS_SYSTEM_ENABLED</code>
+                  </dd>
+                </div>
+                <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2">
+                  <dt className="text-xs font-medium text-[hsl(var(--dashboard-sidebar-muted))]">
+                    Preview placeholders
+                  </dt>
+                  <dd className="mt-1 font-medium text-[hsl(var(--dashboard-main-fg))]">
+                    {adsSystem.previewMode ? 'On' : 'Off'}
+                  </dd>
+                  <dd className="mt-0.5 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                    <code className="text-xs">ADS_PREVIEW_MODE</code>
+                  </dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+                Deploy status unavailable.
+              </p>
+            )}
+            <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              Marketing Hub kill switch:{' '}
+              <code className="text-xs">AI_MARKETING_ENABLED=false</code> then restart API.
+            </p>
+          </div>
+        </details>
       </DashboardCard>
     </div>
   );

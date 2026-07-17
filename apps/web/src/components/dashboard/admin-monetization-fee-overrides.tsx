@@ -13,12 +13,34 @@ import type { AdminServiceRole } from '@/services/admin.service';
 
 interface AdminMonetizationFeeOverridesProps {
   role: AdminServiceRole;
+  defaultPlatformFeePercent: number;
+  verifiedSellerFeePercent: number;
   onMessage: (message: string) => void;
   onError: (error: string) => void;
 }
 
+/** Verification auto-applies verifiedSellerFeePercent as customPlatformFeePercent. */
+function isVerifiedAutoFee(entry: {
+  sellerStatus: string;
+  customPlatformFeePercent: number;
+  verifiedSellerFeePercent: number;
+}): boolean {
+  return (
+    entry.sellerStatus === 'verified' &&
+    entry.customPlatformFeePercent === entry.verifiedSellerFeePercent
+  );
+}
+
+function confirmClearVerifiedAutoFee(defaultPercent: number): boolean {
+  return window.confirm(
+    `This rate matches the automatic verified-seller fee.\n\nClearing will revert to the default platform fee (${defaultPercent}%), not the verified rate.\n\nContinue?`,
+  );
+}
+
 export function AdminMonetizationFeeOverrides({
   role,
+  defaultPlatformFeePercent,
+  verifiedSellerFeePercent,
   onMessage,
   onError,
 }: AdminMonetizationFeeOverridesProps) {
@@ -84,8 +106,19 @@ export function AdminMonetizationFeeOverrides({
     );
   }
 
+  function selectedLooksLikeVerifiedAuto(): boolean {
+    if (!selectedSeller || selectedSeller.customPlatformFeePercent == null) return false;
+    return (
+      selectedSeller.sellerStatus === 'verified' &&
+      selectedSeller.customPlatformFeePercent === verifiedSellerFeePercent
+    );
+  }
+
   async function handleSetOverride(clear = false) {
     if (!selectedSeller) return;
+    if (clear && selectedLooksLikeVerifiedAuto()) {
+      if (!confirmClearVerifiedAutoFee(defaultPlatformFeePercent)) return;
+    }
     setSaving(true);
     onError('');
     try {
@@ -105,15 +138,22 @@ export function AdminMonetizationFeeOverrides({
     }
   }
 
-  async function handleClearOverride(userId: string) {
+  async function handleClearOverride(entry: SellerFeeOverrideEntry) {
+    if (isVerifiedAutoFee(entry)) {
+      if (!confirmClearVerifiedAutoFee(entry.defaultPlatformFeePercent)) return;
+    }
     setSaving(true);
     onError('');
     try {
       await monetizationService.setSellerFeeOverride(role, {
-        userId,
+        userId: entry.userId,
         customPlatformFeePercent: null,
       });
-      onMessage('Seller fee override cleared.');
+      onMessage(
+        isVerifiedAutoFee(entry)
+          ? `Cleared — seller now uses default ${entry.defaultPlatformFeePercent}% (not verified rate).`
+          : 'Seller fee override cleared.',
+      );
       await loadOverrides();
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Failed to clear override');
@@ -125,8 +165,10 @@ export function AdminMonetizationFeeOverrides({
   return (
     <DashboardCard title="Per-seller fee override">
       <p className="mb-3 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-        Search for a seller by name or email, then set a custom platform fee (3–15%). Clear to
-        revert to the default rate.
+        Search for a seller by name or email, then set a custom platform fee (3–15%). Rates marked
+        Verified auto were applied on identity verification — clearing them reverts to the{' '}
+        <span className="font-medium text-[hsl(var(--dashboard-main-fg))]">default</span> fee, not
+        the verified rate.
       </p>
 
       <div className="relative mb-4">
@@ -135,7 +177,10 @@ export function AdminMonetizationFeeOverrides({
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);
-            if (selectedSeller && e.target.value !== (selectedSeller.displayName ?? selectedSeller.email)) {
+            if (
+              selectedSeller &&
+              e.target.value !== (selectedSeller.displayName ?? selectedSeller.email)
+            ) {
               setSelectedSeller(null);
             }
           }}
@@ -182,6 +227,7 @@ export function AdminMonetizationFeeOverrides({
             <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
               {selectedSeller.email} · {selectedSeller.listingCount} listings · Status:{' '}
               {selectedSeller.sellerStatus}
+              {selectedLooksLikeVerifiedAuto() ? ' · Verified auto rate' : ''}
             </p>
           </div>
           <input
@@ -222,40 +268,58 @@ export function AdminMonetizationFeeOverrides({
         <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">No active overrides.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full min-w-[36rem] text-left text-sm">
             <thead>
               <tr className="border-b border-[hsl(var(--dashboard-sidebar-border))] text-[hsl(var(--dashboard-sidebar-muted))]">
                 <th className="py-2 pr-4 font-medium">Seller</th>
                 <th className="py-2 pr-4 font-medium">Email</th>
+                <th className="py-2 pr-4 font-medium">Source</th>
                 <th className="py-2 pr-4 font-medium">Override %</th>
                 <th className="py-2 pr-4 font-medium">Default %</th>
                 <th className="py-2 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {overrides.map((entry) => (
-                <tr
-                  key={entry.userId}
-                  className="border-b border-[hsl(var(--dashboard-sidebar-border)/0.5)]"
-                >
-                  <td className="py-2 pr-4">{entry.displayName ?? '—'}</td>
-                  <td className="py-2 pr-4">{entry.email}</td>
-                  <td className="py-2 pr-4 font-medium">{entry.customPlatformFeePercent}%</td>
-                  <td className="py-2 pr-4 text-[hsl(var(--dashboard-sidebar-muted))]">
-                    {entry.defaultPlatformFeePercent}%
-                  </td>
-                  <td className="py-2">
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={() => void handleClearOverride(entry.userId)}
-                      className="text-sm text-[hsl(var(--dashboard-accent))] hover:underline disabled:opacity-50"
-                    >
-                      Clear
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {overrides.map((entry) => {
+                const verifiedAuto = isVerifiedAutoFee(entry);
+                return (
+                  <tr
+                    key={entry.userId}
+                    className="border-b border-[hsl(var(--dashboard-sidebar-border)/0.5)]"
+                  >
+                    <td className="py-2 pr-4">{entry.displayName ?? '—'}</td>
+                    <td className="py-2 pr-4">{entry.email}</td>
+                    <td className="py-2 pr-4">
+                      {verifiedAuto ? (
+                        <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900">
+                          Verified auto
+                        </span>
+                      ) : (
+                        <span className="text-[hsl(var(--dashboard-sidebar-muted))]">Manual</span>
+                      )}
+                    </td>
+                    <td className="py-2 pr-4 font-medium">{entry.customPlatformFeePercent}%</td>
+                    <td className="py-2 pr-4 text-[hsl(var(--dashboard-sidebar-muted))]">
+                      {entry.defaultPlatformFeePercent}%
+                    </td>
+                    <td className="py-2">
+                      <button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => void handleClearOverride(entry)}
+                        className="text-sm text-[hsl(var(--dashboard-accent))] hover:underline disabled:opacity-50"
+                        title={
+                          verifiedAuto
+                            ? `Clears to default ${entry.defaultPlatformFeePercent}% (not verified ${entry.verifiedSellerFeePercent}%)`
+                            : 'Clear custom fee'
+                        }
+                      >
+                        Clear
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

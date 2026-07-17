@@ -36,7 +36,7 @@ const PAGE_TITLES: Record<MonetizationTab, string> = {
 };
 
 const PAGE_DESCRIPTIONS: Record<MonetizationTab, string> = {
-  advertising: 'Turn advertising modules on or off, review deploy flags, and Marketing Hub conversion.',
+  advertising: 'Publish seller products, review Marketing Hub conversion, and check deploy flags.',
   fees: 'Platform fee defaults, cashback settings, and per-user overrides.',
   catalog: 'Manage listing boosts and featured placement products.',
 };
@@ -50,7 +50,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
   const { success: feedbackSuccess, error: feedbackError } = useAppFeedback();
   const [settings, setSettings] = useState<MonetizationSettings | null>(null);
   const [adsSystem, setAdsSystem] = useState<AdsSystemStatus | null>(null);
-  const [activeTab, setActiveTab] = useState<MonetizationTab>('catalog');
+  const [activeTab, setActiveTab] = useState<MonetizationTab>('advertising');
   const [feesSubTab, setFeesSubTab] = useState<FeesSubTab>('seller');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -213,6 +213,12 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                 {feesSubTab === 'seller' && (
                   <>
                     <DashboardCard title="Seller platform fees">
+                      <p className="mb-4 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                        Unverified sellers use the default fee. On verification, the verified fee is
+                        applied automatically as a per-seller rate (only if they have no custom
+                        override yet). Changing the verified % here is forward-looking — it does not
+                        update sellers already verified.
+                      </p>
                       <form
                         onSubmit={(e) => void handleSaveSellerSettings(e)}
                         className="grid gap-4 sm:grid-cols-2"
@@ -267,6 +273,8 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
 
                     <AdminMonetizationFeeOverrides
                       role={role}
+                      defaultPlatformFeePercent={settings.defaultPlatformFeePercent}
+                      verifiedSellerFeePercent={settings.verifiedSellerFeePercent}
                       onMessage={handlePanelMessage}
                       onError={handlePanelError}
                     />
@@ -277,9 +285,9 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                   <>
                     <DashboardCard title="Buyer cashback defaults">
                       <p className="mb-4 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-                        Policy is fixed in code: card payments only, {settings.coolingDays}-day
-                        cooling period after purchase, no cashback on refunds or disputes. Buyer
-                        verification is not required.
+                        Tunable below: cashback %, cooling days, min order, and caps. Fixed in code:
+                        card payments only, no cashback on refunds or disputes, wallet credit expires
+                        6 months after unlock. Buyer verification is not required.
                       </p>
                       <form
                         onSubmit={(e) => void handleSaveBuyerSettings(e)}

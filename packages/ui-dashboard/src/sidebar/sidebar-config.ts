@@ -123,7 +123,7 @@ export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
   },
   {
     id: 'monetization',
-    label: 'Listing promotions',
+    label: 'Monetization',
     href: '/super-admin/monetization',
     icon: 'tag',
     permission: PERMISSIONS.MANAGE_PAYMENTS,
@@ -247,7 +247,7 @@ export const ADMIN_SIDEBAR: SidebarNavItem[] = [
   },
   {
     id: 'monetization',
-    label: 'Listing promotions',
+    label: 'Monetization',
     href: '/admin/monetization',
     icon: 'landmark',
     permission: PERMISSIONS.MANAGE_PAYMENTS,
