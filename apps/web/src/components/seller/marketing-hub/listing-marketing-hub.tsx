@@ -1,6 +1,7 @@
 "use client";
 
 import type { AiMarketingTask, ListingImage } from "@community-marketplace/types";
+import { LISTING_TITLE_MIN_LENGTH } from "@community-marketplace/utils";
 
 import { ListingAiCampaignPanel } from "@/components/seller/listing-ai-campaign-panel";
 import { ListingAiImagePanel } from "@/components/seller/listing-ai-image-panel";
@@ -43,18 +44,18 @@ const STEP_COPY: Record<
   { title: string; description: string }
 > = {
   details: {
-    title: "Marketing hub",
+    title: "Need help writing?",
     description:
-      "Copy & social use AI credits · posting time is free · costs shown on each button",
+      "Accept fills title/description · Copy is for social apps · free units first, then €0.05/unit",
   },
   pricing: {
-    title: "Marketing hub",
-    description: "Price guidance from similar SellNearby listings · free",
+    title: "Price guidance",
+    description: "Free suggestion from similar SellNearby listings · advisory only",
   },
   photos: {
-    title: "Marketing hub",
+    title: "Improve photos & share",
     description:
-      "Photo tools use AI credits · campaign pack is free · costs shown on each button",
+      "Upload photos first · enhance/bg-remove may apply to listing · banners are marketing-only",
   },
 };
 
@@ -82,17 +83,50 @@ export function ListingMarketingHub({
   onBoostListing,
 }: ListingMarketingHubProps) {
   const copy = STEP_COPY[step];
+  const titleReady = title.trim().length >= LISTING_TITLE_MIN_LENGTH;
 
   return (
     <MarketingHubShell title={copy.title} description={copy.description}>
       {step === "details" && (
         <>
           <MarketingHubWidget
-            title="Copy & social"
-            description="Costs shown on each button · SEO title & description apply in-form · social is copy-only"
+            title="Improve this listing"
+            description="SEO title and description apply into the form fields above"
+            badge="Accept"
+            collapsible
+            defaultOpen={false}
           >
             <ListingAiPanel
               embedded
+              taskGroup="listing"
+              listingId={listingId}
+              title={title}
+              description={description}
+              categoryName={categoryName}
+              condition={condition}
+              location={location}
+              price={price}
+              hiddenTasks={hiddenTasks}
+              descriptionAcceptLabel={descriptionAcceptLabel}
+              onAcceptTitle={onAcceptTitle ?? (() => undefined)}
+              onAcceptDescription={onAcceptDescription ?? (() => undefined)}
+            />
+          </MarketingHubWidget>
+          <MarketingHubWidget
+            title="Share off SellNearby"
+            description={
+              titleReady
+                ? "Copy captions for Instagram, TikTok, WhatsApp, and more"
+                : `Add a title (at least ${LISTING_TITLE_MIN_LENGTH} characters) first so posts match your item`
+            }
+            badge="Copy only"
+            collapsible
+            defaultOpen={false}
+          >
+            <ListingAiPanel
+              embedded
+              taskGroup="social"
+              requireTitleMinLength={LISTING_TITLE_MIN_LENGTH}
               listingId={listingId}
               title={title}
               description={description}
@@ -108,10 +142,14 @@ export function ListingMarketingHub({
           </MarketingHubWidget>
           <MarketingHubWidget
             title="Best posting time"
-            description="Free · Europe/Dublin · no AI credits"
+            description="Free · Europe/Dublin"
+            badge="Free"
+            collapsible
+            defaultOpen={false}
           >
             <ListingAiPostingTimePanel
               embedded
+              compact
               listingId={listingId}
               categoryId={categoryId}
             />
@@ -121,8 +159,11 @@ export function ListingMarketingHub({
 
       {step === "pricing" && onApplySuggestedPrice && (
         <MarketingHubWidget
-          title="Price suggestion"
-          description="Free · similar active listings · advisory only"
+          title="Suggest price"
+          description="Based on similar active listings"
+          badge="Free"
+          collapsible
+          defaultOpen={false}
         >
           <ListingAiPricePanel
             embedded
@@ -142,8 +183,10 @@ export function ListingMarketingHub({
         <>
           {images.length > 0 && (
             <MarketingHubWidget
-              title="Photos & banners"
-              description="Enhance 3 · bg-remove 5 · banner 4 units · enhance/bg-remove may apply to listing · banners marketing-only"
+              title="Photo tools"
+              description="Enhance 3 · bg-remove 5 · banner 4 units"
+              collapsible
+              defaultOpen={false}
             >
               <ListingAiImagePanel
                 embedded
@@ -155,7 +198,10 @@ export function ListingMarketingHub({
           )}
           <MarketingHubWidget
             title="Campaign & boost"
-            description="Campaign pack free · boost uses existing listing promotion checkout"
+            description="Campaign pack free · boost when the listing is live"
+            badge="Free pack"
+            collapsible
+            defaultOpen={false}
           >
             <ListingAiCampaignPanel
               embedded

@@ -593,21 +593,6 @@ export function ListingForm({
 
       {step === 0 && (
         <div className="space-y-4">
-          <ListingMarketingHub
-            step="details"
-            listingId={listingId}
-            title={data.title}
-            description={data.description}
-            categoryId={data.categoryId || undefined}
-            categoryName={
-              categories.find((c) => c.id === data.categoryId)?.name
-            }
-            condition={data.condition}
-            location={data.location}
-            price={data.salePrice}
-            onAcceptTitle={(next) => update({ title: next })}
-            onAcceptDescription={(next) => update({ description: next })}
-          />
           <div>
             <Label htmlFor="title">
               {titleAmendRequired ? "Proposed title" : "Title"}
@@ -693,19 +678,26 @@ export function ListingForm({
                 : ""}
             </p>
           </div>
+          <ListingMarketingHub
+            step="details"
+            listingId={listingId}
+            title={data.title}
+            description={data.description}
+            categoryId={data.categoryId || undefined}
+            categoryName={
+              categories.find((c) => c.id === data.categoryId)?.name
+            }
+            condition={data.condition}
+            location={data.location}
+            price={data.salePrice}
+            onAcceptTitle={(next) => update({ title: next })}
+            onAcceptDescription={(next) => update({ description: next })}
+          />
         </div>
       )}
 
       {step === 1 && (
         <div className="space-y-4">
-          <ListingMarketingHub
-            step="pricing"
-            listingId={listingId}
-            categoryId={data.categoryId || undefined}
-            condition={data.condition}
-            location={data.location}
-            onApplySuggestedPrice={(price) => update({ salePrice: price })}
-          />
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <Label htmlFor="salePrice">Sale price (EUR)</Label>
@@ -815,6 +807,14 @@ export function ListingForm({
               </Select>
             </div>
           )}
+          <ListingMarketingHub
+            step="pricing"
+            listingId={listingId}
+            categoryId={data.categoryId || undefined}
+            condition={data.condition}
+            location={data.location}
+            onApplySuggestedPrice={(price) => update({ salePrice: price })}
+          />
         </div>
       )}
 
@@ -876,16 +876,6 @@ export function ListingForm({
 
       {step === 3 && (
         <div className="space-y-4">
-          {listingId && (
-            <ListingMarketingHub
-              step="photos"
-              listingId={listingId}
-              listingStatus={listingStatus}
-              images={existingImages}
-              onListingImagesChange={onListingImagesChange}
-              onBoostListing={onBoostListing}
-            />
-          )}
           <div>
             <Label htmlFor="images">Photos (optional)</Label>
             <input
@@ -932,6 +922,16 @@ export function ListingForm({
                   ? `New photos to upload (${data.images.length})`
                   : `Selected photos (${data.images.length} of ${MAX_LISTING_IMAGES})`
               }
+            />
+          )}
+          {listingId && (
+            <ListingMarketingHub
+              step="photos"
+              listingId={listingId}
+              listingStatus={listingStatus}
+              images={existingImages}
+              onListingImagesChange={onListingImagesChange}
+              onBoostListing={onBoostListing}
             />
           )}
         </div>

@@ -1,12 +1,13 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import {
   MarketingHubProvider,
   useMarketingHub,
 } from "@/components/seller/marketing-hub/marketing-hub-context";
 import { formatAiMarketingQuotaSummary } from "@community-marketplace/types";
+import { cn } from "@community-marketplace/ui";
 
 function MarketingHubChrome({
   title = "Marketing hub",
@@ -44,7 +45,7 @@ function MarketingHubChrome({
         </p>
       )}
 
-      <div className="mt-3 space-y-4">{children}</div>
+      <div className="mt-3 space-y-3">{children}</div>
     </div>
   );
 }
@@ -71,24 +72,72 @@ export function MarketingHubWidget({
   title,
   description,
   children,
+  defaultOpen = true,
+  collapsible = false,
+  badge,
 }: {
   title: string;
   description?: string;
   children: ReactNode;
+  /** When collapsible, start expanded (default true for backwards compat). */
+  defaultOpen?: boolean;
+  collapsible?: boolean;
+  badge?: string;
 }) {
-  return (
-    <section className="space-y-2 border-t border-[hsl(var(--dashboard-sidebar-border)/0.7)] pt-3 first:border-t-0 first:pt-0">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
-          {title}
-        </p>
-        {description ? (
-          <p className="mt-0.5 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-            {description}
+  const [open, setOpen] = useState(defaultOpen);
+
+  if (!collapsible) {
+    return (
+      <section className="space-y-2 border-t border-[hsl(var(--dashboard-sidebar-border)/0.7)] pt-3 first:border-t-0 first:pt-0">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
+            {title}
+            {badge ? (
+              <span className="ml-2 font-normal normal-case">· {badge}</span>
+            ) : null}
           </p>
-        ) : null}
-      </div>
-      {children}
+          {description ? (
+            <p className="mt-0.5 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              {description}
+            </p>
+          ) : null}
+        </div>
+        {children}
+      </section>
+    );
+  }
+
+  return (
+    <section className="border-t border-[hsl(var(--dashboard-sidebar-border)/0.7)] pt-3 first:border-t-0 first:pt-0">
+      <button
+        type="button"
+        className="flex w-full items-start justify-between gap-2 text-left"
+        aria-expanded={open}
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
+            {title}
+            {badge ? (
+              <span className="ml-2 font-normal normal-case">· {badge}</span>
+            ) : null}
+          </p>
+          {description ? (
+            <p className="mt-0.5 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              {description}
+            </p>
+          ) : null}
+        </div>
+        <span
+          className={cn(
+            "mt-0.5 shrink-0 text-xs text-[hsl(var(--dashboard-sidebar-muted))]",
+          )}
+          aria-hidden
+        >
+          {open ? "Hide" : "Show"}
+        </span>
+      </button>
+      {open ? <div className="mt-2 space-y-2">{children}</div> : null}
     </section>
   );
 }

@@ -25,6 +25,10 @@ interface ListingAiPanelProps {
   price?: string;
   hiddenTasks?: AiMarketingTask[];
   descriptionAcceptLabel?: string;
+  /** listing = Accept into form; social = Copy only; all = both (legacy). */
+  taskGroup?: "listing" | "social" | "all";
+  /** When set, social tasks stay disabled until title length meets this. */
+  requireTitleMinLength?: number;
   onAcceptTitle: (title: string) => void;
   onAcceptDescription: (description: string) => void;
   /** When true, omit outer card/quota chrome (Marketing hub provides it). */
@@ -83,6 +87,8 @@ export function ListingAiPanel({
   price,
   hiddenTasks = [],
   descriptionAcceptLabel = "Accept",
+  taskGroup = "all",
+  requireTitleMinLength,
   onAcceptTitle,
   onAcceptDescription,
   embedded = false,
@@ -102,6 +108,10 @@ export function ListingAiPanel({
 
   const hidden = new Set(hiddenTasks);
   const quota = embedded ? hub?.quota ?? null : localQuota;
+  const titleReady =
+    requireTitleMinLength == null ||
+    title.trim().length >= requireTitleMinLength;
+  const socialLocked = taskGroup === "social" && !titleReady;
 
   const refreshQuota = useCallback(async () => {
     if (embedded) {
@@ -127,6 +137,7 @@ export function ListingAiPanel({
   }
 
   async function runGenerate(task: AiMarketingTask) {
+    if (socialLocked) return;
     setError(null);
     setCopyNotice(null);
     setBusyTask(task);
@@ -193,6 +204,7 @@ export function ListingAiPanel({
 
   const disabled =
     Boolean(busyTask) ||
+    socialLocked ||
     quota?.enabled === false ||
     Boolean(embedded && hub?.disabled);
 
@@ -205,6 +217,11 @@ export function ListingAiPanel({
         variant="outline"
         size="sm"
         disabled={disabled}
+        title={
+          socialLocked
+            ? `Add a title with at least ${requireTitleMinLength} characters first`
+            : undefined
+        }
         onClick={() => void runGenerate(task)}
       >
         {taskButtonLabel(task, busyTask === task)}
@@ -212,12 +229,28 @@ export function ListingAiPanel({
     );
   }
 
-  const listingButtons = LISTING_TASKS.map(renderTaskButton).filter(Boolean);
-  const socialButtons = SOCIAL_TASKS.map(renderTaskButton).filter(Boolean);
-  const outreachButtons = OUTREACH_TASKS.map(renderTaskButton).filter(Boolean);
+  const showListing = taskGroup === "listing" || taskGroup === "all";
+  const showSocial = taskGroup === "social" || taskGroup === "all";
+
+  const listingButtons = showListing
+    ? LISTING_TASKS.map(renderTaskButton).filter(Boolean)
+    : [];
+  const socialButtons = showSocial
+    ? SOCIAL_TASKS.map(renderTaskButton).filter(Boolean)
+    : [];
+  const outreachButtons = showSocial
+    ? OUTREACH_TASKS.map(renderTaskButton).filter(Boolean)
+    : [];
 
   const body = (
     <>
+      {socialLocked && (
+        <p className="mb-2 text-xs text-amber-800">
+          Add a title (at least {requireTitleMinLength} characters) first so
+          social posts match your item — or you will spend credits on generic
+          copy.
+        </p>
+      )}
       <div className="space-y-2">
         {listingButtons.length > 0 && (
           <div className="flex flex-wrap gap-2">{listingButtons}</div>
