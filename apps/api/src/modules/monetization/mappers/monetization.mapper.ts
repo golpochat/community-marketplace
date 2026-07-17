@@ -28,6 +28,7 @@ const DEFAULT_SETTINGS = {
   boostsEnabled: true,
   featuredEnabled: true,
   displayAdsEnabled: false,
+  aiMarketingEnabled: false,
 };
 
 export function getDefaultPlatformSettings(): Omit<
@@ -52,6 +53,7 @@ export function mapPlatformSettings(row: {
   boostsEnabled: boolean;
   featuredEnabled: boolean;
   displayAdsEnabled: boolean;
+  aiMarketingEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
 }): MonetizationSettings {
@@ -70,6 +72,7 @@ export function mapPlatformSettings(row: {
     boostsEnabled: row.boostsEnabled,
     featuredEnabled: row.featuredEnabled,
     displayAdsEnabled: row.displayAdsEnabled,
+    aiMarketingEnabled: row.aiMarketingEnabled,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -167,7 +170,7 @@ export function mapWalletTransaction(row: {
   return {
     id: row.id,
     userId: row.userId,
-    type: row.type as 'cashback_earned' | 'expired',
+    type: row.type as 'cashback_earned' | 'expired' | 'ai_generation',
     amount: Number(row.amount),
     sourcePaymentId: row.sourcePaymentId ?? undefined,
     expiresAt: row.expiresAt?.toISOString(),

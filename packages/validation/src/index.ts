@@ -350,6 +350,24 @@ export {
 } from './monetization.schema';
 
 export {
+  aiMarketingTaskSchema,
+  aiBannerFormatSchema,
+  aiBannerTemplateSchema,
+  aiMarketingGenerateSchema,
+  aiMarketingImageSchema,
+  aiMarketingApplyImageSchema,
+  aiMarketingPriceSuggestSchema,
+  aiMarketingBestPostingTimeSchema,
+  aiMarketingCampaignPackSchema,
+  type AiMarketingGenerateInput,
+  type AiMarketingImageInput,
+  type AiMarketingApplyImageInput,
+  type AiMarketingPriceSuggestInput,
+  type AiMarketingBestPostingTimeInput,
+  type AiMarketingCampaignPackInput,
+} from './ai-marketing.schema';
+
+export {
   emailProviderIdSchema,
   emailPlatformSettingsUpdateSchema,
   emailTestSendSchema,

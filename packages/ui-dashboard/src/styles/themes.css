@@ -1,5 +1,11 @@
 /* Role-based dashboard theme tokens — applied via data-dashboard-role on layout root */
 
+/* Feedback toasts inherit the active role accent (buyer/seller/admin/super-admin/member). */
+[data-dashboard-role] {
+  --feedback-accent: var(--dashboard-accent);
+  --feedback-accent-foreground: 0 0% 100%;
+}
+
 /* Light super-admin theme — purple #9333EA, sidebar #FAF5FF, active #F3E8FF, text #1A1A1A */
 [data-dashboard-theme='superAdmin'] {
   --dashboard-sidebar-bg: 270 100% 98%;

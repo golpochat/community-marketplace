@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import type { SellerVerificationStatus } from '@community-marketplace/types';
+import { useAppFeedback } from '@community-marketplace/ui';
 
 import { useAuth } from '@/hooks/use-auth';
 import {
@@ -17,7 +18,6 @@ import { sellerVerificationService } from '@/services/seller-verification.servic
 
 import { VerificationBanner } from './verification-banner';
 import { VerificationProgressBar } from './verification-progress-bar';
-import { useVerificationToast, VerificationToastStack } from './verification-toast';
 
 interface VerificationNudgeBannerProps {
   className?: string;
@@ -80,10 +80,10 @@ export function VerificationNudgeBanner({
   );
 }
 
-/** Mount in seller layout — shows session toasts for active nudge tiers. */
+/** Mount in seller layout — shows branded app toasts for active nudge tiers. */
 export function VerificationNudgeHost() {
   const { user } = useAuth();
-  const { toasts, push, dismiss } = useVerificationToast();
+  const { error, warning, info } = useAppFeedback();
 
   useEffect(() => {
     if (!user?.id) return;
@@ -91,10 +91,17 @@ export function VerificationNudgeHost() {
       const nudge = resolveVerificationNudge(status);
       if (!nudge || nudge.tier === 'none' || nudge.tier === 'verification_required') return;
       if (hasSeenNudgeToast(user.id, nudge.tier)) return;
-      push(nudge.message, nudge.bannerType);
+
+      if (nudge.bannerType === 'critical') {
+        error('Verification needed', nudge.message);
+      } else if (nudge.bannerType === 'warning') {
+        warning('Verification reminder', nudge.message);
+      } else {
+        info('SellNearby verification', nudge.message);
+      }
       markNudgeToastSeen(user.id, nudge.tier);
     });
-  }, [user?.id, push]);
+  }, [user?.id, error, warning, info]);
 
-  return <VerificationToastStack toasts={toasts} onDismiss={dismiss} />;
+  return null;
 }

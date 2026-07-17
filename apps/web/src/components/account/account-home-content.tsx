@@ -6,6 +6,7 @@ import { PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { useSellerOnboarding } from '@/providers/seller-onboarding-provider';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
+import { SELLER_ROUTES } from '@/lib/seller-routes';
 
 function SectionHeading({ title, description }: { title: string; description?: string }) {
   return (
@@ -103,16 +104,23 @@ export function AccountHomeContent() {
               <HubCard
                 href={WEB_APP_ROUTES.accountSelling}
                 title="Start selling"
-                description="Choose your seller type, verify your identity, connect payouts, then list."
+                description="Choose your seller type, set up a storefront, list items, then verify for payouts."
                 highlight
               />
             ) : phase === 'setup_in_progress' ? (
-              <HubCard
-                href={WEB_APP_ROUTES.accountSelling}
-                title="Continue seller setup"
-                description="Pick up where you left off — verification, payouts, and your first listing."
-                highlight
-              />
+              <>
+                <HubCard
+                  href={WEB_APP_ROUTES.accountSelling}
+                  title="Continue seller setup"
+                  description="Pick up where you left off — storefront, listings, verification, and payouts."
+                  highlight
+                />
+                <HubCard
+                  href={SELLER_ROUTES.storefront}
+                  title="Storefront"
+                  description="Set up your shop name and branding before you list."
+                />
+              </>
             ) : phase === 'suspended' ? (
               <HubCard
                 href={WEB_APP_ROUTES.accountSelling}
@@ -130,6 +138,11 @@ export function AccountHomeContent() {
                   href="/account/listings/create"
                   title="Create listing"
                   description="Add a new item for local buyers."
+                />
+                <HubCard
+                  href={SELLER_ROUTES.storefront}
+                  title="Storefront"
+                  description="Edit your shop name, branding, and public store page."
                 />
                 <HubCard
                   href={WEB_APP_ROUTES.accountEarnings}

@@ -23,6 +23,7 @@ export const WEB_APP_ROUTES = {
   accountNotifications: '/account/notifications',
   accountStartSelling: '/account/start-selling',
   accountSelling: '/account/selling',
+  accountStorefront: '/account/storefront',
   accountVerification: '/account/verification',
   accountSettings: '/account/settings',
   accountDisputes: '/account/disputes',

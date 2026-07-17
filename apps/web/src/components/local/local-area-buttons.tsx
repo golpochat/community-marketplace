@@ -58,7 +58,7 @@ export function LocalAreaButtons({
         onClick={() => onFilterChange('free')}
         className={chipClass(activeFilter === 'free')}
       >
-        Free items
+        Free-priced items
       </button>
 
       {areas.map((area) => (

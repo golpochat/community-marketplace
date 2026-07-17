@@ -49,11 +49,13 @@ describe('deriveAccountSellingPhase', () => {
         startedAt: null,
         sellerStatus: 'unverified',
         businessStructure: null,
+        hasStorefront: false,
+        storeCount: 0,
       }),
     ).toBe('buyer_only');
   });
 
-  it('returns setup_in_progress after opt-in until verified', async () => {
+  it('returns setup_in_progress after opt-in until a storefront exists', async () => {
     const { deriveAccountSellingPhase } = await import('@community-marketplace/types');
     expect(
       deriveAccountSellingPhase({
@@ -61,19 +63,23 @@ describe('deriveAccountSellingPhase', () => {
         startedAt: '2026-01-01T00:00:00.000Z',
         sellerStatus: 'unverified',
         businessStructure: 'individual',
+        hasStorefront: false,
+        storeCount: 0,
       }),
     ).toBe('setup_in_progress');
     expect(
       deriveAccountSellingPhase({
         started: true,
         startedAt: '2026-01-01T00:00:00.000Z',
-        sellerStatus: 'under_review',
+        sellerStatus: 'verified',
         businessStructure: 'individual',
+        hasStorefront: false,
+        storeCount: 0,
       }),
     ).toBe('setup_in_progress');
   });
 
-  it('returns active_seller only when verified', async () => {
+  it('returns active_seller once a storefront exists (verification optional)', async () => {
     const { deriveAccountSellingPhase, isSellerIdentityStepComplete } = await import(
       '@community-marketplace/types'
     );
@@ -81,8 +87,20 @@ describe('deriveAccountSellingPhase', () => {
       deriveAccountSellingPhase({
         started: true,
         startedAt: '2026-01-01T00:00:00.000Z',
+        sellerStatus: 'unverified',
+        businessStructure: 'individual',
+        hasStorefront: true,
+        storeCount: 1,
+      }),
+    ).toBe('active_seller');
+    expect(
+      deriveAccountSellingPhase({
+        started: true,
+        startedAt: '2026-01-01T00:00:00.000Z',
         sellerStatus: 'verified',
         businessStructure: 'individual',
+        hasStorefront: true,
+        storeCount: 1,
       }),
     ).toBe('active_seller');
     expect(isSellerIdentityStepComplete('unverified')).toBe(false);

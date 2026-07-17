@@ -22,6 +22,9 @@
   --motion-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --storefront-banner-height: clamp(13.75rem, 20vw, 17.5rem);
   --storefront-logo-overlap: 3.5rem;
+  /* Public-site toasts use SellNearby teal; dashboards override via role theme */
+  --feedback-accent: var(--brand-primary);
+  --feedback-accent-foreground: 0 0% 100%;
 }
 
 .dark {

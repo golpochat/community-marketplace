@@ -1,12 +1,8 @@
-import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 
-import { LoadingState } from '@/components/LoadingState';
-import { SellerStorefrontPage } from '@/components/seller/profile/seller-storefront-page';
+import { SELLER_ROUTES } from '@/lib/seller-routes';
 
+/** Legacy path — storefront lives under the unified account shell. */
 export default function Page() {
-  return (
-    <Suspense fallback={<LoadingState message="Loading storefront…" />}>
-      <SellerStorefrontPage />
-    </Suspense>
-  );
+  redirect(SELLER_ROUTES.storefront);
 }

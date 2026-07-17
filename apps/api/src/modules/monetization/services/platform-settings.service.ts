@@ -89,6 +89,9 @@ export class PlatformSettingsService {
         ...(input.displayAdsEnabled !== undefined
           ? { displayAdsEnabled: input.displayAdsEnabled }
           : {}),
+        ...(input.aiMarketingEnabled !== undefined
+          ? { aiMarketingEnabled: input.aiMarketingEnabled }
+          : {}),
         ...(pricingChanged
           ? { pricing: pricing as unknown as Prisma.InputJsonValue }
           : {}),
@@ -116,6 +119,7 @@ export class PlatformSettingsService {
         boostsEnabled: defaults.boostsEnabled,
         featuredEnabled: defaults.featuredEnabled,
         displayAdsEnabled: defaults.displayAdsEnabled,
+        aiMarketingEnabled: defaults.aiMarketingEnabled,
         emailProvider: 'brevo',
         emailFallbackEnabled: false,
       },

@@ -19,6 +19,7 @@ import {
 } from "@community-marketplace/utils";
 
 import { DeliveryPreviewModal } from "@/components/seller/DeliveryPreviewModal";
+import { ListingMarketingHub } from "@/components/seller/marketing-hub/listing-marketing-hub";
 import { PricingPreviewModal } from "@/components/seller/PricingPreviewModal";
 import {
   ExistingListingPhotos,
@@ -160,6 +161,8 @@ interface VehicleListingFormProps {
   onPricingUpdated?: (result: { status: string; message: string }) => void;
   onRemoveExistingImage?: (imageId: string) => void | Promise<void>;
   onReorderExistingImages?: (images: ListingImage[]) => void | Promise<void>;
+  onListingImagesChange?: (images: ListingImage[]) => void;
+  onBoostListing?: () => void;
   removingExistingImageId?: string | null;
   reorderingImages?: boolean;
 }
@@ -187,6 +190,8 @@ export function VehicleListingForm({
   onPricingUpdated,
   onRemoveExistingImage,
   onReorderExistingImages,
+  onListingImagesChange,
+  onBoostListing,
   removingExistingImageId = null,
   reorderingImages = false,
 }: VehicleListingFormProps) {
@@ -788,6 +793,21 @@ export function VehicleListingForm({
 
       {step === 3 && (
         <div className="space-y-4">
+          <ListingMarketingHub
+            step="details"
+            listingId={listingId}
+            title={previewTitle || ""}
+            description={data.sellerNotes}
+            categoryId={data.categoryId || undefined}
+            categoryName="Vehicles"
+            condition={data.condition || data.customCondition || undefined}
+            location={data.location}
+            price={data.salePrice}
+            hiddenTasks={["seo_title"]}
+            descriptionAcceptLabel="Apply to seller notes"
+            onAcceptTitle={() => undefined}
+            onAcceptDescription={(next) => update({ sellerNotes: next })}
+          />
           <VehicleHybridSelect
             id="condition"
             label="Condition"
@@ -819,6 +839,17 @@ export function VehicleListingForm({
 
       {step === 4 && (
         <div className="space-y-4">
+          <ListingMarketingHub
+            step="pricing"
+            listingId={listingId}
+            categoryId={data.categoryId || undefined}
+            condition={data.condition || undefined}
+            location={data.location}
+            make={data.make || undefined}
+            model={data.model || undefined}
+            year={data.year || undefined}
+            onApplySuggestedPrice={(price) => update({ salePrice: price })}
+          />
           <div>
             <Label htmlFor="salePrice">Price (EUR) *</Label>
             <Input
@@ -922,6 +953,16 @@ export function VehicleListingForm({
 
       {step === 5 && (
         <div className="space-y-4">
+          {listingId && (
+            <ListingMarketingHub
+              step="photos"
+              listingId={listingId}
+              listingStatus={listingStatus}
+              images={existingImages}
+              onListingImagesChange={onListingImagesChange}
+              onBoostListing={onBoostListing}
+            />
+          )}
           <ExistingListingPhotos
             images={existingImages}
             sortable

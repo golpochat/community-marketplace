@@ -58,9 +58,8 @@ export function SellerOnboardingProvider({ children }: { children: ReactNode }) 
   }, [refresh]);
 
   const phase = useMemo((): AccountSellingPhase => {
-    if (user?.role === 'SELLER') return 'active_seller';
     return deriveAccountSellingPhase(snapshot);
-  }, [user?.role, snapshot]);
+  }, [snapshot]);
 
   const value = useMemo(
     () => ({ snapshot, phase, loading, error, refresh }),

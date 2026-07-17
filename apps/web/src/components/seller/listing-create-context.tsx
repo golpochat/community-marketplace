@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { SellerStore } from '@community-marketplace/types';
 import { Label, Select } from '@community-marketplace/ui';
 
+import { SELLER_ROUTES } from '@/lib/seller-routes';
 export type SellerCategoryOption = {
   id: string;
   name: string;
@@ -81,7 +82,7 @@ export function ListingCreateContext({
     return (
       <p className="text-sm text-amber-700">
         Create a{' '}
-        <Link href="/seller/storefront" className="font-medium underline">
+        <Link href={SELLER_ROUTES.storefront} className="font-medium underline">
           storefront
         </Link>{' '}
         before adding listings.

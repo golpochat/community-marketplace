@@ -311,6 +311,36 @@ export {
   isFeaturedPlacement,
 } from './monetization';
 export type {
+  AiMarketingTask,
+  AiBillingMethod,
+  AiBannerFormat,
+  AiBannerTemplate,
+  AiMarketingQuotaSummary,
+  AiMarketingGenerateResult,
+  AiMarketingImageResult,
+  AiMarketingApplyImageResult,
+  AiPriceSuggestionConfidence,
+  AiPriceSuggestionResult,
+  AiBestPostingTimeConfidence,
+  AiBestPostingTimeSource,
+  AiBestPostingTimeWindow,
+  AiBestPostingTimeSlot,
+  AiBestPostingTimeResult,
+} from './ai-marketing';
+export {
+  AI_MARKETING_TASK_UNIT_COSTS,
+  AI_MARKETING_FREE_UNITS_MONTHLY,
+  AI_MARKETING_UNIT_EUR_COST,
+  AI_MARKETING_DAILY_GENERATION_LIMIT,
+  AI_MARKETING_PROMPT_VERSION,
+  AI_MARKETING_IMAGE_PROMPT_VERSION,
+  AI_MARKETING_TASK_LABELS,
+  AI_BANNER_FORMAT_LABELS,
+  AI_BANNER_TEMPLATE_LABELS,
+  AI_MARKETING_LISTING_APPLY_TASKS,
+  AI_MARKETING_IMAGE_TASKS,
+} from './ai-marketing';
+export type {
   AdsSystemModuleCode,
   DisplayAdPlacement,
   AdsSystemModuleState,

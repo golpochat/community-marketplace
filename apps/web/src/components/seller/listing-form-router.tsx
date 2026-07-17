@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 import type {
@@ -20,6 +22,7 @@ import {
   type VehicleFormData,
 } from '@/components/seller/vehicle-listing-form';
 import { useSellerStoreData } from '@/hooks/use-seller-store-data';
+import { SELLER_ROUTES } from '@/lib/seller-routes';
 import { isVehicleCategory } from '@/lib/vehicle-catalog';
 
 import type { SellerCategoryOption } from '@/components/seller/listing-create-context';
@@ -47,6 +50,8 @@ interface ListingFormRouterProps {
   onPricingUpdated?: (result: { status: string; message: string }) => void;
   onRemoveExistingImage?: (imageId: string) => void | Promise<void>;
   onReorderExistingImages?: (images: ListingImage[]) => void | Promise<void>;
+  onListingImagesChange?: (images: ListingImage[]) => void;
+  onBoostListing?: () => void;
   removingExistingImageId?: string | null;
   reorderingImages?: boolean;
 }
@@ -72,11 +77,15 @@ export function ListingFormRouter({
   onPricingUpdated,
   onRemoveExistingImage,
   onReorderExistingImages,
+  onListingImagesChange,
+  onBoostListing,
   removingExistingImageId,
   reorderingImages,
 }: ListingFormRouterProps) {
+  const router = useRouter();
   const { stores, loading: storesLoading } = useSellerStoreData();
   const [storeId, setStoreId] = useState(() => pickDefaultListingStoreId(stores));
+  const isCreateFlow = !listingId;
 
   const defaultCategoryId =
     initialCategoryId ??
@@ -104,6 +113,12 @@ export function ListingFormRouter({
     if (fallback) setCategoryId(fallback);
   }, [categories, categoryId]);
 
+  useEffect(() => {
+    if (!storesLoading && isCreateFlow && stores.length === 0) {
+      router.replace(SELLER_ROUTES.storefront);
+    }
+  }, [storesLoading, isCreateFlow, stores.length, router]);
+
   const selectedCategory = useMemo(
     () => categories.find((category) => category.id === categoryId),
     [categories, categoryId],
@@ -121,6 +136,29 @@ export function ListingFormRouter({
 
   function withStoreId<T extends { storeId?: string }>(data: T): T {
     return resolvedStoreId ? { ...data, storeId: resolvedStoreId } : data;
+  }
+
+  if (storesLoading) {
+    return (
+      <p className="text-sm text-muted-foreground" role="status">
+        Loading storefront…
+      </p>
+    );
+  }
+
+  if (isCreateFlow && stores.length === 0) {
+    return (
+      <div className="space-y-3 rounded-xl border border-border bg-card p-5">
+        <p className="text-sm text-foreground">
+          Set up your{' '}
+          <Link href={SELLER_ROUTES.storefront} className="font-medium text-primary underline">
+            storefront
+          </Link>{' '}
+          before creating listings.
+        </p>
+        <p className="text-sm text-muted-foreground">Redirecting to storefront setup…</p>
+      </div>
+    );
   }
 
   return (
@@ -156,6 +194,8 @@ export function ListingFormRouter({
           onPricingUpdated={onPricingUpdated}
           onRemoveExistingImage={onRemoveExistingImage}
           onReorderExistingImages={onReorderExistingImages}
+          onListingImagesChange={onListingImagesChange}
+          onBoostListing={onBoostListing}
           removingExistingImageId={removingExistingImageId}
           reorderingImages={reorderingImages}
         />
@@ -178,6 +218,8 @@ export function ListingFormRouter({
           onPricingUpdated={onPricingUpdated}
           onRemoveExistingImage={onRemoveExistingImage}
           onReorderExistingImages={onReorderExistingImages}
+          onListingImagesChange={onListingImagesChange}
+          onBoostListing={onBoostListing}
           removingExistingImageId={removingExistingImageId}
           reorderingImages={reorderingImages}
         />
