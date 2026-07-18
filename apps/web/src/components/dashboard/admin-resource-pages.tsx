@@ -31,8 +31,11 @@ import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-t
 import { ConfirmDialog } from '@/components/admin/seller-verification/confirm-dialog';
 import {
   UserModerationModal,
+  type UserModerationAction,
   type UserModerationSubmitPayload,
 } from '@/components/admin/users/user-moderation-modal';
+import { UserStatusHistoryModal } from '@/components/admin/users/user-status-history-modal';
+import { VerifiedSellerIcon } from '@/components/trust/verified-seller-icon';
 import {
   formatNotificationChannelLabel,
   formatNotificationTypeLabel,
@@ -59,18 +62,18 @@ function moderationReportTarget(report: {
 }
 
 type UserStatusFilter = 'active' | 'inactive' | 'suspended' | '';
-type UserRoleFilter = 'MEMBER' | 'BUYER' | 'SELLER' | 'ADMIN' | '';
 
 export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
   const feedback = useAppFeedback();
   const [actingUserId, setActingUserId] = useState<string | null>(null);
   const [moderationTarget, setModerationTarget] = useState<{
     user: UserProfile;
-    action: 'suspend' | 'ban';
+    action: UserModerationAction;
   } | null>(null);
   const [reinstateTarget, setReinstateTarget] = useState<UserProfile | null>(null);
+  const [activateTarget, setActivateTarget] = useState<UserProfile | null>(null);
+  const [historyTarget, setHistoryTarget] = useState<UserProfile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<UserRoleFilter>('');
   const [statusFilter, setStatusFilter] = useState<UserStatusFilter>('');
   const [pageSize, setPageSize] = useState(10);
 
@@ -80,10 +83,9 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
         page,
         limit,
         ...(searchQuery.trim() ? { search: searchQuery.trim() } : {}),
-        ...(roleFilter ? { role: roleFilter } : {}),
         ...(statusFilter ? { status: statusFilter } : {}),
       }),
-    [role, searchQuery, roleFilter, statusFilter],
+    [role, searchQuery, statusFilter],
   );
 
   const {
@@ -105,6 +107,14 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
       if (action === 'suspend') {
         await adminService.suspendUser(role, user.id, payload.reason || undefined);
         feedback.success('User suspended', `${user.email} can no longer access the marketplace.`);
+      } else if (action === 'deactivate') {
+        await adminService.updateMarketplaceUserStatus(
+          role,
+          user.id,
+          'inactive',
+          payload.reason || undefined,
+        );
+        feedback.success('User deactivated', `${user.email} is inactive and cannot sign in.`);
       } else {
         await adminService.banUser(
           role,
@@ -150,10 +160,28 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
     }
   }
 
-  const hasActiveFilters = Boolean(searchQuery || roleFilter || statusFilter);
+  async function handleActivate() {
+    if (!activateTarget) return;
+    const user = activateTarget;
+    setActingUserId(user.id);
+    try {
+      await adminService.updateMarketplaceUserStatus(role, user.id, 'active');
+      feedback.success('User activated', `${user.email} can sign in again.`);
+      setActivateTarget(null);
+      await reload();
+    } catch (err) {
+      feedback.error(
+        'Failed to activate user',
+        err instanceof Error ? err.message : 'Please try again.',
+      );
+    } finally {
+      setActingUserId(null);
+    }
+  }
+
+  const hasActiveFilters = Boolean(searchQuery || statusFilter);
   const clearUserFilters = () => {
     setSearchQuery('');
-    setRoleFilter('');
     setStatusFilter('');
     setPage(1);
   };
@@ -162,14 +190,25 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
     const isProtectedRole = isPrivilegedSystemRole(user.role);
     const isActing = actingUserId === user.id;
     const isSuspended = user.status === 'suspended';
+    const isInactive = user.status === 'inactive';
+    const isActive = user.status === 'active';
+    const isVerified = Boolean(user.verificationBadge) || user.sellerStatus === 'verified';
 
     return [
-      user.displayName ?? user.email,
+      <div key={`${user.id}-name`} className="flex flex-wrap items-center gap-1.5">
+        <span>{user.displayName ?? user.email}</span>
+        {isVerified ? <VerifiedSellerIcon size="md" /> : null}
+      </div>,
       user.email,
-      user.role,
       user.status,
       <div key={user.id} className="flex flex-wrap gap-2">
         <IconActionGroup>
+          <IconActionButton
+            icon="scroll"
+            label="Status history"
+            disabled={isActing}
+            onClick={() => setHistoryTarget(user)}
+          />
           {isSuspended ? (
             <IconActionButton
               icon="circle-check"
@@ -178,8 +217,24 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
               disabled={isProtectedRole || isActing}
               onClick={() => setReinstateTarget(user)}
             />
-          ) : (
+          ) : null}
+          {isInactive ? (
+            <IconActionButton
+              icon="circle-check"
+              label={isActing ? 'Working…' : 'Activate user'}
+              variant="accent"
+              disabled={isProtectedRole || isActing}
+              onClick={() => setActivateTarget(user)}
+            />
+          ) : null}
+          {isActive ? (
             <>
+              <IconActionButton
+                icon="archive"
+                label={isActing ? 'Working…' : 'Deactivate user'}
+                disabled={isProtectedRole || isActing}
+                onClick={() => setModerationTarget({ user, action: 'deactivate' })}
+              />
               <IconActionButton
                 icon="user-minus"
                 label={isActing ? 'Working…' : 'Suspend user'}
@@ -194,7 +249,7 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
                 onClick={() => setModerationTarget({ user, action: 'ban' })}
               />
             </>
-          )}
+          ) : null}
         </IconActionGroup>
       </div>,
     ];
@@ -203,8 +258,8 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
   return (
     <>
       <DashboardPageShell
-        title="Users"
-        description="Manage buyer and seller accounts across the marketplace."
+        title="Users Management"
+        description="Manage marketplace member accounts — activate, deactivate, suspend, or ban with a recorded status history."
         loading={loading}
         error={error}
         empty={!loading && !error && rows.length === 0}
@@ -224,21 +279,6 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
               className="min-w-[220px] flex-1 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
               aria-label="Search users"
             />
-            <select
-              value={roleFilter}
-              onChange={(e) => {
-                setRoleFilter(e.target.value as UserRoleFilter);
-                setPage(1);
-              }}
-              className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
-              aria-label="Filter users by role"
-            >
-              <option value="">All roles</option>
-              <option value="MEMBER">Member</option>
-              <option value="BUYER">Buyer (legacy)</option>
-              <option value="SELLER">Seller (legacy)</option>
-              {role === 'SUPER_ADMIN' ? <option value="ADMIN">Admin</option> : null}
-            </select>
             <select
               value={statusFilter}
               onChange={(e) => {
@@ -271,7 +311,7 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
                 <option value={50}>50</option>
               </select>
             </label>
-            {(searchQuery || roleFilter || statusFilter) && (
+            {(searchQuery || statusFilter) && (
               <DashboardClearFiltersButton onClick={clearUserFilters} />
             )}
           </div>
@@ -281,7 +321,7 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
             hasActiveFilters={hasActiveFilters}
             onClearFilters={clearUserFilters}
           >
-            <DataTable columns={['Name', 'Email', 'Role', 'Status', 'Actions']} rows={rows} />
+            <DataTable columns={['Name', 'Email', 'Status', 'Actions']} rows={rows} />
             <AdminTableFooter
               page={page}
               totalPages={totalPages}
@@ -304,6 +344,13 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
         }}
       />
 
+      <UserStatusHistoryModal
+        open={historyTarget != null}
+        userId={historyTarget?.id ?? null}
+        userEmail={historyTarget?.email ?? ''}
+        role={role}
+        onClose={() => setHistoryTarget(null)}
+      />
 
       <ConfirmDialog
         open={reinstateTarget != null}
@@ -319,6 +366,23 @@ export function AdminUsersPage({ role }: { role: AdminServiceRole }) {
         onConfirm={() => void handleReinstate()}
         onCancel={() => {
           if (actingUserId == null) setReinstateTarget(null);
+        }}
+      />
+
+      <ConfirmDialog
+        open={activateTarget != null}
+        title="Activate user"
+        message={
+          activateTarget
+            ? `Set ${activateTarget.email} back to active so they can sign in?`
+            : ''
+        }
+        confirmLabel="Activate"
+        tone="primary"
+        loading={actingUserId != null}
+        onConfirm={() => void handleActivate()}
+        onCancel={() => {
+          if (actingUserId == null) setActivateTarget(null);
         }}
       />
     </>

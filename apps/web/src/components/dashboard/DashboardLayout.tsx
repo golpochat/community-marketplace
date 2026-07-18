@@ -19,9 +19,9 @@ import { authService } from '@/services/auth.service';
 const PROFILE_HREF: Record<RbacRole, string> = {
   SUPER_ADMIN: '/super-admin/profile',
   ADMIN: '/admin/profile',
-  MEMBER: '/account/settings',
-  SELLER: '/account/settings',
-  BUYER: '/account/settings',
+  MEMBER: '/account/profile',
+  SELLER: '/account/profile',
+  BUYER: '/account/profile',
 };
 
 const SETTINGS_HREF: Record<RbacRole, string | undefined> = {
@@ -45,9 +45,18 @@ export interface WebDashboardLayoutProps {
   theme: DashboardThemeProp;
   children: React.ReactNode;
   sidebarItems?: SidebarNavItem[];
+  verified?: boolean;
+  verifyHref?: string;
 }
 
-export default function DashboardLayout({ role, theme, children, sidebarItems: sidebarItemsProp }: WebDashboardLayoutProps) {
+export default function DashboardLayout({
+  role,
+  theme,
+  children,
+  sidebarItems: sidebarItemsProp,
+  verified,
+  verifyHref,
+}: WebDashboardLayoutProps) {
   const { user, session, clearUser } = useAuth();
   const { profile, permissions } = useUserProfile();
 
@@ -95,6 +104,8 @@ export default function DashboardLayout({ role, theme, children, sidebarItems: s
         <NotificationBell href={NOTIFICATIONS_HREF[role]} />
       }
       sidebarItems={sidebarItems}
+      verified={verified}
+      verifyHref={verifyHref}
     >
       {children}
     </UIDashboardLayout>

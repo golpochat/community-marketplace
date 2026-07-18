@@ -24,6 +24,10 @@ import {
 import { useSellerStoreData } from '@/hooks/use-seller-store-data';
 import { SELLER_ROUTES } from '@/lib/seller-routes';
 import { isVehicleCategory } from '@/lib/vehicle-catalog';
+import {
+  listingFormStepIndex,
+  vehicleListingFormStepIndex,
+} from '@/lib/wizard-deep-links';
 
 import type { SellerCategoryOption } from '@/components/seller/listing-create-context';
 
@@ -58,6 +62,8 @@ interface ListingFormRouterProps {
   onBoostListing?: () => void;
   removingExistingImageId?: string | null;
   reorderingImages?: boolean;
+  /** Notification deep-link step slug (`details` | `photos` | …). */
+  stepSlug?: string;
 }
 
 export function ListingFormRouter({
@@ -89,6 +95,7 @@ export function ListingFormRouter({
   onBoostListing,
   removingExistingImageId,
   reorderingImages,
+  stepSlug,
 }: ListingFormRouterProps) {
   const router = useRouter();
   const { stores, loading: storesLoading } = useSellerStoreData();
@@ -133,6 +140,9 @@ export function ListingFormRouter({
   );
 
   const isVehicle = selectedCategory ? isVehicleCategory(selectedCategory) : false;
+  const initialStep = isVehicle
+    ? vehicleListingFormStepIndex(stepSlug) ?? undefined
+    : listingFormStepIndex(stepSlug) ?? undefined;
 
   const resolvedStoreId =
     storeId ||
@@ -210,6 +220,7 @@ export function ListingFormRouter({
           onBoostListing={onBoostListing}
           removingExistingImageId={removingExistingImageId}
           reorderingImages={reorderingImages}
+          initialStep={initialStep}
         />
       ) : (
         <ListingForm
@@ -238,6 +249,7 @@ export function ListingFormRouter({
           onBoostListing={onBoostListing}
           removingExistingImageId={removingExistingImageId}
           reorderingImages={reorderingImages}
+          initialStep={initialStep}
         />
       )}
     </div>

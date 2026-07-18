@@ -5,7 +5,7 @@ import { PERMISSIONS } from '@community-marketplace/types';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
-import { BanUserDto, SuspendUserDto } from './dto/users.dto';
+import { BanUserDto, SuspendUserDto, UpdateMarketplaceUserStatusDto } from './dto/users.dto';
 import { UsersService } from './users.service';
 
 @RequireRole('ADMIN', 'SUPER_ADMIN')
@@ -51,6 +51,16 @@ export class AdminUsersController {
   @Post(':id/unsuspend')
   unsuspendUser(@CurrentUser() actor: AuthenticatedUser, @Param('id') id: string) {
     return this.usersService.unsuspendUser(actor.id, actor.role, id);
+  }
+
+  @RequirePermissions(PERMISSIONS.SUSPEND_USER)
+  @Patch(':id/status')
+  updateUserStatus(
+    @CurrentUser() actor: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: UpdateMarketplaceUserStatusDto,
+  ) {
+    return this.usersService.updateMarketplaceUserStatus(actor.id, actor.role, id, dto);
   }
 
   @RequirePermissions(PERMISSIONS.BAN_USER)

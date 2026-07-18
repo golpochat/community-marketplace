@@ -123,6 +123,7 @@ export {
   phoneChangeVerifySchema,
   adminUserListQuerySchema,
   suspendUserSchema,
+  updateMarketplaceUserStatusSchema,
   banUserSchema,
   userWithRoleSchema,
   userWithPermissionsSchema,

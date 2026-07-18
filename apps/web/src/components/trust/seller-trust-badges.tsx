@@ -1,9 +1,10 @@
 'use client';
 
 import { cn } from '@community-marketplace/ui';
-import { Award, BadgeCheck, ShieldCheck } from 'lucide-react';
+import { Award, ShieldCheck } from 'lucide-react';
 
 import { ListingBadge } from '@/components/listings/listing-badge';
+import { VerifiedSellerIcon } from '@/components/trust/verified-seller-icon';
 import {
   isNewMember,
   isTopSeller,
@@ -18,7 +19,6 @@ interface SellerTrustBadgesProps extends SellerTrustInput {
 
 export function SellerTrustBadges({
   verified,
-  phoneVerified,
   memberSince,
   soldCount = 0,
   averageRating,
@@ -27,43 +27,41 @@ export function SellerTrustBadges({
   variant = 'full',
   className,
 }: SellerTrustBadgesProps) {
-  const badges: Array<{ key: string; label: string; tone: 'verified' | 'trusted' | 'gold' | 'outline'; icon?: React.ReactNode }> = [];
+  const badges: Array<{
+    key: string;
+    label: string;
+    tone: 'trusted' | 'gold' | 'outline';
+    icon?: React.ReactNode;
+  }> = [];
 
   if (isNewMember(memberSince)) {
     badges.push({ key: 'new-member', label: 'New member', tone: 'outline' });
-  }
-  if (verified) {
-    badges.push({
-      key: 'verified',
-      label: variant === 'compact' ? 'Verified' : 'Verified seller',
-      tone: 'verified',
-      icon: <BadgeCheck className="h-3 w-3" aria-hidden />,
-    });
   }
   if (isTrustedSeller(averageRating, reviewCount)) {
     badges.push({
       key: 'trusted',
       label: variant === 'compact' ? 'Trusted' : 'Trusted seller',
       tone: 'trusted',
-      icon: <ShieldCheck className="h-3 w-3" aria-hidden />,
+      icon: <ShieldCheck className="h-3.5 w-3.5" aria-hidden />,
     });
   }
   if (isTopSeller(soldCount)) {
     badges.push({
       key: 'top',
-      label: variant === 'compact' ? 'Top seller' : 'Top seller',
+      label: 'Top seller',
       tone: 'gold',
-      icon: <Award className="h-3 w-3" aria-hidden />,
+      icon: <Award className="h-3.5 w-3.5" aria-hidden />,
     });
   }
   if (isAmbassador) {
     badges.push({ key: 'ambassador', label: 'Community ambassador', tone: 'trusted' });
   }
 
-  if (badges.length === 0) return null;
+  if (!verified && badges.length === 0) return null;
 
   return (
-    <div className={cn('flex flex-wrap gap-1.5', className)}>
+    <div className={cn('flex flex-wrap items-center gap-1.5', className)}>
+      {verified ? <VerifiedSellerIcon size={variant === 'compact' ? 'sm' : 'md'} /> : null}
       {badges.map((badge) => (
         <ListingBadge key={badge.key} tone={badge.tone} className="font-normal">
           {badge.icon}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Lock } from 'lucide-react';
 
 import type {
@@ -20,6 +21,7 @@ import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
 import { monetizationService } from '@/services/monetization.service';
 import { sellerVerificationService } from '@/services/seller-verification.service';
 import { SellerProfileStatusBadge } from '@/components/seller/profile/seller-profile-status-badge';
+import { verificationStepIndex } from '@/lib/wizard-deep-links';
 
 import { SellerStatusHistoryPanel } from './seller-status-history-panel';
 
@@ -218,6 +220,8 @@ interface SellerVerificationFlowProps {
 
 export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowProps) {
   const feedback = useAppFeedback();
+  const searchParams = useSearchParams();
+  const deepLinkStep = verificationStepIndex(searchParams.get('step'));
   const [status, setStatus] = useState<SellerVerificationStatus | null>(null);
   const [fastTrack, setFastTrack] = useState<FastTrackStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -263,7 +267,13 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
       setFastTrack(fastTrackStatus);
       hydrateFormFromStatus(verificationStatus);
       if (options?.syncStep !== false) {
-        setSelectedStep(incompleteStepIndex(verificationStatus));
+        // Prefer notification deep link; otherwise open the first incomplete step.
+        // Deep-linked steps may be beyond the unlocked gate so sellers can see what to fix.
+        if (deepLinkStep != null) {
+          setSelectedStep(deepLinkStep);
+        } else {
+          setSelectedStep(incompleteStepIndex(verificationStatus));
+        }
       }
     } catch (err) {
       feedback.error(err instanceof Error ? err.message : 'Failed to load verification');
@@ -277,7 +287,8 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
     // eslint-disable-next-line react-hooks/exhaustive-deps -- initial load only
   }, []);
 
-  const unlocked = maxUnlockedStep(status, files);
+  const unlocked =
+    deepLinkStep != null ? Math.max(maxUnlockedStep(status, files), deepLinkStep) : maxUnlockedStep(status, files);
   const step = Math.min(selectedStep, unlocked);
 
   function goToStep(index: number) {

@@ -1,29 +1,18 @@
 'use client';
 
 import type { SellerStatus } from '@community-marketplace/types';
-import { BadgeCheck } from 'lucide-react';
+
+import { VerifiedSellerIcon } from '@/components/trust/verified-seller-icon';
 
 interface StoreVerificationLabelProps {
   sellerStatus?: SellerStatus;
   verified: boolean;
 }
 
+/** Icon-only verified mark beside the store name. */
 export function StoreVerificationLabel({ sellerStatus, verified }: StoreVerificationLabelProps) {
   if (verified || sellerStatus === 'verified') {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
-        <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
-        Verified Seller
-      </span>
-    );
-  }
-
-  if (sellerStatus === 'unverified' || sellerStatus === 'verification_required') {
-    return (
-      <span className="inline-flex items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-        Unverified Seller
-      </span>
-    );
+    return <VerifiedSellerIcon size="lg" />;
   }
 
   return null;

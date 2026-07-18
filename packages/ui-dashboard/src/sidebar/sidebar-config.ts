@@ -76,6 +76,99 @@ export function getSellerVerificationSidebarChildren(
 
 export const SELLER_VERIFICATION_SIDEBAR_CHILDREN = getSellerVerificationSidebarChildren('/admin');
 
+export function getListingsSidebarChildren(routePrefix: AdminRoutePrefix): SidebarNavChildItem[] {
+  return [
+    {
+      id: 'listings-catalog',
+      label: 'Catalog',
+      href: `${routePrefix}/listings`,
+      permission: PERMISSIONS.VIEW_LISTINGS,
+    },
+    {
+      id: 'listings-moderation',
+      label: 'Listing Moderation',
+      href: `${routePrefix}/listing-moderation`,
+      permission: PERMISSIONS.APPROVE_LISTING,
+    },
+    {
+      id: 'listings-delivery-reviews',
+      label: 'Delivery Reviews',
+      href: `${routePrefix}/delivery-reviews`,
+      permission: PERMISSIONS.MANAGE_LISTINGS,
+    },
+    {
+      id: 'listings-price-reviews',
+      label: 'Price Reviews',
+      href: `${routePrefix}/price-reviews`,
+      permission: PERMISSIONS.MANAGE_LISTINGS,
+    },
+    {
+      id: 'listings-title-reviews',
+      label: 'Title Reviews',
+      href: `${routePrefix}/title-reviews`,
+      permission: PERMISSIONS.MANAGE_LISTINGS,
+    },
+  ];
+}
+
+export function getTrustSafetySidebarChildren(
+  routePrefix: AdminRoutePrefix,
+): SidebarNavChildItem[] {
+  return [
+    {
+      id: 'trust-reports',
+      label: 'Reports',
+      href: `${routePrefix}/moderation`,
+      permission: PERMISSIONS.VIEW_REPORTS,
+    },
+    {
+      id: 'trust-message-reports',
+      label: 'Message Reports',
+      href: `${routePrefix}/message-moderation`,
+      permission: PERMISSIONS.MODERATE_MESSAGES,
+    },
+    {
+      id: 'trust-disputes',
+      label: 'Disputes',
+      href: `${routePrefix}/disputes`,
+      permission: PERMISSIONS.VIEW_DISPUTES,
+    },
+    {
+      id: 'trust-fraud',
+      label: 'Fraud Detection',
+      href: `${routePrefix}/fraud`,
+      permission: PERMISSIONS.VIEW_FRAUD,
+    },
+    {
+      id: 'trust-moderation-insights',
+      label: 'Moderation insights',
+      href: `${routePrefix}/moderation-insights`,
+      permission: PERMISSIONS.VIEW_PLATFORM_STATS,
+    },
+  ];
+}
+
+export function getFinanceSidebarChildren(routePrefix: AdminRoutePrefix): SidebarNavChildItem[] {
+  return [
+    {
+      id: 'finance-payments',
+      label: 'Payments',
+      href: `${routePrefix}/payments`,
+      permission: PERMISSIONS.VIEW_PAYMENTS,
+    },
+    {
+      id: 'finance-reports',
+      label: 'Financial reports',
+      href: `${routePrefix}/finance`,
+      permission: PERMISSIONS.MANAGE_PAYMENTS,
+    },
+  ];
+}
+
+export const LISTINGS_SIDEBAR_CHILDREN = getListingsSidebarChildren('/admin');
+export const TRUST_SAFETY_SIDEBAR_CHILDREN = getTrustSafetySidebarChildren('/admin');
+export const FINANCE_SIDEBAR_CHILDREN = getFinanceSidebarChildren('/admin');
+
 export const SUPER_ADMIN_SIDEBAR: SidebarNavItem[] = [
   { id: 'overview', label: 'Overview', href: '/super-admin/dashboard', icon: 'crown', exact: true },
 
@@ -155,7 +248,7 @@ export const ADMIN_SIDEBAR: SidebarNavItem[] = [
   },
   {
     id: 'users',
-    label: 'Users',
+    label: 'Users Management',
     href: '/admin/users',
     icon: 'users',
     permission: PERMISSIONS.VIEW_USERS,
@@ -173,90 +266,27 @@ export const ADMIN_SIDEBAR: SidebarNavItem[] = [
     label: 'Listings',
     href: '/admin/listings',
     icon: 'folder',
-    permission: PERMISSIONS.VIEW_LISTINGS,
+    children: LISTINGS_SIDEBAR_CHILDREN,
   },
   {
-    id: 'listing-moderation',
-    label: 'Listing Moderation',
-    href: '/admin/listing-moderation',
-    icon: 'shield-check',
-    permission: PERMISSIONS.APPROVE_LISTING,
-  },
-  {
-    id: 'delivery-reviews',
-    label: 'Delivery Reviews',
-    href: '/admin/delivery-reviews',
-    icon: 'package',
-    permission: PERMISSIONS.MANAGE_LISTINGS,
-  },
-  {
-    id: 'price-reviews',
-    label: 'Price Reviews',
-    href: '/admin/price-reviews',
-    icon: 'tag',
-    permission: PERMISSIONS.MANAGE_LISTINGS,
-  },
-  {
-    id: 'title-reviews',
-    label: 'Title Reviews',
-    href: '/admin/title-reviews',
-    icon: 'pencil',
-    permission: PERMISSIONS.MANAGE_LISTINGS,
-  },
-  {
-    id: 'moderation',
-    label: 'Moderation',
+    id: 'trust-safety',
+    label: 'Trust & safety',
     href: '/admin/moderation',
-    icon: 'scale',
-    permission: PERMISSIONS.VIEW_REPORTS,
+    icon: 'shield',
+    children: TRUST_SAFETY_SIDEBAR_CHILDREN,
   },
   {
-    id: 'moderation-insights',
-    label: 'Moderation insights',
-    href: '/admin/moderation-insights',
-    icon: 'flag',
-    permission: PERMISSIONS.VIEW_PLATFORM_STATS,
-  },
-  {
-    id: 'message-moderation',
-    label: 'Message Reports',
-    href: '/admin/message-moderation',
-    icon: 'message-circle',
-    permission: PERMISSIONS.MODERATE_MESSAGES,
-  },
-  {
-    id: 'disputes',
-    label: 'Disputes',
-    href: '/admin/disputes',
-    icon: 'scale',
-    permission: PERMISSIONS.VIEW_DISPUTES,
-  },
-  {
-    id: 'fraud',
-    label: 'Fraud Detection',
-    href: '/admin/fraud',
-    icon: 'shield-check',
-    permission: PERMISSIONS.VIEW_FRAUD,
-  },
-  {
-    id: 'payments',
-    label: 'Payments',
+    id: 'finance',
+    label: 'Finance',
     href: '/admin/payments',
     icon: 'credit-card',
-    permission: PERMISSIONS.VIEW_PAYMENTS,
+    children: FINANCE_SIDEBAR_CHILDREN,
   },
   {
     id: 'monetization',
     label: 'Monetization',
     href: '/admin/monetization',
     icon: 'landmark',
-    permission: PERMISSIONS.MANAGE_PAYMENTS,
-  },
-  {
-    id: 'finance',
-    label: 'Financial reports',
-    href: '/admin/finance',
-    icon: 'bar-chart',
     permission: PERMISSIONS.MANAGE_PAYMENTS,
   },
   {

@@ -7,6 +7,8 @@ export interface AuthenticatedUser {
   email: string;
   role: RbacRole;
   primaryRoleId: string;
+  /** Auth session id from JWT `sid` — used for idle activity tracking */
+  sessionId?: string;
   /** Populated after RolesPermissionsGuard resolves permissions for the request */
   permissions?: UserEffectivePermissions;
 }

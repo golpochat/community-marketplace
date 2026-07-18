@@ -1,4 +1,5 @@
 import type { RbacRole, Role, UserEffectivePermissions, UserPermission } from './rbac';
+import type { SellerStatus } from './seller-verification';
 
 export type { RbacRole, RoleCode, UserRole } from './rbac';
 
@@ -62,7 +63,11 @@ export interface UserProfileDetails {
 }
 
 export interface UserProfile extends User, UserProfileDetails {
+  /** Seller identity verification lifecycle (canonical). */
+  sellerStatus?: SellerStatus;
+  idVerified?: boolean;
   verificationStatus?: VerificationStatus;
+  /** True when seller is identity-verified (sellerStatus / idVerified / legacy badge). */
   verificationBadge?: boolean;
 }
 

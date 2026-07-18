@@ -42,7 +42,7 @@ export function StoreHeader({ store, listingCount }: StoreHeaderProps) {
                 className={STOREFRONT_LOGO_OVERLAP_CLASS}
               />
               <div className="min-w-0 space-y-2 pb-1">
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                     {store.name}
                   </h1>

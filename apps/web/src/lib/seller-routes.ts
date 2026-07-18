@@ -7,7 +7,7 @@ export const SELLER_ROUTES = {
   storefront: WEB_APP_ROUTES.accountStorefront,
   marketing: WEB_APP_ROUTES.accountMarketing,
   verification: '/account/verification',
-  profile: WEB_APP_ROUTES.accountSettings,
+  profile: WEB_APP_ROUTES.accountProfile,
   settings: WEB_APP_ROUTES.accountSettings,
 } as const;
 

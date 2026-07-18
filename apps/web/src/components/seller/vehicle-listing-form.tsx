@@ -21,12 +21,20 @@ import {
 } from "@community-marketplace/utils";
 
 import { DeliveryPreviewModal } from "@/components/seller/DeliveryPreviewModal";
-import { ListingMarketingHub } from "@/components/seller/marketing-hub/listing-marketing-hub";
+import {
+  ListingMarketingHub,
+  MarketingHubRoot,
+} from "@/components/seller/marketing-hub/listing-marketing-hub";
 import { PricingPreviewModal } from "@/components/seller/PricingPreviewModal";
 import {
   ExistingListingPhotos,
   SelectedFilePreviews,
 } from "@/components/seller/listing-image-previews";
+import {
+  clearVehicleListingDraft,
+  loadVehicleListingDraft,
+  saveVehicleListingDraft,
+} from "@/lib/listing-form-draft";
 import { deliveryService } from "@/services/delivery.service";
 import {
   pricingInputFromForm,
@@ -112,6 +120,8 @@ export interface VehicleFormData {
   images: File[];
 }
 
+type PersistedVehicleFormData = Omit<VehicleFormData, "images">;
+
 const INITIAL: VehicleFormData = {
   categoryId: "",
   location: "",
@@ -171,6 +181,8 @@ interface VehicleListingFormProps {
   onBoostListing?: () => void;
   removingExistingImageId?: string | null;
   reorderingImages?: boolean;
+  /** Deep-link step index from notification `?step=`. */
+  initialStep?: number;
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -204,9 +216,18 @@ export function VehicleListingForm({
   onBoostListing,
   removingExistingImageId = null,
   reorderingImages = false,
+  initialStep,
 }: VehicleListingFormProps) {
   const { catalog, loading: catalogLoading } = useDeliveryCatalog();
-  const [step, setStep] = useState(0);
+  const isCreateFlow = !listingId && !initialData;
+  const draftHydratedRef = useRef(false);
+  const [step, setStep] = useState(() => {
+    if (typeof initialStep === 'number' && initialStep >= 0 && initialStep < STEPS.length) {
+      return initialStep;
+    }
+    return 0;
+  });
+  const [highestCompletedStep, setHighestCompletedStep] = useState(-1);
   const [data, setData] = useState<VehicleFormData>({
     ...INITIAL,
     ...initialData,
@@ -278,6 +299,36 @@ export function VehicleListingForm({
   useEffect(() => {
     setData((prev) => ({ ...prev, categoryId }));
   }, [categoryId]);
+
+  useEffect(() => {
+    if (!isCreateFlow || draftHydratedRef.current) return;
+    draftHydratedRef.current = true;
+    const draft = loadVehicleListingDraft<PersistedVehicleFormData>();
+    if (!draft?.data) return;
+    setStep(Math.min(Math.max(0, draft.step), STEPS.length - 1));
+    setHighestCompletedStep(
+      Math.min(Math.max(-1, draft.highestCompletedStep), STEPS.length - 1),
+    );
+    setData((prev) => ({
+      ...prev,
+      ...draft.data,
+      categoryId: draft.data.categoryId || categoryId,
+      images: prev.images,
+    }));
+  }, [isCreateFlow, categoryId]);
+
+  useEffect(() => {
+    if (!isCreateFlow || !draftHydratedRef.current) return;
+    const { images: _images, ...persistable } = data;
+    const timer = window.setTimeout(() => {
+      saveVehicleListingDraft({
+        step,
+        highestCompletedStep,
+        data: persistable,
+      });
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [isCreateFlow, step, highestCompletedStep, data]);
 
   useEffect(() => {
     deliverySeededRef.current = false;
@@ -456,6 +507,7 @@ export function VehicleListingForm({
         });
       }
       setShowPricingPreview(false);
+      if (isCreateFlow) clearVehicleListingDraft();
       onSubmit?.(data);
     } catch (err) {
       setValidationError(
@@ -495,6 +547,8 @@ export function VehicleListingForm({
       setFieldErrors(errors);
       return;
     }
+    setFieldErrors({});
+    setHighestCompletedStep((prev) => Math.max(prev, step));
     if (step < STEPS.length - 1) {
       setStep(step + 1);
       return;
@@ -504,6 +558,14 @@ export function VehicleListingForm({
 
   function handleBack() {
     if (step > 0) setStep(step - 1);
+  }
+
+  function handleStepClick(index: number) {
+    if (index <= Math.max(step, highestCompletedStep)) {
+      setStep(index);
+      setFieldErrors({});
+      setValidationError(null);
+    }
   }
 
   function handleImagesChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -562,9 +624,8 @@ export function VehicleListingForm({
       <ListingFormSteps
         steps={STEPS}
         currentStep={step}
-        onStepClick={(index) => {
-          if (index <= step) setStep(index);
-        }}
+        highestCompletedStep={highestCompletedStep}
+        onStepClick={handleStepClick}
       />
 
       {validationError && (
@@ -870,22 +931,26 @@ export function VehicleListingForm({
               className="mt-1 w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm"
               placeholder="Service history, extras, known issues…"
             />
+            <MarketingHubRoot>
+              <ListingMarketingHub
+                step="details"
+                detailsSection="description"
+                listingId={listingId}
+                title={previewTitle || ""}
+                description={data.sellerNotes}
+                categoryId={data.categoryId || undefined}
+                categoryName="Vehicles"
+                condition={data.condition || data.customCondition || undefined}
+                location={data.location}
+                price={data.salePrice}
+                hiddenTasks={["seo_title"]}
+                descriptionAcceptLabel="Apply to seller notes"
+                descriptionAssistTitle="Improve seller notes"
+                onAcceptTitle={() => undefined}
+                onAcceptDescription={(next) => update({ sellerNotes: next })}
+              />
+            </MarketingHubRoot>
           </div>
-          <ListingMarketingHub
-            step="details"
-            listingId={listingId}
-            title={previewTitle || ""}
-            description={data.sellerNotes}
-            categoryId={data.categoryId || undefined}
-            categoryName="Vehicles"
-            condition={data.condition || data.customCondition || undefined}
-            location={data.location}
-            price={data.salePrice}
-            hiddenTasks={["seo_title"]}
-            descriptionAcceptLabel="Apply to seller notes"
-            onAcceptTitle={() => undefined}
-            onAcceptDescription={(next) => update({ sellerNotes: next })}
-          />
         </div>
       )}
 

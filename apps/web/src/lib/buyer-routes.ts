@@ -2,7 +2,7 @@ import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
 export const BUYER_ROUTES = {
   dashboard: WEB_APP_ROUTES.account,
-  profile: WEB_APP_ROUTES.accountSettings,
+  profile: WEB_APP_ROUTES.accountProfile,
   settings: WEB_APP_ROUTES.accountSettings,
   favorites: WEB_APP_ROUTES.accountSaved,
   purchases: WEB_APP_ROUTES.accountPurchases,

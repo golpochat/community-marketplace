@@ -712,6 +712,7 @@ export class SellerVerificationService {
         verificationId: parsed.requestId,
         reason: parsed.reason,
         priorityRequeueGranted,
+        ...(parsed.targetStep ? { targetStep: parsed.targetStep } : {}),
       },
       timestamp: now,
     });

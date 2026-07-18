@@ -78,11 +78,20 @@ export const adminSellerVerificationService = {
     );
   },
 
-  reject(role: AdminServiceRole, requestId: string, reason: string) {
+  reject(
+    role: AdminServiceRole,
+    requestId: string,
+    reason: string,
+    targetStep?: string,
+  ) {
     return adminPath(role, '/seller-verification/reject').then((path) =>
       apiClient(path, {
         method: 'POST',
-        body: JSON.stringify({ requestId, reason }),
+        body: JSON.stringify({
+          requestId,
+          reason,
+          ...(targetStep ? { targetStep } : {}),
+        }),
       }),
     );
   },

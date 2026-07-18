@@ -2,6 +2,12 @@
 
 import { useEffect, useState } from 'react';
 
+import {
+  VERIFICATION_DEEP_LINK_STEP_LABELS,
+  VERIFICATION_DEEP_LINK_STEPS,
+  type VerificationDeepLinkStep,
+} from '@community-marketplace/types';
+
 interface RejectVerificationModalProps {
   open: boolean;
   sellerName: string;
@@ -9,7 +15,11 @@ interface RejectVerificationModalProps {
   title?: string;
   loading?: boolean;
   showAdditionalDocsOption?: boolean;
-  onSubmit: (reason: string, requestAdditionalDocs: boolean) => void;
+  onSubmit: (
+    reason: string,
+    requestAdditionalDocs: boolean,
+    targetStep?: VerificationDeepLinkStep,
+  ) => void;
   onClose: () => void;
 }
 
@@ -25,11 +35,13 @@ export function RejectVerificationModal({
 }: RejectVerificationModalProps) {
   const [reason, setReason] = useState('');
   const [requestAdditionalDocs, setRequestAdditionalDocs] = useState(false);
+  const [targetStep, setTargetStep] = useState<VerificationDeepLinkStep | ''>('id_document');
 
   useEffect(() => {
     if (!open) {
       setReason('');
       setRequestAdditionalDocs(false);
+      setTargetStep('id_document');
     }
   }, [open]);
 
@@ -64,15 +76,35 @@ export function RejectVerificationModal({
               A reason is required — this prevents accidental rejections.
             </p>
           </div>
+          <div>
+            <label htmlFor="reject-target-step" className="mb-1 block text-sm font-medium text-foreground">
+              Send seller to step
+            </label>
+            <select
+              id="reject-target-step"
+              value={targetStep}
+              onChange={(e) => setTargetStep(e.target.value as VerificationDeepLinkStep | '')}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            >
+              {VERIFICATION_DEEP_LINK_STEPS.map((step) => (
+                <option key={step} value={step}>
+                  {VERIFICATION_DEEP_LINK_STEP_LABELS[step]}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Their notification will open this verification step directly.
+            </p>
+          </div>
           {showAdditionalDocsOption ? (
-          <label className="flex items-center gap-2 text-sm text-foreground">
-            <input
-              type="checkbox"
-              checked={requestAdditionalDocs}
-              onChange={(e) => setRequestAdditionalDocs(e.target.checked)}
-            />
-            Request additional documents
-          </label>
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={requestAdditionalDocs}
+                onChange={(e) => setRequestAdditionalDocs(e.target.checked)}
+              />
+              Request additional documents
+            </label>
           ) : null}
         </div>
         <div className="mt-6 flex justify-end gap-3">
@@ -87,7 +119,13 @@ export function RejectVerificationModal({
           <button
             type="button"
             disabled={loading || !reason.trim()}
-            onClick={() => onSubmit(reason.trim(), requestAdditionalDocs)}
+            onClick={() =>
+              onSubmit(
+                reason.trim(),
+                requestAdditionalDocs,
+                targetStep || undefined,
+              )
+            }
             className="rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground hover:opacity-90 disabled:opacity-50"
           >
             {loading ? 'Submitting…' : 'Submit rejection'}

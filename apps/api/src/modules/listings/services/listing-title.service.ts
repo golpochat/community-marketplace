@@ -10,6 +10,7 @@ import type {
   RbacRole,
   TitleUpdateResult,
 } from '@community-marketplace/types';
+import { listingEditActionUrl } from '@community-marketplace/types';
 import { updateListingTitleSchema } from '@community-marketplace/validation';
 import {
   isListingTitleAmendment,
@@ -138,7 +139,7 @@ export class ListingTitleService {
       type: 'title_review_pending',
       title: 'Title change pending review',
       body: 'Your proposed title is under review. Buyers still see your current title.',
-      actionUrl: `/account/listings/${listingId}/edit`,
+      actionUrl: listingEditActionUrl(listingId, 'details'),
     });
 
     this.eventBus.publish({
@@ -199,7 +200,7 @@ export class ListingTitleService {
       type: 'title_change_approved',
       title: 'Title change approved',
       body: 'Your updated title is now visible to buyers.',
-      actionUrl: `/account/listings/${log.listingId}/edit`,
+      actionUrl: listingEditActionUrl(log.listingId, 'details'),
     });
 
     this.eventBus.publish({
@@ -230,7 +231,7 @@ export class ListingTitleService {
       body:
         reviewNotes?.trim() ||
         'Your proposed title was not approved. The previous title remains live.',
-      actionUrl: `/account/listings/${log.listingId}/edit`,
+      actionUrl: listingEditActionUrl(log.listingId, 'details'),
     });
 
     return { changeLogId, title: log.oldTitle };

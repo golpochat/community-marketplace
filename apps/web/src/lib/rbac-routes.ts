@@ -26,6 +26,7 @@ export const WEB_APP_ROUTES = {
   accountStorefront: '/account/storefront',
   accountMarketing: '/account/marketing',
   accountVerification: '/account/verification',
+  accountProfile: '/account/profile',
   accountSettings: '/account/settings',
   accountDisputes: '/account/disputes',
   accountWallet: '/account/wallet',

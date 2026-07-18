@@ -7,6 +7,9 @@ import { generateSessionId, hashToken } from '../utils/token-hash';
 
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
+/** Marketplace members (Level 3) are logged out after this much inactivity. */
+export const MEMBER_IDLE_TTL_MS = 15 * 60 * 1000;
+
 export interface SessionContext {
   userAgent?: string;
   ipAddress?: string;
@@ -17,8 +20,12 @@ export interface SessionContext {
 export class SessionService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createSession(user: User, refreshToken: string, context: SessionContext = {}) {
-    const sessionId = generateSessionId();
+  async createSession(
+    user: User,
+    refreshToken: string,
+    context: SessionContext = {},
+    sessionId: string = generateSessionId(),
+  ) {
     const expiresAt = new Date(Date.now() + REFRESH_TTL_MS);
 
     await this.prisma.authSession.create({
@@ -58,6 +65,29 @@ export class SessionService {
     }
 
     return session;
+  }
+
+  /**
+   * Marketplace (Level 3) sessions expire after MEMBER_IDLE_TTL_MS without activity.
+   * Call after assertRefreshSession when the user role is a marketplace role.
+   */
+  assertMarketplaceSessionActive(session: {
+    id: string;
+    lastUsedAt: Date | null;
+    createdAt: Date;
+  }) {
+    const lastActivity = session.lastUsedAt ?? session.createdAt;
+    if (Date.now() - lastActivity.getTime() > MEMBER_IDLE_TTL_MS) {
+      throw new UnauthorizedException('Session expired due to inactivity');
+    }
+  }
+
+  /** Update lastUsedAt for sliding idle timeout (fire-and-forget safe). */
+  async touchActivity(sessionId: string): Promise<void> {
+    await this.prisma.authSession.updateMany({
+      where: { id: sessionId, revokedAt: null },
+      data: { lastUsedAt: new Date() },
+    });
   }
 
   async rotateSession(

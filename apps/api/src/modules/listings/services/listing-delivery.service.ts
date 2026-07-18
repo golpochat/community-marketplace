@@ -11,6 +11,7 @@ import type {
   ListingDeliverySelection,
   RbacRole,
 } from '@community-marketplace/types';
+import { listingEditActionUrl } from '@community-marketplace/types';
 import {
   updateListingDeliverySchema,
   type ListingDeliverySelectionInput,
@@ -201,7 +202,7 @@ export class ListingDeliveryService {
       type: 'delivery_review_pending',
       title: 'Delivery changes pending review',
       body: 'Your delivery updates are under review. Your listing stays live with current delivery options.',
-      actionUrl: `/account/listings/${listingId}/edit`,
+      actionUrl: listingEditActionUrl(listingId, 'delivery'),
     });
 
     this.eventBus.publish({
@@ -272,7 +273,7 @@ export class ListingDeliveryService {
       type: 'delivery_change_approved',
       title: 'Delivery changes approved',
       body: 'Your delivery options have been updated and are now visible to buyers.',
-      actionUrl: `/account/listings/${log.listingId}/edit`,
+      actionUrl: listingEditActionUrl(log.listingId, 'delivery'),
     });
 
     return { changeLogId, deliveryOptions };
@@ -300,7 +301,7 @@ export class ListingDeliveryService {
       body:
         reviewNotes?.trim() ||
         'Your proposed delivery changes were not approved. Previous delivery options remain in effect.',
-      actionUrl: `/account/listings/${log.listingId}/edit`,
+      actionUrl: listingEditActionUrl(log.listingId, 'delivery'),
     });
 
     return { changeLogId, deliveryOptions };

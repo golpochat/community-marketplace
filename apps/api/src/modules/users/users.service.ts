@@ -123,6 +123,15 @@ export class UsersService {
     return this.adminService.unsuspendUser(actorId, actorRole, userId);
   }
 
+  updateMarketplaceUserStatus(
+    actorId: string,
+    actorRole: RbacRole,
+    userId: string,
+    dto: unknown,
+  ) {
+    return this.adminService.updateMarketplaceUserStatus(actorId, actorRole, userId, dto);
+  }
+
   banUser(actorId: string, actorRole: RbacRole, dto: unknown) {
     return this.adminService.banUser(actorId, actorRole, dto);
   }

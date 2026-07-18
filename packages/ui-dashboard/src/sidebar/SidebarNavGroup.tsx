@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { ChevronDown } from 'lucide-react';
 
 import { cn } from '@community-marketplace/ui';
 
@@ -24,6 +26,13 @@ export function SidebarNavGroup({ item, collapsed = false, onNavigate }: Sidebar
   const pathname = usePathname();
   const children = item.children ?? [];
   const parentActive = children.some((child) => isChildActive(pathname, child.href));
+  const [open, setOpen] = useState(parentActive);
+
+  useEffect(() => {
+    if (parentActive) {
+      setOpen(true);
+    }
+  }, [parentActive, pathname]);
 
   if (collapsed) {
     return (
@@ -38,17 +47,45 @@ export function SidebarNavGroup({ item, collapsed = false, onNavigate }: Sidebar
 
   return (
     <div className="space-y-1">
-      <SidebarItem
-        item={item}
-        isActive={parentActive && !children.some((c) => isChildActive(pathname, c.href))}
-        collapsed={false}
-        onNavigate={onNavigate}
-      />
-      {children.length > 0 ? (
-        <div className="ml-4 space-y-0.5 border-l border-[hsl(var(--dashboard-sidebar-border))] pl-2">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={`sidebar-group-${item.id}`}
+        onClick={() => setOpen((value) => !value)}
+        className={cn(
+          'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-colors',
+          'border-l-[3px]',
+          parentActive
+            ? 'border-[hsl(var(--dashboard-accent))] bg-[hsl(var(--dashboard-sidebar-active))] text-[hsl(var(--dashboard-sidebar-fg))]'
+            : 'border-transparent text-[hsl(var(--dashboard-sidebar-muted))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.7)] hover:text-[hsl(var(--dashboard-sidebar-fg))]',
+        )}
+      >
+        <Icon
+          name={item.icon}
+          className={cn(
+            'shrink-0',
+            parentActive
+              ? 'text-[hsl(var(--dashboard-accent))]'
+              : 'text-[hsl(var(--dashboard-sidebar-muted))]',
+          )}
+        />
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+        <ChevronDown
+          className={cn(
+            'h-4 w-4 shrink-0 opacity-60 transition-transform',
+            open && 'rotate-180',
+          )}
+          aria-hidden
+        />
+      </button>
+      {open && children.length > 0 ? (
+        <div
+          id={`sidebar-group-${item.id}`}
+          className="ml-4 space-y-0.5 border-l border-[hsl(var(--dashboard-sidebar-border))] pl-2"
+        >
           {children.map((child) => {
             const childActive = isChildActive(pathname, child.href);
-            const childLink = (
+            return (
               <Link
                 key={child.id}
                 href={child.href}
@@ -64,7 +101,6 @@ export function SidebarNavGroup({ item, collapsed = false, onNavigate }: Sidebar
                 {child.label}
               </Link>
             );
-            return childLink;
           })}
         </div>
       ) : null}

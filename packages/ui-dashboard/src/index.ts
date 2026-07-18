@@ -45,6 +45,11 @@ export {
 } from './sidebar/sidebar-config';
 export type { SidebarNavItem, SidebarNavChildItem } from './sidebar/sidebar-config';
 export { SELLER_VERIFICATION_SIDEBAR_CHILDREN } from './sidebar/sidebar-config';
+export {
+  LISTINGS_SIDEBAR_CHILDREN,
+  TRUST_SAFETY_SIDEBAR_CHILDREN,
+  FINANCE_SIDEBAR_CHILDREN,
+} from './sidebar/sidebar-config';
 
 export { PageHeader } from './ui/PageHeader';
 export type { PageHeaderProps } from './ui/PageHeader';

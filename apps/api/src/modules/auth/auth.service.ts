@@ -15,6 +15,7 @@ import {
 
 
 import type { LoginResponse, RbacRole, User } from '@community-marketplace/types';
+import { isMarketplaceRole } from '@community-marketplace/types';
 
 import {
   activateEmailSchema,
@@ -691,7 +692,11 @@ export class AuthService {
 
 
 
-    await this.sessionService.assertRefreshSession(payload.sid, refreshToken, payload.sub);
+    const session = await this.sessionService.assertRefreshSession(
+      payload.sid,
+      refreshToken,
+      payload.sub,
+    );
 
 
 
@@ -717,13 +722,22 @@ export class AuthService {
 
     const user = this.toUserFromDb(dbUser);
 
+    if (isMarketplaceRole(user.role)) {
+      try {
+        this.sessionService.assertMarketplaceSessionActive(session);
+      } catch (error) {
+        await this.sessionService.revokeSession(payload.sid);
+        throw error;
+      }
+    }
+
     const newSessionId = generateSessionId();
 
     const tokens = this.jwtAuthService.issueTokenPair(user, newSessionId);
 
     await this.sessionService.revokeSession(payload.sid);
 
-    await this.sessionService.createSession(user, tokens.refreshToken, context);
+    await this.sessionService.createSession(user, tokens.refreshToken, context, newSessionId);
 
 
 
@@ -776,7 +790,7 @@ export class AuthService {
 
     const tokens = this.jwtAuthService.issueTokenPair(user, sessionId);
 
-    await this.sessionService.createSession(user, tokens.refreshToken, context);
+    await this.sessionService.createSession(user, tokens.refreshToken, context, sessionId);
 
 
 

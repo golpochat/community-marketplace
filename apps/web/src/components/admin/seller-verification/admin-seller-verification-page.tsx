@@ -242,11 +242,15 @@ export function AdminSellerVerificationPage({
     }
   }
 
-  async function handleRejectSubmit(reason: string) {
+  async function handleRejectSubmit(
+    reason: string,
+    _requestAdditionalDocs: boolean,
+    targetStep?: string,
+  ) {
     if (!rejectRequestId) return;
     setActing(true);
     try {
-      await adminSellerVerificationService.reject(role, rejectRequestId, reason);
+      await adminSellerVerificationService.reject(role, rejectRequestId, reason, targetStep);
       feedback.success('Verification rejected', 'The seller has been notified.');
       setRejectRequestId(null);
       setReviewRequestId(undefined);
@@ -552,7 +556,9 @@ export function AdminSellerVerificationPage({
         sellerName={rejectSellerName}
         isFastTrack={rejectIsFastTrack}
         loading={acting}
-        onSubmit={(reason) => void handleRejectSubmit(reason)}
+        onSubmit={(reason, requestAdditionalDocs, targetStep) =>
+          void handleRejectSubmit(reason, requestAdditionalDocs, targetStep)
+        }
         onClose={() => {
           setRejectRequestId(null);
           setRejectIsFastTrack(false);

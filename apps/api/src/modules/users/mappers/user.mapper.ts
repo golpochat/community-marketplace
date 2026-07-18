@@ -2,12 +2,14 @@ import type { Prisma } from '@prisma/client';
 
 import type {
   RbacRole,
+  SellerStatus,
   User,
   UserProfile,
   UserProfileDetails,
   UserVerification,
   VerificationStatus,
 } from '@community-marketplace/types';
+import { isSellerVerified } from '@community-marketplace/types';
 
 import { resolveOptionalAssetPublicUrl } from '../../../libs/asset-url.lib';
 
@@ -67,13 +69,17 @@ export function mapProfileDetails(
 
 export function mapUserProfile(dbUser: DbUser): UserProfile {
   const latestVerification = dbUser.verifications?.[0];
-  const approvedBadge = dbUser.verifications?.some((v) => v.badgeGranted) ?? false;
+  const legacyBadge = Boolean(latestVerification?.badgeGranted);
+  const sellerStatus = dbUser.sellerStatus as SellerStatus;
+  const sellerVerified = isSellerVerified(sellerStatus) || Boolean(dbUser.idVerified);
 
   return {
     ...mapUser(dbUser),
     ...mapProfileDetails(dbUser.profile),
+    sellerStatus,
+    idVerified: Boolean(dbUser.idVerified),
     verificationStatus: latestVerification?.status as VerificationStatus | undefined,
-    verificationBadge: approvedBadge,
+    verificationBadge: sellerVerified || legacyBadge,
   };
 }
 

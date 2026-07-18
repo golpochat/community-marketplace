@@ -82,8 +82,15 @@ export function listingTitleValidationMessage(value: string): string | null {
   if (isBlockedListingTitle(trimmed)) {
     return 'This title is too vague. Add more detail about the item you are selling.';
   }
+  return null;
+}
+
+/** Soft guidance — does not block saving or step navigation. */
+export function listingTitleSuggestionMessage(value: string): string | null {
+  const trimmed = value.trim();
+  if (listingTitleValidationMessage(trimmed)) return null;
   if (!isDescriptiveListingTitle(trimmed)) {
-    return 'Use a descriptive title with at least two words (e.g. "2015 Nissan Note automatic").';
+    return 'Suggestion: use a descriptive title with at least two words (e.g. "Kids reading glasses blue frames").';
   }
   return null;
 }

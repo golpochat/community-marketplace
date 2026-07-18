@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 
+import { isSellerVerified } from '@community-marketplace/types';
 import { PageHeader } from '@community-marketplace/ui-dashboard';
 
 import { useSellerOnboarding } from '@/providers/seller-onboarding-provider';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 import { SELLER_ROUTES } from '@/lib/seller-routes';
+import { VerifiedSellerIcon } from '@/components/trust/verified-seller-icon';
 
 function SectionHeading({ title, description }: { title: string; description?: string }) {
   return (
@@ -46,14 +48,20 @@ function HubCard({
 }
 
 export function AccountHomeContent() {
-  const { phase, loading } = useSellerOnboarding();
+  const { phase, snapshot, loading } = useSellerOnboarding();
+  const verifiedSeller = isSellerVerified(snapshot?.sellerStatus);
 
   return (
     <>
-      <PageHeader
-        title="Your account"
-        description="Buy locally, sell when you are ready — one login for everything on SellNearby."
-      />
+      <div className="mb-6 flex items-start gap-2">
+        <div className="min-w-0 flex-1">
+          <PageHeader
+            title="Your account"
+            description="Buy locally, sell when you are ready — one login for everything on SellNearby."
+          />
+        </div>
+        {verifiedSeller ? <VerifiedSellerIcon size="lg" className="mt-0.5" /> : null}
+      </div>
 
       <div className="space-y-8">
         <section>

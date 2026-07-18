@@ -61,6 +61,10 @@ export const sellerVerificationFlowSubmitSchema = z.object({
 export const sellerVerificationReviewSchema = z.object({
   requestId: z.string().uuid(),
   reason: z.string().max(500).optional(),
+  /** Wizard step the seller should open from the notification deep link. */
+  targetStep: z
+    .enum(['personal_details', 'phone', 'id_document', 'address', 'submit'])
+    .optional(),
 });
 
 export const sellerSuspendSchema = z.object({

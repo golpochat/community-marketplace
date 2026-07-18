@@ -9,12 +9,8 @@ export const LISTING_TITLE_MAX_LENGTH = 100;
 export const LISTING_DESCRIPTION_SOFT_MAX = 2000;
 export const LISTING_DESCRIPTION_HARD_MAX = 5000;
 
-function isDescriptiveListingTitle(value: string): boolean {
-  const trimmed = value.trim();
-  if (trimmed.length < LISTING_TITLE_MIN_LENGTH) return false;
-  if (trimmed.length > LISTING_TITLE_MAX_LENGTH) return false;
-
-  const normalized = trimmed.toLowerCase();
+function isAcceptableListingTitle(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
   const junk = new Set([
     "car",
     "nice",
@@ -39,13 +35,10 @@ function isDescriptiveListingTitle(value: string): boolean {
   ]);
   if (junk.has(normalized)) return false;
 
-  const words = trimmed.split(/\s+/).filter(Boolean);
+  const words = normalized.split(/\s+/).filter(Boolean);
   if (words.length === 1 && words[0]!.length < 5) return false;
-  if (words.length >= 2) {
-    return words.every((word) => word.length >= 2);
-  }
 
-  return trimmed.length >= 15;
+  return true;
 }
 
 export const listingTitleFieldSchema = z
@@ -59,9 +52,9 @@ export const listingTitleFieldSchema = z
     LISTING_TITLE_MAX_LENGTH,
     `Title must be at most ${LISTING_TITLE_MAX_LENGTH} characters`,
   )
-  .refine(isDescriptiveListingTitle, {
+  .refine(isAcceptableListingTitle, {
     message:
-      'Use a descriptive title with at least two words (e.g. "2015 Nissan Note automatic").',
+      "This title is too vague. Add more detail about the item you are selling.",
   });
 
 export const listingDescriptionFieldSchema = z
@@ -299,7 +292,11 @@ export const listingReviewMessageSchema = z.object({
   content: z.string().min(1).max(2000),
 });
 
-export const requestListingChangesSchema = listingReviewMessageSchema;
+export const requestListingChangesSchema = z.object({
+  content: z.string().min(1).max(2000),
+  /** Listing edit wizard step for the seller notification deep link. */
+  targetStep: z.enum(['details', 'pricing', 'delivery', 'photos', 'review']).optional(),
+});
 
 export const renewListingSchema = z.object({
   packageType: listingPackageTypeSchema,
@@ -307,6 +304,7 @@ export const renewListingSchema = z.object({
 
 export const rejectListingSchema = z.object({
   reason: z.string().min(3).max(2000),
+  targetStep: z.enum(['details', 'pricing', 'delivery', 'photos', 'review']).optional(),
 });
 
 export const removeListingSchema = z.object({

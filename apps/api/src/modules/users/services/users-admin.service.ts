@@ -2,10 +2,12 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import type { Prisma } from '@prisma/client';
 
 import type { RbacRole, User, UserBan } from '@community-marketplace/types';
+import { MARKETPLACE_ROLES } from '@community-marketplace/types';
 import {
   adminUserListQuerySchema,
   banUserSchema,
   suspendUserSchema,
+  updateMarketplaceUserStatusSchema,
 } from '@community-marketplace/validation';
 
 import { AuthorizationService } from '../../../common/authorization/authorization.service';
@@ -13,10 +15,11 @@ import { assertBootstrapSuperAdminImmutable } from '../../../common/constants/bo
 import { assertNoMarketplaceToOperatorPromotion } from '../../../common/constants/role-assignment.policy';
 import { PrismaService } from '../../../database/prisma.service';
 import { SessionService } from '../../auth/services/session.service';
+import { isAuthenticationBlockedStatus } from '../../auth/utils/user-auth-status';
 import { mapUser, mapUserProfile, userProfileInclude } from '../mappers/user.mapper';
 import { UserAuditService } from './user-audit.service';
 
-const MARKETPLACE_USER_ROLES = ['BUYER', 'SELLER'] as const satisfies readonly RbacRole[];
+const MARKETPLACE_USER_ROLES = MARKETPLACE_ROLES;
 
 @Injectable()
 export class UsersAdminService {
@@ -120,6 +123,44 @@ export class UsersAdminService {
 
     await this.audit.record('user_unsuspended', actorId, userId);
     return { userId, status: 'active' };
+  }
+
+  async updateMarketplaceUserStatus(actorId: string, actorRole: RbacRole, userId: string, input: unknown) {
+    const parsed = updateMarketplaceUserStatusSchema.parse(input);
+    await this.assertCanManageUser(actorId, actorRole, userId);
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.status === 'suspended') {
+      throw new ForbiddenException(
+        parsed.status === 'active'
+          ? 'Use Reinstate to restore a suspended account'
+          : 'Reinstate the account before changing inactive/active status',
+      );
+    }
+
+    const previousStatus = user.status;
+    if (previousStatus === parsed.status) {
+      return { userId, status: parsed.status, previousStatus };
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { status: parsed.status },
+    });
+
+    if (isAuthenticationBlockedStatus(parsed.status)) {
+      await this.sessionService.revokeAllForUser(userId);
+    }
+
+    await this.audit.record('status_changed', actorId, userId, {
+      previousStatus,
+      status: parsed.status,
+      ...(parsed.reason?.trim() ? { reason: parsed.reason.trim() } : {}),
+    });
+
+    return { userId, status: parsed.status, previousStatus };
   }
 
   async banUser(actorId: string, actorRole: RbacRole, input: unknown) {

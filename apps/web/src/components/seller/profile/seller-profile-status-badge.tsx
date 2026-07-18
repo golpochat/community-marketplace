@@ -2,7 +2,12 @@
 
 import type { SellerStatus } from '@community-marketplace/types';
 
-const STATUS_STYLES: Record<SellerStatus, { label: string; className: string }> = {
+import { VerifiedSellerIcon } from '@/components/trust/verified-seller-icon';
+
+const STATUS_STYLES: Record<
+  Exclude<SellerStatus, 'verified'>,
+  { label: string; className: string }
+> = {
   unverified: {
     label: 'Unverified',
     className: 'bg-yellow-100 text-yellow-900 ring-yellow-200',
@@ -10,10 +15,6 @@ const STATUS_STYLES: Record<SellerStatus, { label: string; className: string }> 
   verification_required: {
     label: 'Verification required',
     className: 'bg-orange-100 text-orange-900 ring-orange-200',
-  },
-  verified: {
-    label: 'Verified',
-    className: 'bg-emerald-100 text-emerald-900 ring-emerald-200',
   },
   suspended: {
     label: 'Suspended',
@@ -32,6 +33,10 @@ export function SellerProfileStatusBadge({
   status: SellerStatus;
   className?: string;
 }) {
+  if (status === 'verified') {
+    return <VerifiedSellerIcon size="md" className={className} />;
+  }
+
   const config = STATUS_STYLES[status];
 
   return (

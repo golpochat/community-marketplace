@@ -6,6 +6,7 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { AuthGuard } from './common/guards/auth.guard';
 import { MaintenanceGuard } from './common/guards/maintenance.guard';
 import { RolesPermissionsGuard } from './common/guards/roles-permissions.guard';
+import { SessionActivityInterceptor } from './common/interceptors/session-activity.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { AppConfigModule } from './config/config.module';
 import { DatabaseModule } from './database/database.module';
@@ -78,6 +79,7 @@ import { UtilsModule } from './utils/utils.module';
     { provide: APP_GUARD, useClass: MaintenanceGuard },
     { provide: APP_GUARD, useClass: RolesPermissionsGuard },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: SessionActivityInterceptor },
   ],
 })
 export class AppModule {}

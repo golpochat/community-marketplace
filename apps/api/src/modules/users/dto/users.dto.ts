@@ -67,6 +67,16 @@ export class SuspendUserDto {
   reason?: string;
 }
 
+export class UpdateMarketplaceUserStatusDto {
+  @IsEnum(['active', 'inactive'])
+  status!: 'active' | 'inactive';
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
+}
+
 export class BanUserDto {
   @IsUUID()
   userId!: string;

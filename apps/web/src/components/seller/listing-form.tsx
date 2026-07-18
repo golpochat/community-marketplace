@@ -10,6 +10,7 @@ import {
   LISTING_TITLE_MAX_LENGTH,
   TITLE_AMEND_MIN_SIMILARITY,
   listingTitleSimilarity,
+  listingTitleSuggestionMessage,
   listingTitleValidationMessage,
   normalizeListingTitle,
 } from "@community-marketplace/utils";
@@ -35,7 +36,10 @@ import {
   useDeliveryCatalog,
   validateDeliveryForm,
 } from "@/components/seller/delivery-options-section";
-import { ListingMarketingHub } from "@/components/seller/marketing-hub/listing-marketing-hub";
+import {
+  ListingMarketingHub,
+  MarketingHubRoot,
+} from "@/components/seller/marketing-hub/listing-marketing-hub";
 import { DeliveryPreviewModal } from "@/components/seller/DeliveryPreviewModal";
 import { PricingPreviewModal } from "@/components/seller/PricingPreviewModal";
 import {
@@ -43,6 +47,11 @@ import {
   SelectedFilePreviews,
 } from "@/components/seller/listing-image-previews";
 import { ListingPreviewDialog } from "@/components/seller/listing-preview-dialog";
+import {
+  clearGenericListingDraft,
+  loadGenericListingDraft,
+  saveGenericListingDraft,
+} from "@/lib/listing-form-draft";
 import { deliveryService } from "@/services/delivery.service";
 import {
   pricingInputFromForm,
@@ -68,6 +77,8 @@ export interface ListingFormData {
   images: File[];
   delivery: DeliveryFormState;
 }
+
+type PersistedListingFormData = Omit<ListingFormData, "images">;
 
 const EMPTY_DELIVERY: DeliveryFormState = {
   selectedOptionIds: [],
@@ -120,6 +131,8 @@ interface ListingFormProps {
   onBoostListing?: () => void;
   removingExistingImageId?: string | null;
   reorderingImages?: boolean;
+  /** Deep-link step index from notification `?step=` (0–4). */
+  initialStep?: number;
 }
 
 export function ListingForm({
@@ -148,9 +161,19 @@ export function ListingForm({
   onBoostListing,
   removingExistingImageId = null,
   reorderingImages = false,
+  initialStep,
 }: ListingFormProps) {
   const { catalog, loading: catalogLoading } = useDeliveryCatalog();
-  const [step, setStep] = useState(0);
+  const isCreateFlow = !listingId;
+  const draftHydratedRef = useRef(false);
+
+  const [step, setStep] = useState(() => {
+    if (typeof initialStep === 'number' && initialStep >= 0 && initialStep < STEPS.length) {
+      return initialStep;
+    }
+    return 0;
+  });
+  const [highestCompletedStep, setHighestCompletedStep] = useState(-1);
   const [data, setData] = useState<ListingFormData>({
     ...INITIAL,
     ...normalizeInitialData(initialData),
@@ -187,6 +210,40 @@ export function ListingForm({
   }, [listingId, initialDeliveryKey]);
 
   useEffect(() => {
+    if (!isCreateFlow || draftHydratedRef.current) return;
+    draftHydratedRef.current = true;
+    const draft = loadGenericListingDraft<PersistedListingFormData>();
+    if (!draft?.data) return;
+    setStep(
+      Math.min(Math.max(0, draft.step), STEPS.length - 1),
+    );
+    setHighestCompletedStep(
+      Math.min(Math.max(-1, draft.highestCompletedStep), STEPS.length - 1),
+    );
+    setData((prev) => ({
+      ...prev,
+      ...draft.data,
+      images: prev.images,
+    }));
+    if (draft.data.delivery?.selectedOptionIds?.length) {
+      deliverySeededRef.current = true;
+    }
+  }, [isCreateFlow]);
+
+  useEffect(() => {
+    if (!isCreateFlow || !draftHydratedRef.current) return;
+    const { images: _images, ...persistable } = data;
+    const timer = window.setTimeout(() => {
+      saveGenericListingDraft({
+        step,
+        highestCompletedStep,
+        data: persistable,
+      });
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [isCreateFlow, step, highestCompletedStep, data]);
+
+  useEffect(() => {
     if (catalog.length === 0 || deliverySeededRef.current) return;
 
     if (initialDeliverySelections.length > 0) {
@@ -212,10 +269,21 @@ export function ListingForm({
   }, [catalog, initialDeliverySelections]);
 
   useEffect(() => {
-    if (categories.length > 0 && !data.categoryId) {
-      setData((prev) => ({ ...prev, categoryId: categories[0]!.id }));
+    const parentCategoryId = initialData?.categoryId;
+    if (parentCategoryId) {
+      setData((prev) =>
+        prev.categoryId === parentCategoryId
+          ? prev
+          : { ...prev, categoryId: parentCategoryId },
+      );
+      return;
     }
-  }, [categories, data.categoryId]);
+    if (categories.length > 0) {
+      setData((prev) =>
+        prev.categoryId ? prev : { ...prev, categoryId: categories[0]!.id },
+      );
+    }
+  }, [categories, initialData?.categoryId]);
 
   function update(patch: Partial<ListingFormData>) {
     setData((prev) => ({ ...prev, ...patch }));
@@ -387,6 +455,7 @@ export function ListingForm({
               : "Your price changes are pending review. Buyers still see your current prices.",
         });
       }
+      if (isCreateFlow) clearGenericListingDraft();
       setShowPricingPreview(false);
       onSubmit?.(data);
     } catch (err) {
@@ -426,6 +495,8 @@ export function ListingForm({
       setValidationError(error);
       return;
     }
+    setValidationError(null);
+    setHighestCompletedStep((prev) => Math.max(prev, step));
     if (step < STEPS.length - 1) {
       setStep(step + 1);
       return;
@@ -435,6 +506,13 @@ export function ListingForm({
 
   function handleBack() {
     if (step > 0) setStep(step - 1);
+  }
+
+  function handleStepClick(index: number) {
+    if (index <= Math.max(step, highestCompletedStep)) {
+      setStep(index);
+      setValidationError(null);
+    }
   }
 
   function handleImagesChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -510,6 +588,7 @@ export function ListingForm({
 
   const saleAmount = parseSalePrice();
   const isFreeListing = saleAmount === 0;
+  const titleSuggestion = listingTitleSuggestionMessage(data.title);
   const selectedCategoryName = categories.find(
     (category) => category.id === data.categoryId,
   )?.name;
@@ -534,9 +613,8 @@ export function ListingForm({
       <ListingFormSteps
         steps={STEPS}
         currentStep={step}
-        onStepClick={(index) => {
-          if (index <= step) setStep(index);
-        }}
+        highestCompletedStep={highestCompletedStep}
+        onStepClick={handleStepClick}
       />
 
       {priceReviewStatus === "pending-review" && (
@@ -592,108 +670,146 @@ export function ListingForm({
       )}
 
       {step === 0 && (
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="title">
-              {titleAmendRequired ? "Proposed title" : "Title"}
-            </Label>
-            {titleAmendRequired && liveTitle ? (
-              <div className="mb-3 mt-1 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.25)] p-3">
-                  <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
-                    Live title (buyers see)
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
-                    {liveTitle}
-                  </p>
+        <MarketingHubRoot>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="title">
+                {titleAmendRequired ? "Proposed title" : "Title"}
+              </Label>
+              {titleAmendRequired && liveTitle ? (
+                <div className="mb-3 mt-1 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-active)/0.25)] p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
+                      Live title (buyers see)
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
+                      {liveTitle}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] p-3">
+                    <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
+                      Your amendment
+                    </p>
+                    <p className="mt-1 text-sm text-[hsl(var(--dashboard-main-fg))]">
+                      {data.title.trim() || "—"}
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] p-3">
-                  <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
-                    Your amendment
-                  </p>
-                  <p className="mt-1 text-sm text-[hsl(var(--dashboard-main-fg))]">
-                    {data.title.trim() || "—"}
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            <Input
-              id="title"
-              value={data.title}
-              maxLength={LISTING_TITLE_MAX_LENGTH}
-              disabled={titleReviewStatus === "pending-review"}
-              onChange={(e) => update({ title: e.target.value })}
-              onBlur={() => {
-                const normalized = normalizeListingTitle(data.title);
-                if (normalized !== data.title) update({ title: normalized });
-              }}
-              placeholder="What are you selling?"
-            />
-            <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-              {data.title.trim().length}/{LISTING_TITLE_MAX_LENGTH} characters ·
-              {titleAmendRequired
-                ? " amend the live title — a full rewrite will be rejected"
-                : " use a descriptive title"}
-            </p>
-            {titleAmendRequired && liveTitle && data.title.trim() ? (
+              ) : null}
+              <Input
+                id="title"
+                value={data.title}
+                maxLength={LISTING_TITLE_MAX_LENGTH}
+                disabled={titleReviewStatus === "pending-review"}
+                onChange={(e) => update({ title: e.target.value })}
+                onBlur={() => {
+                  const normalized = normalizeListingTitle(data.title);
+                  if (normalized !== data.title) update({ title: normalized });
+                }}
+                placeholder="What are you selling?"
+              />
+              <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                {data.title.trim().length}/{LISTING_TITLE_MAX_LENGTH} characters ·
+                {titleAmendRequired
+                  ? " amend the live title — a full rewrite will be rejected"
+                  : " use a clear, descriptive title (at least two words)"}
+              </p>
+              {titleSuggestion ? (
+                <p className="mt-1 text-xs text-amber-700">{titleSuggestion}</p>
+              ) : null}
+              {titleAmendRequired && liveTitle && data.title.trim() ? (
+                <p
+                  className={cn(
+                    "mt-1 text-xs",
+                    listingTitleSimilarity(liveTitle, data.title) >=
+                      TITLE_AMEND_MIN_SIMILARITY
+                      ? "text-emerald-700"
+                      : "text-amber-700",
+                  )}
+                >
+                  Similarity to live title:{" "}
+                  {Math.round(listingTitleSimilarity(liveTitle, data.title) * 100)}
+                  % · need at least {Math.round(TITLE_AMEND_MIN_SIMILARITY * 100)}%
+                  to submit as an amendment
+                </p>
+              ) : null}
+              <ListingMarketingHub
+                step="details"
+                detailsSection="title"
+                listingId={listingId}
+                title={data.title}
+                description={data.description}
+                categoryId={data.categoryId || undefined}
+                categoryName={
+                  categories.find((c) => c.id === data.categoryId)?.name
+                }
+                condition={data.condition}
+                location={data.location}
+                price={data.salePrice}
+                onAcceptTitle={(next) => update({ title: next })}
+                onAcceptDescription={(next) => update({ description: next })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <textarea
+                id="description"
+                value={data.description}
+                maxLength={LISTING_DESCRIPTION_HARD_MAX}
+                onChange={(e) => update({ description: e.target.value })}
+                rows={5}
+                className="mt-1 w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
+                placeholder="Describe your item (min. 10 characters)..."
+              />
               <p
                 className={cn(
                   "mt-1 text-xs",
-                  listingTitleSimilarity(liveTitle, data.title) >=
-                    TITLE_AMEND_MIN_SIMILARITY
-                    ? "text-emerald-700"
-                    : "text-amber-700",
+                  data.description.length > LISTING_DESCRIPTION_SOFT_MAX
+                    ? "text-amber-700"
+                    : "text-[hsl(var(--dashboard-sidebar-muted))]",
                 )}
               >
-                Similarity to live title:{" "}
-                {Math.round(listingTitleSimilarity(liveTitle, data.title) * 100)}
-                % · need at least {Math.round(TITLE_AMEND_MIN_SIMILARITY * 100)}%
-                to submit as an amendment
+                {data.description.length}/{LISTING_DESCRIPTION_HARD_MAX}{" "}
+                characters
+                {data.description.length > LISTING_DESCRIPTION_SOFT_MAX
+                  ? ` · recommended max ${LISTING_DESCRIPTION_SOFT_MAX}`
+                  : ""}
               </p>
-            ) : null}
-          </div>
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <textarea
-              id="description"
-              value={data.description}
-              maxLength={LISTING_DESCRIPTION_HARD_MAX}
-              onChange={(e) => update({ description: e.target.value })}
-              rows={5}
-              className="mt-1 w-full rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
-              placeholder="Describe your item (min. 10 characters)..."
+              <ListingMarketingHub
+                step="details"
+                detailsSection="description"
+                listingId={listingId}
+                title={data.title}
+                description={data.description}
+                categoryId={data.categoryId || undefined}
+                categoryName={
+                  categories.find((c) => c.id === data.categoryId)?.name
+                }
+                condition={data.condition}
+                location={data.location}
+                price={data.salePrice}
+                onAcceptTitle={(next) => update({ title: next })}
+                onAcceptDescription={(next) => update({ description: next })}
+              />
+            </div>
+            <ListingMarketingHub
+              step="details"
+              detailsSection="extras"
+              listingId={listingId}
+              title={data.title}
+              description={data.description}
+              categoryId={data.categoryId || undefined}
+              categoryName={
+                categories.find((c) => c.id === data.categoryId)?.name
+              }
+              condition={data.condition}
+              location={data.location}
+              price={data.salePrice}
+              onAcceptTitle={(next) => update({ title: next })}
+              onAcceptDescription={(next) => update({ description: next })}
             />
-            <p
-              className={cn(
-                "mt-1 text-xs",
-                data.description.length > LISTING_DESCRIPTION_SOFT_MAX
-                  ? "text-amber-700"
-                  : "text-[hsl(var(--dashboard-sidebar-muted))]",
-              )}
-            >
-              {data.description.length}/{LISTING_DESCRIPTION_HARD_MAX}{" "}
-              characters
-              {data.description.length > LISTING_DESCRIPTION_SOFT_MAX
-                ? ` · recommended max ${LISTING_DESCRIPTION_SOFT_MAX}`
-                : ""}
-            </p>
           </div>
-          <ListingMarketingHub
-            step="details"
-            listingId={listingId}
-            title={data.title}
-            description={data.description}
-            categoryId={data.categoryId || undefined}
-            categoryName={
-              categories.find((c) => c.id === data.categoryId)?.name
-            }
-            condition={data.condition}
-            location={data.location}
-            price={data.salePrice}
-            onAcceptTitle={(next) => update({ title: next })}
-            onAcceptDescription={(next) => update({ description: next })}
-          />
-        </div>
+        </MarketingHubRoot>
       )}
 
       {step === 1 && (
@@ -791,22 +907,6 @@ export function ListingForm({
               <option value="poor">Needs Work</option>
             </Select>
           </div>
-          {categories.length > 0 && (
-            <div>
-              <Label htmlFor="categoryId">Category</Label>
-              <Select
-                id="categoryId"
-                value={data.categoryId}
-                onChange={(e) => update({ categoryId: e.target.value })}
-              >
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          )}
           <ListingMarketingHub
             step="pricing"
             listingId={listingId}

@@ -1246,9 +1246,11 @@ export function SellerCreateListingPage() {
 export function SellerEditListingPage({
   listingId,
   duplicatedHint = false,
+  stepSlug,
 }: {
   listingId: string;
   duplicatedHint?: boolean;
+  stepSlug?: string;
 }) {
   const router = useRouter();
   const feedback = useAppFeedback();
@@ -1632,6 +1634,7 @@ export function SellerEditListingPage({
             priceReviewNotes={priceReviewNotes}
             titleReviewNotes={titleReviewNotes}
             submitLabel="Save changes"
+            stepSlug={stepSlug}
             onGenericSubmit={(data) => void handleGenericSubmit(data)}
             onVehicleSubmit={(data) => void handleVehicleSubmit(data)}
             onDeliveryUpdated={({ message }) => {

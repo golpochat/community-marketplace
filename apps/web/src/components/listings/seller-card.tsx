@@ -4,13 +4,12 @@ import Link from 'next/link';
 
 import type { ListingSellerSummary } from '@community-marketplace/types';
 import { Button } from '@community-marketplace/ui';
-import { BadgeCheck, Phone } from 'lucide-react';
-
-import { ListingBadge } from '@/components/listings/listing-badge';
+import { Phone } from 'lucide-react';
 
 import { Avatar } from '@/components/shared/avatar';
 import { SellerRatingDisplay } from '@/components/trust/seller-rating-display';
 import { SellerTrustBadges } from '@/components/trust/seller-trust-badges';
+import { VerifiedSellerIcon } from '@/components/trust/verified-seller-icon';
 import { resolveCommunityLabel } from '@community-marketplace/utils';
 
 interface SellerCardProps {
@@ -61,14 +60,9 @@ export function SellerCard({
         <Avatar name={name} size={compact ? 'md' : 'lg'} />
         <div className="min-w-0 flex-1 space-y-1.5">
           <div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               <p className="font-semibold text-foreground">{name}</p>
-              {isVerified && (
-                <ListingBadge tone="verified" className="font-normal">
-                  <BadgeCheck className="h-3 w-3" aria-hidden />
-                  Verified
-                </ListingBadge>
-              )}
+              {isVerified ? <VerifiedSellerIcon size="md" /> : null}
             </div>
             {location && (
               <p className="text-sm text-muted-foreground">

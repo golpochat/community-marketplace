@@ -24,6 +24,7 @@ import type {
   StaffAdminDetail,
   SuspensionDuration,
   UserBan,
+  UserAuditLog,
   UserProfile,
   PaginatedResult,
   ApiResponse,
@@ -267,10 +268,17 @@ export const adminService = {
     role: AdminApiRole,
     listingId: string,
     content: string,
+    targetStep?: string,
   ): Promise<ListingReviewContext> {
     const response = await apiClient<ListingReviewContext>(
       `${adminApiPath(role, '/listings')}/${listingId}/request-changes`,
-      { method: 'POST', body: JSON.stringify({ content }) },
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          content,
+          ...(targetStep ? { targetStep } : {}),
+        }),
+      },
     );
     return response.data;
   },
@@ -637,6 +645,40 @@ export const adminService = {
       { method: 'POST' },
     );
     return response.data;
+  },
+
+  async updateMarketplaceUserStatus(
+    role: AdminApiRole,
+    userId: string,
+    status: 'active' | 'inactive',
+    reason?: string,
+  ) {
+    const response = await apiClient<{ userId: string; status: string; previousStatus: string }>(
+      adminApiPath(role, `/users/${userId}/status`),
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ status, ...(reason ? { reason } : {}) }),
+      },
+    );
+    return response.data;
+  },
+
+  async listUserAuditLogs(
+    role: AdminApiRole,
+    params: { targetUserId: string; page?: number; limit?: number; eventType?: string },
+  ): Promise<PaginatedResult<UserAuditLog>> {
+    const response = await apiClient<UserAuditLog[] | PaginatedResult<UserAuditLog>>(
+      adminApiPath(role, '/users/audit-logs'),
+      {
+        params: {
+          targetUserId: params.targetUserId,
+          page: String(params.page ?? 1),
+          limit: String(params.limit ?? 50),
+          ...(params.eventType ? { eventType: params.eventType } : {}),
+        },
+      },
+    );
+    return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 50 });
   },
 
   async unbanUser(role: AdminApiRole, userId: string, banId: string) {

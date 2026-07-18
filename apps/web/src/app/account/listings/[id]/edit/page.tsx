@@ -13,9 +13,14 @@ interface PageProps {
 function AccountEditListingRoute({ listingId }: { listingId: string }) {
   const searchParams = useSearchParams();
   const duplicatedHint = searchParams.get('duplicated') === '1';
+  const stepSlug = searchParams.get('step') ?? undefined;
 
   return (
-    <SellerEditListingPage listingId={listingId} duplicatedHint={duplicatedHint} />
+    <SellerEditListingPage
+      listingId={listingId}
+      duplicatedHint={duplicatedHint}
+      stepSlug={stepSlug}
+    />
   );
 }
 

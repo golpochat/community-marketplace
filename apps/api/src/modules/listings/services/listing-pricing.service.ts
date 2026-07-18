@@ -11,6 +11,7 @@ import type {
   PricingPreview,
   RbacRole,
 } from '@community-marketplace/types';
+import { listingEditActionUrl } from '@community-marketplace/types';
 import { updateListingPricingSchema } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../../database/prisma.service';
@@ -205,7 +206,7 @@ export class ListingPricingService {
       type: 'price_review_pending',
       title: 'Price change pending review',
       body: 'Your price update is under review. Buyers still see your current prices.',
-      actionUrl: `/account/listings/${listingId}/edit`,
+      actionUrl: listingEditActionUrl(listingId, 'pricing'),
     });
 
     return {
@@ -269,7 +270,7 @@ export class ListingPricingService {
       type: 'price_change_approved',
       title: 'Price change approved',
       body: 'Your updated prices are now visible to buyers.',
-      actionUrl: `/account/listings/${log.listingId}/edit`,
+      actionUrl: listingEditActionUrl(log.listingId, 'pricing'),
     });
 
     return { changeLogId, pricing: resultPricing };
@@ -303,7 +304,7 @@ export class ListingPricingService {
       body:
         reviewNotes?.trim() ||
         'Your proposed price change was not approved. Previous prices remain in effect.',
-      actionUrl: `/account/listings/${log.listingId}/edit`,
+      actionUrl: listingEditActionUrl(log.listingId, 'pricing'),
     });
 
     return { changeLogId, pricing };

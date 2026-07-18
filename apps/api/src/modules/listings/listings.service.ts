@@ -127,7 +127,7 @@ export class ListingsService {
 
   rejectListing(listingId: string, adminId: string, input: unknown) {
     const parsed = rejectListingSchema.parse(input);
-    return this.lifecycle.rejectListing(listingId, adminId, parsed.reason);
+    return this.lifecycle.rejectListing(listingId, adminId, parsed.reason, parsed.targetStep);
   }
 
   submitForReview(listingId: string, sellerId: string) {

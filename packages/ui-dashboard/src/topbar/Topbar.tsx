@@ -21,6 +21,8 @@ export interface TopbarProps {
   onLogout: () => void | Promise<void>;
   title?: string;
   actions?: ReactNode;
+  verified?: boolean;
+  verifyHref?: string;
 }
 
 export function Topbar({
@@ -31,6 +33,8 @@ export function Topbar({
   onLogout,
   title,
   actions,
+  verified,
+  verifyHref,
 }: TopbarProps) {
   const theme = getThemeByRole(role);
   const { title: pageTitle } = usePageTitle();
@@ -81,6 +85,8 @@ export function Topbar({
           profileHref={profileHref}
           settingsHref={settingsHref}
           onLogout={onLogout}
+          verified={verified}
+          verifyHref={verifyHref}
         />
       </div>
     </header>

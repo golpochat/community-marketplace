@@ -23,14 +23,23 @@ export function filterSidebarItems(
     })
     .map((item) => {
       if (!item.children?.length) return item;
+      const children = item.children.filter((child) => {
+        const required = child.permission ?? item.permission;
+        if (!required) return true;
+        return hasPermission(permissions, role, required);
+      });
+      const firstChild = children[0];
       return {
         ...item,
-        children: item.children.filter((child) => {
-          const required = child.permission ?? item.permission;
-          if (!required) return true;
-          return hasPermission(permissions, role, required);
-        }),
+        // Keep parent click useful after RBAC trims children.
+        href: firstChild?.href ?? item.href,
+        children,
       };
+    })
+    .filter((item) => {
+      // Hide nested groups that have no visible children after RBAC filtering.
+      if (!item.children) return true;
+      return item.children.length > 0;
     });
 }
 

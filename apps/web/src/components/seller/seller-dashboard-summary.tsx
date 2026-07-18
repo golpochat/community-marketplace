@@ -59,10 +59,12 @@ export function SellerDashboardSummary({
 
       <Card title="Account">
         <div className="space-y-2 text-sm">
-          <SellerProfileStatusBadge status={verification.sellerStatus} />
-          <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">
-            {profile.displayName?.trim() || 'Add your display name'}
-          </p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">
+              {profile.displayName?.trim() || 'Add your display name'}
+            </p>
+            <SellerProfileStatusBadge status={verification.sellerStatus} />
+          </div>
           <p className="truncate text-[hsl(var(--dashboard-sidebar-muted))]">{profile.email}</p>
         </div>
         <Link

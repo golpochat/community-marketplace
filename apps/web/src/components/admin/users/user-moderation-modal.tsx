@@ -12,6 +12,8 @@ const REASON_OPTIONS = [
 
 type BanDuration = 'permanent' | '7_days' | '30_days';
 
+export type UserModerationAction = 'suspend' | 'ban' | 'deactivate';
+
 export interface UserModerationSubmitPayload {
   reason: string;
   banType?: 'temporary' | 'permanent';
@@ -20,7 +22,7 @@ export interface UserModerationSubmitPayload {
 
 interface UserModerationModalProps {
   open: boolean;
-  action: 'suspend' | 'ban';
+  action: UserModerationAction;
   userEmail: string;
   userName?: string;
   loading?: boolean;
@@ -69,6 +71,12 @@ export function UserModerationModal({
   const label = userName?.trim() || userEmail;
   const reason = [reasonType, reasonDetail.trim()].filter(Boolean).join(': ');
   const isBan = action === 'ban';
+  const isDeactivate = action === 'deactivate';
+  const title = isBan ? 'Ban user' : isDeactivate ? 'Deactivate user' : 'Suspend user';
+  const confirmLabel = isBan ? 'Ban user' : isDeactivate ? 'Deactivate' : 'Suspend user';
+  const confirmClass = isDeactivate
+    ? 'rounded-lg bg-[hsl(var(--dashboard-main-fg))] px-4 py-2 text-sm font-medium text-[hsl(var(--dashboard-topbar-bg))] hover:opacity-90 disabled:opacity-50'
+    : 'rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50';
 
   return (
     <div
@@ -79,9 +87,14 @@ export function UserModerationModal({
     >
       <div className="w-full max-w-lg rounded-xl bg-[hsl(var(--dashboard-topbar-bg))] p-6 shadow-xl">
         <h3 id="user-moderation-title" className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]">
-          {isBan ? 'Ban user' : 'Suspend user'} — {label}
+          {title} — {label}
         </h3>
         <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">{userEmail}</p>
+        {isDeactivate ? (
+          <p className="mt-2 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+            Inactive accounts cannot sign in. This is softer than a suspension and is recorded in the status log.
+          </p>
+        ) : null}
 
         <div className="mt-4 space-y-4">
           <div>
@@ -153,9 +166,9 @@ export function UserModerationModal({
                 ...(isBan ? resolveBanPayload(banDuration) : {}),
               })
             }
-            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+            className={confirmClass}
           >
-            {loading ? 'Working…' : isBan ? 'Ban user' : 'Suspend user'}
+            {loading ? 'Working…' : confirmLabel}
           </button>
         </div>
       </div>

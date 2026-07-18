@@ -1,6 +1,13 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 
-import { PERMISSIONS, SELLER_VERIFICATION_MESSAGES } from '@community-marketplace/types';
+import {
+  inferListingDeepLinkStep,
+  inferVerificationDeepLinkStep,
+  listingEditActionUrl,
+  PERMISSIONS,
+  SELLER_VERIFICATION_MESSAGES,
+  verificationActionUrl,
+} from '@community-marketplace/types';
 
 import { EventBusService } from '../../../events/event-bus.service';
 import { PrismaService } from '../../../database/prisma.service';
@@ -246,7 +253,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'seller_verification_nudge',
       templateKey: 'seller_verification_nudge',
       variables: { message },
-      actionUrl: '/account/verification',
+      actionUrl: verificationActionUrl(inferVerificationDeepLinkStep(message)),
       channels: ['in_app', 'email'],
     });
   }
@@ -396,6 +403,8 @@ export class NotificationEventsListener implements OnModuleInit {
     const listingId = payload.listingId as string;
     const sellerId = payload.sellerId as string;
     const message = (payload.message as string) ?? 'Please review the admin feedback.';
+    const targetStep =
+      (payload.targetStep as string | undefined) ?? inferListingDeepLinkStep(message);
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
       select: { title: true },
@@ -407,7 +416,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'listing_changes_requested',
       templateKey: 'listing_changes_requested',
       variables: { listing_title: listing.title, message },
-      actionUrl: `/account/listings/${listingId}/edit`,
+      actionUrl: listingEditActionUrl(listingId, targetStep),
       channels: ['in_app', 'push', 'email'],
     });
   }
@@ -458,6 +467,8 @@ export class NotificationEventsListener implements OnModuleInit {
     const listingId = payload.listingId as string;
     const sellerId = payload.sellerId as string;
     const reason = (payload.reason as string) ?? 'Please review and resubmit.';
+    const targetStep =
+      (payload.targetStep as string | undefined) ?? inferListingDeepLinkStep(reason);
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
       select: { title: true },
@@ -469,7 +480,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'listing_rejected',
       templateKey: 'listing_rejected',
       variables: { listing_title: listing.title, reason },
-      actionUrl: `/account/listings/${listingId}/edit`,
+      actionUrl: listingEditActionUrl(listingId, targetStep),
       channels: ['in_app', 'push', 'email'],
     });
   }
@@ -489,7 +500,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'listing_changes_requested',
       templateKey: 'listing_changes_requested',
       variables: { listing_title: listing.title, reason },
-      actionUrl: `/account/listings/${listingId}/edit`,
+      actionUrl: listingEditActionUrl(listingId, inferListingDeepLinkStep(reason)),
       channels: ['in_app', 'push', 'email'],
     });
   }
@@ -680,6 +691,7 @@ export class NotificationEventsListener implements OnModuleInit {
       userId,
       type: 'verification_approved',
       templateKey: 'verification_approved',
+      actionUrl: verificationActionUrl(),
       channels: ['in_app', 'push', 'email'],
     });
   }
@@ -688,6 +700,8 @@ export class NotificationEventsListener implements OnModuleInit {
     const userId = payload.userId as string;
     const reason = (payload.reason as string) ?? 'Please resubmit your documents.';
     const priorityRequeueGranted = payload.priorityRequeueGranted === true;
+    const targetStep =
+      (payload.targetStep as string | undefined) ?? inferVerificationDeepLinkStep(reason);
     if (!userId) return;
 
     const rejectionMessage = priorityRequeueGranted
@@ -699,6 +713,7 @@ export class NotificationEventsListener implements OnModuleInit {
       type: 'verification_rejected',
       templateKey: 'verification_rejected',
       variables: { reason: rejectionMessage },
+      actionUrl: verificationActionUrl(targetStep),
       channels: ['in_app', 'email'],
     });
   }
@@ -750,7 +765,9 @@ export class NotificationEventsListener implements OnModuleInit {
           (payload.message as string) ?? 'Your account requires re-verification.',
         reason: (payload.reason as string) ?? '',
       },
-      actionUrl: '/account/verification',
+      actionUrl: verificationActionUrl(
+        inferVerificationDeepLinkStep((payload.reason as string) ?? (payload.message as string) ?? ''),
+      ),
       channels: ['in_app', 'email'],
     });
   }

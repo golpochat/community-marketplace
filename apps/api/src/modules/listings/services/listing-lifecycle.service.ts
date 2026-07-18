@@ -91,7 +91,12 @@ export class ListingLifecycleService {
     return this.activateListingAsAdmin(listingId, adminId);
   }
 
-  rejectListing(listingId: string, adminId: string, reason: string): Promise<Listing> {
+  rejectListing(
+    listingId: string,
+    adminId: string,
+    reason: string,
+    targetStep?: string,
+  ): Promise<Listing> {
     return this.transition({
       listingId,
       actorId: adminId,
@@ -104,7 +109,7 @@ export class ListingLifecycleService {
         moderationHiddenAt: new Date(),
       },
       eventType: 'listing.rejected',
-      eventPayload: { reason },
+      eventPayload: { reason, ...(targetStep ? { targetStep } : {}) },
     });
   }
 

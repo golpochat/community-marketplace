@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import type { ListingReviewContext } from '@community-marketplace/types';
+import type { ListingDeepLinkStep, ListingReviewContext } from '@community-marketplace/types';
+import {
+  LISTING_DEEP_LINK_STEP_LABELS,
+  LISTING_DEEP_LINK_STEPS,
+} from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
 import { Button } from '@community-marketplace/ui';
 
@@ -37,6 +41,7 @@ export function AdminListingReviewDialog({
   const [approving, setApproving] = useState(false);
   const [requestingChanges, setRequestingChanges] = useState(false);
   const [changeNote, setChangeNote] = useState('');
+  const [targetStep, setTargetStep] = useState<ListingDeepLinkStep | ''>('photos');
 
   const loadReview = useCallback(async () => {
     if (!listingId) return;
@@ -59,6 +64,7 @@ export function AdminListingReviewDialog({
     } else {
       setReview(null);
       setChangeNote('');
+      setTargetStep('photos');
       setError(null);
     }
   }, [open, listingId, loadReview]);
@@ -92,7 +98,12 @@ export function AdminListingReviewDialog({
     setRequestingChanges(true);
     setError(null);
     try {
-      const data = await adminService.requestListingChanges(role, listingId, trimmed);
+      const data = await adminService.requestListingChanges(
+        role,
+        listingId,
+        trimmed,
+        targetStep || undefined,
+      );
       setReview(data);
       setChangeNote('');
     } catch (err) {
@@ -210,6 +221,20 @@ export function AdminListingReviewDialog({
                     placeholder="Describe what the seller should fix…"
                     className="mt-3 w-full rounded-lg border border-amber-200 bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm"
                   />
+                  <label className="mt-3 block text-sm font-medium text-amber-900">
+                    Send seller to step
+                    <select
+                      value={targetStep}
+                      onChange={(e) => setTargetStep(e.target.value as ListingDeepLinkStep | '')}
+                      className="mt-1 w-full rounded-lg border border-amber-200 bg-[hsl(var(--dashboard-topbar-bg))] px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))]"
+                    >
+                      {LISTING_DEEP_LINK_STEPS.map((step) => (
+                        <option key={step} value={step}>
+                          {LISTING_DEEP_LINK_STEP_LABELS[step]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <Button
                     type="button"
                     variant="outline"

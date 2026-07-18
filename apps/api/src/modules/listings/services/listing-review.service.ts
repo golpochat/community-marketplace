@@ -126,6 +126,7 @@ export class ListingReviewService {
         sellerId: listing.sellerId,
         adminId,
         message: parsed.content.trim(),
+        ...(parsed.targetStep ? { targetStep: parsed.targetStep } : {}),
       },
       timestamp: new Date(),
     });

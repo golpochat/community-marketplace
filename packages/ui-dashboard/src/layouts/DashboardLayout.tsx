@@ -31,6 +31,8 @@ export interface DashboardLayoutProps {
   topbarActions?: ReactNode;
   footerCopyright?: string;
   sidebarItems?: import('../sidebar/sidebar-config').SidebarNavItem[];
+  verified?: boolean;
+  verifyHref?: string;
 }
 
 function DashboardLayoutFrame({
@@ -49,6 +51,8 @@ function DashboardLayoutFrame({
   topbarActions,
   footerCopyright,
   sidebarItems,
+  verified,
+  verifyHref,
 }: DashboardLayoutProps) {
   const { mobileOpen, setMobileOpen } = useSidebar();
 
@@ -102,6 +106,8 @@ function DashboardLayoutFrame({
             onLogout={onLogout}
             title={topbarTitle}
             actions={topbarActions}
+            verified={verified}
+            verifyHref={verifyHref}
           />
           <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 sm:px-6 sm:py-6">
             {children}

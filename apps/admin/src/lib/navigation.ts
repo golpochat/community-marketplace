@@ -22,7 +22,7 @@ export function buildAdminNav(role: RbacRole, permissions: PermissionCode[]): Na
 
   const items: NavItem[] = [
     { id: 'overview', label: 'Overview', href: base, exact: true, permission: PERMISSIONS.VIEW_PLATFORM_STATS },
-    { id: 'users', label: 'Users', href: `${base}/users`, permission: PERMISSIONS.VIEW_USERS },
+    { id: 'users', label: 'Users Management', href: `${base}/users`, permission: PERMISSIONS.VIEW_USERS },
     { id: 'listings', label: 'Listings', href: `${base}/listings`, permission: PERMISSIONS.VIEW_LISTINGS },
     { id: 'moderation', label: 'Moderation', href: `${base}/moderation`, permission: PERMISSIONS.VIEW_REPORTS },
     { id: 'payments', label: 'Payments', href: `${base}/payments`, permission: PERMISSIONS.VIEW_PAYMENTS },

@@ -30,6 +30,7 @@ export {
   isBlockedListingTitle,
   isDescriptiveListingTitle,
   listingTitleValidationMessage,
+  listingTitleSuggestionMessage,
   tokenizeListingTitle,
   listingTitleSimilarity,
   isListingTitleAmendment,

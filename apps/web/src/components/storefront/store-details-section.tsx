@@ -3,11 +3,12 @@
 import { useState } from 'react';
 
 import type { StoreAnalytics, StoreContactInfo, StoreOpeningHours, StorePolicy } from '@community-marketplace/types';
-import { ChevronDown, ShieldCheck } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 import { StoreContactSection } from '@/components/storefront/store-contact-section';
 import { StoreOpeningHoursPanel } from '@/components/storefront/store-opening-hours-panel';
 import { StorePolicySection } from '@/components/storefront/store-policy-section';
+import { VerifiedSellerIcon } from '@/components/trust/verified-seller-icon';
 
 interface StoreDetailsSectionProps {
   description: string;
@@ -76,13 +77,10 @@ export function StoreDetailsSection({
     <div className="space-y-4">
       {verified ? (
         <div className="flex items-start gap-3 rounded-brand-md border border-emerald-200 bg-emerald-50/80 px-4 py-3">
-          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" aria-hidden />
-          <div>
-            <p className="text-sm font-semibold text-emerald-900">Verified seller</p>
-            <p className="mt-0.5 text-xs leading-relaxed text-emerald-800/90">
-              Identity checked by SellNearby. Shop with confidence.
-            </p>
-          </div>
+          <VerifiedSellerIcon size="lg" className="mt-0.5" />
+          <p className="text-sm leading-relaxed text-emerald-900">
+            Identity checked by SellNearby. Shop with confidence.
+          </p>
         </div>
       ) : null}
 

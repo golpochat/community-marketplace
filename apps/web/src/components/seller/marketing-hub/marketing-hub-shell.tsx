@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, type ReactNode } from "react";
 
@@ -8,6 +8,37 @@ import {
 } from "@/components/seller/marketing-hub/marketing-hub-context";
 import { formatAiMarketingQuotaSummary } from "@community-marketplace/types";
 import { cn } from "@community-marketplace/ui";
+
+/** Renders children only when marketing tools are published and deploy-enabled. */
+export function MarketingHubGate({
+  children,
+  showQuota = false,
+}: {
+  children: ReactNode;
+  /** When true, show a compact free-units / wallet line above children. */
+  showQuota?: boolean;
+}) {
+  const { quota, loadingQuota } = useMarketingHub();
+
+  if (loadingQuota || !quota) return null;
+  if (!quota.published || !quota.deployEnabled) return null;
+
+  return (
+    <div className="space-y-2">
+      {showQuota ? (
+        <p className="text-right text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+          {formatAiMarketingQuotaSummary(quota)}
+        </p>
+      ) : null}
+      {!quota.enabled ? (
+        <p className="text-xs text-amber-700">
+          Marketing tools are temporarily unavailable.
+        </p>
+      ) : null}
+      {children}
+    </div>
+  );
+}
 
 function MarketingHubChrome({
   title = "Marketing hub",
@@ -68,6 +99,11 @@ export function MarketingHubShell({
   );
 }
 
+/** Provider only — use with MarketingHubGate + MarketingHubWidget under form fields. */
+export function MarketingHubRoot({ children }: { children: ReactNode }) {
+  return <MarketingHubProvider>{children}</MarketingHubProvider>;
+}
+
 export function MarketingHubWidget({
   title,
   description,
@@ -75,6 +111,7 @@ export function MarketingHubWidget({
   defaultOpen = true,
   collapsible = false,
   badge,
+  compact = false,
 }: {
   title: string;
   description?: string;
@@ -83,12 +120,18 @@ export function MarketingHubWidget({
   defaultOpen?: boolean;
   collapsible?: boolean;
   badge?: string;
+  /** Tighter styling for placement under a single form field. */
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
 
+  const sectionClass = compact
+    ? "mt-2 rounded-lg border border-[hsl(var(--dashboard-sidebar-border)/0.8)] bg-[hsl(var(--dashboard-sidebar-active)/0.2)] p-2.5"
+    : "space-y-2 border-t border-[hsl(var(--dashboard-sidebar-border)/0.7)] pt-3 first:border-t-0 first:pt-0";
+
   if (!collapsible) {
     return (
-      <section className="space-y-2 border-t border-[hsl(var(--dashboard-sidebar-border)/0.7)] pt-3 first:border-t-0 first:pt-0">
+      <section className={sectionClass}>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">
             {title}
@@ -108,7 +151,13 @@ export function MarketingHubWidget({
   }
 
   return (
-    <section className="border-t border-[hsl(var(--dashboard-sidebar-border)/0.7)] pt-3 first:border-t-0 first:pt-0">
+    <section
+      className={
+        compact
+          ? sectionClass
+          : "border-t border-[hsl(var(--dashboard-sidebar-border)/0.7)] pt-3 first:border-t-0 first:pt-0"
+      }
+    >
       <button
         type="button"
         className="flex w-full items-start justify-between gap-2 text-left"

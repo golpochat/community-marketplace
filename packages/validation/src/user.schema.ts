@@ -46,6 +46,10 @@ export const userProfileSchema = userSchema.extend({
   phone: phoneSchema.optional(),
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   gender: userGenderSchema.optional(),
+  sellerStatus: z
+    .enum(['unverified', 'verification_required', 'verified', 'suspended', 'under_review'])
+    .optional(),
+  idVerified: z.boolean().optional(),
   verificationStatus: verificationStatusSchema.optional(),
   verificationBadge: z.boolean().optional(),
 });
@@ -150,6 +154,11 @@ export const adminUserListQuerySchema = z.object({
 
 export const suspendUserSchema = z.object({
   userId: uuidSchema,
+  reason: z.string().max(500).optional(),
+});
+
+export const updateMarketplaceUserStatusSchema = z.object({
+  status: z.enum(['active', 'inactive']),
   reason: z.string().max(500).optional(),
 });
 

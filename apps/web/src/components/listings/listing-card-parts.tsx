@@ -10,7 +10,7 @@ import {
   resolveListingListedAt,
 } from '@community-marketplace/utils';
 import { cn } from '@community-marketplace/ui';
-import { BadgeCheck, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 import { DealBlock } from '@/components/listings/deal-block';
 import { BoostedBadge } from '@/components/listings/boosted-badge';
@@ -26,6 +26,7 @@ import {
 } from '@/components/listings/vehicle-listing-meta';
 import { SellerRatingDisplay } from '@/components/trust/seller-rating-display';
 import { SellerTrustBadges } from '@/components/trust/seller-trust-badges';
+import { VerifiedSellerIcon } from '@/components/trust/verified-seller-icon';
 import type { ListingImageVariant } from '@/lib/listing-image-url';
 
 import { ListingMediaImage } from '@/components/listings/listing-media-image';
@@ -61,15 +62,10 @@ function DeliveryBadge({ summary }: { summary?: string }) {
   );
 }
 
-/** Compact verified seller indicator for browse cards (no full trust strip). */
+/** Compact verified seller indicator for browse cards (icon only). */
 export function ListingCardVerifiedBadge({ verified }: { verified?: boolean }) {
   if (!verified) return null;
-  return (
-    <ListingBadge tone="verified" className="font-normal">
-      <BadgeCheck className="h-3 w-3" aria-hidden />
-      Verified
-    </ListingBadge>
-  );
+  return <VerifiedSellerIcon size="sm" />;
 }
 
 interface ListingCardImageProps {
@@ -211,7 +207,7 @@ export function ListingCardContent({
       <div className={cn('mt-auto space-y-1.5', !isCompact && 'space-y-2')}>
         <div
           className={cn(
-            'flex flex-wrap items-center gap-2 text-muted-foreground',
+            'flex flex-wrap items-center gap-1.5 text-muted-foreground',
             isList ? 'text-sm' : 'text-xs',
           )}
         >
@@ -259,7 +255,7 @@ export function ListingCardTrustStrip({ listing }: { listing: ListingSummary }) 
       )}
       <SellerTrustBadges
         variant="compact"
-        verified={listing.sellerVerified}
+        verified={false}
         soldCount={listing.sellerSoldCount}
         averageRating={listing.sellerRating}
         reviewCount={listing.sellerReviewCount}

@@ -49,6 +49,7 @@ export class AuthGuard implements CanActivate {
         email: payload.email,
         role: payload.role as RbacRole,
         primaryRoleId: payload.primaryRoleId,
+        sessionId: payload.sid,
       };
       return true;
     } catch {

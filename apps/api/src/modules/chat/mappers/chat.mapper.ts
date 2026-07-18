@@ -131,7 +131,11 @@ export function mapInboxItem(
       displayName: participant.displayName ?? undefined,
       avatarUrl: resolveOptionalAssetPublicUrl(participant.avatarUrl),
       role: participant.primaryRole.code,
-      verificationBadge: participant.verifications.length > 0,
+      verificationBadge:
+        participant.id === thread.sellerId &&
+        (participant.sellerStatus === 'verified' ||
+          Boolean(participant.idVerified) ||
+          participant.verifications.length > 0),
     },
   };
 }

@@ -30,6 +30,7 @@ export {
   ACCOUNT_DASHBOARD_PATH,
   ACCOUNT_SELLING_PATH,
   deriveAccountSellingPhase,
+  isMarketplaceRole,
   isSellerIdentityStepComplete,
   shouldShowSellerNavItems,
   canActAsBuyer,
@@ -179,6 +180,22 @@ export {
   formatFastTrackSlaLabel,
 } from './seller-verification';
 export type { AdminSellerVerificationTrackFilter } from './seller-verification';
+export type {
+  VerificationDeepLinkStep,
+  ListingDeepLinkStep,
+} from './deep-links';
+export {
+  VERIFICATION_DEEP_LINK_STEPS,
+  LISTING_DEEP_LINK_STEPS,
+  VERIFICATION_DEEP_LINK_STEP_LABELS,
+  LISTING_DEEP_LINK_STEP_LABELS,
+  isVerificationDeepLinkStep,
+  isListingDeepLinkStep,
+  inferVerificationDeepLinkStep,
+  inferListingDeepLinkStep,
+  verificationActionUrl,
+  listingEditActionUrl,
+} from './deep-links';
 export type {
   UnifiedVerificationState,
   SellerBusinessStructure,
