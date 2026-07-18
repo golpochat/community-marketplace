@@ -207,6 +207,8 @@ export const SELLER_VERIFICATION_MESSAGES = {
     'Complete seller verification before boosting or featuring listings.',
 } as const;
 
-export function isSellerVerified(status: SellerStatus | null | undefined): boolean {
+export function isSellerVerified(
+  status: SellerStatus | string | null | undefined,
+): boolean {
   return status === 'verified';
 }
