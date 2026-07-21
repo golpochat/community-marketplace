@@ -78,6 +78,7 @@ export function SellerStorefrontSettings({
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<'profile' | 'details' | 'promote'>('profile');
 
   const activeStore = useMemo(
     () => stores.find((store) => store.id === activeStoreId) ?? null,
@@ -110,6 +111,7 @@ export function SellerStorefrontSettings({
       setContact(mergeStoreContact(activeStore.contact));
       setOpeningHours(mergeStoreOpeningHours(activeStore.openingHours));
       setPolicies(mergeStorePolicies(activeStore.policies));
+      setTab('profile');
     }
   }, [activeStore]);
 
@@ -178,6 +180,14 @@ export function SellerStorefrontSettings({
 
   const limitsLabel = formatStoreLimits(limits);
   const canAddStore = limits?.canCreateStore === true;
+  const tabItems = useMemo(
+    () => [
+      { id: 'profile', label: 'Profile' },
+      { id: 'details', label: 'Buyer details' },
+      { id: 'promote', label: 'Promote' },
+    ],
+    [],
+  );
 
   if (!stores.length) {
     return (
@@ -326,7 +336,7 @@ export function SellerStorefrontSettings({
             </div>
           ) : (
             activeStore && (
-              <div className="space-y-4">
+              <div className="space-y-6 pb-24">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
                     {activeStore.isPrimary ? 'Primary storefront' : 'Storefront'}
@@ -343,105 +353,116 @@ export function SellerStorefrontSettings({
                   </Link>
                 </div>
 
-                <StoreBannerUpload
-                  bannerUrl={activeStore.bannerUrl}
-                  storeId={activeStore.id}
-                  onUpdated={(bannerUrl) => {
-                    setStores((current) =>
-                      current.map((store) =>
-                        store.id === activeStore.id ? { ...store, bannerUrl } : store,
-                      ),
-                    );
-                    setError(null);
-                    feedback.success('Storefront banner updated');
-                    onSaved?.();
-                  }}
+                <DashboardSectionTabs
+                  items={tabItems}
+                  activeId={tab}
+                  onChange={(next) => setTab(next as typeof tab)}
+                  variant="nested"
                 />
 
-                <StoreLogoUpload
-                  logoUrl={activeStore.logoUrl}
-                  storeName={activeStore.name}
-                  storeId={activeStore.id}
-                  onUpdated={(logoUrl) => {
-                    setStores((current) =>
-                      current.map((store) =>
-                        store.id === activeStore.id ? { ...store, logoUrl } : store,
-                      ),
-                    );
-                    setError(null);
-                    feedback.success('Store logo updated');
-                    onSaved?.();
-                  }}
-                />
+                {tab === 'profile' && (
+                  <div className="space-y-4">
+                    <StoreBannerUpload
+                      bannerUrl={activeStore.bannerUrl}
+                      storeId={activeStore.id}
+                      onUpdated={(bannerUrl) => {
+                        setStores((current) =>
+                          current.map((store) =>
+                            store.id === activeStore.id ? { ...store, bannerUrl } : store,
+                          ),
+                        );
+                        setError(null);
+                        feedback.success('Storefront banner updated');
+                        onSaved?.();
+                      }}
+                    />
 
-                <div>
-                  <Label htmlFor="storefront-name">Store name</Label>
-                  <Input
-                    id="storefront-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
+                    <StoreLogoUpload
+                      logoUrl={activeStore.logoUrl}
+                      storeName={activeStore.name}
+                      storeId={activeStore.id}
+                      onUpdated={(logoUrl) => {
+                        setStores((current) =>
+                          current.map((store) =>
+                            store.id === activeStore.id ? { ...store, logoUrl } : store,
+                          ),
+                        );
+                        setError(null);
+                        feedback.success('Store logo updated');
+                        onSaved?.();
+                      }}
+                    />
 
-                <div>
-                  <Label htmlFor="storefront-bio">Store description</Label>
-                  <textarea
-                    id="storefront-bio"
-                    rows={3}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className={TEXTAREA_CLASSES}
-                  />
-                </div>
+                    <div>
+                      <Label htmlFor="storefront-name">Store name</Label>
+                      <Input
+                        id="storefront-name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                      />
+                    </div>
 
-                <div>
-                  <Label htmlFor="storefront-location">Store location</Label>
-                  <Input
-                    id="storefront-location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="e.g. Dublin"
-                  />
-                </div>
+                    <div>
+                      <Label htmlFor="storefront-bio">Store description</Label>
+                      <textarea
+                        id="storefront-bio"
+                        rows={3}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className={TEXTAREA_CLASSES}
+                      />
+                    </div>
 
-                <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-                  Public URL: /store/{activeStore.slug}
-                </p>
+                    <div>
+                      <Label htmlFor="storefront-location">Store location</Label>
+                      <Input
+                        id="storefront-location"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="e.g. Dublin"
+                      />
+                    </div>
 
-                <StorePublicDetailsForm
-                  contact={contact}
-                  openingHours={openingHours}
-                  policies={policies}
-                  onContactChange={setContact}
-                  onOpeningHoursChange={setOpeningHours}
-                  onPoliciesChange={setPolicies}
-                />
+                    <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                      Public URL: /store/{activeStore.slug}
+                    </p>
+                  </div>
+                )}
 
-                <Button
-                  type="button"
-                  disabled={saving || !name.trim()}
-                  onClick={() => void handleSave()}
-                >
-                  {saving ? 'Saving…' : 'Save storefront'}
-                </Button>
+                {tab === 'details' && (
+                  <div className="space-y-4">
+                    <StorePublicDetailsForm
+                      contact={contact}
+                      openingHours={openingHours}
+                      policies={policies}
+                      onContactChange={setContact}
+                      onOpeningHoursChange={setOpeningHours}
+                      onPoliciesChange={setPolicies}
+                    />
+                  </div>
+                )}
 
-                <StoreMarketingHub
-                  store={activeStore}
-                  name={name}
-                  description={description}
-                  location={location}
-                  onAcceptName={setName}
-                  onAcceptDescription={setDescription}
-                  onBannerApplied={(bannerUrl) => {
-                    setStores((current) =>
-                      current.map((store) =>
-                        store.id === activeStore.id ? { ...store, bannerUrl } : store,
-                      ),
-                    );
-                    feedback.success('Shop banner applied to storefront');
-                    onSaved?.();
-                  }}
-                />
+                {tab === 'promote' && (
+                  <div className="space-y-4">
+                    <StoreMarketingHub
+                      store={activeStore}
+                      name={name}
+                      description={description}
+                      location={location}
+                      onAcceptName={setName}
+                      onAcceptDescription={setDescription}
+                      onBannerApplied={(bannerUrl) => {
+                        setStores((current) =>
+                          current.map((store) =>
+                            store.id === activeStore.id ? { ...store, bannerUrl } : store,
+                          ),
+                        );
+                        feedback.success('Shop banner applied to storefront');
+                        onSaved?.();
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             )
           )}
@@ -455,6 +476,21 @@ export function SellerStorefrontSettings({
       {limits && !canAddStore && limits.storeCount >= limits.storeSlotLimit && (
         <SellerStoreSlotPanel onUpdated={() => onSaved?.()} />
       )}
+
+      {activeStore && !showCreateForm ? (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[hsl(var(--dashboard-sidebar-border))] bg-background/90 backdrop-blur-lg">
+          <div className="mx-auto flex max-w-2xl items-center justify-end gap-3 px-4 py-3">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={saving || !name.trim()}
+              onClick={() => void handleSave()}
+            >
+              {saving ? 'Saving…' : 'Save storefront'}
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
