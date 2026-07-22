@@ -6,6 +6,8 @@ import {
 import type { RoleCodeValue } from '@community-marketplace/types';
 import { WEB_APP_ROUTES, getWebDashboardPathForRole, isWebDashboardRouteAllowed } from './rbac-routes';
 import { getWebRoleFromAuthTokenCookie, getWebRoleFromCookie } from './auth';
+import { resolveBuyerProfileRedirect } from './buyer-routes';
+import { resolveSellerProfileRedirect } from './seller-routes';
 
 export const DASHBOARD_PREFIXES = ['/super-admin', '/admin', '/account', '/seller', '/buyer'] as const;
 
@@ -35,7 +37,6 @@ export const LEGACY_DASHBOARD_REDIRECTS: Record<string, string> = {
   '/buyer/favorites': '/account/saved',
   '/buyer/chat': '/account/messages',
   '/buyer/settings': '/account/settings',
-  '/buyer/profile': '/account/settings',
   '/buyer/notifications': '/account/notifications',
   '/buyer/listings': '/listings',
   '/buyer/search': '/listings',
@@ -48,7 +49,6 @@ export const LEGACY_DASHBOARD_REDIRECTS: Record<string, string> = {
   '/seller/marketing': '/account/marketing',
   '/seller/chat': '/account/messages',
   '/seller/settings': '/account/settings',
-  '/seller/profile': '/account/settings',
   '/seller/notifications': '/account/notifications',
   '/seller/dashboard/chat': '/account/messages',
   '/buyer/dashboard/chat': '/account/messages',
@@ -87,6 +87,30 @@ function resolveLegacyPrefixRedirect(pathname: string): string | null {
   return null;
 }
 
+function resolveLegacyProfileRedirect(
+  pathname: string,
+  searchParams?: URLSearchParams | null,
+): string | null {
+  if (pathname === '/seller/profile') {
+    return resolveSellerProfileRedirect(searchParams?.get('tab'));
+  }
+  if (pathname === '/buyer/profile') {
+    return resolveBuyerProfileRedirect(searchParams?.get('tab'));
+  }
+  return null;
+}
+
+/** Last-resort: any leftover /seller or /buyer path lands on unified account. */
+function resolveLegacyNamespaceCatchAll(pathname: string): string | null {
+  if (pathname === '/seller' || pathname.startsWith('/seller/')) {
+    return WEB_APP_ROUTES.account;
+  }
+  if (pathname === '/buyer' || pathname.startsWith('/buyer/')) {
+    return WEB_APP_ROUTES.account;
+  }
+  return null;
+}
+
 export function isDashboardPath(pathname: string): boolean {
   if (pathname === '/admin/invite/accept' || pathname.startsWith('/admin/invite/')) {
     return false;
@@ -107,7 +131,14 @@ export function resolveSuperAdminAdminNamespaceRedirect(
   return null;
 }
 
-export function resolveDashboardRedirect(pathname: string, role: RoleCodeValue | null): string | null {
+export function resolveDashboardRedirect(
+  pathname: string,
+  role: RoleCodeValue | null,
+  searchParams?: URLSearchParams | null,
+): string | null {
+  const profileTarget = resolveLegacyProfileRedirect(pathname, searchParams);
+  if (profileTarget) return profileTarget;
+
   const legacyTarget = LEGACY_DASHBOARD_REDIRECTS[pathname];
   if (legacyTarget) return legacyTarget;
 
@@ -120,6 +151,9 @@ export function resolveDashboardRedirect(pathname: string, role: RoleCodeValue |
   if (pathname.startsWith('/dashboard')) {
     return role ? getDashboardRouteByRole(role) : WEB_APP_ROUTES.login;
   }
+
+  const catchAll = resolveLegacyNamespaceCatchAll(pathname);
+  if (catchAll) return catchAll;
 
   return null;
 }

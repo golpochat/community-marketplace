@@ -11,9 +11,10 @@ import { BrowseMobileFilterDrawer } from '@/components/listings/browse/browse-mo
 import { LocalBrowseBar } from '@/components/local/local-browse-bar';
 import { useBrowseViewMode } from '@/components/listings/browse/browse-view-preferences';
 import {
+  buildBrowseHref,
   clearCategorySpecificFilters,
+  filtersToParamsKey,
   parseBrowseFiltersFromParams,
-  serializeBrowseFilters,
 } from '@/components/listings/browse/browse-url-filters';
 import {
   hasActiveFilters,
@@ -39,6 +40,8 @@ interface ListingsBrowseClientProps {
   initialListings?: ListingSummary[];
   initialMeta?: { page: number; limit: number; total: number };
   initialFiltersKey?: string;
+  /** Category locked from `/categories/{slug}` path. */
+  pathCategoryId?: string;
   pageTitle?: string;
   pageDescription?: string;
   /** Ad serve context: browse (sidebar + inline) or category (sidebar). */
@@ -50,6 +53,7 @@ export function ListingsBrowseClient({
   initialListings,
   initialMeta,
   initialFiltersKey,
+  pathCategoryId,
   pageTitle,
   pageDescription,
   adsContext = 'browse',
@@ -65,8 +69,12 @@ export function ListingsBrowseClient({
   const [meta, setMeta] = useState(initialMeta ?? { page: 1, limit: 12, total: 0 });
   const loadedKeyRef = useRef<string | null>(initialFiltersKey ?? null);
 
-  const filters = parseBrowseFiltersFromParams(searchParams);
-  const paramsKey = searchParams.toString();
+  const parsed = parseBrowseFiltersFromParams(searchParams, 12, categories);
+  const filters: ListingSearchFilters = {
+    ...parsed,
+    ...(pathCategoryId ? { categoryId: pathCategoryId } : {}),
+  };
+  const paramsKey = filtersToParamsKey(filters, categories);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -118,7 +126,7 @@ export function ListingsBrowseClient({
     if (next.categoryId !== prevCategoryId) {
       resolved = clearCategorySpecificFilters(next);
     }
-    router.push(`/listings?${serializeBrowseFilters(resolved).toString()}`);
+    router.push(buildBrowseHref(resolved, categories));
   }
 
   const totalPages = Math.max(1, Math.ceil(meta.total / meta.limit));

@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 
-import { parseBrowseFiltersFromRecord } from '@/components/listings/browse/browse-url-filters';
+import {
+  buildBrowseHref,
+  parseBrowseFiltersFromRecord,
+} from '@/components/listings/browse/browse-url-filters';
 import { ListingsBrowseClient } from '@/components/listings/listings-browse-client';
 import { ListingCardSkeleton } from '@/components/shared/skeleton';
 import { ContentHubLinks } from '@/components/seo/content-hub-links';
@@ -23,11 +27,18 @@ export async function generateMetadata({ searchParams }: ListingsPageProps): Pro
 
 export default async function ListingsPage({ searchParams }: ListingsPageProps) {
   const params = await searchParams;
-  const filters = parseBrowseFiltersFromRecord(params);
-  const { categories, listings, meta } = await fetchBrowsePage(filters);
-  const initialFiltersKey = filtersToParamsKey(filters);
+  const categories = await fetchCategories();
+  const filters = parseBrowseFiltersFromRecord(params, 12, categories);
+
+  // Canonical category URLs live at /categories/{slug} — redirect query forms.
+  if (filters.categoryId) {
+    redirect(buildBrowseHref(filters, categories));
+  }
+
+  const { listings, meta } = await fetchBrowsePage(filters);
+  const initialFiltersKey = filtersToParamsKey(filters, categories);
   const totalPages = Math.max(1, Math.ceil(meta.total / meta.limit));
-  const pagination = buildBrowsePaginationPaths(params, totalPages);
+  const pagination = buildBrowsePaginationPaths(params, totalPages, categories);
 
   return (
     <>

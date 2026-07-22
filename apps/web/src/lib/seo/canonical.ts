@@ -55,7 +55,8 @@ export function buildBrowseCanonicalPath(
   };
 
   set('q');
-  set('categoryId');
+  // Prefer slug form; never put legacy categoryId UUIDs in canonical URLs.
+  set('category');
   set('condition');
   set('minPrice');
   set('maxPrice');
@@ -79,6 +80,14 @@ export function buildBrowseCanonicalPath(
 
   const page = params.page;
   if (typeof page === 'string' && page !== '1') canonical.set('page', page);
+
+  const categorySlug = canonical.get('category');
+  if (categorySlug) {
+    canonical.delete('category');
+    const query = canonical.toString();
+    const path = buildCategoryCanonicalPath(categorySlug);
+    return query ? `${path}?${query}` : path;
+  }
 
   const query = canonical.toString();
   return query ? `/listings?${query}` : '/listings';

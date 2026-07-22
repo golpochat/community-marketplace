@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 
 import type { NearbyArea } from '@community-marketplace/types';
@@ -16,6 +16,10 @@ import { useUserLocation, type LocalFilterMode } from '@/hooks/use-user-location
 import type { ListingSearchFilters } from '@community-marketplace/types';
 import { locationService } from '@/services/location.service';
 
+function browsePathFromCurrent(pathname: string): string {
+  return pathname.startsWith('/categories/') ? pathname : '/listings';
+}
+
 interface LocalBrowseBarProps {
   filters: ListingSearchFilters;
   onFiltersChange: (filters: ListingSearchFilters) => void;
@@ -29,6 +33,7 @@ function readRadius(params: URLSearchParams): number {
 
 export function LocalBrowseBar({ filters, onFiltersChange }: LocalBrowseBarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const {
     location,
@@ -73,9 +78,13 @@ export function LocalBrowseBar({ filters, onFiltersChange }: LocalBrowseBarProps
       params.set('radiusKm', String(radiusKm));
       serializeLocalFilterToParams(params, filter);
       params.delete('page');
-      router.push(`/listings?${params.toString()}`);
+      // Strip legacy UUID category query — category lives in the path on /categories/{slug}.
+      params.delete('categoryId');
+      const base = browsePathFromCurrent(pathname);
+      const qs = params.toString();
+      router.push(qs ? `${base}?${qs}` : base);
     },
-    [location, radiusKm, router, searchParams],
+    [location, pathname, radiusKm, router, searchParams],
   );
 
   if (!isLocalMode && !locationLoading && !location) {

@@ -148,7 +148,7 @@ export class ListingReserveService {
       listing.sellerId,
       'Reservation request',
       `Someone requested to reserve "${listing.title}". Approve or decline within ${LISTING_RESERVE_PENDING_TTL_HOURS} hours.`,
-      `/seller/listings/${listingId}`,
+      `/account/listings/${listingId}`,
     );
 
     this.eventBus.publish({
@@ -206,7 +206,7 @@ export class ListingReserveService {
         row.sellerId,
         'Reservation cancelled',
         'The buyer cancelled their reservation. Your listing is available again.',
-        `/seller/listings/${row.listingId}`,
+        `/account/listings/${row.listingId}`,
       );
     }
 
@@ -443,7 +443,7 @@ export class ListingReserveService {
         row.sellerId,
         'Reservation expired',
         'The reservation hold ended. Your listing is available again.',
-        `/seller/listings/${row.listingId}`,
+        `/account/listings/${row.listingId}`,
       );
     }
 

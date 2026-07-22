@@ -22,7 +22,7 @@ export function ListingDetailHeader({ listing }: ListingDetailHeaderProps) {
   const showHybrid = listingIsHybrid(listing);
   const vehicleSpecs = resolveListingVehicleSpecs(listing);
   const categoryHref = listing.category?.slug
-    ? `/listings?categoryId=${listing.categoryId}`
+    ? `/categories/${listing.category.slug}`
     : undefined;
 
   return (

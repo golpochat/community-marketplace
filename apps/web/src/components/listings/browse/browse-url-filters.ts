@@ -2,6 +2,8 @@ import type { ReadonlyURLSearchParams } from 'next/navigation';
 
 import type { Category, ListingCondition, ListingSearchFilters, ListingSortOption } from '@community-marketplace/types';
 
+import { buildCategoryCanonicalPath } from '@/lib/seo/canonical';
+
 function readNumber(params: ReadonlyURLSearchParams, key: string): number | undefined {
   const raw = params.get(key);
   if (!raw) return undefined;
@@ -31,25 +33,40 @@ function toURLSearchParams(
   return searchParams;
 }
 
+function resolveCategoryId(
+  params: ReadonlyURLSearchParams,
+  categories: Category[],
+): string | undefined {
+  const legacyId = params.get('categoryId') ?? undefined;
+  if (legacyId) return legacyId;
+
+  const slug = params.get('category') ?? undefined;
+  if (!slug || categories.length === 0) return undefined;
+  return categories.find((category) => category.slug === slug)?.id;
+}
+
 export function parseBrowseFiltersFromRecord(
   params: Record<string, string | string[] | undefined>,
   limit = 12,
+  categories: Category[] = [],
 ): ListingSearchFilters {
   return parseBrowseFiltersFromParams(
     toURLSearchParams(params) as unknown as ReadonlyURLSearchParams,
     limit,
+    categories,
   );
 }
 
 export function parseBrowseFiltersFromParams(
   searchParams: ReadonlyURLSearchParams,
   limit = 12,
+  categories: Category[] = [],
 ): ListingSearchFilters {
   const sellerBusiness = readBoolean(searchParams, 'sellerBusiness');
 
   return {
     q: searchParams.get('q') ?? undefined,
-    categoryId: searchParams.get('categoryId') ?? undefined,
+    categoryId: resolveCategoryId(searchParams, categories),
     condition: (searchParams.get('condition') as ListingCondition) || undefined,
     minPrice: readNumber(searchParams, 'minPrice'),
     maxPrice: readNumber(searchParams, 'maxPrice'),
@@ -87,10 +104,20 @@ export function parseBrowseFiltersFromParams(
   };
 }
 
-export function serializeBrowseFilters(filters: ListingSearchFilters): URLSearchParams {
+/** Query params only — category lives in `/categories/{slug}` path when set. */
+export function serializeBrowseFilters(
+  filters: ListingSearchFilters,
+  categories: Category[] = [],
+): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.q) params.set('q', filters.q);
-  if (filters.categoryId) params.set('categoryId', filters.categoryId);
+  // Prefer slug in query when serializing onto /listings (legacy / share links).
+  // Callers that use buildBrowseHref put category in the path instead.
+  if (filters.categoryId) {
+    const slug = getActiveCategorySlug(categories, filters.categoryId);
+    if (slug) params.set('category', slug);
+    else params.set('categoryId', filters.categoryId);
+  }
   if (filters.condition) params.set('condition', filters.condition);
   if (filters.minPrice != null) params.set('minPrice', String(filters.minPrice));
   if (filters.maxPrice != null) params.set('maxPrice', String(filters.maxPrice));
@@ -129,12 +156,49 @@ export function serializeBrowseFilters(filters: ListingSearchFilters): URLSearch
   return params;
 }
 
+export function serializeBrowseQueryWithoutCategory(
+  filters: ListingSearchFilters,
+): URLSearchParams {
+  return serializeBrowseFilters({ ...filters, categoryId: undefined }, []);
+}
+
+/**
+ * Public browse href. Category filters use `/categories/{slug}`; everything else uses `/listings`.
+ */
+export function buildBrowseHref(
+  filters: ListingSearchFilters,
+  categories: Category[],
+): string {
+  const slug = getActiveCategorySlug(categories, filters.categoryId);
+  const query = serializeBrowseQueryWithoutCategory(filters);
+  const qs = query.toString();
+
+  if (slug) {
+    const path = buildCategoryCanonicalPath(slug);
+    return qs ? `${path}?${qs}` : path;
+  }
+
+  return qs ? `/listings?${qs}` : '/listings';
+}
+
 export function getActiveCategorySlug(
   categories: Category[],
   categoryId?: string,
 ): string | undefined {
   if (!categoryId) return undefined;
   return categories.find((c) => c.id === categoryId)?.slug;
+}
+
+/** Stable key for browse filter identity (SSR hydrate + client refetch). */
+export function filtersToParamsKey(
+  filters: ListingSearchFilters,
+  categories: Category[] = [],
+): string {
+  const params = serializeBrowseQueryWithoutCategory(filters);
+  const slug = getActiveCategorySlug(categories, filters.categoryId);
+  if (slug) params.set('category', slug);
+  else if (filters.categoryId) params.set('categoryId', filters.categoryId);
+  return params.toString();
 }
 
 export function clearCategorySpecificFilters(filters: ListingSearchFilters): ListingSearchFilters {

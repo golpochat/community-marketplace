@@ -87,7 +87,7 @@ export default function BuyerDashboardPage() {
       )}
       <p className="mt-4 text-sm">
         <Link
-          href="/buyer/listings"
+          href="/listings"
           className="font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
         >
           Browse listings

@@ -91,7 +91,7 @@ export function ListingDetailClient({
   }
 
   const categoryHref = listing.category?.slug
-    ? `/listings?categoryId=${listing.categoryId}`
+    ? `/categories/${listing.category.slug}`
     : undefined;
 
   return (

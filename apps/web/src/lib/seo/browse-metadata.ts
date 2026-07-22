@@ -3,7 +3,8 @@ import type { Metadata } from 'next';
 
 import { APP_NAME } from '@community-marketplace/config';
 
-import { buildBrowseCanonicalPath, buildCategoryCanonicalPath, canonicalMetadata } from '@/lib/seo/canonical';
+import { filtersToParamsKey as buildFiltersParamsKey } from '@/components/listings/browse/browse-url-filters';
+import { buildBrowseCanonicalPath, canonicalMetadata } from '@/lib/seo/canonical';
 import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER } from '@/lib/seo/og-default';
 
 function readParam(
@@ -14,14 +15,28 @@ function readParam(
   return typeof value === 'string' ? value : undefined;
 }
 
+function resolveCategoryFromParams(
+  params: Record<string, string | string[] | undefined>,
+  categories: Category[],
+): Category | undefined {
+  const slug = readParam(params, 'category');
+  if (slug) {
+    return categories.find((item) => item.slug === slug);
+  }
+  const categoryId = readParam(params, 'categoryId');
+  if (categoryId) {
+    return categories.find((item) => item.id === categoryId);
+  }
+  return undefined;
+}
+
 export function buildBrowseMetadata(
   params: Record<string, string | string[] | undefined>,
   categories: Category[] = [],
 ): Metadata {
   const q = readParam(params, 'q');
-  const categoryId = readParam(params, 'categoryId');
   const area = readParam(params, 'area');
-  const category = categoryId ? categories.find((item) => item.id === categoryId) : undefined;
+  const category = resolveCategoryFromParams(params, categories);
   const page = readParam(params, 'page');
   const pageSuffix = page && page !== '1' ? ` – Page ${page}` : '';
 
@@ -45,14 +60,20 @@ export function buildBrowseMetadata(
     description = `Browse local listings in ${area} from community sellers on ${APP_NAME}.`;
   }
 
+  const canonicalParams = { ...params };
+  if (category && !readParam(canonicalParams, 'category')) {
+    canonicalParams.category = category.slug;
+  }
+  delete canonicalParams.categoryId;
+
   return {
     title: `${title}${pageSuffix}`,
     description,
-    ...canonicalMetadata(buildBrowseCanonicalPath(params)),
+    ...canonicalMetadata(buildBrowseCanonicalPath(canonicalParams)),
     openGraph: {
       title: `${title}${pageSuffix}`,
       description,
-      url: buildBrowseCanonicalPath(params),
+      url: buildBrowseCanonicalPath(canonicalParams),
       images: [DEFAULT_OG_IMAGE],
     },
     twitter: {
@@ -63,24 +84,30 @@ export function buildBrowseMetadata(
   };
 }
 
-export function buildCategoryMetadata(category: Category): Metadata {
+export function buildCategoryMetadata(
+  category: Category,
+  params: Record<string, string | string[] | undefined> = {},
+): Metadata {
   const description =
     category.description?.trim() ||
     `Browse ${category.name.toLowerCase()} for sale from local sellers in Ireland on ${APP_NAME}.`;
+  const page = readParam(params, 'page');
+  const pageSuffix = page && page !== '1' ? ` – Page ${page}` : '';
+  const canonical = buildBrowseCanonicalPath({ ...params, category: category.slug });
 
   return {
-    title: `${category.name} for sale`,
+    title: `${category.name} for sale${pageSuffix}`,
     description,
-    ...canonicalMetadata(buildCategoryCanonicalPath(category.slug)),
+    ...canonicalMetadata(canonical),
     openGraph: {
-      title: `${category.name} for sale`,
+      title: `${category.name} for sale${pageSuffix}`,
       description,
-      url: buildCategoryCanonicalPath(category.slug),
+      url: canonical,
       images: [DEFAULT_OG_IMAGE],
     },
     twitter: {
       ...DEFAULT_TWITTER,
-      title: `${category.name} for sale`,
+      title: `${category.name} for sale${pageSuffix}`,
       description,
     },
   };
@@ -89,6 +116,7 @@ export function buildCategoryMetadata(category: Category): Metadata {
 export function buildBrowsePaginationPaths(
   params: Record<string, string | string[] | undefined>,
   totalPages: number,
+  categories: Category[] = [],
 ): { prevPath?: string; nextPath?: string } {
   const pageRaw = params.page;
   const currentPage =
@@ -96,8 +124,13 @@ export function buildBrowsePaginationPaths(
 
   if (totalPages <= 1) return {};
 
+  const category = resolveCategoryFromParams(params, categories);
+  const baseParams = { ...params };
+  if (category) baseParams.category = category.slug;
+  delete baseParams.categoryId;
+
   const withPage = (page: number) => {
-    const nextParams = { ...params, page: String(page) };
+    const nextParams = { ...baseParams, page: String(page) };
     if (page <= 1) {
       const { page: _removed, ...rest } = nextParams;
       return buildBrowseCanonicalPath(rest);
@@ -111,21 +144,9 @@ export function buildBrowsePaginationPaths(
   };
 }
 
-export function filtersToParamsKey(filters: ListingSearchFilters): string {
-  const params = new URLSearchParams();
-  if (filters.q) params.set('q', filters.q);
-  if (filters.categoryId) params.set('categoryId', filters.categoryId);
-  if (filters.condition) params.set('condition', filters.condition);
-  if (filters.minPrice != null) params.set('minPrice', String(filters.minPrice));
-  if (filters.maxPrice != null) params.set('maxPrice', String(filters.maxPrice));
-  if (filters.area) params.set('area', filters.area);
-  if (filters.deliveryAvailable) params.set('deliveryAvailable', 'true');
-  if (filters.deliveryCollection) params.set('deliveryCollection', 'true');
-  if (filters.sellerVerified) params.set('sellerVerified', 'true');
-  if (filters.latitude != null) params.set('lat', String(filters.latitude));
-  if (filters.longitude != null) params.set('lng', String(filters.longitude));
-  if (filters.radiusKm != null) params.set('radiusKm', String(filters.radiusKm));
-  if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort);
-  if (filters.page && filters.page > 1) params.set('page', String(filters.page));
-  return params.toString();
+export function filtersToParamsKey(
+  filters: ListingSearchFilters,
+  categories: Category[] = [],
+): string {
+  return buildFiltersParamsKey(filters, categories);
 }

@@ -75,7 +75,7 @@ Static pages exist and are linked from footer:
 ### 4. Internal linking (basic but present)
 
 - Footer links to key pages
-- Category shortcuts → `/listings?categoryId=...`
+- Category shortcuts → `/categories/{slug}`
 - Listing breadcrumbs (UI)
 - Seller cards → `/store/{sellerSlug}`
 - Similar listings on detail pages
@@ -164,7 +164,7 @@ Document navigations use `NetworkOnly` in the service worker — HTML is not sta
 | Entity | Current URL | SEO-friendly alternative |
 |--------|-------------|--------------------------|
 | Listing | `/listings/a1b2c3d4-...` (UUID) | `/listings/vintage-bike-dublin-a1b2c3d4` |
-| Category | `/listings?categoryId=uuid` | `/categories/electronics` or `/listings/electronics` |
+| Category | `/categories/{slug}` ✓ | Keep path form; legacy `/listings?categoryId=` / `?category=` redirect here |
 | Store | `/store/{sellerSlug}` ✓ | Good — but needs dynamic metadata |
 
 **Justification:** URLs are a ranking signal. "vintage-bike-dublin" in the path helps long-tail queries. DoneDeal, Adverts.ie, Gumtree all use slug-based URLs. UUID-only URLs are a competitive disadvantage.

@@ -86,7 +86,7 @@ export function NavCategoriesDropdown({ className, onNavigate }: NavCategoriesDr
               return (
                 <Link
                   key={category.id}
-                  href={`/listings?categoryId=${category.id}`}
+                  href={`/categories/${category.slug}`}
                   role="menuitem"
                   className="flex flex-col items-center gap-2 rounded-lg border border-transparent px-2 py-3 text-center transition-colors hover:border-primary/20 hover:bg-primary/5"
                   onClick={() => {

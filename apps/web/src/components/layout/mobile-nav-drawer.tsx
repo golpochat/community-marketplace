@@ -113,7 +113,7 @@ export function MobileNavDrawer({
               return (
                 <Link
                   key={category.id}
-                  href={`/listings?categoryId=${category.id}`}
+                  href={`/categories/${category.slug}`}
                   className="flex items-center gap-2 rounded-lg border border-border px-3 py-3 text-sm font-medium text-foreground hover:border-primary/30 hover:bg-primary/5"
                   onClick={onClose}
                 >

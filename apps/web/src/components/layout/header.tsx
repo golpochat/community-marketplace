@@ -34,7 +34,15 @@ function isBuyRoute(pathname: string): boolean {
 }
 
 function isSellRoute(pathname: string): boolean {
-  return pathname.startsWith("/seller");
+  return (
+    pathname.startsWith("/account/selling") ||
+    pathname.startsWith("/account/storefront") ||
+    pathname.startsWith("/account/marketing") ||
+    pathname.startsWith("/account/listings") ||
+    pathname.startsWith("/account/verification") ||
+    pathname.startsWith("/account/earnings") ||
+    pathname.startsWith("/seller")
+  );
 }
 
 function HeaderNavLink({
@@ -89,12 +97,7 @@ export function Header() {
 
   const sellHref = getSellHref(hasAuthState, navLinks?.sellItem);
   const buyActive = isBuyRoute(pathname);
-  const sellActive =
-    isSellRoute(pathname) ||
-    pathname.startsWith("/account/selling") ||
-    pathname.startsWith("/account/storefront") ||
-    pathname.startsWith("/account/marketing") ||
-    pathname.startsWith("/account/listings");
+  const sellActive = isSellRoute(pathname);
   const onLoginPage = isAuthLoginRoute(pathname);
   const onRegisterPage = isAuthRegisterRoute(pathname);
 

@@ -68,10 +68,13 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  const redirectTarget = resolveDashboardRedirect(pathname, role);
+  const redirectTarget = resolveDashboardRedirect(pathname, role, request.nextUrl.searchParams);
   if (redirectTarget) {
     const url = new URL(redirectTarget, request.url);
-    url.search = request.nextUrl.search;
+    // Profile tab redirects already encode the destination; don't re-attach ?tab=.
+    if (pathname !== '/seller/profile' && pathname !== '/buyer/profile') {
+      url.search = request.nextUrl.search;
+    }
     return withLegacyRoleCookieCleanup(request, NextResponse.redirect(url));
   }
 
