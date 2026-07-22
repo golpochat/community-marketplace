@@ -9,7 +9,11 @@ export { formatDate, formatDateTime, formatRelativeTime, toIsoString } from './d
 export { formatListedAgo, formatUpdatedAgo, resolveListingListedAt, isFreshListing, isNewListing, formatJustListedLabel } from './listing-age';
 export { formatListingConditionLabel, LISTING_CONDITION_LABELS } from './listing-condition';
 export { isFreeListingPrice } from './listing-price';
-export { buildDeliverySummaryLabel } from './delivery';
+export {
+  buildDeliverySummaryLabel,
+  sanitizeDeliveryOptionsForDisplay,
+  deliverySectionTitle,
+} from './delivery';
 export { formatLocationLabel } from './location';
 export { parseStoreAddress, type ParsedStoreAddress } from './store-address';
 export {

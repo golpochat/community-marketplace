@@ -1,7 +1,29 @@
-import { ListingBadge } from '@/components/listings/listing-badge';
-import { MessageSquare, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 
-export function ListingTrustCues({ className }: { className?: string }) {
+import { cn } from '@community-marketplace/ui';
+import { ShieldCheck } from 'lucide-react';
+
+interface ListingTrustCuesProps {
+  className?: string;
+  /** Single-line cue for the detail sidebar (avoids duplicating a full banner). */
+  compact?: boolean;
+}
+
+export function ListingTrustCues({ className, compact = false }: ListingTrustCuesProps) {
+  if (compact) {
+    return (
+      <p className={cn('flex items-start gap-2 text-xs text-muted-foreground', className)}>
+        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+        <span>
+          Verified sellers · secure messaging ·{' '}
+          <Link href="/safety" className="font-medium text-primary hover:underline">
+            Buyer protection
+          </Link>
+        </span>
+      </p>
+    );
+  }
+
   return (
     <div className={className}>
       <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -9,17 +31,19 @@ export function ListingTrustCues({ className }: { className?: string }) {
       </p>
       <p className="mb-3 text-sm text-muted-foreground">We verify sellers to keep your community safe.</p>
       <div className="flex flex-wrap gap-2">
-        <ListingBadge tone="outline" className="font-normal">
+        <span className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground">
           <ShieldCheck className="h-3 w-3" aria-hidden />
           Verified community marketplace
-        </ListingBadge>
-        <ListingBadge tone="outline" className="font-normal">
-          <MessageSquare className="h-3 w-3" aria-hidden />
+        </span>
+        <span className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground">
           Secure messaging
-        </ListingBadge>
-        <ListingBadge tone="outline" className="font-normal">
-          Report suspicious listings instantly
-        </ListingBadge>
+        </span>
+        <Link
+          href="/safety"
+          className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium text-primary hover:underline"
+        >
+          Report suspicious listings
+        </Link>
       </div>
     </div>
   );

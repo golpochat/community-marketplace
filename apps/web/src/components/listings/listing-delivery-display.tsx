@@ -3,12 +3,15 @@
 import type { ListingDeliverySelection } from '@community-marketplace/types';
 
 import {
+  deliverySectionTitle,
   formatDeliveryOptionLabel,
   formatDeliveryOptionPrice,
+  sanitizeDeliveryOptionsForDisplay,
 } from '@/lib/delivery-display';
 
 interface ListingDeliveryDisplayProps {
   options?: ListingDeliverySelection[];
+  /** Override auto title (`Collection` vs `Delivery`). */
   title?: string;
   /** Renders as a simple list without an outer card — for use inside sidebar panels. */
   inline?: boolean;
@@ -16,14 +19,18 @@ interface ListingDeliveryDisplayProps {
 
 export function ListingDeliveryDisplay({
   options = [],
-  title = 'Delivery',
+  title,
   inline = false,
 }: ListingDeliveryDisplayProps) {
-  if (options.length === 0) return null;
+  const sanitized = sanitizeDeliveryOptionsForDisplay(options);
+  if (sanitized.length === 0) return null;
+
+  const heading = title ?? deliverySectionTitle(sanitized);
+  const collectionOnly = sanitized.every((option) => option.zone === 'COLLECTION');
 
   const list = (
     <ul className={inline ? 'space-y-1.5' : 'mt-3 space-y-2'}>
-      {options.map((option) => {
+      {sanitized.map((option) => {
         const label = formatDeliveryOptionLabel(option);
         const priceLabel = formatDeliveryOptionPrice(option);
 
@@ -32,7 +39,7 @@ export function ListingDeliveryDisplay({
             key={`${option.deliveryOptionId}-${option.customLabel ?? option.label}`}
             className="flex items-center justify-between gap-3 text-sm text-foreground"
           >
-            <span>{label}</span>
+            <span>{collectionOnly && sanitized.length === 1 ? 'Collect from seller' : label}</span>
             {priceLabel && <span className="shrink-0 font-medium text-foreground">{priceLabel}</span>}
           </li>
         );
@@ -43,7 +50,7 @@ export function ListingDeliveryDisplay({
   if (inline) {
     return (
       <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</p>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{heading}</p>
         {list}
       </div>
     );
@@ -51,7 +58,7 @@ export function ListingDeliveryDisplay({
 
   return (
     <section className="rounded-xl border border-border bg-card p-4 shadow-brand-sm">
-      <h2 className="text-base font-semibold text-foreground">{title}</h2>
+      <h2 className="text-base font-semibold text-foreground">{heading}</h2>
       {list}
     </section>
   );

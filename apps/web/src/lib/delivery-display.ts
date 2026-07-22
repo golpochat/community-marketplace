@@ -1,4 +1,8 @@
 import type { ListingDeliverySelection } from '@community-marketplace/types';
+import {
+  deliverySectionTitle,
+  sanitizeDeliveryOptionsForDisplay,
+} from '@community-marketplace/utils';
 import { formatCurrency } from '@community-marketplace/utils';
 
 export function formatDeliveryOptionPrice(option: ListingDeliverySelection): string | null {
@@ -10,3 +14,5 @@ export function formatDeliveryOptionPrice(option: ListingDeliverySelection): str
 export function formatDeliveryOptionLabel(option: ListingDeliverySelection): string {
   return option.label ?? option.customLabel ?? 'Delivery';
 }
+
+export { deliverySectionTitle, sanitizeDeliveryOptionsForDisplay };
