@@ -5,7 +5,8 @@ export type WalletTransactionType =
   | 'cashback_earned'
   | 'expired'
   | 'ai_generation'
-  | 'credit_topup';
+  | 'credit_topup'
+  | 'spent';
 
 
 export type CashbackGrantStatus = 'pending' | 'earned' | 'cancelled';
@@ -22,7 +23,8 @@ export type PlatformPurchaseType =
   | 'ai_credit_2'
   | 'ai_credit_5'
   | 'ai_credit_10'
-  | 'featured_store';
+  | 'featured_store'
+  | 'early_cashback_unlock';
 
 export type PlatformPurchaseStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
@@ -117,6 +119,10 @@ export interface PlatformPricingConfig {
     category_slots_per_day?: number;
     store_homepage_slots_per_day?: number;
   };
+  /** AI Marketing Hub allowance (verified sellers). */
+  aiMarketing?: {
+    freeUnitsMonthly: number;
+  };
 }
 
 export interface MonetizationSettings {
@@ -136,6 +142,11 @@ export interface MonetizationSettings {
   displayAdsEnabled: boolean;
   /** Admin publish flag for AI Marketing Hub (sellers). */
   aiMarketingEnabled: boolean;
+  /**
+   * Monthly free AI credit units for verified sellers.
+   * Sourced from pricing.aiMarketing.freeUnitsMonthly (default 10).
+   */
+  aiMarketingFreeUnitsMonthly: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -161,7 +172,10 @@ export interface PlatformPurchase {
 
 export interface BoostIntentResponse {
   purchase: PlatformPurchase;
-  clientSecret: string;
+  /** Null when credits cover the full price (no Stripe step). */
+  clientSecret: string | null;
+  creditsApplied?: number;
+  amountDue?: number;
 }
 
 export interface FeaturedIntentResponse {
@@ -171,7 +185,18 @@ export interface FeaturedIntentResponse {
 
 export interface FastTrackIntentResponse {
   purchase: PlatformPurchase;
-  clientSecret: string;
+  /** Null when credits cover the full price (no Stripe step). */
+  clientSecret: string | null;
+  creditsApplied?: number;
+  amountDue?: number;
+}
+
+export interface EarlyCashbackUnlockIntentResponse {
+  purchase: PlatformPurchase;
+  clientSecret: string | null;
+  creditsApplied?: number;
+  amountDue?: number;
+  grantId: string;
 }
 
 export interface StoreSlotIntentResponse {
@@ -410,6 +435,12 @@ export interface BuyerWalletSummary {
   cashbackPercent: number;
   coolingDays: number;
   cashbackEnabled: boolean;
+  /** Early unlock SKU for pending cashback (when enabled). */
+  earlyUnlock?: {
+    enabled: boolean;
+    price: number;
+    currency: string;
+  };
 }
 
 export interface CashbackEstimate {
@@ -498,6 +529,15 @@ export interface SellerFeeOverrideEntry {
   verifiedSellerFeePercent: number;
 }
 
+export interface SellerAiFreeUnitsOverrideEntry {
+  userId: string;
+  displayName?: string;
+  email: string;
+  sellerStatus: string;
+  customAiMarketingFreeUnitsMonthly: number;
+  platformFreeUnitsMonthly: number;
+}
+
 export interface SellerMonetizationSearchResult {
   id: string;
   displayName?: string;
@@ -505,5 +545,7 @@ export interface SellerMonetizationSearchResult {
   sellerStatus: string;
   customPlatformFeePercent?: number;
   effectiveFeePercent: number;
+  customAiMarketingFreeUnitsMonthly?: number;
+  effectiveAiFreeUnitsMonthly: number;
   listingCount: number;
 }

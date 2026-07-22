@@ -25,10 +25,6 @@ export class AuthGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    if (isPublic) {
-      return true;
-    }
-
     const request = context.switchToHttp().getRequest<{
       headers: { authorization?: string };
       cookies?: Record<string, string>;
@@ -36,7 +32,28 @@ export class AuthGuard implements CanActivate {
     }>();
 
     const authHeader = request.headers.authorization;
-    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : undefined;
+    const bearerToken = authHeader?.startsWith('Bearer ')
+      ? authHeader.slice('Bearer '.length)
+      : undefined;
+
+    if (isPublic) {
+      // Attach viewer when present so public endpoints can personalize (e.g. reserve summary).
+      if (bearerToken) {
+        try {
+          const payload = this.jwtAuthService.verifyAccessToken(bearerToken);
+          request.user = {
+            id: payload.sub,
+            email: payload.email,
+            role: payload.role as RbacRole,
+            primaryRoleId: payload.primaryRoleId,
+            sessionId: payload.sid,
+          };
+        } catch {
+          // Ignore invalid tokens on public routes.
+        }
+      }
+      return true;
+    }
 
     if (!bearerToken) {
       throw new UnauthorizedException('Missing or invalid authorization token');

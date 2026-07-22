@@ -1,24 +1,25 @@
 import type PDFKit from 'pdfkit';
 
-import type { InvoiceCompanyConfig } from '@community-marketplace/config';
 import {
   buildPlatformRevenueReportNote,
   formatInvoiceMoney,
   getInvoiceCompanyConfig,
-  splitFooterLegalSentences,
-  buildDocumentFooterLegal,
+  type InvoiceCompanyConfig,
 } from '@community-marketplace/config';
 
-import { resolveInvoiceBrandAssetPath } from './brand-assets';
-import { getPdfCompany, PDF_MARGIN, PDF_PAGE, PDF_RGB } from './document-pdf.theme';
+import {
+  attachEnterpriseDocumentFooters,
+  drawEnterpriseHeader,
+  drawMetaColumns,
+  drawNoteBox,
+  drawSupplierStrip,
+} from './enterprise-pdf.layout';
+import { PDF_MARGIN, PDF_PAGE, PDF_RGB } from './document-pdf.theme';
 import {
   drawContinuationHeader,
-  drawPageBackground,
   ensurePageSpace,
   PDF_CONTENT_TOP,
-  PDF_FOOTER_RESERVE,
 } from './pdf-page.util';
-import { formatStatementPeriodRange } from '../../modules/statements/lib/account-statement.types';
 import type { FinanceRecordLine } from '../../modules/statements/lib/finance-records.util';
 import type { PlatformRevenueReportData } from '../../modules/statements/lib/platform-revenue-report.types';
 import { formatReceiptDate } from '../../modules/payments/lib/payment-receipt.types';
@@ -46,7 +47,48 @@ export function renderPlatformRevenueReport(
   data: PlatformRevenueReportData,
 ): void {
   const company = getInvoiceCompanyConfig();
-  let y = drawCover(doc, data, company);
+  let y = drawEnterpriseHeader(doc, 'REPORT', data.reportNumber) + 20;
+  y = drawSupplierStrip(doc, y);
+
+  y = drawMetaColumns(
+    doc,
+    y,
+    {
+      title: 'Prepared for',
+      lines: [
+        { label: 'Entity', value: company.legalName },
+        { label: 'Purpose', value: 'Internal accountancy & VAT reporting' },
+      ],
+    },
+    {
+      title: 'Report details',
+      lines: [
+        { label: 'Period', value: data.periodLabel },
+        { label: 'Issued', value: formatReceiptDate(data.issuedAt) },
+      ],
+    },
+  );
+
+  if (data.isPartialPeriod) {
+    y = ensurePageSpace(doc, y, 20);
+    doc
+      .font('Helvetica-Oblique')
+      .fontSize(8.5)
+      .fillColor(PDF_RGB.muted)
+      .text(
+        `Activity to ${formatReceiptDate(data.issuedAt)} — reporting period not yet complete.`,
+        PDF_MARGIN,
+        y,
+        {
+          width: PDF_PAGE.width - PDF_MARGIN * 2,
+          lineBreak: false,
+          ellipsis: true,
+        },
+      );
+    y += 18;
+  }
+
+  y = drawExecutiveSummary(doc, data, company, y);
 
   const platformRows = data.records.filter((row) => row.type === 'platform_service');
   const feeRows = data.records.filter((row) => row.type === 'marketplace_fee');
@@ -59,228 +101,24 @@ export function renderPlatformRevenueReport(
   if (activityRows.length > 0) {
     y = drawActivitySection(doc, activityRows, y);
   }
-  y = drawSummary(doc, data, company, y);
-  y = ensurePageSpace(doc, y, 72);
-  drawNote(doc, company, y);
+
+  y = ensurePageSpace(doc, y, 20);
+  drawNoteBox(doc, y, buildPlatformRevenueReportNote(company));
 }
 
-export function attachPlatformRevenueFooters(doc: PDFKit.PDFDocument, reportNumber: string): void {
-  const company = getInvoiceCompanyConfig();
-  const legal = splitFooterLegalSentences(
-    buildDocumentFooterLegal('platform_revenue_report', company),
-  );
-  const range = doc.bufferedPageRange();
-  for (let i = range.start; i < range.start + range.count; i += 1) {
-    doc.switchToPage(i);
-    const footerY = PDF_PAGE.height - PDF_FOOTER_RESERVE + 12;
-    doc
-      .font('Helvetica')
-      .fontSize(7.5)
-      .fillColor(PDF_RGB.muted)
-      .text(legal.join(' '), PDF_MARGIN, footerY, {
-        width: PDF_PAGE.width - PDF_MARGIN * 2,
-        align: 'center',
-      });
-    doc
-      .font('Helvetica')
-      .fontSize(7)
-      .fillColor(PDF_RGB.muted)
-      .text(`${reportNumber} · Page ${i + 1} of ${range.count}`, PDF_MARGIN, footerY + 28, {
-        width: PDF_PAGE.width - PDF_MARGIN * 2,
-        align: 'center',
-      });
-  }
-}
-
-function drawCover(
+export function attachPlatformRevenueFooters(
   doc: PDFKit.PDFDocument,
-  data: PlatformRevenueReportData,
-  config: InvoiceCompanyConfig,
-): number {
-  drawPageBackground(doc);
-  const company = getPdfCompany(config);
-
-  doc.rect(0, 0, PDF_PAGE.width, 6).fillColor(PDF_RGB.primary).fill();
-  doc.rect(0, 6, PDF_PAGE.width, 3).fillColor(PDF_RGB.accent).fill();
-
-  const logoPath = resolveInvoiceBrandAssetPath(company.logoFooterFile, company);
-  let y = 28;
-  if (logoPath) {
-    doc.image(logoPath, PDF_MARGIN, y, { width: 120 });
-    y += 38;
-  } else {
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(18)
-      .fillColor(PDF_RGB.primaryDark)
-      .text(company.displayName, PDF_MARGIN, y);
-    y += 28;
-  }
-
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(20)
-    .fillColor(PDF_RGB.text)
-    .text('Platform revenue report', PDF_MARGIN, y + 8);
-  y += 36;
-
-  const periodStart = new Date(data.periodStart);
-  const periodEnd = new Date(data.periodEnd);
-  doc
-    .font('Helvetica')
-    .fontSize(10)
-    .fillColor(PDF_RGB.muted)
-    .text(formatStatementPeriodRange(periodStart, periodEnd), PDF_MARGIN, y);
-  y += 16;
-
-  if (data.isPartialPeriod) {
-    doc
-      .font('Helvetica-Oblique')
-      .fontSize(8.5)
-      .fillColor(PDF_RGB.muted)
-      .text(
-        `Activity to ${formatReceiptDate(data.issuedAt)} — period not yet complete.`,
-        PDF_MARGIN,
-        y,
-      );
-    y += 18;
-  }
-
-  const boxW = PDF_PAGE.width - PDF_MARGIN * 2;
-  doc.roundedRect(PDF_MARGIN, y, boxW, 88, 6).fillColor(PDF_RGB.white).fill();
-  doc.strokeColor(PDF_RGB.border).lineWidth(0.75).roundedRect(PDF_MARGIN, y, boxW, 88, 6).stroke();
-
-  const colW = (boxW - 28) / 2;
-  const leftX = PDF_MARGIN + 14;
-  const rightX = PDF_MARGIN + 14 + colW + 14;
-
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(7.5)
-    .fillColor(PDF_RGB.muted)
-    .text('PREPARED FOR', leftX, y + 12, { characterSpacing: 0.6 });
-  doc.font('Helvetica-Bold').fontSize(10).fillColor(PDF_RGB.text).text(company.displayName, leftX, y + 24);
-  doc
-    .font('Helvetica')
-    .fontSize(8.5)
-    .fillColor(PDF_RGB.muted)
-    .text('Internal accountancy & VAT reporting', leftX, y + 38);
-
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(7.5)
-    .fillColor(PDF_RGB.muted)
-    .text('REPORT DETAILS', rightX, y + 12, { characterSpacing: 0.6 });
-  doc.font('Helvetica').fontSize(8.5).fillColor(PDF_RGB.muted).text('Reference', rightX, y + 24);
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(PDF_RGB.text)
-    .text(data.reportNumber, rightX, y + 34);
-  doc.font('Helvetica').fontSize(8.5).fillColor(PDF_RGB.muted).text('Issued', rightX, y + 50);
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(PDF_RGB.text)
-    .text(formatReceiptDate(data.issuedAt), rightX, y + 60);
-
-  return y + 88 + SECTION_GAP;
-}
-
-function drawPlatformServicesSection(
-  doc: PDFKit.PDFDocument,
-  rows: FinanceRecordLine[],
-  startY: number,
-): number {
-  let y = drawSectionTitle(
+  reportNumber: string,
+): void {
+  attachEnterpriseDocumentFooters(
     doc,
-    startY,
-    'A. Platform services',
-    'Direct invoices for SellNearby packages (featured listings, boosts, verification, etc.).',
+    'platform_revenue_report',
+    reportNumber,
+    getInvoiceCompanyConfig(),
   );
-
-  if (rows.length === 0) {
-    return drawEmptySection(doc, y, 'No platform service invoices in this period.');
-  }
-
-  const cols: ColDef[] = [
-    { label: 'DATE', width: 62 },
-    { label: 'REFERENCE', width: 88 },
-    { label: 'CUSTOMER', width: 118 },
-    { label: 'SERVICE', width: 148 },
-    { label: 'AMOUNT', width: 58, align: 'right' },
-  ];
-
-  y = drawTableHeader(doc, cols, y);
-  for (const row of rows) {
-    y = ensurePageSpace(doc, y, ROW_H, () => drawContinuationHeader(doc, 'A. Platform services'));
-    y = drawRevenueRow(doc, cols, row, y);
-  }
-  return y + SECTION_GAP;
 }
 
-function drawMarketplaceFeesSection(
-  doc: PDFKit.PDFDocument,
-  rows: FinanceRecordLine[],
-  startY: number,
-): number {
-  let y = drawSectionTitle(
-    doc,
-    startY,
-    'B. Marketplace fees',
-    'Commission earned on completed listing sales.',
-  );
-
-  if (rows.length === 0) {
-    return drawEmptySection(doc, y, 'No marketplace fees in this period.');
-  }
-
-  const cols: ColDef[] = [
-    { label: 'DATE', width: 62 },
-    { label: 'REFERENCE', width: 88 },
-    { label: 'SELLER', width: 118 },
-    { label: 'LISTING', width: 148 },
-    { label: 'FEE', width: 58, align: 'right' },
-  ];
-
-  y = drawTableHeader(doc, cols, y);
-  for (const row of rows) {
-    y = ensurePageSpace(doc, y, ROW_H, () => drawContinuationHeader(doc, 'B. Marketplace fees'));
-    y = drawRevenueRow(doc, cols, row, y);
-  }
-  return y + SECTION_GAP;
-}
-
-function drawActivitySection(
-  doc: PDFKit.PDFDocument,
-  rows: FinanceRecordLine[],
-  startY: number,
-): number {
-  let y = drawSectionTitle(
-    doc,
-    startY,
-    'C. Marketplace activity',
-    'Informational trade volume between buyers and sellers — not platform income.',
-  );
-
-  const cols: ColDef[] = [
-    { label: 'DATE', width: 58 },
-    { label: 'TYPE', width: 52 },
-    { label: 'REFERENCE', width: 78 },
-    { label: 'PARTY', width: 108 },
-    { label: 'LISTING', width: 118 },
-    { label: 'AMOUNT', width: 58, align: 'right' },
-  ];
-
-  y = drawTableHeader(doc, cols, y);
-  for (const row of rows) {
-    y = ensurePageSpace(doc, y, ROW_H, () => drawContinuationHeader(doc, 'C. Marketplace activity'));
-    y = drawActivityRow(doc, cols, row, y);
-  }
-  return y + SECTION_GAP;
-}
-
-function drawSummary(
+function drawExecutiveSummary(
   doc: PDFKit.PDFDocument,
   data: PlatformRevenueReportData,
   config: InvoiceCompanyConfig,
@@ -335,9 +173,11 @@ function drawSummary(
     );
   }
 
-  const panelHeight = 28 + lines.filter((line) => line.label || line.value).length * 18 + 16;
-  let y = ensurePageSpace(doc, startY, panelHeight + 24);
-  y = drawSectionTitlePlain(doc, 'Period summary', y);
+  const contentLines = lines.filter((line) => line.label || line.value).length;
+  const panelHeight = 28 + contentLines * 18 + 16;
+  const titleH = 22;
+  let y = ensurePageSpace(doc, startY, titleH + panelHeight + SECTION_GAP);
+  y = drawSectionTitlePlain(doc, 'Executive summary', y);
 
   const panelX = PDF_MARGIN;
   const panelW = PDF_PAGE.width - PDF_MARGIN * 2;
@@ -354,10 +194,15 @@ function drawSummary(
       .font(line.emphasis ? 'Helvetica-Bold' : 'Helvetica')
       .fontSize(line.emphasis ? 10 : 9)
       .fillColor(line.muted ? PDF_RGB.muted : PDF_RGB.text)
-      .text(line.label, panelX + 14, innerY, { width: panelW * 0.58 });
+      .text(line.label, panelX + 14, innerY, {
+        width: panelW * 0.58,
+        lineBreak: false,
+        ellipsis: true,
+      });
     doc.text(line.value, panelX + 14, innerY, {
       width: panelW - 28,
       align: 'right',
+      lineBreak: false,
     });
     innerY += line.emphasis ? 20 : 18;
   }
@@ -365,15 +210,113 @@ function drawSummary(
   return y + panelHeight + SECTION_GAP;
 }
 
-function drawNote(doc: PDFKit.PDFDocument, config: InvoiceCompanyConfig, y: number): void {
-  doc
-    .font('Helvetica')
-    .fontSize(8)
-    .fillColor(PDF_RGB.muted)
-    .text(buildPlatformRevenueReportNote(config), PDF_MARGIN, y, {
-      width: PDF_PAGE.width - PDF_MARGIN * 2,
-      align: 'justify',
-    });
+function beginContinuedTable(
+  doc: PDFKit.PDFDocument,
+  title: string,
+  cols: ColDef[],
+): number {
+  let y = drawContinuationHeader(doc, title);
+  return drawTableHeader(doc, cols, y);
+}
+
+function drawPlatformServicesSection(
+  doc: PDFKit.PDFDocument,
+  rows: FinanceRecordLine[],
+  startY: number,
+): number {
+  const cols: ColDef[] = [
+    { label: 'DATE', width: 62 },
+    { label: 'REFERENCE', width: 88 },
+    { label: 'CUSTOMER', width: 118 },
+    { label: 'SERVICE', width: 148 },
+    { label: 'AMOUNT', width: 58, align: 'right' },
+  ];
+
+  const introH = 48 + (rows.length === 0 ? 24 : 22);
+  let y = ensurePageSpace(doc, startY, introH + (rows.length === 0 ? 0 : ROW_H), () => PDF_CONTENT_TOP);
+  y = drawSectionTitle(
+    doc,
+    y,
+    'A. Platform services',
+    'Direct invoices for SellNearby packages (featured listings, boosts, verification, etc.).',
+  );
+
+  if (rows.length === 0) {
+    return drawEmptySection(doc, y, 'No platform service invoices in this period.');
+  }
+
+  y = drawTableHeader(doc, cols, y);
+  for (const row of rows) {
+    y = ensurePageSpace(doc, y, ROW_H, () => beginContinuedTable(doc, 'A. Platform services', cols));
+    y = drawRevenueRow(doc, cols, row, y);
+  }
+  return y + SECTION_GAP;
+}
+
+function drawMarketplaceFeesSection(
+  doc: PDFKit.PDFDocument,
+  rows: FinanceRecordLine[],
+  startY: number,
+): number {
+  const cols: ColDef[] = [
+    { label: 'DATE', width: 62 },
+    { label: 'REFERENCE', width: 88 },
+    { label: 'SELLER', width: 118 },
+    { label: 'LISTING', width: 148 },
+    { label: 'FEE', width: 58, align: 'right' },
+  ];
+
+  const introH = 48 + (rows.length === 0 ? 24 : 22);
+  let y = ensurePageSpace(doc, startY, introH + (rows.length === 0 ? 0 : ROW_H), () => PDF_CONTENT_TOP);
+  y = drawSectionTitle(
+    doc,
+    y,
+    'B. Marketplace fees',
+    'Commission earned on completed listing sales.',
+  );
+
+  if (rows.length === 0) {
+    return drawEmptySection(doc, y, 'No marketplace fees in this period.');
+  }
+
+  y = drawTableHeader(doc, cols, y);
+  for (const row of rows) {
+    y = ensurePageSpace(doc, y, ROW_H, () => beginContinuedTable(doc, 'B. Marketplace fees', cols));
+    y = drawRevenueRow(doc, cols, row, y);
+  }
+  return y + SECTION_GAP;
+}
+
+function drawActivitySection(
+  doc: PDFKit.PDFDocument,
+  rows: FinanceRecordLine[],
+  startY: number,
+): number {
+  const cols: ColDef[] = [
+    { label: 'DATE', width: 58 },
+    { label: 'TYPE', width: 52 },
+    { label: 'REFERENCE', width: 78 },
+    { label: 'PARTY', width: 108 },
+    { label: 'LISTING', width: 118 },
+    { label: 'AMOUNT', width: 58, align: 'right' },
+  ];
+
+  let y = ensurePageSpace(doc, startY, 48 + 22 + ROW_H, () => PDF_CONTENT_TOP);
+  y = drawSectionTitle(
+    doc,
+    y,
+    'C. Marketplace activity',
+    'Informational trade volume between buyers and sellers — not platform income.',
+  );
+
+  y = drawTableHeader(doc, cols, y);
+  for (const row of rows) {
+    y = ensurePageSpace(doc, y, ROW_H, () =>
+      beginContinuedTable(doc, 'C. Marketplace activity', cols),
+    );
+    y = drawActivityRow(doc, cols, row, y);
+  }
+  return y + SECTION_GAP;
 }
 
 function drawSectionTitle(
@@ -382,21 +325,42 @@ function drawSectionTitle(
   title: string,
   subtitle: string,
 ): number {
-  y = ensurePageSpace(doc, y, 48, () => PDF_CONTENT_TOP);
-  doc.font('Helvetica-Bold').fontSize(11).fillColor(PDF_RGB.primaryDark).text(title, PDF_MARGIN, y);
-  doc.font('Helvetica').fontSize(8.5).fillColor(PDF_RGB.muted).text(subtitle, PDF_MARGIN, y + 14, {
-    width: PDF_PAGE.width - PDF_MARGIN * 2,
-  });
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(11)
+    .fillColor(PDF_RGB.primaryDark)
+    .text(title, PDF_MARGIN, y, { lineBreak: false });
+  doc
+    .font('Helvetica')
+    .fontSize(8.5)
+    .fillColor(PDF_RGB.muted)
+    .text(subtitle, PDF_MARGIN, y + 14, {
+      width: PDF_PAGE.width - PDF_MARGIN * 2,
+      lineBreak: false,
+      ellipsis: true,
+    });
   return y + 32;
 }
 
 function drawSectionTitlePlain(doc: PDFKit.PDFDocument, title: string, y: number): number {
-  doc.font('Helvetica-Bold').fontSize(11).fillColor(PDF_RGB.primaryDark).text(title, PDF_MARGIN, y);
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(11)
+    .fillColor(PDF_RGB.primaryDark)
+    .text(title, PDF_MARGIN, y, { lineBreak: false });
   return y + 22;
 }
 
 function drawEmptySection(doc: PDFKit.PDFDocument, y: number, message: string): number {
-  doc.font('Helvetica').fontSize(9).fillColor(PDF_RGB.muted).text(message, PDF_MARGIN, y);
+  doc
+    .font('Helvetica')
+    .fontSize(9)
+    .fillColor(PDF_RGB.muted)
+    .text(message, PDF_MARGIN, y, {
+      width: PDF_PAGE.width - PDF_MARGIN * 2,
+      lineBreak: false,
+      ellipsis: true,
+    });
   return y + 24 + SECTION_GAP;
 }
 

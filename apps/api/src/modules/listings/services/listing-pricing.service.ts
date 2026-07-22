@@ -147,6 +147,12 @@ export class ListingPricingService {
     const preview = await this.buildPreview(listingId, sellerId, role, input);
     const listing = await this.assertCanManagePricing(listingId, sellerId, role);
 
+    if (listing.status === 'reserved') {
+      throw new BadRequestException(
+        'Cannot change price while the listing is reserved',
+      );
+    }
+
     if (listing.status !== 'active') {
       await this.applyPricing(listingId, preview.proposed);
       return {

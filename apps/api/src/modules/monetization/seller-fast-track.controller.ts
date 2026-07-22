@@ -1,7 +1,10 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
-import { confirmFastTrackSchema } from '@community-marketplace/validation';
+import {
+  confirmFastTrackSchema,
+  createFastTrackIntentSchema,
+} from '@community-marketplace/validation';
 
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -21,8 +24,9 @@ export class SellerFastTrackController {
 
   @RequirePermissions(PERMISSIONS.EDIT_LISTING)
   @Post('intent')
-  createIntent(@CurrentUser() user: AuthenticatedUser) {
-    return this.purchases.createFastTrackIntent(user.id);
+  createIntent(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    const dto = createFastTrackIntentSchema.parse(body ?? {});
+    return this.purchases.createFastTrackIntent(user.id, dto);
   }
 
   @RequirePermissions(PERMISSIONS.EDIT_LISTING)

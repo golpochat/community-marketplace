@@ -4,24 +4,17 @@ import type { AdsSystemModuleCode, AdsSystemStatus, MonetizationSettings } from 
 import { cn } from '@community-marketplace/ui';
 import { DashboardCard } from '@community-marketplace/ui-dashboard';
 
-import { AdminMarketingHubAnalytics } from '@/components/dashboard/admin-marketing-hub-analytics';
+import { AdminMonetizationDisplayCampaigns } from '@/components/dashboard/admin-monetization-display-campaigns';
 import type { AdminServiceRole } from '@/services/admin.service';
 
-type ModuleSettingsField =
-  | 'displayAdsEnabled'
-  | 'boostsEnabled'
-  | 'featuredEnabled'
-  | 'aiMarketingEnabled';
+type ModuleSettingsField = 'displayAdsEnabled' | 'boostsEnabled' | 'featuredEnabled';
 
 interface ProductRow {
   id: string;
   label: string;
   hint: string;
   settingsField: ModuleSettingsField;
-  /** Ads-system module code when Live status comes from deploy + publish. */
-  adsCode?: AdsSystemModuleCode;
-  /** When set, Live badge uses this settings flag only (AI Hub). */
-  liveFromSettings?: boolean;
+  adsCode: AdsSystemModuleCode;
   catalogLink?: boolean;
 }
 
@@ -45,16 +38,9 @@ const PRODUCT_ROWS: ProductRow[] = [
   {
     id: 'display',
     label: 'Display advertising',
-    hint: 'Banner slot shell on homepage & browse',
+    hint: 'Banner slots · admin campaigns under Display campaigns below',
     settingsField: 'displayAdsEnabled',
     adsCode: 'display_advertising',
-  },
-  {
-    id: 'ai-hub',
-    label: 'AI Marketing Hub',
-    hint: 'Seller AI copy, images & credits · 10 free units / month for verified',
-    settingsField: 'aiMarketingEnabled',
-    liveFromSettings: true,
   },
 ];
 
@@ -130,6 +116,9 @@ interface AdminMonetizationAdvertisingProps {
   onSettingsChange: (settings: MonetizationSettings) => void;
   onSave: (event: React.FormEvent) => Promise<void>;
   onGoToCatalog?: () => void;
+  onGoToAiMarketing?: () => void;
+  onMessage: (message: string) => void;
+  onError: (error: string) => void;
 }
 
 export function AdminMonetizationAdvertising({
@@ -140,6 +129,9 @@ export function AdminMonetizationAdvertising({
   onSettingsChange,
   onSave,
   onGoToCatalog,
+  onGoToAiMarketing,
+  onMessage,
+  onError,
 }: AdminMonetizationAdvertisingProps) {
   const moduleByCode = new Map(adsSystem?.modules.map((item) => [item.code, item]));
 
@@ -147,7 +139,7 @@ export function AdminMonetizationAdvertising({
     <div className="space-y-6">
       <DashboardCard title="Seller products">
         <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-          Publish products for sellers. Configure boost and featured SKUs on{' '}
+          Publish advertising products for sellers. Configure boost and featured SKUs on{' '}
           {onGoToCatalog ? (
             <button
               type="button"
@@ -159,6 +151,18 @@ export function AdminMonetizationAdvertising({
           ) : (
             'Listing promotions'
           )}
+          . AI Hub settings live on{' '}
+          {onGoToAiMarketing ? (
+            <button
+              type="button"
+              onClick={onGoToAiMarketing}
+              className="font-medium text-[hsl(var(--dashboard-accent))] hover:underline"
+            >
+              AI Marketing
+            </button>
+          ) : (
+            'AI Marketing'
+          )}
           .
         </p>
 
@@ -166,12 +170,7 @@ export function AdminMonetizationAdvertising({
           <ul className="divide-y divide-[hsl(var(--dashboard-sidebar-border)/0.6)] rounded-lg border border-[hsl(var(--dashboard-sidebar-border))]">
             {PRODUCT_ROWS.map((row) => {
               const published = Boolean(settings[row.settingsField]);
-              const status = row.liveFromSettings
-                ? {
-                    text: published ? 'Live' : 'Off',
-                    tone: (published ? 'published' : 'off') as 'published' | 'off',
-                  }
-                : moduleStatusLabel(row.adsCode ? moduleByCode.get(row.adsCode) : undefined);
+              const status = moduleStatusLabel(moduleByCode.get(row.adsCode));
 
               return (
                 <li
@@ -226,13 +225,17 @@ export function AdminMonetizationAdvertising({
               disabled={saving}
               className="w-full rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white disabled:opacity-50 sm:w-auto"
             >
-              {saving ? 'Saving…' : 'Save settings'}
+              {saving ? 'Saving…' : 'Save advertising settings'}
             </button>
           </div>
         </form>
       </DashboardCard>
 
-      <AdminMarketingHubAnalytics role={role} />
+      <AdminMonetizationDisplayCampaigns
+        role={role}
+        onMessage={onMessage}
+        onError={onError}
+      />
 
       <DashboardCard title="Advanced · deploy flags">
         <details className="group">
@@ -279,10 +282,6 @@ export function AdminMonetizationAdvertising({
                 Deploy status unavailable.
               </p>
             )}
-            <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-              Marketing Hub kill switch:{' '}
-              <code className="text-xs">AI_MARKETING_ENABLED=false</code> then restart API.
-            </p>
           </div>
         </details>
       </DashboardCard>

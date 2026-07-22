@@ -164,6 +164,7 @@ export function buildVehicleListingCreatePayload(
     })),
     attributes: attrs,
     status: 'draft' as const,
+    reserveWindowHours: data.reserveWindowHours,
     ...(data.storeId ? { storeId: data.storeId } : {}),
   };
 }
@@ -251,6 +252,12 @@ export function vehicleFormDataFromListing(
     sellerNotes: listing.description,
     salePrice: pricing.salePrice,
     originalPrice: pricing.originalPrice,
+    reserveWindowHours:
+      listing.reserveWindowHours === 4 ||
+      listing.reserveWindowHours === 12 ||
+      listing.reserveWindowHours === 24
+        ? listing.reserveWindowHours
+        : 12,
     images: [],
   };
 }

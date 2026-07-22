@@ -5,17 +5,17 @@ import {
   buildDocumentFooterLegal,
   getInvoiceCompanyConfig,
   resolveDocumentWebsite,
-  splitFooterLegalSentences,
 } from '@community-marketplace/config';
 
 import { resolveInvoiceBrandAssetPath } from './brand-assets';
 import { getPdfCompany, PDF_MARGIN, PDF_PAGE, PDF_RGB } from './document-pdf.theme';
 import { ensurePageSpace, PDF_CONTENT_TOP } from './pdf-page.util';
 
-export type DocumentKind = 'RECEIPT' | 'INVOICE' | 'SALES RECORD' | 'STATEMENT';
+export type DocumentKind = 'RECEIPT' | 'INVOICE' | 'SALES RECORD' | 'STATEMENT' | 'REPORT';
 
 export type DocumentFooterKind =
   | 'platform_invoice'
+  | 'platform_revenue_report'
   | 'buyer_receipt'
   | 'seller_sales_record'
   | 'statement';
@@ -44,39 +44,54 @@ export function drawEnterpriseHeader(
   config?: InvoiceCompanyConfig,
 ): number {
   const company = getPdfCompany(config);
-  const headerHeight = 100;
+  const website = resolveDocumentWebsite(company);
+  const headerHeight = 92;
   doc.save();
   doc.rect(0, 0, PDF_PAGE.width, headerHeight).fillColor(PDF_RGB.primaryDark).fill();
 
   const logoPath = resolveInvoiceBrandAssetPath(company.logoHeaderFile, company);
   if (logoPath) {
-    doc.image(logoPath, PDF_MARGIN, 30, { width: 148 });
+    doc.image(logoPath, PDF_MARGIN, 22, { width: 148 });
   } else {
     doc
       .fillColor(PDF_RGB.white)
       .font('Helvetica-Bold')
-      .fontSize(22)
-      .text(company.displayName, PDF_MARGIN, 38, { lineBreak: false });
-    doc
-      .font('Helvetica')
-      .fontSize(10)
-      .fillColor([220, 245, 240])
-      .text('Community marketplace', PDF_MARGIN, 62, { lineBreak: false });
+      .fontSize(20)
+      .text(company.displayName, PDF_MARGIN, 26, { lineBreak: false });
   }
 
-  const badgeWidth = 128;
-  const badgeX = PDF_PAGE.width - PDF_MARGIN - badgeWidth;
-  doc.roundedRect(badgeX, 28, badgeWidth, 44, 6).fillColor([255, 255, 255, 0.12]).fill();
-  doc
-    .font('Helvetica-Bold')
-    .fontSize(9)
-    .fillColor(PDF_RGB.white)
-    .text(kind, badgeX, 40, { width: badgeWidth, align: 'center', characterSpacing: 0.6 });
   doc
     .font('Helvetica')
-    .fontSize(7.5)
+    .fontSize(8)
     .fillColor([220, 245, 240])
-    .text(documentNumber, badgeX, 56, { width: badgeWidth, align: 'center' });
+    .text(`${company.supportEmail}  ·  ${website}`, PDF_MARGIN, 68, {
+      width: PDF_PAGE.width * 0.52,
+      lineBreak: false,
+      ellipsis: true,
+    });
+
+  const rightW = 200;
+  const rightX = PDF_PAGE.width - PDF_MARGIN - rightW;
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(10)
+    .fillColor(PDF_RGB.white)
+    .text(kind, rightX, 28, {
+      width: rightW,
+      align: 'right',
+      characterSpacing: 0.8,
+      lineBreak: false,
+    });
+  doc
+    .font('Helvetica')
+    .fontSize(8)
+    .fillColor([220, 245, 240])
+    .text(documentNumber, rightX, 46, {
+      width: rightW,
+      align: 'right',
+      lineBreak: false,
+      ellipsis: true,
+    });
 
   doc.restore();
   doc.rect(0, headerHeight, PDF_PAGE.width, 3).fillColor(PDF_RGB.accent).fill();
@@ -90,36 +105,68 @@ export function drawSupplierStrip(
   config?: InvoiceCompanyConfig,
 ): number {
   const company = getPdfCompany(config);
+  const website = resolveDocumentWebsite(company);
   const boxW = PDF_PAGE.width - PDF_MARGIN * 2;
-  doc.roundedRect(PDF_MARGIN, y, boxW, 52, 4).fillColor(PDF_RGB.surface).fill();
+  const leftW = boxW * 0.58;
+  const rightX = PDF_MARGIN + leftW + 12;
+  const rightW = boxW - leftW - 26;
+  const stripH = 58;
+
+  doc.roundedRect(PDF_MARGIN, y, boxW, stripH, 4).fillColor(PDF_RGB.surface).fill();
   doc
     .font('Helvetica-Bold')
     .fontSize(8)
     .fillColor(PDF_RGB.muted)
-    .text('SUPPLIER', PDF_MARGIN + 14, y + 10, { characterSpacing: 0.6 });
+    .text('SUPPLIER', PDF_MARGIN + 14, y + 10, { characterSpacing: 0.6, lineBreak: false });
   doc
     .font('Helvetica-Bold')
     .fontSize(10)
     .fillColor(PDF_RGB.text)
-    .text(company.displayName, PDF_MARGIN + 14, y + 24);
+    .text(company.displayName, PDF_MARGIN + 14, y + 24, {
+      width: leftW - 20,
+      lineBreak: false,
+      ellipsis: true,
+    });
+
+  const addressLine =
+    company.vatStatus === 'registered' && company.vatNumber
+      ? `${company.formattedAddress} · VAT ${company.vatNumber}`
+      : company.formattedAddress;
   doc
     .font('Helvetica')
     .fontSize(8.5)
     .fillColor(PDF_RGB.muted)
-    .text(company.formattedAddress, PDF_MARGIN + 14, y + 38, { width: boxW - 28 });
+    .text(addressLine, PDF_MARGIN + 14, y + 40, {
+      width: leftW - 20,
+      lineBreak: false,
+      ellipsis: true,
+    });
 
-  if (company.vatStatus === 'registered' && company.vatNumber) {
-    doc
-      .font('Helvetica')
-      .fontSize(8)
-      .fillColor(PDF_RGB.primaryDark)
-      .text(`VAT: ${company.vatNumber}`, PDF_PAGE.width - PDF_MARGIN - 14, y + 24, {
-        width: 160,
-        align: 'right',
-      });
-  }
+  doc
+    .font('Helvetica-Bold')
+    .fontSize(8)
+    .fillColor(PDF_RGB.muted)
+    .text('CONTACT', rightX, y + 10, { characterSpacing: 0.6, lineBreak: false });
+  doc
+    .font('Helvetica')
+    .fontSize(8.5)
+    .fillColor(PDF_RGB.text)
+    .text(company.supportEmail, rightX, y + 24, {
+      width: rightW,
+      lineBreak: false,
+      ellipsis: true,
+    });
+  doc
+    .font('Helvetica')
+    .fontSize(8.5)
+    .fillColor(PDF_RGB.muted)
+    .text(website, rightX, y + 40, {
+      width: rightW,
+      lineBreak: false,
+      ellipsis: true,
+    });
 
-  return y + 60;
+  return y + stripH + 8;
 }
 
 export function drawPaidBadge(doc: PDFKit.PDFDocument, y: number): number {
@@ -149,21 +196,32 @@ export function drawMetaColumns(
   const colWidth = (PDF_PAGE.width - PDF_MARGIN * 2 - 24) / 2;
   const leftX = PDF_MARGIN;
   const rightX = PDF_MARGIN + colWidth + 24;
+  const blockLines = Math.max(left.lines.length, right.lines.length);
+  const blockH = 16 + blockLines * 34;
+  y = ensurePageSpace(doc, y, blockH + 8);
 
   const drawBlock = (x: number, block: PdfMetaBlock) => {
     doc
       .font('Helvetica-Bold')
       .fontSize(8)
       .fillColor(PDF_RGB.muted)
-      .text(block.title.toUpperCase(), x, y, { characterSpacing: 0.8 });
+      .text(block.title.toUpperCase(), x, y, { characterSpacing: 0.8, lineBreak: false });
     let lineY = y + 16;
     for (const line of block.lines) {
-      doc.font('Helvetica').fontSize(8).fillColor(PDF_RGB.muted).text(line.label, x, lineY);
+      doc
+        .font('Helvetica')
+        .fontSize(8)
+        .fillColor(PDF_RGB.muted)
+        .text(line.label, x, lineY, { width: colWidth, lineBreak: false, ellipsis: true });
       doc
         .font('Helvetica-Bold')
         .fontSize(10)
         .fillColor(PDF_RGB.text)
-        .text(line.value, x, lineY + 11, { width: colWidth });
+        .text(line.value, x, lineY + 11, {
+          width: colWidth,
+          lineBreak: false,
+          ellipsis: true,
+        });
       lineY += 34;
     }
     return lineY;
@@ -334,53 +392,42 @@ export function drawEnterpriseFooter(
   doc: PDFKit.PDFDocument,
   footerKind: DocumentFooterKind,
   config?: InvoiceCompanyConfig,
-  documentNumber?: string,
+  pageLabel?: string,
 ): void {
   const company = getPdfCompany(config);
-  const footerY = PDF_PAGE.height - 88;
   const contentW = PDF_PAGE.width - PDF_MARGIN * 2;
+  const footerTop = PDF_PAGE.height - 48;
+  const pageLineY = PDF_PAGE.height - 16;
 
   doc
     .strokeColor(PDF_RGB.border)
     .lineWidth(0.5)
-    .moveTo(PDF_MARGIN, footerY)
-    .lineTo(PDF_PAGE.width - PDF_MARGIN, footerY)
+    .moveTo(PDF_MARGIN, footerTop)
+    .lineTo(PDF_PAGE.width - PDF_MARGIN, footerTop)
     .stroke();
 
-  const footerLogo = resolveInvoiceBrandAssetPath(company.logoFooterFile, company);
-  if (footerLogo) {
-    doc.image(footerLogo, PDF_MARGIN, footerY + 10, { width: 96 });
-  } else {
-    doc
-      .font('Helvetica-Bold')
-      .fontSize(9)
-      .fillColor(PDF_RGB.text)
-      .text(company.displayName, PDF_MARGIN, footerY + 14);
-  }
-
-  const website = resolveDocumentWebsite(company);
+  const legal = buildDocumentFooterLegal(footerKind, company);
   doc
     .font('Helvetica')
-    .fontSize(8)
-    .fillColor(PDF_RGB.muted)
-    .text(company.supportEmail, PDF_MARGIN, footerY + 34);
-  doc.font('Helvetica').fontSize(8).fillColor(PDF_RGB.muted).text(website, PDF_MARGIN, footerY + 46);
+    .fontSize(7)
+    .fillColor(PDF_RGB.footer)
+    .text(legal, PDF_MARGIN, footerTop + 8, {
+      width: contentW,
+      align: 'left',
+      lineBreak: false,
+      ellipsis: true,
+    });
 
-  const legalParts = splitFooterLegalSentences(buildDocumentFooterLegal(footerKind, company));
-  let legalY = footerY + 8;
-  for (const sentence of legalParts) {
-    doc.font('Helvetica').fontSize(6.75).fillColor(PDF_RGB.footer);
-    const blockH = doc.heightOfString(sentence, { width: contentW - 120, lineGap: 1.2 });
-    doc.text(sentence, PDF_MARGIN + 120, legalY, { width: contentW - 120, lineGap: 1.2 });
-    legalY += blockH + 4;
-  }
-
-  if (documentNumber) {
+  if (pageLabel) {
     doc
       .font('Helvetica')
-      .fontSize(6)
+      .fontSize(7)
       .fillColor(PDF_RGB.footer)
-      .text(documentNumber, PDF_MARGIN, PDF_PAGE.height - 18, { width: contentW, align: 'right' });
+      .text(pageLabel, PDF_MARGIN, pageLineY, {
+        width: contentW,
+        align: 'right',
+        lineBreak: false,
+      });
   }
 }
 
@@ -395,10 +442,7 @@ export function attachEnterpriseDocumentFooters(
   const total = range.count;
   for (let i = range.start; i < range.start + total; i++) {
     doc.switchToPage(i);
-    const label =
-      total > 1
-        ? `${documentNumber} · Page ${i + 1} of ${total}`
-        : documentNumber;
-    drawEnterpriseFooter(doc, footerKind, company, label);
+    const pageLabel = `${documentNumber} · Page ${i + 1} of ${total}`;
+    drawEnterpriseFooter(doc, footerKind, company, pageLabel);
   }
 }

@@ -2,10 +2,8 @@ import { Injectable } from '@nestjs/common';
 
 import {
   AI_MARKETING_FREE_UNITS_MONTHLY,
-  isSellerVerified,
   type AiBillingMethod,
   type AiMarketingTask,
-  type SellerStatus,
 } from '@community-marketplace/types';
 
 import { PrismaService } from '../../../database/prisma.service';
@@ -63,6 +61,7 @@ export class AiCreditMeterService {
     billingMethod: AiBillingMethod;
     creditUnits: number;
     amountEur: number;
+    freeUnitsMonthly?: number;
     inputSummary: string;
     outputText: string;
   }): Promise<{
@@ -118,15 +117,10 @@ export class AiCreditMeterService {
       return { generationId: log.id, walletBalance };
     });
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: input.userId },
-      select: { sellerStatus: true },
-    });
-    const verified = isSellerVerified(user?.sellerStatus as SellerStatus);
     const freeUsed = await this.countFreeUnitsUsedThisMonth(input.userId);
-    const freeUnitsRemaining = verified
-      ? Math.max(0, AI_MARKETING_FREE_UNITS_MONTHLY - freeUsed)
-      : 0;
+    const freeQuotaMonthly =
+      input.freeUnitsMonthly ?? AI_MARKETING_FREE_UNITS_MONTHLY;
+    const freeUnitsRemaining = Math.max(0, freeQuotaMonthly - freeUsed);
 
     return {
       generationId: result.generationId,

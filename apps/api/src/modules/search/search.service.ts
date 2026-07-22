@@ -112,7 +112,10 @@ export class SearchService {
   private async getExpectedDocumentCounts(): Promise<Record<SearchIndexName, number>> {
     const [listings, users, categories, chatThreads] = await Promise.all([
       this.prisma.listing.count({
-        where: { status: 'active', seller: { status: 'active' } },
+        where: {
+          status: { in: ['active', 'reserved'] },
+          seller: { status: 'active' },
+        },
       }),
       this.prisma.user.count({ where: { status: 'active' } }),
       this.prisma.category.count({ where: { isActive: true } }),

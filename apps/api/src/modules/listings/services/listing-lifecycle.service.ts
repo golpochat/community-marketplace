@@ -27,6 +27,7 @@ import {
 import { listingInclude, mapListing } from '../mappers/listing.mapper';
 import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 import { ListingAuditService } from './listing-audit.service';
+import { ListingReserveService } from './listing-reserve.service';
 
 type PrismaListingStatus = ListingStatus;
 
@@ -39,7 +40,18 @@ const ALLOWED_TRANSITIONS: Record<ListingStatus, ListingStatus[]> = {
   flagged: ['active', 'rejected', 'removed', 'pending_review', 'under_investigation'],
   under_investigation: ['active', 'rejected', 'removed', 'flagged', 'pending_review'],
   suspended_seller: ['draft', 'removed', 'active'],
-  active: ['paused', 'sold', 'ended', 'removed', 'expired', 'flagged', 'under_investigation', 'suspended_seller'],
+  active: [
+    'paused',
+    'reserved',
+    'sold',
+    'ended',
+    'removed',
+    'expired',
+    'flagged',
+    'under_investigation',
+    'suspended_seller',
+  ],
+  reserved: ['active', 'sold', 'paused', 'removed', 'flagged', 'under_investigation', 'suspended_seller'],
   paused: ['active', 'sold', 'ended', 'removed', 'expired', 'flagged', 'under_investigation', 'suspended_seller'],
   expired: ['active'],
   sold: [],
@@ -55,6 +67,7 @@ export class ListingLifecycleService {
     private readonly audit: ListingAuditService,
     private readonly eventBus: EventBusService,
     private readonly sellerListingGate: SellerListingGateService,
+    private readonly reserves: ListingReserveService,
   ) {}
 
   async submitForReview(listingId: string, sellerId: string): Promise<Listing> {
@@ -143,6 +156,9 @@ export class ListingLifecycleService {
       toStatus: 'paused',
       changedByType: 'SELLER',
       eventType: 'listing.paused',
+    }).then(async (listing) => {
+      await this.reserves.cancelOpenForListing(listingId, 'cancelled_seller');
+      return listing;
     });
   }
 
@@ -168,10 +184,32 @@ export class ListingLifecycleService {
       changedByType: actorRole === 'SELLER' ? 'SELLER' : 'ADMIN',
       setEndedAt: true,
       eventType: 'listing.sold',
+    }).then(async (listing) => {
+      await this.reserves.cancelOpenForListing(listingId, 'cancelled_seller');
+      return listing;
     });
   }
 
   markSoldFromPayment(listingId: string): Promise<Listing> {
+    return this.transition({
+      listingId,
+      actorId: null,
+      actorRole: 'ADMIN',
+      toStatus: 'sold',
+      changedByType: 'SYSTEM',
+      setEndedAt: true,
+      skipOwnershipCheck: true,
+      eventType: 'listing.sold',
+      eventPayload: { source: 'payment' },
+    }).then(async (listing) => {
+      // Safety net if called without buyer conversion path.
+      await this.reserves.cancelOpenForListing(listingId, 'cancelled_seller');
+      return listing;
+    });
+  }
+
+  async markSoldFromPaymentWithBuyer(listingId: string, buyerId: string): Promise<Listing> {
+    await this.reserves.markConvertedForListing(listingId, buyerId);
     return this.transition({
       listingId,
       actorId: null,
@@ -194,6 +232,9 @@ export class ListingLifecycleService {
       changedByType: 'SELLER',
       setEndedAt: true,
       eventType: 'listing.ended',
+    }).then(async (listing) => {
+      await this.reserves.cancelOpenForListing(listingId, 'cancelled_seller');
+      return listing;
     });
   }
 
@@ -213,6 +254,9 @@ export class ListingLifecycleService {
       setEndedAt: true,
       eventType: 'listing.removed',
       eventPayload: { reason },
+    }).then(async (listing) => {
+      await this.reserves.cancelOpenForListing(listingId, 'cancelled_seller');
+      return listing;
     });
   }
 

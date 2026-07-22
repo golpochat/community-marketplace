@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import type { CashbackEstimate, PaymentMethod } from '@community-marketplace/types';
+import type { CashbackGrant } from '@prisma/client';
 
 import { PrismaService } from '../../../database/prisma.service';
 import { mapCashbackGrant, roundMoney } from '../mappers/monetization.mapper';
@@ -72,68 +73,98 @@ export class CashbackGrantsService {
 
     let unlocked = 0;
     for (const grant of pending) {
-      const payment = await this.prisma.payment.findUnique({
-        where: { id: grant.paymentId },
-        select: { status: true },
-      });
-      if (!payment || payment.status !== 'succeeded') {
-        await this.prisma.cashbackGrant.update({
-          where: { id: grant.id },
-          data: { status: 'cancelled' },
-        });
-        continue;
-      }
-
-      const settings = await this.settings.get();
-      const earnedThisMonth = await this.sumEarnedThisMonth(grant.userId);
-      const remainingCap = settings.maxCashbackPerMonth - earnedThisMonth;
-      if (remainingCap <= 0) {
-        await this.prisma.cashbackGrant.update({
-          where: { id: grant.id },
-          data: { status: 'cancelled' },
-        });
-        continue;
-      }
-
-      const creditAmount = roundMoney(Math.min(Number(grant.amount), remainingCap));
-      if (creditAmount <= 0) {
-        await this.prisma.cashbackGrant.update({
-          where: { id: grant.id },
-          data: { status: 'cancelled' },
-        });
-        continue;
-      }
-
-      const expiresAt = new Date();
-      expiresAt.setMonth(expiresAt.getMonth() + 6);
-
-      await this.prisma.$transaction(async (tx) => {
-        await tx.buyerWallet.upsert({
-          where: { userId: grant.userId },
-          create: { userId: grant.userId, balance: creditAmount },
-          update: { balance: { increment: creditAmount } },
-        });
-
-        await tx.walletTransaction.create({
-          data: {
-            userId: grant.userId,
-            type: 'cashback_earned',
-            amount: creditAmount,
-            sourcePaymentId: grant.paymentId,
-            expiresAt,
-          },
-        });
-
-        await tx.cashbackGrant.update({
-          where: { id: grant.id },
-          data: { status: 'earned', amount: creditAmount },
-        });
-      });
-
-      unlocked += 1;
+      if (await this.tryUnlockGrant(grant)) unlocked += 1;
     }
 
     return unlocked;
+  }
+
+  /**
+   * Paid early unlock: move unlockAt to now and credit the wallet immediately.
+   * Idempotent when the grant is already earned.
+   */
+  async unlockGrantNow(userId: string, grantId: string): Promise<boolean> {
+    const grant = await this.prisma.cashbackGrant.findFirst({
+      where: { id: grantId, userId },
+    });
+    if (!grant) throw new NotFoundException('Cashback grant not found');
+    if (grant.status === 'earned') return true;
+    if (grant.status !== 'pending') {
+      throw new BadRequestException('This cashback grant cannot be unlocked');
+    }
+
+    const updated = await this.prisma.cashbackGrant.update({
+      where: { id: grant.id },
+      data: { unlockAt: new Date() },
+    });
+
+    return this.tryUnlockGrant(updated);
+  }
+
+  private async tryUnlockGrant(grant: CashbackGrant): Promise<boolean> {
+    const payment = await this.prisma.payment.findUnique({
+      where: { id: grant.paymentId },
+      select: { status: true },
+    });
+    if (!payment || payment.status !== 'succeeded') {
+      await this.prisma.cashbackGrant.update({
+        where: { id: grant.id },
+        data: { status: 'cancelled' },
+      });
+      return false;
+    }
+
+    const settings = await this.settings.get();
+    const earnedThisMonth = await this.sumEarnedThisMonth(grant.userId);
+    const remainingCap = settings.maxCashbackPerMonth - earnedThisMonth;
+    if (remainingCap <= 0) {
+      await this.prisma.cashbackGrant.update({
+        where: { id: grant.id },
+        data: { status: 'cancelled' },
+      });
+      return false;
+    }
+
+    const creditAmount = roundMoney(Math.min(Number(grant.amount), remainingCap));
+    if (creditAmount <= 0) {
+      await this.prisma.cashbackGrant.update({
+        where: { id: grant.id },
+        data: { status: 'cancelled' },
+      });
+      return false;
+    }
+
+    const expiresAt = new Date();
+    expiresAt.setMonth(expiresAt.getMonth() + 6);
+
+    await this.prisma.$transaction(async (tx) => {
+      const current = await tx.cashbackGrant.findUnique({ where: { id: grant.id } });
+      if (!current || current.status !== 'pending') return;
+
+      await tx.buyerWallet.upsert({
+        where: { userId: grant.userId },
+        create: { userId: grant.userId, balance: creditAmount },
+        update: { balance: { increment: creditAmount } },
+      });
+
+      await tx.walletTransaction.create({
+        data: {
+          userId: grant.userId,
+          type: 'cashback_earned',
+          amount: creditAmount,
+          sourcePaymentId: grant.paymentId,
+          expiresAt,
+        },
+      });
+
+      await tx.cashbackGrant.update({
+        where: { id: grant.id },
+        data: { status: 'earned', amount: creditAmount },
+      });
+    });
+
+    const final = await this.prisma.cashbackGrant.findUnique({ where: { id: grant.id } });
+    return final?.status === 'earned';
   }
 
   async estimateForListing(

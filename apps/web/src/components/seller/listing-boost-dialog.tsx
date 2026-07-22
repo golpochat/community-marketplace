@@ -6,7 +6,9 @@ import type {
   BoostCatalogResponse,
   BoostIntentResponse,
   BoostPurchaseSource,
+  BuyerWalletSummary,
 } from '@community-marketplace/types';
+import { formatCurrency } from '@community-marketplace/utils';
 
 import { monetizationService } from '@/services/monetization.service';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
@@ -28,6 +30,8 @@ export function ListingBoostDialog({
   onSuccess,
 }: ListingBoostDialogProps) {
   const [catalog, setCatalog] = useState<BoostCatalogResponse | null>(null);
+  const [wallet, setWallet] = useState<BuyerWalletSummary | null>(null);
+  const [useCredits, setUseCredits] = useState(false);
   const [intent, setIntent] = useState<BoostIntentResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +39,8 @@ export function ListingBoostDialog({
   useEffect(() => {
     if (!open) {
       setCatalog(null);
+      setWallet(null);
+      setUseCredits(false);
       setIntent(null);
       setError(null);
       return;
@@ -43,10 +49,14 @@ export function ListingBoostDialog({
     let cancelled = false;
     setLoading(true);
     setError(null);
-    void monetizationService
-      .getBoostCatalog(listingId)
-      .then((data) => {
-        if (!cancelled) setCatalog(data);
+    void Promise.all([
+      monetizationService.getBoostCatalog(listingId),
+      monetizationService.getBuyerWallet().catch(() => null),
+    ])
+      .then(([catalogData, walletData]) => {
+        if (cancelled) return;
+        setCatalog(catalogData);
+        setWallet(walletData);
       })
       .catch((err) => {
         if (!cancelled) {
@@ -68,10 +78,17 @@ export function ListingBoostDialog({
     setLoading(true);
     setError(null);
     try {
+      const option = catalog?.options.find((item) => item.packageType === packageType);
+      const price = option?.price ?? 0;
+      const creditsAmount =
+        useCredits && wallet && wallet.balance > 0
+          ? Math.min(wallet.balance, price)
+          : undefined;
       const response = await monetizationService.createBoostIntent({
         listingId,
         packageType,
         source,
+        ...(creditsAmount && creditsAmount > 0 ? { creditsAmount } : {}),
       });
       setIntent(response);
     } catch (err) {
@@ -114,6 +131,21 @@ export function ListingBoostDialog({
         )}
 
         {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+
+        {catalog && !intent && wallet && wallet.balance > 0 && (
+          <label className="mt-4 flex cursor-pointer items-start gap-2 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={useCredits}
+              onChange={(e) => setUseCredits(e.target.checked)}
+            />
+            <span>
+              Use SellNearby Credit ({formatCurrency(wallet.balance, 'EUR')} available).
+              Applies up to the boost price; card covers any remainder.
+            </span>
+          </label>
+        )}
 
         {loading && !catalog && !intent && (
           <p className="mt-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading boost options…</p>

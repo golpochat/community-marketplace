@@ -15,6 +15,16 @@ export type AiMarketingTask =
 
 export type AiBillingMethod = 'free_quota' | 'wallet';
 
+/** Admin/seller-facing deploy + publish gate for the Marketing Hub. */
+export interface AiMarketingAccessStatus {
+  /** Hard kill switch from AI_MARKETING_ENABLED env (false disables everywhere). */
+  deployEnabled: boolean;
+  /** Admin publish flag (platform settings). */
+  published: boolean;
+  /** True when sellers may use the hub (env allow + admin published). */
+  effective: boolean;
+}
+
 export type AiBannerFormat = 'feed_square' | 'story' | 'marketplace_card' | 'storefront_hero';
 
 export type AiBannerTemplate =

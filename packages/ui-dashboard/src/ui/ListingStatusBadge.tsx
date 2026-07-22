@@ -20,6 +20,11 @@ const STATUS_CONFIG: Record<
     dotClass: 'bg-emerald-500',
     textClass: 'text-emerald-800',
   },
+  reserved: {
+    label: 'Reserved',
+    dotClass: 'bg-indigo-500',
+    textClass: 'text-indigo-800',
+  },
   paused: {
     label: 'Paused',
     dotClass: 'bg-sky-500',

@@ -34,12 +34,13 @@ export class PlatformSettingsService {
       boostPrice30d: input.boostPrice30d,
       featuredHomepagePrice: input.featuredHomepagePrice,
       featuredCategoryPrice: input.featuredCategoryPrice,
-    fastTrackVerificationPrice: input.fastTrackVerificationPrice,
-    storeSlot2Price: input.storeSlot2Price,
-    storeSlot3Price: input.storeSlot3Price,
-    storeBundle3Price: input.storeBundle3Price,
-    homepageSlotsPerDay: input.homepageSlotsPerDay,
+      fastTrackVerificationPrice: input.fastTrackVerificationPrice,
+      storeSlot2Price: input.storeSlot2Price,
+      storeSlot3Price: input.storeSlot3Price,
+      storeBundle3Price: input.storeBundle3Price,
+      homepageSlotsPerDay: input.homepageSlotsPerDay,
       categorySlotsPerDay: input.categorySlotsPerDay,
+      aiMarketingFreeUnitsMonthly: input.aiMarketingFreeUnitsMonthly,
     });
 
     const pricingChanged =
@@ -52,7 +53,8 @@ export class PlatformSettingsService {
       input.storeSlot3Price !== undefined ||
       input.storeBundle3Price !== undefined ||
       input.homepageSlotsPerDay !== undefined ||
-      input.categorySlotsPerDay !== undefined;
+      input.categorySlotsPerDay !== undefined ||
+      input.aiMarketingFreeUnitsMonthly !== undefined;
 
     const row = await this.prisma.platformSettings.update({
       where: { id: 'default' },

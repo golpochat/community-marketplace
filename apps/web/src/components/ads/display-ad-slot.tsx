@@ -5,6 +5,33 @@ interface DisplayAdSlotProps {
 }
 
 export function DisplayAdSlot({ slot }: DisplayAdSlotProps) {
+  if (slot.creative) {
+    return (
+      <aside
+        aria-label={`${slot.label} — ${slot.creative.advertiserName}`}
+        className="mx-auto max-w-full overflow-hidden rounded-lg"
+        style={{ width: slot.width, height: slot.height, maxWidth: '100%' }}
+        data-ad-placement={slot.placement}
+      >
+        <a
+          href={slot.creative.clickUrl}
+          target="_blank"
+          rel="noopener noreferrer sponsored"
+          className="block h-full w-full"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={slot.creative.imageUrl}
+            alt={slot.creative.altText || `${slot.creative.advertiserName} advertisement`}
+            className="h-full w-full object-cover"
+            width={slot.width}
+            height={slot.height}
+          />
+        </a>
+      </aside>
+    );
+  }
+
   if (slot.preview) {
     return (
       <aside

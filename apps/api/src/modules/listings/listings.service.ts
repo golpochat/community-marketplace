@@ -58,8 +58,8 @@ export class ListingsService {
     return this.crud.findFeatured(input);
   }
 
-  findById(id: string, incrementView = false): Promise<Listing> {
-    return this.crud.findById(id, incrementView);
+  findById(id: string, incrementView = false, viewerId?: string): Promise<Listing> {
+    return this.crud.findById(id, incrementView, viewerId);
   }
 
   resolveListingIdByCompact(compactId: string) {
@@ -97,7 +97,10 @@ export class ListingsService {
     return this.lifecycle.markSold(listingId, actorId, actorRole);
   }
 
-  markSoldFromPayment(listingId: string) {
+  markSoldFromPayment(listingId: string, buyerId?: string) {
+    if (buyerId) {
+      return this.lifecycle.markSoldFromPaymentWithBuyer(listingId, buyerId);
+    }
     return this.lifecycle.markSoldFromPayment(listingId);
   }
 

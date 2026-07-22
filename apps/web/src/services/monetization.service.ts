@@ -8,13 +8,17 @@ import type {
   BuyerWalletSummary,
   CashbackEstimate,
   CashbackGrant,
+  EarlyCashbackUnlockIntentResponse,
   FeaturedCatalogResponse,
   FeaturedIntentResponse,
   FastTrackIntentResponse,
   FastTrackStatusResponse,
   MonetizationProduct,
   MonetizationSettings,
+  AiMarketingAccessStatus,
+  DisplayAdCampaign,
   PlatformPurchase,
+  SellerAiFreeUnitsOverrideEntry,
   SellerFeeOverrideEntry,
   SellerMonetizationSearchResult,
   SellerPlatformFeeInfo,
@@ -83,6 +87,31 @@ function statementFallbackFilename(prefix: string, year: number, month: number, 
 export const monetizationService = {
   async getBuyerWallet(): Promise<BuyerWalletSummary> {
     const response = await apiClient<BuyerWalletSummary>('/buyer/wallet');
+    return response.data!;
+  },
+
+  async createEarlyCashbackUnlockIntent(body: {
+    grantId: string;
+    creditsAmount?: number;
+  }): Promise<EarlyCashbackUnlockIntentResponse> {
+    const response = await apiClient<EarlyCashbackUnlockIntentResponse>(
+      WEB_API_ROUTES.buyer.earlyUnlockIntent,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      },
+    );
+    return response.data!;
+  },
+
+  async confirmEarlyCashbackUnlock(purchaseId: string): Promise<PlatformPurchase> {
+    const response = await apiClient<PlatformPurchase>(
+      WEB_API_ROUTES.buyer.earlyUnlockConfirm,
+      {
+        method: 'POST',
+        body: JSON.stringify({ purchaseId }),
+      },
+    );
     return response.data!;
   },
 
@@ -242,10 +271,12 @@ export const monetizationService = {
     return response.data!;
   },
 
-  async createFastTrackIntent(): Promise<FastTrackIntentResponse> {
+  async createFastTrackIntent(body?: {
+    creditsAmount?: number;
+  }): Promise<FastTrackIntentResponse> {
     const response = await apiClient<FastTrackIntentResponse>(WEB_API_ROUTES.seller.fastTrackIntent, {
       method: 'POST',
-      body: JSON.stringify({}),
+      body: JSON.stringify(body ?? {}),
     });
     return response.data!;
   },
@@ -344,6 +375,19 @@ export const monetizationService = {
     return response.data!;
   },
 
+  async getAiMarketingAccessStatus(
+    role: AdminApiRole,
+  ): Promise<AiMarketingAccessStatus | null> {
+    try {
+      const response = await apiClient<AiMarketingAccessStatus>(
+        adminApiPath(role, '/monetization/ai-marketing-access'),
+      );
+      return response.data ?? null;
+    } catch {
+      return null;
+    }
+  },
+
   async updateMonetizationSettings(
     role: AdminApiRole,
     body: PlatformSettingsUpdateInput,
@@ -375,6 +419,33 @@ export const monetizationService = {
   async listSellerFeeOverrides(role: AdminApiRole): Promise<SellerFeeOverrideEntry[]> {
     const response = await apiClient<SellerFeeOverrideEntry[]>(
       adminApiPath(role, '/monetization/seller-fee-overrides'),
+    );
+    return response.data ?? [];
+  },
+
+  async setSellerAiFreeUnitsOverride(
+    role: AdminApiRole,
+    body: {
+      userId: string;
+      customAiMarketingFreeUnitsMonthly: number | null;
+      reason?: string;
+    },
+  ) {
+    const response = await apiClient(
+      adminApiPath(role, '/monetization/seller-ai-free-units-override'),
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      },
+    );
+    return response.data;
+  },
+
+  async listSellerAiFreeUnitsOverrides(
+    role: AdminApiRole,
+  ): Promise<SellerAiFreeUnitsOverrideEntry[]> {
+    const response = await apiClient<SellerAiFreeUnitsOverrideEntry[]>(
+      adminApiPath(role, '/monetization/seller-ai-free-units-overrides'),
     );
     return response.data ?? [];
   },
@@ -493,6 +564,89 @@ export const monetizationService = {
     });
     const response = await apiClient<MarketingHubAnalyticsResponse>(
       `${adminApiPath(role, '/monetization/marketing-hub-analytics')}?${query.toString()}`,
+    );
+    return response.data!;
+  },
+
+  async listDisplayAdCampaigns(role: AdminApiRole): Promise<DisplayAdCampaign[]> {
+    const response = await apiClient<DisplayAdCampaign[]>(
+      adminApiPath(role, '/monetization/display-campaigns'),
+    );
+    return response.data ?? [];
+  },
+
+  async createDisplayAdCreativeUploadUrl(
+    role: AdminApiRole,
+    body: { contentType: 'image/jpeg' | 'image/png' | 'image/webp'; fileName?: string },
+  ) {
+    const response = await apiClient<{
+      uploadUrl: string;
+      publicUrl: string;
+      key: string;
+      expiresInSeconds: number;
+    }>(adminApiPath(role, '/monetization/display-campaigns/upload-url'), {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return response.data!;
+  },
+
+  async createDisplayAdCampaign(
+    role: AdminApiRole,
+    body: {
+      advertiserName: string;
+      advertiserEmail?: string;
+      advertiserNotes?: string;
+      placement: DisplayAdCampaign['placement'];
+      startsAt: string;
+      endsAt: string;
+      imageKey: string;
+      imageUrl: string;
+      clickUrl: string;
+      altText?: string;
+      priority?: number;
+      publish?: boolean;
+    },
+  ): Promise<DisplayAdCampaign> {
+    const response = await apiClient<DisplayAdCampaign>(
+      adminApiPath(role, '/monetization/display-campaigns'),
+      { method: 'POST', body: JSON.stringify(body) },
+    );
+    return response.data!;
+  },
+
+  async updateDisplayAdCampaign(
+    role: AdminApiRole,
+    id: string,
+    body: Partial<{
+      advertiserName: string;
+      advertiserEmail?: string;
+      advertiserNotes?: string;
+      placement: DisplayAdCampaign['placement'];
+      startsAt: string;
+      endsAt: string;
+      imageKey: string;
+      imageUrl: string;
+      clickUrl: string;
+      altText?: string;
+      priority?: number;
+    }>,
+  ): Promise<DisplayAdCampaign> {
+    const response = await apiClient<DisplayAdCampaign>(
+      adminApiPath(role, `/monetization/display-campaigns/${id}`),
+      { method: 'PATCH', body: JSON.stringify(body) },
+    );
+    return response.data!;
+  },
+
+  async applyDisplayAdCampaignStatus(
+    role: AdminApiRole,
+    id: string,
+    action: 'publish' | 'pause' | 'end',
+  ): Promise<DisplayAdCampaign> {
+    const response = await apiClient<DisplayAdCampaign>(
+      adminApiPath(role, `/monetization/display-campaigns/${id}/status`),
+      { method: 'POST', body: JSON.stringify({ action }) },
     );
     return response.data!;
   },

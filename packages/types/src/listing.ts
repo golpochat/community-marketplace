@@ -2,6 +2,7 @@ export type ListingStatus =
   | "draft"
   | "pending_review"
   | "active"
+  | "reserved"
   | "paused"
   | "expired"
   | "sold"
@@ -26,6 +27,7 @@ import type {
   ListingDeliveryState,
 } from "./delivery";
 import type { ListingPricingState } from "./pricing";
+import type { ListingReservationSummary } from "./listing-reserve";
 
 export type ListingCondition = "new" | "like_new" | "good" | "fair" | "poor";
 
@@ -204,6 +206,9 @@ export interface Listing {
   favoriteCount: number;
   moderationNotes?: string;
   bannedAt?: string;
+  /** Seller-set hold window (4 | 12 | 24). Default 12. */
+  reserveWindowHours?: number;
+  reservation?: ListingReservationSummary;
   createdAt: string;
   updatedAt: string;
 }

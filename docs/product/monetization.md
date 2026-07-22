@@ -8,17 +8,18 @@ The single canonical planning document is:
 
 It includes monetization, pricing, rollout, revenue model, UX flows, safety, moderation, and category tree — with full engineering specs, copy, and policy in appendices A–L.
 
-**Implementation status (2026-06-27):** Foundation, Phase 1 (boosts), Phase 1.5 (featured), and Phase 3 (fast-track) are live. Phase 2 (wallet spend) and Phases 4–6+ remain planned — see the blueprint header and [Growth phases](./master-blueprint-v1.md#growth-phases).
+**Implementation status (2026-07-22):** Foundation, Phase 1 (boosts), Phase 1.5 (featured), Phase 2 wallet spend (boosts + fast-track credits + early cashback unlock), and Phase 3 (fast-track) are live. Phases 4–6+ remain planned — see the blueprint header and [Growth phases](./master-blueprint-v1.md#growth-phases).
 
 ### Future — external display advertising (brands / sponsors)
 
-**Not built yet.** Admin **Advertising → Display advertising** only reserves homepage / browse / search banner **slots** (plus env kill-switches and preview placeholders).
+**Admin campaign MVP (Phase 1):** ops can upload a creative and schedule it into existing slots (homepage leaderboard live). Payment stays offline. See [display-ads-admin-campaigns.md](./display-ads-admin-campaigns.md).
 
-Sellers already buy **boosts** and **featured** via Listing promotions. Outside brands (non-sellers) **cannot** self-serve upload creative and pay for banner placement today.
+**Not built:** advertiser self-serve portal, in-product checkout, CPM auctions.
 
-**Planned later:**
-- Advertiser (or admin-on-behalf) campaign flow: creative upload, placement targeting, schedule, checkout
-- Serve paid creatives into existing display slots instead of empty/preview shells
-- Separate from seller listing boosts / featured SKUs
+Sellers already buy **boosts** and **featured** via Listing promotions — separate from brand banner slots.
 
-For payment implementation details, see [payments API](../api/payments.md).
+**Planned later (roadmap Enterprise):**
+- Advertiser (or admin-on-behalf) self-serve: creative, targeting, schedule, checkout
+- Full reporting / click tracking
+
+For payment implementation details (seller products), see [payments API](../api/payments.md).

@@ -6,8 +6,46 @@ import {
   MarketingHubProvider,
   useMarketingHub,
 } from "@/components/seller/marketing-hub/marketing-hub-context";
-import { formatAiMarketingQuotaSummary } from "@community-marketplace/types";
-import { cn } from "@community-marketplace/ui";
+import { AiCreditPackDialog } from "@/components/seller/ai-credit-pack-dialog";
+import {
+  formatAiMarketingQuotaSummary,
+  type AiMarketingQuotaSummary,
+} from "@community-marketplace/types";
+import { Button, cn } from "@community-marketplace/ui";
+
+function needsCreditTopUp(quota: AiMarketingQuotaSummary): boolean {
+  const freeLeft = quota.sellerVerified ? quota.freeUnitsRemaining : 0;
+  return freeLeft <= 0 || quota.walletBalance <= 0;
+}
+
+function MarketingHubTopUpControl() {
+  const { quota, refreshQuota } = useMarketingHub();
+  const [open, setOpen] = useState(false);
+
+  if (!quota?.published || !quota.deployEnabled) return null;
+
+  const urgent = needsCreditTopUp(quota);
+
+  return (
+    <>
+      <Button
+        type="button"
+        size="sm"
+        variant={urgent ? "default" : "outline"}
+        onClick={() => setOpen(true)}
+      >
+        Top up credits
+      </Button>
+      <AiCreditPackDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        onSuccess={() => {
+          void refreshQuota();
+        }}
+      />
+    </>
+  );
+}
 
 /** Renders children only when marketing tools are published and deploy-enabled. */
 export function MarketingHubGate({
@@ -26,9 +64,12 @@ export function MarketingHubGate({
   return (
     <div className="space-y-2">
       {showQuota ? (
-        <p className="text-right text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-          {formatAiMarketingQuotaSummary(quota)}
-        </p>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+            {formatAiMarketingQuotaSummary(quota)}
+          </p>
+          {needsCreditTopUp(quota) ? <MarketingHubTopUpControl /> : null}
+        </div>
       ) : null}
       {!quota.enabled ? (
         <p className="text-xs text-amber-700">
@@ -54,10 +95,12 @@ function MarketingHubChrome({
   if (loadingQuota || !quota) return null;
   if (!quota.published || !quota.deployEnabled) return null;
 
+  const urgent = needsCreditTopUp(quota);
+
   return (
     <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-topbar-bg))] p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
             {title}
           </p>
@@ -65,10 +108,20 @@ function MarketingHubChrome({
             {description}
           </p>
         </div>
-        <p className="max-w-xs text-right text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-          {formatAiMarketingQuotaSummary(quota)}
-        </p>
+        <div className="flex max-w-sm flex-col items-end gap-2">
+          <p className="text-right text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+            {formatAiMarketingQuotaSummary(quota)}
+          </p>
+          <MarketingHubTopUpControl />
+        </div>
       </div>
+
+      {urgent ? (
+        <p className="mt-2 text-xs text-amber-800">
+          No free units or credit left for paid AI tools. Top up SellNearby Credit
+          (€0.05/unit), or get verified for a monthly free allowance.
+        </p>
+      ) : null}
 
       {!quota.enabled && (
         <p className="mt-2 text-xs text-amber-700">

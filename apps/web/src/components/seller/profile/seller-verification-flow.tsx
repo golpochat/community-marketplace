@@ -149,8 +149,17 @@ function FastTrackBanner({
 }) {
   const feedback = useAppFeedback();
   const [intent, setIntent] = useState<FastTrackIntentResponse | null>(null);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [useCredits, setUseCredits] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    void monetizationService
+      .getBuyerWallet()
+      .then((w) => setWalletBalance(w.balance))
+      .catch(() => setWalletBalance(0));
+  }, []);
 
   if (
     status.sellerStatus === 'verified' ||
@@ -163,7 +172,13 @@ function FastTrackBanner({
   async function startCheckout() {
     setLoading(true);
     try {
-      const response = await monetizationService.createFastTrackIntent();
+      const creditsAmount =
+        useCredits && walletBalance > 0
+          ? Math.min(walletBalance, fastTrack.price)
+          : undefined;
+      const response = await monetizationService.createFastTrackIntent(
+        creditsAmount && creditsAmount > 0 ? { creditsAmount } : undefined,
+      );
       setIntent(response);
     } catch (err) {
       feedback.error(err instanceof Error ? err.message : 'Failed to start checkout');
@@ -184,6 +199,19 @@ function FastTrackBanner({
             Optional fast-track for{' '}
             <span className="font-semibold">€{fastTrack.price.toFixed(2)}</span> (24-hour queue).
           </p>
+          {walletBalance > 0 && !intent && (
+            <label className="mt-2 flex cursor-pointer items-start gap-2 text-xs text-indigo-900">
+              <input
+                type="checkbox"
+                className="mt-0.5"
+                checked={useCredits}
+                onChange={(e) => setUseCredits(e.target.checked)}
+              />
+              <span>
+                Use SellNearby Credit (€{walletBalance.toFixed(2)} available)
+              </span>
+            </label>
+          )}
           {intent ? (
             <div className="mt-3">
               <BoostCheckoutPanel

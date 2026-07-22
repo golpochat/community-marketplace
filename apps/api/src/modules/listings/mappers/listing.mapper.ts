@@ -162,6 +162,7 @@ export function mapListing(
     endedAt: row.endedAt?.toISOString(),
     rejectionReason: row.rejectionReason ?? undefined,
     removalReason: row.removalReason ?? undefined,
+    reserveWindowHours: row.reserveWindowHours ?? 12,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     seller: mapListingSeller(row.seller, row.store),

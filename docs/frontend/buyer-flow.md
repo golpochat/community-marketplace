@@ -23,4 +23,4 @@ Buying does not require a storefront. Starting to sell uses the seller setup wor
 
 ## Related product specs
 
-- [Listing reserve](../product/listing-reserve.md) — free hold for ID-verified members after seller approval (spec only; not built)
+- [Listing reserve](../product/listing-reserve.md) — free hold for ID-verified members after seller approval (Phase 1 MVP)

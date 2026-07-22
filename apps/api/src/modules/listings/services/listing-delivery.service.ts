@@ -143,6 +143,12 @@ export class ListingDeliveryService {
     const preview = await this.buildPreview(listingId, sellerId, role, input);
     const listing = await this.assertCanManageDelivery(listingId, sellerId, role);
 
+    if (listing.status === 'reserved') {
+      throw new BadRequestException(
+        'Cannot change delivery while the listing is reserved',
+      );
+    }
+
     if (listing.status !== 'active') {
       await this.replaceListingOptions(listingId, preview.proposed);
       return {

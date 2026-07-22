@@ -14,6 +14,7 @@ import type {
   AiCreditPackIntentResponse,
   BoostIntentResponse,
   BoostPackageType,
+  EarlyCashbackUnlockIntentResponse,
   FastTrackIntentResponse,
   FastTrackStatusResponse,
   FeaturedIntentResponse,
@@ -27,6 +28,7 @@ import type {
 import type {
   ConfirmAiCreditPackInput,
   ConfirmBoostInput,
+  ConfirmEarlyCashbackUnlockInput,
   ConfirmFastTrackInput,
   ConfirmFeaturedInput,
   ConfirmFeaturedStoreInput,
@@ -34,8 +36,10 @@ import type {
   ConfirmStoreSlotInput,
   CreateAiCreditPackIntentInput,
   CreateBoostIntentInput,
+  CreateEarlyCashbackUnlockIntentInput,
   CreateFeaturedIntentInput,
   CreateFeaturedStoreIntentInput,
+  CreateFastTrackIntentInput,
   CreateStoreSlotIntentInput,
 } from '@community-marketplace/validation';
 
@@ -75,6 +79,8 @@ import { PlatformSettingsService } from './platform-settings.service';
 import { StoreSlotCatalogService } from './store-slot-catalog.service';
 import { StoreSlotFulfillmentService } from './store-slot-fulfillment.service';
 import { PlatformPurchaseReceiptService } from './platform-purchase-receipt.service';
+import { WalletSpendService } from './wallet-spend.service';
+import { CashbackGrantsService } from './cashback-grants.service';
 import { BuyerStatementPurchaseService } from '../../statements/services/buyer-statement-purchase.service';
 import { slotsGrantedBySku, targetStoreSlotLimit } from '../lib/store-slot.lib';
 import {
@@ -103,6 +109,8 @@ export class PlatformPurchaseService {
     private readonly growthPackFulfillment: GrowthPackFulfillmentService,
     private readonly stripeConnect: StripeConnectService,
     private readonly purchaseReceipts: PlatformPurchaseReceiptService,
+    private readonly walletSpend: WalletSpendService,
+    private readonly cashbackGrants: CashbackGrantsService,
     @Inject(forwardRef(() => BuyerStatementPurchaseService))
     private readonly buyerStatementPurchases: BuyerStatementPurchaseService,
     private readonly eventBus: EventBusService,
@@ -133,6 +141,8 @@ export class PlatformPurchaseService {
         dto.source,
       );
 
+    const mix = await this.resolveCreditsMix(sellerId, amount, dto.creditsAmount);
+
     const purchase = await this.prisma.platformPurchase.create({
       data: {
         userId: sellerId,
@@ -150,12 +160,32 @@ export class PlatformPurchaseService {
           discountPercent,
           discountKind,
           growthPackPurchaseId: growthPackPurchaseId ?? null,
+          creditsApplied: mix.creditsApplied,
+          amountChargedCard: mix.amountDue,
+          paymentMix: mix.paymentMix,
+          creditsDebited: false,
         },
       },
     });
 
+    if (mix.amountDue <= 0) {
+      return this.completeCreditsOnlyPurchase({
+        purchaseId: purchase.id,
+        sellerId,
+        creditsApplied: mix.creditsApplied,
+        fulfill: (id) => this.boostFulfillment.fulfillListingBoost(id),
+        afterFulfill: async () => {
+          if (growthPackPurchaseId) {
+            await this.growthPackFulfillment.markBoostDiscountConsumed(
+              growthPackPurchaseId,
+            );
+          }
+        },
+      });
+    }
+
     const { providerPaymentId, clientSecret } = await this.createStripeIntent(
-      amount,
+      mix.amountDue,
       settings.pricing.currency,
       {
         type: 'listing_boost',
@@ -164,6 +194,7 @@ export class PlatformPurchaseService {
         packageType: dto.packageType,
         platformPurchaseId: purchase.id,
         source: dto.source ?? 'listing_edit',
+        creditsApplied: String(mix.creditsApplied),
       },
       'boost',
     );
@@ -176,6 +207,8 @@ export class PlatformPurchaseService {
     return {
       purchase: mapPlatformPurchase(updated),
       clientSecret,
+      creditsApplied: mix.creditsApplied,
+      amountDue: mix.amountDue,
     };
   }
 
@@ -587,7 +620,10 @@ export class PlatformPurchaseService {
     };
   }
 
-  async createFastTrackIntent(sellerId: string): Promise<FastTrackIntentResponse> {
+  async createFastTrackIntent(
+    sellerId: string,
+    dto: CreateFastTrackIntentInput = {},
+  ): Promise<FastTrackIntentResponse> {
     await this.assertIntentRateLimit(sellerId, 'fast_track_verification');
     await this.verification.assertAcceleratedVerificationAllowed(sellerId);
 
@@ -598,6 +634,7 @@ export class PlatformPurchaseService {
 
     const settings = await this.settings.get();
     const amount = roundMoney(status.price);
+    const mix = await this.resolveCreditsMix(sellerId, amount, dto.creditsAmount);
 
     const purchase = await this.prisma.platformPurchase.create({
       data: {
@@ -608,17 +645,31 @@ export class PlatformPurchaseService {
         currency: settings.pricing.currency.toUpperCase(),
         metadata: {
           priceAtPurchase: amount,
+          creditsApplied: mix.creditsApplied,
+          amountChargedCard: mix.amountDue,
+          paymentMix: mix.paymentMix,
+          creditsDebited: false,
         },
       },
     });
 
+    if (mix.amountDue <= 0) {
+      return this.completeCreditsOnlyPurchase({
+        purchaseId: purchase.id,
+        sellerId,
+        creditsApplied: mix.creditsApplied,
+        fulfill: (id) => this.fastTrackFulfillment.fulfillFastTrack(id),
+      });
+    }
+
     const { providerPaymentId, clientSecret } = await this.createStripeIntent(
-      amount,
+      mix.amountDue,
       settings.pricing.currency,
       {
         type: 'fast_track_verification',
         userId: sellerId,
         platformPurchaseId: purchase.id,
+        creditsApplied: String(mix.creditsApplied),
       },
       'fast_track',
     );
@@ -631,6 +682,8 @@ export class PlatformPurchaseService {
     return {
       purchase: mapPlatformPurchase(updated),
       clientSecret,
+      creditsApplied: mix.creditsApplied,
+      amountDue: mix.amountDue,
     };
   }
 
@@ -641,6 +694,144 @@ export class PlatformPurchaseService {
     return this.confirmPurchase(sellerId, dto.purchaseId, (id) =>
       this.fastTrackFulfillment.fulfillFastTrack(id),
     );
+  }
+
+  async createEarlyCashbackUnlockIntent(
+    buyerId: string,
+    dto: CreateEarlyCashbackUnlockIntentInput,
+  ): Promise<EarlyCashbackUnlockIntentResponse> {
+    await this.assertIntentRateLimit(buyerId, 'early_cashback_unlock');
+
+    const settings = await this.settings.get();
+    const sku =
+      settings.pricing.skus.early_cashback_unlock ??
+      DEFAULT_PLATFORM_PRICING.skus.early_cashback_unlock!;
+    if (!sku.enabled) {
+      throw new BadRequestException('Early cashback unlock is not available');
+    }
+
+    const grant = await this.prisma.cashbackGrant.findFirst({
+      where: { id: dto.grantId, userId: buyerId },
+    });
+    if (!grant) throw new NotFoundException('Cashback grant not found');
+    if (grant.status !== 'pending') {
+      throw new BadRequestException('Only pending cashback can be unlocked early');
+    }
+    if (grant.unlockAt.getTime() <= Date.now()) {
+      throw new BadRequestException(
+        'This cashback is already due to unlock — no early unlock needed',
+      );
+    }
+
+    const existing = await this.prisma.platformPurchase.findFirst({
+      where: {
+        userId: buyerId,
+        type: 'early_cashback_unlock',
+        status: { in: ['pending', 'succeeded'] },
+        metadata: { path: ['grantId'], equals: dto.grantId },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (existing?.status === 'succeeded') {
+      throw new BadRequestException('This cashback was already unlocked early');
+    }
+    if (existing?.status === 'pending') {
+      throw new BadRequestException(
+        'An early unlock payment is already in progress for this cashback',
+      );
+    }
+
+    const amount = roundMoney(Number(sku.amount));
+    const mix = await this.resolveCreditsMix(buyerId, amount, dto.creditsAmount);
+
+    const purchase = await this.prisma.platformPurchase.create({
+      data: {
+        userId: buyerId,
+        type: 'early_cashback_unlock',
+        status: 'pending',
+        amount,
+        currency: settings.pricing.currency.toUpperCase(),
+        metadata: {
+          grantId: dto.grantId,
+          paymentId: grant.paymentId,
+          grantAmount: Number(grant.amount),
+          priceAtPurchase: amount,
+          creditsApplied: mix.creditsApplied,
+          amountChargedCard: mix.amountDue,
+          paymentMix: mix.paymentMix,
+          creditsDebited: false,
+        },
+      },
+    });
+
+    if (mix.amountDue <= 0) {
+      const result = await this.completeCreditsOnlyPurchase({
+        purchaseId: purchase.id,
+        sellerId: buyerId,
+        creditsApplied: mix.creditsApplied,
+        fulfill: (id) => this.fulfillEarlyCashbackUnlock(id),
+      });
+      return { ...result, grantId: dto.grantId };
+    }
+
+    const { providerPaymentId, clientSecret } = await this.createStripeIntent(
+      mix.amountDue,
+      settings.pricing.currency,
+      {
+        type: 'early_cashback_unlock',
+        userId: buyerId,
+        platformPurchaseId: purchase.id,
+        grantId: dto.grantId,
+        creditsApplied: String(mix.creditsApplied),
+      },
+      'early_unlock',
+    );
+
+    const updated = await this.prisma.platformPurchase.update({
+      where: { id: purchase.id },
+      data: { providerPaymentId, clientSecret },
+    });
+
+    return {
+      purchase: mapPlatformPurchase(updated),
+      clientSecret,
+      creditsApplied: mix.creditsApplied,
+      amountDue: mix.amountDue,
+      grantId: dto.grantId,
+    };
+  }
+
+  async confirmEarlyCashbackUnlock(
+    buyerId: string,
+    dto: ConfirmEarlyCashbackUnlockInput,
+  ): Promise<PlatformPurchase> {
+    return this.confirmPurchase(buyerId, dto.purchaseId, (id) =>
+      this.fulfillEarlyCashbackUnlock(id),
+    );
+  }
+
+  async fulfillEarlyCashbackUnlock(purchaseId: string): Promise<boolean> {
+    const purchase = await this.prisma.platformPurchase.findUnique({
+      where: { id: purchaseId },
+    });
+    if (!purchase || purchase.type !== 'early_cashback_unlock') return false;
+    if (purchase.status === 'succeeded' && purchase.fulfilledAt) return true;
+
+    const meta = (purchase.metadata ?? {}) as Record<string, unknown>;
+    const grantId = typeof meta.grantId === 'string' ? meta.grantId : null;
+    if (!grantId) return false;
+
+    const unlocked = await this.cashbackGrants.unlockGrantNow(purchase.userId, grantId);
+    if (!unlocked) return false;
+
+    await this.prisma.platformPurchase.update({
+      where: { id: purchaseId },
+      data: {
+        status: 'succeeded',
+        fulfilledAt: new Date(),
+      },
+    });
+    return true;
   }
 
   async getStoreSlotCatalog(sellerId: string) {
@@ -718,7 +909,14 @@ export class PlatformPurchaseService {
     let fulfilled = false;
     switch (purchase.type) {
       case 'listing_boost':
-        fulfilled = await this.boostFulfillment.fulfillListingBoost(purchase.id);
+        await this.debitCreditsForPurchaseIfNeeded(purchase.id);
+        try {
+          fulfilled = await this.boostFulfillment.fulfillListingBoost(purchase.id);
+          if (!fulfilled) await this.refundCreditsForPurchaseIfNeeded(purchase.id);
+        } catch (error) {
+          await this.refundCreditsForPurchaseIfNeeded(purchase.id);
+          throw error;
+        }
         if (fulfilled) {
           const meta = (purchase.metadata ?? {}) as Record<string, unknown>;
           if (typeof meta.growthPackPurchaseId === 'string') {
@@ -737,7 +935,24 @@ export class PlatformPurchaseService {
         );
         break;
       case 'fast_track_verification':
-        fulfilled = await this.fastTrackFulfillment.fulfillFastTrack(purchase.id);
+        await this.debitCreditsForPurchaseIfNeeded(purchase.id);
+        try {
+          fulfilled = await this.fastTrackFulfillment.fulfillFastTrack(purchase.id);
+          if (!fulfilled) await this.refundCreditsForPurchaseIfNeeded(purchase.id);
+        } catch (error) {
+          await this.refundCreditsForPurchaseIfNeeded(purchase.id);
+          throw error;
+        }
+        break;
+      case 'early_cashback_unlock':
+        await this.debitCreditsForPurchaseIfNeeded(purchase.id);
+        try {
+          fulfilled = await this.fulfillEarlyCashbackUnlock(purchase.id);
+          if (!fulfilled) await this.refundCreditsForPurchaseIfNeeded(purchase.id);
+        } catch (error) {
+          await this.refundCreditsForPurchaseIfNeeded(purchase.id);
+          throw error;
+        }
         break;
       case 'store_slot_2':
       case 'store_slot_3':
@@ -860,18 +1075,37 @@ export class PlatformPurchaseService {
       throw new ForbiddenException('You can only confirm your own purchases');
     }
 
+    if (purchase.status === 'succeeded') {
+      return mapPlatformPurchase(purchase);
+    }
+
     const stripe = this.stripeConnect.getStripeClient();
     if (stripe && purchase.providerPaymentId) {
       const intent = await stripe.paymentIntents.retrieve(purchase.providerPaymentId);
       if (intent.status === 'succeeded') {
-        await fulfill(purchase.id);
+        await this.debitCreditsForPurchaseIfNeeded(purchase.id);
+        try {
+          await fulfill(purchase.id);
+        } catch (error) {
+          await this.refundCreditsForPurchaseIfNeeded(purchase.id);
+          throw error;
+        }
       } else if (intent.status === 'canceled') {
         await this.prisma.platformPurchase.update({
           where: { id: purchase.id },
           data: { status: 'failed' },
         });
       }
+    } else if (purchase.providerPaymentId) {
+      await this.debitCreditsForPurchaseIfNeeded(purchase.id);
+      try {
+        await fulfill(purchase.id);
+      } catch (error) {
+        await this.refundCreditsForPurchaseIfNeeded(purchase.id);
+        throw error;
+      }
     } else {
+      // Credits-only purchases are fulfilled at intent time.
       await fulfill(purchase.id);
     }
 
@@ -936,12 +1170,166 @@ export class PlatformPurchaseService {
     };
   }
 
+  private async resolveCreditsMix(
+    userId: string,
+    listPrice: number,
+    creditsAmount?: number,
+  ): Promise<{
+    creditsApplied: number;
+    amountDue: number;
+    paymentMix: 'card' | 'credits' | 'hybrid';
+  }> {
+    const price = roundMoney(listPrice);
+    const requested = roundMoney(Math.max(0, creditsAmount ?? 0));
+    if (requested <= 0) {
+      return { creditsApplied: 0, amountDue: price, paymentMix: 'card' };
+    }
+
+    const balance = await this.walletSpend.getBalance(userId);
+    const creditsApplied = roundMoney(Math.min(requested, price, balance));
+    const amountDue = roundMoney(price - creditsApplied);
+    const paymentMix =
+      creditsApplied <= 0 ? 'card' : amountDue <= 0 ? 'credits' : 'hybrid';
+    return { creditsApplied, amountDue, paymentMix };
+  }
+
+  private async completeCreditsOnlyPurchase(input: {
+    purchaseId: string;
+    sellerId: string;
+    creditsApplied: number;
+    fulfill: (purchaseId: string) => Promise<boolean>;
+    afterFulfill?: () => Promise<void>;
+  }): Promise<{
+    purchase: PlatformPurchase;
+    clientSecret: null;
+    creditsApplied: number;
+    amountDue: number;
+  }> {
+    if (input.creditsApplied > 0) {
+      await this.walletSpend.debitForPlatformPurchase({
+        userId: input.sellerId,
+        amount: input.creditsApplied,
+        purchaseId: input.purchaseId,
+      });
+    }
+
+    const existing = await this.prisma.platformPurchase.findUniqueOrThrow({
+      where: { id: input.purchaseId },
+    });
+    const meta = {
+      ...((existing.metadata ?? {}) as Record<string, unknown>),
+      creditsDebited: true,
+      amountChargedCard: 0,
+      paymentMix: 'credits',
+    };
+    await this.prisma.platformPurchase.update({
+      where: { id: input.purchaseId },
+      data: { metadata: meta as object },
+    });
+
+    try {
+      const ok = await input.fulfill(input.purchaseId);
+      if (!ok) {
+        await this.refundCreditsForPurchaseIfNeeded(input.purchaseId);
+        throw new BadRequestException('Could not complete purchase with credits');
+      }
+    } catch (error) {
+      await this.refundCreditsForPurchaseIfNeeded(input.purchaseId);
+      throw error;
+    }
+
+    if (input.afterFulfill) await input.afterFulfill();
+    await this.afterPurchaseSucceeded(input.purchaseId);
+
+    const row = await this.prisma.platformPurchase.findUniqueOrThrow({
+      where: { id: input.purchaseId },
+    });
+    return {
+      purchase: mapPlatformPurchase(row),
+      clientSecret: null,
+      creditsApplied: input.creditsApplied,
+      amountDue: 0,
+    };
+  }
+
+  private async debitCreditsForPurchaseIfNeeded(purchaseId: string): Promise<void> {
+    const purchase = await this.prisma.platformPurchase.findUnique({
+      where: { id: purchaseId },
+    });
+    if (!purchase) return;
+
+    const meta = (purchase.metadata ?? {}) as Record<string, unknown>;
+    if (meta.creditsDebited === true) return;
+    const creditsApplied = Number(meta.creditsApplied ?? 0);
+    if (!(creditsApplied > 0)) return;
+
+    await this.walletSpend.debitForPlatformPurchase({
+      userId: purchase.userId,
+      amount: creditsApplied,
+      purchaseId: purchase.id,
+    });
+
+    await this.prisma.platformPurchase.update({
+      where: { id: purchase.id },
+      data: {
+        metadata: {
+          ...meta,
+          creditsDebited: true,
+        } as object,
+      },
+    });
+  }
+
+  /** Reverse a prior debit if fulfillment failed after credits were taken. */
+  private async refundCreditsForPurchaseIfNeeded(purchaseId: string): Promise<void> {
+    const purchase = await this.prisma.platformPurchase.findUnique({
+      where: { id: purchaseId },
+    });
+    if (!purchase) return;
+
+    const meta = (purchase.metadata ?? {}) as Record<string, unknown>;
+    if (meta.creditsDebited !== true || meta.creditsRefunded === true) return;
+    const creditsApplied = Number(meta.creditsApplied ?? 0);
+    if (!(creditsApplied > 0)) return;
+
+    await this.prisma.$transaction(async (tx) => {
+      const wallet = await tx.buyerWallet.findUnique({
+        where: { userId: purchase.userId },
+      });
+      const balance = wallet ? Number(wallet.balance) : 0;
+      const nextBalance = roundMoney(balance + creditsApplied);
+      await tx.buyerWallet.upsert({
+        where: { userId: purchase.userId },
+        create: { userId: purchase.userId, balance: nextBalance },
+        update: { balance: nextBalance },
+      });
+      await tx.walletTransaction.create({
+        data: {
+          userId: purchase.userId,
+          type: 'credit_topup',
+          amount: creditsApplied,
+        },
+      });
+      await tx.platformPurchase.update({
+        where: { id: purchase.id },
+        data: {
+          metadata: {
+            ...meta,
+            creditsDebited: false,
+            creditsRefunded: true,
+          } as object,
+        },
+      });
+    });
+  }
+
   private async assertIntentRateLimit(
     sellerId: string,
     type:
       | 'listing_boost'
       | 'featured_slot'
       | 'fast_track_verification'
+      | 'early_cashback_unlock'
       | 'store_slot_2'
       | 'store_slot_3'
       | 'store_bundle_3'

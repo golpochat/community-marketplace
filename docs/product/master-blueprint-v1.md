@@ -1004,9 +1004,11 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 
 ---
 
-### Phase 2 — Wallet spend (credit economy) 📋
+### Phase 2 — Wallet spend (credit economy) ✅
 
-**Timeline:** 2–3 weeks · **Status:** 📋 Planned · **Depends on:** Phase 1 boosts
+**Shipped:** Apply SellNearby Credit to **listing boosts**, **fast-track verification**, and **early cashback unlock** (€0.99; full or partial; card covers remainder).
+
+**Timeline:** 2–3 weeks · **Status:** ✅ Live · **Depends on:** Phase 1 boosts
 
 **Goal:** Close the earn → spend loop; credits as soft currency.
 
@@ -1020,8 +1022,8 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 
 **Spend targets (priority order):**
 
-1. Listing boosts (sellers / buyer-sellers)
-2. Early cashback unlock (€0.99 equivalent in credits or hybrid)
+1. Listing boosts (sellers / buyer-sellers) ✅
+2. Early cashback unlock (€0.99 equivalent in credits or hybrid) ✅
 3. Featured slots (Phase 1.5)
 
 #### Rules
@@ -1963,7 +1965,9 @@ Most data model and UI already exist (`packageType`, `boostedUntil`, package dia
 
 ---
 
-### 6. Phase 2 — Wallet spend (boosts + early unlock only) 📋
+### 6. Phase 2 — Wallet spend (boosts + early unlock) ✅
+
+**Done:** Credits on boosts + fast-track + early cashback unlock (€0.99; hybrid or full).
 
 **Goal:** Close the earn → spend loop without overcomplicating checkout.
 
@@ -1972,20 +1976,21 @@ Most data model and UI already exist (`packageType`, `boostedUntil`, package dia
 #### Scope
 
 - Buyers who also sell can pay for **boosts** with SellNearby Credit
-- **Early cashback unlock** payable with credits or card
-- Wallet UI: **Available**, **Pending**, **Used** (new `spent` transaction type)
+- **Early cashback unlock** payable with credits or card (`POST /buyer/wallet/early-unlock/*`)
+- Wallet UI: **Available**, **Pending**, **Used** (new `spent` transaction type) + Unlock early CTA
 - **Limit v2.0 wallet spend to boosts + early unlock only** — no full checkout wallet+card yet
 
 #### Out of scope (Phase 2)
 
 - Partial wallet + card on listing purchases
 - Spending credits on alerts, protection, featured (later)
+- Confirm-receipt gate on early unlock (optional later polish)
 
 #### Exit criteria
 
-- [ ] Credit balance debited on boost purchase
-- [ ] Early unlock moves grant to available balance
-- [ ] Idempotent spend debits; no double-charge
+- [x] Credit balance debited on boost purchase
+- [x] Early unlock moves grant to available balance
+- [x] Idempotent spend debits; no double-charge
 
 ---
 

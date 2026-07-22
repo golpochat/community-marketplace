@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import type { ListingStatus, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../../database/prisma.service';
+
+const PUBLIC_LISTING_STATUSES: ListingStatus[] = ['active', 'reserved'];
 
 @Injectable()
 export class ListingVisibilityService {
@@ -25,15 +28,15 @@ export class ListingVisibilityService {
     return Boolean(activeBan);
   }
 
-  visibleListingWhere(extra?: Record<string, unknown>) {
+  visibleListingWhere(extra?: Record<string, unknown>): Prisma.ListingWhereInput {
     return {
-      status: 'active' as const,
+      status: { in: PUBLIC_LISTING_STATUSES },
       moderationHiddenAt: null,
       seller: {
-        status: 'active' as const,
-        sellerStatus: { not: 'suspended' as const },
+        status: 'active',
+        sellerStatus: { not: 'suspended' },
       },
       ...extra,
-    };
+    } as Prisma.ListingWhereInput;
   }
 }

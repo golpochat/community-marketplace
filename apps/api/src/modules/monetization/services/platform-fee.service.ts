@@ -197,6 +197,7 @@ export class PlatformFeeService {
         email: true,
         sellerStatus: true,
         customPlatformFeePercent: true,
+        customAiMarketingFreeUnitsMonthly: true,
         _count: { select: { listings: true } },
       },
       take: limit,
@@ -208,6 +209,12 @@ export class PlatformFeeService {
         row.customPlatformFeePercent != null
           ? Number(row.customPlatformFeePercent)
           : platform.defaultPlatformFeePercent;
+      const effectiveAiFreeUnitsMonthly =
+        row.customAiMarketingFreeUnitsMonthly != null
+          ? row.customAiMarketingFreeUnitsMonthly
+          : row.sellerStatus === 'verified'
+            ? platform.aiMarketingFreeUnitsMonthly
+            : 0;
       return {
         id: row.id,
         displayName: row.displayName ?? undefined,
@@ -218,6 +225,9 @@ export class PlatformFeeService {
             ? Number(row.customPlatformFeePercent)
             : undefined,
         effectiveFeePercent,
+        customAiMarketingFreeUnitsMonthly:
+          row.customAiMarketingFreeUnitsMonthly ?? undefined,
+        effectiveAiFreeUnitsMonthly,
         listingCount: row._count.listings,
       };
     });

@@ -28,6 +28,42 @@ export interface DisplayAdSlot {
   width: number;
   height: number;
   preview: boolean;
+  /** Present when an admin campaign is live for this slot. */
+  creative?: DisplayAdCreative | null;
+}
+
+export interface DisplayAdCreative {
+  campaignId: string;
+  imageUrl: string;
+  clickUrl: string;
+  altText?: string;
+  advertiserName: string;
+}
+
+export type DisplayAdCampaignStatus =
+  | 'draft'
+  | 'scheduled'
+  | 'live'
+  | 'paused'
+  | 'ended';
+
+export interface DisplayAdCampaign {
+  id: string;
+  advertiserName: string;
+  advertiserEmail?: string;
+  advertiserNotes?: string;
+  placement: DisplayAdPlacement;
+  status: DisplayAdCampaignStatus;
+  startsAt: string;
+  endsAt: string;
+  imageKey: string;
+  imageUrl: string;
+  clickUrl: string;
+  altText?: string;
+  priority: number;
+  createdByAdminId?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DisplayAdsPlacementsResponse {

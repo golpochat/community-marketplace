@@ -60,6 +60,7 @@ import { FeaturedBadge } from "@/components/listings/featured-badge";
 import { LISTING_PACKAGE_OPTIONS } from "@/lib/listing-package-options";
 import { ListingReviewThread } from "@/components/dashboard/listing-review-thread";
 import { SellerConnectBanner } from "@/components/seller/seller-connect-banner";
+import { SellerPendingReservesPanel } from "@/components/seller/seller-pending-reserves-panel";
 import { CreateListingButton } from "@/components/seller/create-listing-button";
 import { SellerVerificationBanner } from "@/components/seller/seller-verification-banner";
 import { SellerVerificationModal } from "@/components/seller/seller-verification-modal";
@@ -139,6 +140,7 @@ function buildListingCreatePayload(
       customPrice: s.customPrice,
     })),
     status: "draft" as const,
+    reserveWindowHours: data.reserveWindowHours,
     ...(data.storeId ? { storeId: data.storeId } : {}),
   };
 }
@@ -179,6 +181,7 @@ const STATUS_FILTER_OPTIONS = [
   { value: "flagged", label: "Flagged" },
   { value: "under_investigation", label: "Under investigation" },
   { value: "active", label: "Live" },
+  { value: "reserved", label: "Reserved" },
   { value: "paused", label: "Paused" },
   { value: "expired", label: "Expired" },
   { value: "sold", label: "Sold" },
@@ -349,6 +352,7 @@ export function SellerListingsPage() {
       emptyDescription="Create your first listing to start selling."
     >
       <SellerConnectBanner className="mb-4" />
+      <SellerPendingReservesPanel onChanged={() => void load()} />
       <Card>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
@@ -1377,6 +1381,12 @@ export function SellerEditListingPage({
             condition: listing.condition,
             categoryId: listing.categoryId,
             location: listing.location.label,
+            reserveWindowHours:
+              listing.reserveWindowHours === 4 ||
+              listing.reserveWindowHours === 12 ||
+              listing.reserveWindowHours === 24
+                ? listing.reserveWindowHours
+                : 12,
             images: [],
           });
           setVehicleInitialData(null);

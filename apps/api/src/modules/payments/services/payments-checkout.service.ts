@@ -12,6 +12,7 @@ import { PrismaService } from '../../../database/prisma.service';
 import { LoggerLib } from '../../../libs/logger.lib';
 import { mapPayment } from '../mappers/payment.mapper';
 import { PlatformFeeService } from '../../monetization/services/platform-fee.service';
+import { ListingReserveService } from '../../listings/services/listing-reserve.service';
 import { buildCheckoutPaymentIntentData } from '../lib/stripe-charge.lib';
 import { PaymentsAuditService } from './payments-audit.service';
 import { PaymentsFraudService } from './payments-fraud.service';
@@ -27,6 +28,7 @@ export class PaymentsCheckoutService {
     private readonly eventBus: EventBusService,
     private readonly platformFee: PlatformFeeService,
     private readonly logger: LoggerLib,
+    private readonly reserves: ListingReserveService,
   ) {}
 
   async createCheckoutSession(
@@ -45,9 +47,7 @@ export class PaymentsCheckoutService {
       },
     });
     if (!listing) throw new NotFoundException('Listing not found');
-    if (listing.status !== 'active') {
-      throw new BadRequestException('Listing is not available for purchase');
-    }
+    await this.reserves.assertBuyerCanPurchase(listing.id, buyerId);
 
     await this.fraud.validatePurchase(buyerId, dto.listingId, listing.sellerId);
     const connectAccount = await this.stripeConnect.assertSellerCanReceivePayments(

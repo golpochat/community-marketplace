@@ -117,12 +117,13 @@ describe('AiSafetyFilterService', () => {
 });
 
 describe('computeAiBilling', () => {
-  it('uses free quota when verified and enough units remain', () => {
+  it('uses free quota when enough units remain', () => {
     expect(
       computeAiBilling({
         sellerVerified: true,
         freeUnitsUsedThisMonth: 0,
         creditUnits: 2,
+        freeUnitsMonthly: 10,
       }),
     ).toEqual({
       billingMethod: 'free_quota',
@@ -137,6 +138,7 @@ describe('computeAiBilling', () => {
         sellerVerified: true,
         freeUnitsUsedThisMonth: 10,
         creditUnits: 2,
+        freeUnitsMonthly: 10,
       }),
     ).toEqual({
       billingMethod: 'wallet',
@@ -145,17 +147,33 @@ describe('computeAiBilling', () => {
     });
   });
 
-  it('charges wallet for unverified sellers with no free units', () => {
+  it('charges wallet when effective free units are 0', () => {
     expect(
       computeAiBilling({
         sellerVerified: false,
         freeUnitsUsedThisMonth: 0,
         creditUnits: 5,
+        freeUnitsMonthly: 0,
       }),
     ).toEqual({
       billingMethod: 'wallet',
       amountEur: 0.25,
       freeUnitsRemainingBefore: 0,
+    });
+  });
+
+  it('honours an override allowance even when sellerVerified is false', () => {
+    expect(
+      computeAiBilling({
+        sellerVerified: false,
+        freeUnitsUsedThisMonth: 0,
+        creditUnits: 2,
+        freeUnitsMonthly: 20,
+      }),
+    ).toEqual({
+      billingMethod: 'free_quota',
+      amountEur: 0,
+      freeUnitsRemainingBefore: 20,
     });
   });
 });

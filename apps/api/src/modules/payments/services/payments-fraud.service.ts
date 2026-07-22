@@ -32,8 +32,16 @@ export class PaymentsFraudService {
       where: { id: listingId },
       include: { seller: { include: { verifications: { where: { badgeGranted: true, status: 'approved' }, take: 1 } } } },
     });
-    if (!listing || listing.status !== 'active') {
+    if (!listing || (listing.status !== 'active' && listing.status !== 'reserved')) {
       throw new BadRequestException('Listing is not available for purchase');
+    }
+    if (listing.status === 'reserved') {
+      const reserve = await this.prisma.listingReserve.findFirst({
+        where: { listingId, status: 'active', buyerId },
+      });
+      if (!reserve) {
+        throw new BadRequestException('This listing is reserved for another buyer');
+      }
     }
     if (listing.sellerId !== sellerId) {
       throw new BadRequestException('Invalid seller for this listing');

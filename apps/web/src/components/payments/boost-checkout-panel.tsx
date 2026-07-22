@@ -102,7 +102,7 @@ function DevConfirmButton({
   return (
     <div className="space-y-3">
       <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-        Stripe is not configured. Use dev confirm to activate the boost locally.
+        Stripe is not configured. Use dev confirm to activate locally.
       </p>
       {error && <p className="text-sm text-red-600">{error}</p>}
       <button
@@ -118,7 +118,12 @@ function DevConfirmButton({
 }
 
 interface BoostCheckoutPanelProps {
-  intent: { purchase: { id: string }; clientSecret: string };
+  intent: {
+    purchase: { id: string };
+    clientSecret: string | null;
+    creditsApplied?: number;
+    amountDue?: number;
+  };
   onSuccess: () => void;
   confirmPurchase?: (purchaseId: string) => Promise<unknown>;
   confirmLabel?: string;
@@ -130,34 +135,70 @@ export function BoostCheckoutPanel({
   confirmPurchase = monetizationService.confirmBoost,
   confirmLabel,
 }: BoostCheckoutPanelProps) {
-  const useStripeElements =
-    stripePromise && !isDevClientSecret(intent.clientSecret);
+  const creditsOnly = !intent.clientSecret || (intent.amountDue != null && intent.amountDue <= 0);
+
+  if (creditsOnly) {
+    return (
+      <div className="space-y-3">
+        {intent.creditsApplied != null && intent.creditsApplied > 0 && (
+          <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+            Paid with €{intent.creditsApplied.toFixed(2)} SellNearby Credit. No card charge.
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={onSuccess}
+          className="rounded-lg bg-[hsl(var(--dashboard-accent))] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          Done
+        </button>
+      </div>
+    );
+  }
+
+  const clientSecret = intent.clientSecret!;
+  const useStripeElements = Boolean(stripePromise && !isDevClientSecret(clientSecret));
+  const creditHint =
+    intent.creditsApplied != null && intent.creditsApplied > 0
+      ? `Applying €${intent.creditsApplied.toFixed(2)} credit` +
+        (intent.amountDue != null ? ` · card due €${intent.amountDue.toFixed(2)}` : '')
+      : null;
 
   if (!useStripeElements) {
     return (
-      <DevConfirmButton
-        purchaseId={intent.purchase.id}
-        onSuccess={onSuccess}
-        confirmPurchase={confirmPurchase}
-        confirmLabel={confirmLabel}
-      />
+      <div className="space-y-3">
+        {creditHint && (
+          <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{creditHint}</p>
+        )}
+        <DevConfirmButton
+          purchaseId={intent.purchase.id}
+          onSuccess={onSuccess}
+          confirmPurchase={confirmPurchase}
+          confirmLabel={confirmLabel}
+        />
+      </div>
     );
   }
 
   return (
-    <Elements
-      stripe={stripePromise}
-      options={{
-        clientSecret: intent.clientSecret,
-        appearance: { theme: 'stripe' },
-      }}
-    >
-      <BoostCheckoutForm
-        purchaseId={intent.purchase.id}
-        onSuccess={onSuccess}
-        confirmPurchase={confirmPurchase}
-        confirmLabel={confirmLabel}
-      />
-    </Elements>
+    <div className="space-y-3">
+      {creditHint && (
+        <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{creditHint}</p>
+      )}
+      <Elements
+        stripe={stripePromise}
+        options={{
+          clientSecret,
+          appearance: { theme: 'stripe' },
+        }}
+      >
+        <BoostCheckoutForm
+          purchaseId={intent.purchase.id}
+          onSuccess={onSuccess}
+          confirmPurchase={confirmPurchase}
+          confirmLabel={confirmLabel}
+        />
+      </Elements>
+    </div>
   );
 }

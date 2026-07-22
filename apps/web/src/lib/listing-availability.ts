@@ -15,6 +15,6 @@ const UNAVAILABLE_MESSAGES: Partial<Record<ListingStatus, string>> = {
 };
 
 export function getListingUnavailableMessage(status: ListingStatus): string | null {
-  if (status === 'active') return null;
+  if (status === 'active' || status === 'reserved') return null;
   return UNAVAILABLE_MESSAGES[status] ?? 'This listing is not available.';
 }

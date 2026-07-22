@@ -1,5 +1,7 @@
 import ExcelJS from 'exceljs';
 
+import type { FinanceRecordLine } from './finance-records.util';
+import { buildPlatformRevenueReportMeta } from './platform-revenue-export-meta';
 import type { PlatformRevenueReportData } from './platform-revenue-report.types';
 
 function csvEscape(value: string): string {
@@ -9,14 +11,26 @@ function csvEscape(value: string): string {
   return value;
 }
 
-export function buildPlatformRevenueCsv(data: PlatformRevenueReportData): string {
-  const lines: string[] = [
-    'Type,Date,Reference,Party,Email,Description,Amount,Currency',
-  ];
+function csvRow(cells: Array<string | number>): string {
+  return cells.map((cell) => csvEscape(String(cell))).join(',');
+}
 
-  for (const row of data.records) {
+function addDetailRows(
+  lines: string[],
+  title: string,
+  rows: FinanceRecordLine[],
+): void {
+  lines.push(title);
+  lines.push('Type,Date,Reference,Party,Email,Description,Amount,Currency');
+  if (rows.length === 0) {
+    lines.push('—,,,,,No records in this period,,');
+    lines.push('');
+    return;
+  }
+
+  for (const row of rows) {
     lines.push(
-      [
+      csvRow([
         row.typeLabel,
         row.date.slice(0, 10),
         row.reference,
@@ -25,21 +39,46 @@ export function buildPlatformRevenueCsv(data: PlatformRevenueReportData): string
         row.description,
         row.amount.toFixed(2),
         row.currency,
-      ]
-        .map((cell) => csvEscape(String(cell)))
-        .join(','),
+      ]),
     );
   }
-
-  const { summary } = data;
   lines.push('');
-  lines.push(
-    `Platform revenue total,,,,,,${summary.totalRevenueGross.toFixed(2)},${summary.currency}`,
+}
+
+export function buildPlatformRevenueCsv(data: PlatformRevenueReportData): string {
+  const meta = buildPlatformRevenueReportMeta(data);
+  const lines: string[] = [
+    'SellNearby Platform Revenue Report',
+    '',
+    'Field,Value',
+  ];
+
+  for (const row of meta.headerRows) {
+    lines.push(csvRow([row.label, row.value]));
+  }
+
+  lines.push('');
+  lines.push('Executive summary');
+  lines.push('Line,Amount');
+  for (const row of meta.summaryRows) {
+    lines.push(csvRow([row.label, row.value]));
+  }
+
+  lines.push('');
+  lines.push('Notes');
+  lines.push(csvRow([meta.notes]));
+  lines.push('');
+
+  const platformRows = data.records.filter((row) => row.type === 'platform_service');
+  const feeRows = data.records.filter((row) => row.type === 'marketplace_fee');
+  const activityRows = data.records.filter(
+    (row) => row.type === 'buyer_purchase' || row.type === 'seller_sale',
   );
-  if (summary.activityVolumeGross > 0) {
-    lines.push(
-      `Activity volume (informational),,,,,,${summary.activityVolumeGross.toFixed(2)},${summary.currency}`,
-    );
+
+  addDetailRows(lines, 'A. Platform services', platformRows);
+  addDetailRows(lines, 'B. Marketplace fees', feeRows);
+  if (activityRows.length > 0) {
+    addDetailRows(lines, 'C. Marketplace activity (informational)', activityRows);
   }
 
   return `${lines.join('\n')}\n`;
@@ -55,12 +94,37 @@ function styleHeaderRow(sheet: ExcelJS.Worksheet): void {
   };
 }
 
-export async function buildPlatformRevenueXlsx(data: PlatformRevenueReportData): Promise<Buffer> {
-  const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'SellNearby';
-  workbook.created = new Date();
+function styleTitleRow(sheet: ExcelJS.Worksheet, rowNumber: number): void {
+  const row = sheet.getRow(rowNumber);
+  row.font = { bold: true, size: 14, color: { argb: 'FF0F766E' } };
+}
 
-  const sheet = workbook.addWorksheet('Finance records');
+function styleSectionHeading(sheet: ExcelJS.Worksheet, rowNumber: number): void {
+  const row = sheet.getRow(rowNumber);
+  row.font = { bold: true, size: 11 };
+}
+
+function addKeyValueRows(
+  sheet: ExcelJS.Worksheet,
+  rows: Array<{ label: string; value: string }>,
+  startRow: number,
+): number {
+  let current = startRow;
+  for (const row of rows) {
+    sheet.getCell(`A${current}`).value = row.label;
+    sheet.getCell(`A${current}`).font = { bold: true };
+    sheet.getCell(`B${current}`).value = row.value;
+    current += 1;
+  }
+  return current;
+}
+
+function addRecordsSheet(
+  workbook: ExcelJS.Workbook,
+  sheetName: string,
+  rows: FinanceRecordLine[],
+): void {
+  const sheet = workbook.addWorksheet(sheetName);
   sheet.columns = [
     { header: 'Type', key: 'type', width: 18 },
     { header: 'Date', key: 'date', width: 12 },
@@ -73,7 +137,15 @@ export async function buildPlatformRevenueXlsx(data: PlatformRevenueReportData):
   ];
   styleHeaderRow(sheet);
 
-  for (const row of data.records) {
+  if (rows.length === 0) {
+    sheet.addRow({
+      type: '—',
+      description: 'No records in this period',
+    });
+    return;
+  }
+
+  for (const row of rows) {
     sheet.addRow({
       type: row.typeLabel,
       date: row.date.slice(0, 10),
@@ -85,21 +157,55 @@ export async function buildPlatformRevenueXlsx(data: PlatformRevenueReportData):
       currency: row.currency,
     });
   }
+}
 
-  const { summary } = data;
-  sheet.addRow({});
-  sheet.addRow({
-    type: 'Platform revenue total',
-    amount: summary.totalRevenueGross,
-    currency: summary.currency,
-  });
-  if (summary.activityVolumeGross > 0) {
-    sheet.addRow({
-      type: 'Activity volume (informational)',
-      amount: summary.activityVolumeGross,
-      currency: summary.currency,
-    });
+export async function buildPlatformRevenueXlsx(data: PlatformRevenueReportData): Promise<Buffer> {
+  const meta = buildPlatformRevenueReportMeta(data);
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'SellNearby';
+  workbook.created = new Date();
+
+  const summarySheet = workbook.addWorksheet('Summary');
+  summarySheet.columns = [
+    { width: 34 },
+    { width: 52 },
+  ];
+
+  summarySheet.mergeCells('A1:B1');
+  summarySheet.getCell('A1').value = 'SellNearby Platform Revenue Report';
+  styleTitleRow(summarySheet, 1);
+
+  let row = 3;
+  summarySheet.getCell(`A${row}`).value = 'Report metadata';
+  styleSectionHeading(summarySheet, row);
+  row += 1;
+  row = addKeyValueRows(summarySheet, meta.headerRows, row) + 1;
+
+  summarySheet.getCell(`A${row}`).value = 'Executive summary';
+  styleSectionHeading(summarySheet, row);
+  row += 1;
+  row = addKeyValueRows(summarySheet, meta.summaryRows, row) + 1;
+
+  summarySheet.getCell(`A${row}`).value = 'Notes';
+  styleSectionHeading(summarySheet, row);
+  row += 1;
+  summarySheet.mergeCells(`A${row}:B${row + 2}`);
+  summarySheet.getCell(`A${row}`).value = meta.notes;
+  summarySheet.getCell(`A${row}`).alignment = { wrapText: true, vertical: 'top' };
+
+  const platformRows = data.records.filter((record) => record.type === 'platform_service');
+  const feeRows = data.records.filter((record) => record.type === 'marketplace_fee');
+  const activityRows = data.records.filter(
+    (record) => record.type === 'buyer_purchase' || record.type === 'seller_sale',
+  );
+
+  addRecordsSheet(workbook, 'Platform services', platformRows);
+  addRecordsSheet(workbook, 'Marketplace fees', feeRows);
+  if (activityRows.length > 0) {
+    addRecordsSheet(workbook, 'Marketplace activity', activityRows);
   }
+
+  addRecordsSheet(workbook, 'All records', data.records);
 
   const buffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(buffer);

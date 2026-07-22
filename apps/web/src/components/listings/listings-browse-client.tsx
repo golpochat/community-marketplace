@@ -20,6 +20,7 @@ import {
   resetBrowseFilters,
 } from '@/components/listings/browse/browse-filter-constants';
 import { ListingCard } from '@/components/listings/listing-card';
+import { DisplayAdsClient } from '@/components/ads/display-ads-client';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Pagination } from '@/components/shared/pagination';
 import { ListingCardListSkeleton, ListingCardSkeleton } from '@/components/shared/skeleton';
@@ -40,6 +41,8 @@ interface ListingsBrowseClientProps {
   initialFiltersKey?: string;
   pageTitle?: string;
   pageDescription?: string;
+  /** Ad serve context: browse (sidebar + inline) or category (sidebar). */
+  adsContext?: 'browse' | 'category' | 'search';
 }
 
 export function ListingsBrowseClient({
@@ -49,6 +52,7 @@ export function ListingsBrowseClient({
   initialFiltersKey,
   pageTitle,
   pageDescription,
+  adsContext = 'browse',
 }: ListingsBrowseClientProps = {}) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -133,14 +137,21 @@ export function ListingsBrowseClient({
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <div className="hidden w-full shrink-0 lg:block lg:w-72 xl:w-80">
-          <div className="sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto rounded-xl border border-border bg-card p-3 shadow-brand-sm">
-            <BrowseFilterSidebar
-              categories={categories}
-              filters={filters}
-              onChange={updateFilters}
-            />
-          </div>
+          <div className="sticky top-4 max-h-[calc(100vh-2rem)] space-y-4 overflow-y-auto">
+            <div className="rounded-xl border border-border bg-card p-3 shadow-brand-sm">
+              <BrowseFilterSidebar
+                categories={categories}
+                filters={filters}
+                onChange={updateFilters}
+              />
+            </div>
+          <DisplayAdsClient
+            context={adsContext}
+            placement="category_sidebar"
+            className="overflow-hidden rounded-xl lg:block"
+          />
         </div>
+      </div>
 
         <div className="min-w-0 flex-1 space-y-4">
           <LocalBrowseBar filters={filters} onFiltersChange={updateFilters} />
@@ -149,6 +160,21 @@ export function ListingsBrowseClient({
             categories={categories}
             filters={filters}
             onChange={updateFilters}
+          />
+
+          {/* Mobile: show sidebar creative above results when desktop column is hidden */}
+          <div className="flex justify-center lg:hidden">
+            <DisplayAdsClient
+              context={adsContext}
+              placement="category_sidebar"
+              className="overflow-hidden"
+            />
+          </div>
+
+          <DisplayAdsClient
+            context={adsContext === 'category' ? 'browse' : adsContext}
+            placement="search_results_inline"
+            className="overflow-hidden"
           />
 
           <BrowseListingsToolbar

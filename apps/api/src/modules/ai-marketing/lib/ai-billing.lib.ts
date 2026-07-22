@@ -8,6 +8,8 @@ export interface ComputeAiBillingInput {
   sellerVerified: boolean;
   freeUnitsUsedThisMonth: number;
   creditUnits: number;
+  /** Overrides platform default when provided. */
+  freeUnitsMonthly?: number;
 }
 
 export interface ComputeAiBillingResult {
@@ -16,13 +18,21 @@ export interface ComputeAiBillingResult {
   freeUnitsRemainingBefore: number;
 }
 
-/** Pure billing decision: free quota first, then wallet at €/unit. */
+/** Pure billing decision: free quota first, then wallet at €/unit.
+ * `freeUnitsMonthly` must already be the seller's effective allowance
+ * (override or platform default / 0). */
 export function computeAiBilling(
   input: ComputeAiBillingInput,
 ): ComputeAiBillingResult {
-  const freeUnitsRemainingBefore = input.sellerVerified
-    ? Math.max(0, AI_MARKETING_FREE_UNITS_MONTHLY - input.freeUnitsUsedThisMonth)
-    : 0;
+  const freeQuotaMonthly =
+    input.freeUnitsMonthly ?? AI_MARKETING_FREE_UNITS_MONTHLY;
+  // When callers pass an effective freeUnitsMonthly, verification is already
+  // baked in (unverified without override → 0). Keep sellerVerified only as a
+  // legacy no-op for callers that still pass it.
+  const freeUnitsRemainingBefore = Math.max(
+    0,
+    freeQuotaMonthly - input.freeUnitsUsedThisMonth,
+  );
 
   if (freeUnitsRemainingBefore >= input.creditUnits) {
     return {

@@ -18,6 +18,7 @@ const TONE_CLASSES = {
   fresh: 'border-primary/20 bg-primary/10 text-primary',
   boosted: 'border-primary/20 bg-primary/10 text-primary',
   featured: 'border-primary/20 bg-primary/10 text-primary',
+  reserved: 'border-indigo-200 bg-indigo-50 text-indigo-800',
 } as const;
 
 export type ListingBadgeTone = keyof typeof TONE_CLASSES;

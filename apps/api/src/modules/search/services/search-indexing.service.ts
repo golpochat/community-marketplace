@@ -116,7 +116,7 @@ export class SearchIndexingService implements OnModuleInit, OnModuleDestroy {
     if (!row) return;
 
     if (
-      row.status !== 'active' ||
+      (row.status !== 'active' && row.status !== 'reserved') ||
       row.seller.status !== 'active'
     ) {
       await this.meili.deleteDocument('listings', listingId);
@@ -175,7 +175,10 @@ export class SearchIndexingService implements OnModuleInit, OnModuleDestroy {
 
     while (true) {
       const rows = await this.prisma.listing.findMany({
-        where: { status: 'active', seller: { status: 'active' } },
+        where: {
+          status: { in: ['active', 'reserved'] },
+          seller: { status: 'active' },
+        },
         include: listingInclude,
         skip,
         take: batchSize,

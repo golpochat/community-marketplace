@@ -1,7 +1,11 @@
 import { z } from 'zod';
 
 import { paymentMethodSchema } from './payment.schema';
-import { paginationSchema, uuidSchema } from './common.schema';
+import {
+  isoDateSchema as isoDateTimeSchema,
+  paginationSchema,
+  uuidSchema,
+} from './common.schema';
 
 const feePercentSchema = z.number().min(3).max(15);
 
@@ -19,6 +23,8 @@ export const platformSettingsUpdateSchema = z.object({
   featuredEnabled: z.boolean().optional(),
   displayAdsEnabled: z.boolean().optional(),
   aiMarketingEnabled: z.boolean().optional(),
+  /** Monthly free AI units for verified sellers (0–500). */
+  aiMarketingFreeUnitsMonthly: z.number().int().min(0).max(500).optional(),
   boostPrice7d: z.number().min(0).max(999).optional(),
   boostPrice30d: z.number().min(0).max(999).optional(),
   featuredHomepagePrice: z.number().min(0).max(999).optional(),
@@ -39,9 +45,25 @@ export const createBoostIntentSchema = z.object({
   source: z
     .enum(['marketing_hub', 'listings_table', 'listing_edit'])
     .optional(),
+  /** EUR credits to apply (0..price). Omitted/0 = card only. */
+  creditsAmount: z.number().min(0).max(999).optional(),
 });
 
 export const confirmBoostSchema = z.object({
+  purchaseId: uuidSchema,
+});
+
+export const createFastTrackIntentSchema = z.object({
+  creditsAmount: z.number().min(0).max(999).optional(),
+});
+
+export const createEarlyCashbackUnlockIntentSchema = z.object({
+  grantId: uuidSchema,
+  /** EUR credits to apply (0..price). Omitted/0 = card only. */
+  creditsAmount: z.number().min(0).max(999).optional(),
+});
+
+export const confirmEarlyCashbackUnlockSchema = z.object({
   purchaseId: uuidSchema,
 });
 
@@ -280,7 +302,12 @@ export type CreateFeaturedStoreIntentInput = z.infer<
 export type ConfirmFeaturedStoreInput = z.infer<typeof confirmFeaturedStoreSchema>;
 export type CreateFeaturedIntentInput = z.infer<typeof createFeaturedIntentSchema>;
 export type ConfirmFeaturedInput = z.infer<typeof confirmFeaturedSchema>;
+export type CreateFastTrackIntentInput = z.infer<typeof createFastTrackIntentSchema>;
 export type ConfirmFastTrackInput = z.infer<typeof confirmFastTrackSchema>;
+export type CreateEarlyCashbackUnlockIntentInput = z.infer<
+  typeof createEarlyCashbackUnlockIntentSchema
+>;
+export type ConfirmEarlyCashbackUnlockInput = z.infer<typeof confirmEarlyCashbackUnlockSchema>;
 export type CreateStoreSlotIntentInput = z.infer<typeof createStoreSlotIntentSchema>;
 export type ConfirmStoreSlotInput = z.infer<typeof confirmStoreSlotSchema>;
 export type CreateBuyerStatementIntentInput = z.infer<typeof createBuyerStatementIntentSchema>;
@@ -307,6 +334,12 @@ export const sellerFeeOverrideSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
+export const sellerAiFreeUnitsOverrideSchema = z.object({
+  userId: uuidSchema,
+  customAiMarketingFreeUnitsMonthly: z.number().int().min(0).max(500).nullable(),
+  reason: z.string().max(500).optional(),
+});
+
 export const buyerCashbackOverrideSchema = z.object({
   userId: uuidSchema,
   customCashbackPercent: z.number().min(0).max(10).nullable(),
@@ -329,6 +362,7 @@ export const cashbackEstimateQuerySchema = z.object({
 
 export type PlatformSettingsUpdateInput = z.infer<typeof platformSettingsUpdateSchema>;
 export type SellerFeeOverrideInput = z.infer<typeof sellerFeeOverrideSchema>;
+export type SellerAiFreeUnitsOverrideInput = z.infer<typeof sellerAiFreeUnitsOverrideSchema>;
 export type BuyerCashbackOverrideInput = z.infer<typeof buyerCashbackOverrideSchema>;
 
 export const monetizationSellerSearchSchema = z.object({
@@ -362,3 +396,107 @@ export const monetizationProductUpdateSchema = monetizationProductUpsertSchema.p
 export type MonetizationSellerSearchInput = z.infer<typeof monetizationSellerSearchSchema>;
 export type MonetizationProductUpsertInput = z.infer<typeof monetizationProductUpsertSchema>;
 export type MonetizationProductUpdateInput = z.infer<typeof monetizationProductUpdateSchema>;
+
+export const displayAdPlacementSchema = z.enum([
+  'homepage_leaderboard',
+  'category_sidebar',
+  'search_results_inline',
+]);
+
+export const displayAdCampaignStatusSchema = z.enum([
+  'draft',
+  'scheduled',
+  'live',
+  'paused',
+  'ended',
+]);
+
+const httpsUrlSchema = z
+  .string()
+  .trim()
+  .url()
+  .max(2048)
+  .refine((value) => value.startsWith('https://'), {
+    message: 'Click URL must use HTTPS',
+  });
+
+export const displayAdCampaignCreateSchema = z
+  .object({
+    advertiserName: z.string().trim().min(1).max(160),
+    advertiserEmail: z
+      .union([z.literal(''), z.string().trim().email().max(255)])
+      .optional(),
+    advertiserNotes: z
+      .union([z.literal(''), z.string().trim().max(1000)])
+      .optional(),
+    placement: displayAdPlacementSchema,
+    startsAt: isoDateTimeSchema,
+    endsAt: isoDateTimeSchema,
+    imageKey: z.string().trim().min(1).max(512),
+    imageUrl: z.string().trim().url().max(1024),
+    clickUrl: httpsUrlSchema,
+    altText: z.union([z.literal(''), z.string().trim().max(200)]).optional(),
+    priority: z.coerce.number().int().min(0).max(1000).optional(),
+    /** When true, publish immediately (live or scheduled by dates). */
+    publish: z.boolean().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (new Date(value.endsAt).getTime() <= new Date(value.startsAt).getTime()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End date must be after start date',
+        path: ['endsAt'],
+      });
+    }
+  });
+
+export const displayAdCampaignUpdateSchema = z
+  .object({
+    advertiserName: z.string().trim().min(1).max(160).optional(),
+    advertiserEmail: z
+      .union([z.literal(''), z.string().trim().email().max(255)])
+      .nullable()
+      .optional(),
+    advertiserNotes: z
+      .union([z.literal(''), z.string().trim().max(1000)])
+      .nullable()
+      .optional(),
+    placement: displayAdPlacementSchema.optional(),
+    startsAt: isoDateTimeSchema.optional(),
+    endsAt: isoDateTimeSchema.optional(),
+    imageKey: z.string().trim().min(1).max(512).optional(),
+    imageUrl: z.string().trim().url().max(1024).optional(),
+    clickUrl: httpsUrlSchema.optional(),
+    altText: z
+      .union([z.literal(''), z.string().trim().max(200)])
+      .nullable()
+      .optional(),
+    priority: z.coerce.number().int().min(0).max(1000).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.startsAt && value.endsAt) {
+      if (new Date(value.endsAt).getTime() <= new Date(value.startsAt).getTime()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'End date must be after start date',
+          path: ['endsAt'],
+        });
+      }
+    }
+  });
+
+export const displayAdCampaignStatusActionSchema = z.object({
+  action: z.enum(['publish', 'pause', 'end']),
+});
+
+export const displayAdCreativeUploadUrlSchema = z.object({
+  contentType: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  fileName: z.string().trim().min(1).max(255).optional(),
+});
+
+export type DisplayAdCampaignCreateInput = z.infer<typeof displayAdCampaignCreateSchema>;
+export type DisplayAdCampaignUpdateInput = z.infer<typeof displayAdCampaignUpdateSchema>;
+export type DisplayAdCampaignStatusActionInput = z.infer<
+  typeof displayAdCampaignStatusActionSchema
+>;
+export type DisplayAdCreativeUploadUrlInput = z.infer<typeof displayAdCreativeUploadUrlSchema>;

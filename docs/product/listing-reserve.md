@@ -1,7 +1,7 @@
 # Listing Reserve — Product Spec
 
-**Status:** Spec only — **not implemented** (approve before engineering)  
-**Last reviewed:** 2026-07-18  
+**Status:** Phase 2 polish implemented (browse badge, countdown, reminders)  
+**Last reviewed:** 2026-07-22  
 **Decision lock:** Verified = **seller ID verification** (`sellerStatus === verified`); reserve is **free forever** (no deposit)  
 **Related:** [buyer-flow.md](../frontend/buyer-flow.md), [storefront-model.md](./storefront-model.md), [master-blueprint-v1.md](./master-blueprint-v1.md), [launch-checklist.md](./launch-checklist.md)
 
@@ -351,9 +351,9 @@ Guards: buyer must be verified; approve/decline only listing owner.
 | Phase | Scope |
 |-------|--------|
 | **0 — Spec** | This document |
-| **1 — MVP** | Verified-only request, seller approve/decline, listing `reserveWindowHours`, `reserved` status, pending 2h TTL, expire job, chat system line, Buy now blocked when reserved |
-| **2 — Polish** | Countdown, browse badge, reminders, seller inbox UI |
-| **3 — Optional** | Seller opt-out “allow reservations” per listing |
+| **1 — MVP** | Verified-only request, seller approve/decline, listing `reserveWindowHours`, `reserved` status, pending 2h TTL, expire job, chat system line, Buy now blocked when reserved | ✅ |
+| **2 — Polish** | Countdown, browse badge, reminders, seller inbox UI | ✅ |
+| **3 — Optional** | Seller opt-out “allow reservations” per listing | 📋 |
 
 ---
 

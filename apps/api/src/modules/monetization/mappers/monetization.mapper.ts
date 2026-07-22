@@ -29,6 +29,7 @@ const DEFAULT_SETTINGS = {
   featuredEnabled: true,
   displayAdsEnabled: false,
   aiMarketingEnabled: false,
+  aiMarketingFreeUnitsMonthly: 10,
 };
 
 export function getDefaultPlatformSettings(): Omit<
@@ -57,6 +58,7 @@ export function mapPlatformSettings(row: {
   createdAt: Date;
   updatedAt: Date;
 }): MonetizationSettings {
+  const pricing = parsePlatformPricing(row.pricing);
   return {
     id: row.id,
     defaultPlatformFeePercent: Number(row.defaultPlatformFeePercent),
@@ -68,11 +70,14 @@ export function mapPlatformSettings(row: {
     cashbackEnabled: row.cashbackEnabled,
     cashbackMinOrderAmount: Number(row.cashbackMinOrderAmount),
     allowedCashbackMethods: row.allowedCashbackMethods as PaymentMethod[],
-    pricing: parsePlatformPricing(row.pricing),
+    pricing,
     boostsEnabled: row.boostsEnabled,
     featuredEnabled: row.featuredEnabled,
     displayAdsEnabled: row.displayAdsEnabled,
     aiMarketingEnabled: row.aiMarketingEnabled,
+    aiMarketingFreeUnitsMonthly:
+      pricing.aiMarketing?.freeUnitsMonthly ??
+      DEFAULT_SETTINGS.aiMarketingFreeUnitsMonthly,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -91,13 +96,27 @@ export function mergePricingUpdate(
     storeBundle3Price?: number;
     homepageSlotsPerDay?: number;
     categorySlotsPerDay?: number;
+    aiMarketingFreeUnitsMonthly?: number;
   },
 ): PlatformPricingConfig {
   const next = {
     ...current,
     skus: { ...current.skus },
     featured: { ...current.featured },
+    aiMarketing: {
+      freeUnitsMonthly:
+        current.aiMarketing?.freeUnitsMonthly ??
+        DEFAULT_PLATFORM_PRICING.aiMarketing!.freeUnitsMonthly,
+    },
   };
+  if (input.aiMarketingFreeUnitsMonthly !== undefined) {
+    next.aiMarketing = {
+      freeUnitsMonthly: Math.min(
+        500,
+        Math.max(0, Math.floor(input.aiMarketingFreeUnitsMonthly)),
+      ),
+    };
+  }
   if (input.boostPrice7d !== undefined) {
     next.skus.boost_7d = { ...next.skus.boost_7d, amount: roundMoney(input.boostPrice7d) };
   }
@@ -202,6 +221,7 @@ export function mapCashbackGrant(row: {
 }
 
 export function emptyWalletSummary(settings: MonetizationSettings) {
+  const earlySku = settings.pricing.skus.early_cashback_unlock;
   return {
     balance: 0,
     pendingUnlocks: [],
@@ -209,5 +229,10 @@ export function emptyWalletSummary(settings: MonetizationSettings) {
     cashbackPercent: settings.cashbackPercent,
     coolingDays: settings.coolingDays,
     cashbackEnabled: settings.cashbackEnabled,
+    earlyUnlock: {
+      enabled: Boolean(earlySku?.enabled),
+      price: Number(earlySku?.amount ?? 0.99),
+      currency: settings.pricing.currency.toUpperCase(),
+    },
   };
 }

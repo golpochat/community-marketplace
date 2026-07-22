@@ -111,7 +111,7 @@ export class MeilisearchService implements OnModuleInit, OnModuleDestroy {
 
     const filter: string[] = [];
     if (!options.includeRestricted) {
-      filter.push('status = active', 'sellerStatus = active');
+      filter.push('status IN [active, reserved]', 'sellerStatus = active');
     }
     if (options.categoryId) filter.push(`categoryId = "${options.categoryId}"`);
     if (options.condition) filter.push(`condition = "${options.condition}"`);

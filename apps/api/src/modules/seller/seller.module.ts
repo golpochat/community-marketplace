@@ -29,6 +29,7 @@ import { SellerCapabilityService } from './services/seller-capability.service';
 import { SellerOnboardingService } from './services/seller-onboarding.service';
 import { SellerOnboardingController } from './seller-onboarding.controller';
 import { SellerVerificationModule } from './seller-verification.module';
+import { SellerReservesController } from './seller-reserves.controller';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { SellerVerificationModule } from './seller-verification.module';
     SellerVerificationController,
     SellerStoresController,
     SellerOnboardingController,
+    SellerReservesController,
   ],
   providers: [
     SellerBuyerReviewsService,

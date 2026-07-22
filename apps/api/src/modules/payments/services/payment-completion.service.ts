@@ -58,8 +58,15 @@ export class PaymentCompletionService {
         where: { id: payment.listingId },
         select: { status: true },
       });
-      if (listing?.status === 'active' || listing?.status === 'paused') {
-        await this.listingsService.markSoldFromPayment(payment.listingId);
+      if (
+        listing?.status === 'active' ||
+        listing?.status === 'paused' ||
+        listing?.status === 'reserved'
+      ) {
+        await this.listingsService.markSoldFromPayment(
+          payment.listingId,
+          payment.buyerId,
+        );
       }
 
       await this.audit.record('payment_succeeded', undefined, payment.id);

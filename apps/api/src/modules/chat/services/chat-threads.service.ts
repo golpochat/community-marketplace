@@ -50,7 +50,7 @@ export class ChatThreadsService {
       where: { id: parsed.listingId },
       select: { id: true, sellerId: true, status: true },
     });
-    if (!listing || listing.status !== 'active') {
+    if (!listing || (listing.status !== 'active' && listing.status !== 'reserved')) {
       throw new NotFoundException('Listing not found');
     }
     if (listing.sellerId !== sellerId) {

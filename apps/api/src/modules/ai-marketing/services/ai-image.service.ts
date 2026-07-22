@@ -34,6 +34,7 @@ import { extractStorageKeyFromUrl } from '../../../libs/asset-url.lib';
 import { PrismaService } from '../../../database/prisma.service';
 import { DevUploadService } from '../../dev-upload/dev-upload.service';
 import { ListingImagesService } from '../../listings/services/listing-images.service';
+import { AiMarketingQuotaService } from '../../monetization/services/ai-marketing-quota.service';
 import { R2StorageService } from '../../users/services/r2-storage.service';
 import { computeAiBilling } from '../lib/ai-billing.lib';
 import { AiCreditMeterService } from './ai-credit-meter.service';
@@ -59,6 +60,7 @@ export class AiImageService {
     private readonly listingImages: ListingImagesService,
     private readonly access: AiMarketingAccessService,
     private readonly safety: AiSafetyFilterService,
+    private readonly aiQuota: AiMarketingQuotaService,
   ) {}
 
   isBackgroundRemovalAvailable(): boolean {
@@ -132,7 +134,7 @@ export class AiImageService {
     if (!image) throw new NotFoundException('Listing image not found');
 
     const creditUnits = AI_MARKETING_TASK_UNIT_COSTS[input.task];
-    const { billingMethod, amountEur } = await this.resolveBilling(
+    const { billingMethod, amountEur, freeUnitsMonthly } = await this.resolveBilling(
       userId,
       sellerVerified,
       creditUnits,
@@ -196,6 +198,7 @@ export class AiImageService {
         billingMethod,
         creditUnits,
         amountEur,
+        freeUnitsMonthly,
         inputSummary: `${input.task}|image=${input.imageId}|format=${input.bannerFormat ?? 'n/a'}|template=${bannerTemplate}|wm=${includeWatermark}|logo=${includeStoreLogo && Boolean(storeLogoBuffer)}`,
         outputText: publicUrl,
       });
@@ -341,7 +344,7 @@ export class AiImageService {
     }
 
     const creditUnits = AI_MARKETING_TASK_UNIT_COSTS.store_banner;
-    const { billingMethod, amountEur } = await this.resolveBilling(
+    const { billingMethod, amountEur, freeUnitsMonthly } = await this.resolveBilling(
       userId,
       sellerVerified,
       creditUnits,
@@ -381,6 +384,7 @@ export class AiImageService {
         billingMethod,
         creditUnits,
         amountEur,
+        freeUnitsMonthly,
         inputSummary: `store_banner|store=${store.id}|source=${sourceLabel}|wm=${includeWatermark}`,
         outputText: publicUrl,
       });
@@ -551,12 +555,19 @@ export class AiImageService {
     userId: string,
     sellerVerified: boolean,
     creditUnits: number,
-  ): Promise<{ billingMethod: AiBillingMethod; amountEur: number }> {
+  ): Promise<{
+    billingMethod: AiBillingMethod;
+    amountEur: number;
+    freeUnitsMonthly: number;
+  }> {
+    const freeUnitsMonthly =
+      await this.aiQuota.getEffectiveFreeUnitsMonthly(userId);
     const freeUsed = await this.meter.countFreeUnitsUsedThisMonth(userId);
     const { billingMethod, amountEur } = computeAiBilling({
       sellerVerified,
       freeUnitsUsedThisMonth: freeUsed,
       creditUnits,
+      freeUnitsMonthly,
     });
 
     if (billingMethod === 'wallet' && amountEur > 0) {
@@ -564,7 +575,7 @@ export class AiImageService {
       if (balance < amountEur) {
         throw new ForbiddenException(
           `Not enough SellNearby Credit. This generation costs €${amountEur.toFixed(2)}. Your balance is €${balance.toFixed(2)}.${
-            sellerVerified
+            sellerVerified || freeUnitsMonthly > 0
               ? ''
               : ' Verified sellers also receive a monthly free AI allowance.'
           }`,
@@ -572,7 +583,7 @@ export class AiImageService {
       }
     }
 
-    return { billingMethod, amountEur };
+    return { billingMethod, amountEur, freeUnitsMonthly };
   }
 
   private async readListingImageBuffer(storedUrl: string): Promise<Buffer> {

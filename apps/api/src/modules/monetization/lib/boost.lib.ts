@@ -55,7 +55,7 @@ export const DEFAULT_PLATFORM_PRICING: PlatformPricingConfig = {
     store_bundle_3: { amount: 7.99, enabled: true },
     buyer_statement: { amount: 0.99, enabled: true },
     priority_message: { amount: 0.49, enabled: false },
-    early_cashback_unlock: { amount: 0.99, enabled: false },
+    early_cashback_unlock: { amount: 0.99, enabled: true },
     seller_growth_pack: {
       amount: 6.99,
       enabled: true,
@@ -73,6 +73,9 @@ export const DEFAULT_PLATFORM_PRICING: PlatformPricingConfig = {
     category_slots_per_day: 4,
     store_homepage_slots_per_day: 6,
   },
+  aiMarketing: {
+    freeUnitsMonthly: 10,
+  },
 };
 
 export function parsePlatformPricing(value: unknown): PlatformPricingConfig {
@@ -80,6 +83,13 @@ export function parsePlatformPricing(value: unknown): PlatformPricingConfig {
     return DEFAULT_PLATFORM_PRICING;
   }
   const raw = value as Partial<PlatformPricingConfig>;
+  const freeUnitsRaw = raw.aiMarketing?.freeUnitsMonthly;
+  const freeUnitsMonthly =
+    typeof freeUnitsRaw === 'number' &&
+    Number.isFinite(freeUnitsRaw) &&
+    freeUnitsRaw >= 0
+      ? Math.min(500, Math.floor(freeUnitsRaw))
+      : DEFAULT_PLATFORM_PRICING.aiMarketing!.freeUnitsMonthly;
   return {
     currency: raw.currency ?? DEFAULT_PLATFORM_PRICING.currency,
     skus: {
@@ -88,6 +98,9 @@ export function parsePlatformPricing(value: unknown): PlatformPricingConfig {
     },
     promos: { ...DEFAULT_PLATFORM_PRICING.promos, ...(raw.promos ?? {}) },
     featured: { ...DEFAULT_PLATFORM_PRICING.featured, ...(raw.featured ?? {}) },
+    aiMarketing: {
+      freeUnitsMonthly,
+    },
   };
 }
 

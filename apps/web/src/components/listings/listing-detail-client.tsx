@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { Listing, ListingSummary } from '@community-marketplace/types';
 import {
@@ -28,6 +28,7 @@ import {
   SITE_PAGE_CLASS,
 } from '@/lib/page-layout';
 import { listingsService } from '@/services/listings.service';
+import { useAuth } from '@/hooks/use-auth';
 
 interface ListingDetailClientProps {
   id: string;
@@ -40,6 +41,7 @@ export function ListingDetailClient({
   initialListing,
   initialSimilar = [],
 }: ListingDetailClientProps) {
+  const { isAuthenticated } = useAuth();
   const [listing, setListing] = useState(initialListing);
   const [similar, setSimilar] = useState(initialSimilar);
   const [refreshError, setRefreshError] = useState<string | null>(null);
@@ -66,6 +68,14 @@ export function ListingDetailClient({
       setRefreshing(false);
     }
   }, [id]);
+
+  // SSR fetch is unauthenticated; refresh so reserve CTA sees the viewer.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    void listingsService.getById(id, { trackView: false }).then((next) => {
+      if (next) setListing(next);
+    });
+  }, [id, isAuthenticated]);
 
   const unavailableMessage = getListingUnavailableMessage(listing.status);
 
@@ -128,7 +138,11 @@ export function ListingDetailClient({
         </div>
 
         <aside className="order-2 min-w-0 lg:col-start-2 lg:row-start-1 lg:row-span-3">
-          <ListingDetailSidebar listing={listing} initialSaved={initialSaved} />
+          <ListingDetailSidebar
+            listing={listing}
+            initialSaved={initialSaved}
+            onListingChange={setListing}
+          />
         </aside>
 
         <div className={`order-3 space-y-6 lg:col-start-1 lg:row-start-2 ${LISTING_DETAIL_MAIN_CLASS}`}>

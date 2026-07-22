@@ -34,6 +34,7 @@ import { FastTrackFulfillmentService } from './services/fast-track-fulfillment.s
 import { GrowthPackFulfillmentService } from './services/growth-pack-fulfillment.service';
 import { MarketingHubAnalyticsService } from './services/marketing-hub-analytics.service';
 import { BuyerWalletService } from './services/buyer-wallet.service';
+import { WalletSpendService } from './services/wallet-spend.service';
 import { BuyerCashbackService } from './services/buyer-cashback.service';
 import { CashbackGrantsService } from './services/cashback-grants.service';
 import { CashbackJobsService } from './services/cashback-jobs.service';
@@ -42,8 +43,10 @@ import { PlatformFeeService } from './services/platform-fee.service';
 import { PlatformPurchaseService } from './services/platform-purchase.service';
 import { PlatformPurchaseReceiptService } from './services/platform-purchase-receipt.service';
 import { PlatformSettingsService } from './services/platform-settings.service';
+import { AiMarketingQuotaService } from './services/ai-marketing-quota.service';
 import { AdsSystemService } from './services/ads-system.service';
 import { DisplayAdsService } from './services/display-ads.service';
+import { DisplayAdCampaignService } from './services/display-ad-campaign.service';
 import { StoreSlotCatalogService } from './services/store-slot-catalog.service';
 import { StoreSlotFulfillmentService } from './services/store-slot-fulfillment.service';
 import { StatementsModule } from '../statements/statements.module';
@@ -80,13 +83,16 @@ import { AiMarketingModule } from '../ai-marketing/ai-marketing.module';
   providers: [
     MonetizationService,
     PlatformSettingsService,
+    AiMarketingQuotaService,
     AdsSystemService,
     DisplayAdsService,
+    DisplayAdCampaignService,
     MonetizationProductService,
     BuyerCashbackService,
     PlatformFeeService,
     CashbackGrantsService,
     BuyerWalletService,
+    WalletSpendService,
     CashbackJobsService,
     CashbackEventsListener,
     BoostCatalogService,
@@ -109,6 +115,7 @@ import { AiMarketingModule } from '../ai-marketing/ai-marketing.module';
   exports: [
     PlatformFeeService,
     PlatformSettingsService,
+    AiMarketingQuotaService,
     AdsSystemService,
     MonetizationService,
     PlatformPurchaseService,

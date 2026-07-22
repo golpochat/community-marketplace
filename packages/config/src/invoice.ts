@@ -228,6 +228,10 @@ export function splitFooterLegalSentences(text: string): string[] {
     .map((part) => (part.endsWith('.') ? part : `${part}.`));
 }
 
+/**
+ * Short footer legal line for enterprise PDFs.
+ * Full VAT / purpose notes stay in the document body note box.
+ */
 export function buildDocumentFooterLegal(
   kind:
     | 'platform_invoice'
@@ -237,44 +241,20 @@ export function buildDocumentFooterLegal(
     | 'statement',
   config: InvoiceCompanyConfig = getInvoiceCompanyConfig(),
 ): string {
-  const address = formatInvoiceAddress(config);
-  const base = `${config.legalName} · ${address}`;
-
+  const name = config.legalName;
   switch (kind) {
     case 'platform_invoice':
-      return [
-        base,
-        'This invoice is for platform services supplied by SellNearby. Listing sales between buyers and sellers are separate transactions.',
-        'This document was generated electronically and is valid without signature.',
-        buildPlatformInvoiceVatNote(config),
-      ].join(' ');
+      return `${name} · Platform services invoice · Generated electronically · Valid without signature.`;
     case 'platform_revenue_report':
-      return [
-        base,
-        'Internal platform revenue report for accountancy. Listing sales between buyers and sellers are separate transactions.',
-        'This document was generated electronically and is valid without signature.',
-        buildPlatformRevenueReportVatNote(config),
-      ].join(' ');
+      return `${name} · Internal platform revenue report · Generated electronically · Valid without signature.`;
     case 'buyer_receipt':
-      return [
-        base,
-        'Payment facilitation document only — not a VAT invoice for listing goods/services unless issued by the seller.',
-        'Generated electronically without signature.',
-      ].join(' ');
+      return `${name} · Payment facilitation document · Generated electronically · Valid without signature.`;
     case 'seller_sales_record':
-      return [
-        base,
-        'Sales summary for your marketplace listing. Seller remains responsible for supply and tax on the underlying sale.',
-        'Generated electronically without signature.',
-      ].join(' ');
+      return `${name} · Seller sales summary · Generated electronically · Valid without signature.`;
     case 'statement':
-      return [
-        base,
-        'Activity summary for the stated period. Refer to individual documents for full transaction detail.',
-        'Generated electronically without signature.',
-      ].join(' ');
+      return `${name} · Period activity summary · Generated electronically · Valid without signature.`;
     default:
-      return base;
+      return `${name} · Generated electronically · Valid without signature.`;
   }
 }
 

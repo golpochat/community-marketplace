@@ -39,6 +39,6 @@ import { ChatThreadsService } from './services/chat-threads.service';
     ChatSystemMessagesService,
     ChatRealtimeListener,
   ],
-  exports: [ChatService, ChatRealtimeService],
+  exports: [ChatService, ChatRealtimeService, ChatMessagesService],
 })
 export class ChatModule {}

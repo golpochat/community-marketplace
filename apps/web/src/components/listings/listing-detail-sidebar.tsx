@@ -14,6 +14,7 @@ import { MapPin } from 'lucide-react';
 
 import { ChatButton } from '@/components/listings/chat-button';
 import { BuyNowButton } from '@/components/listings/buy-now-button';
+import { ListingReserveCta } from '@/components/listings/listing-reserve-cta';
 import { BuyerProtectionBanner } from '@/components/listings/buyer-protection-banner';
 import { BoostedBadge } from '@/components/listings/boosted-badge';
 import { FeaturedBadge } from '@/components/listings/featured-badge';
@@ -34,6 +35,7 @@ interface ListingDetailSidebarProps {
   initialSaved?: boolean;
   compact?: boolean;
   hideActions?: boolean;
+  onListingChange?: (listing: Listing) => void;
 }
 
 function formatResponseTime(minutes?: number): string | undefined {
@@ -58,6 +60,7 @@ export function ListingDetailSidebar({
   initialSaved,
   compact = false,
   hideActions = false,
+  onListingChange,
 }: ListingDetailSidebarProps) {
   const { isAuthenticated } = useAuth();
   const listedAt = resolveListingListedAt(listing.createdAt, listing.activatedAt);
@@ -127,6 +130,10 @@ export function ListingDetailSidebar({
           {!hideActions && (
             <div className="space-y-3 border-t border-border pt-4">
               <BuyNowButton listing={listing} />
+              <ListingReserveCta
+                listing={listing}
+                onUpdated={(next) => onListingChange?.(next)}
+              />
               <ChatButton listingId={listing.id} sellerId={listing.sellerId} />
               <div className="flex flex-wrap items-center gap-2">
                 <SaveButton

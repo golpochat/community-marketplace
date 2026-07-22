@@ -22,6 +22,7 @@ import { BuyerSearchController } from './buyer-search.controller';
 import { BuyerReviewsService } from './buyer-reviews.service';
 import { BuyerTrustController } from './buyer-trust.controller';
 import { BuyerTrustService } from './buyer-trust.service';
+import { BuyerReservesController } from './buyer-reserves.controller';
 
 @Module({
   imports: [PaymentsModule, UsersModule, ListingsModule, ChatModule, NotificationsModule, SearchModule, ModerationModule],
@@ -37,6 +38,7 @@ import { BuyerTrustService } from './buyer-trust.service';
     BuyerFavoritesController,
     BuyerListingReportsController,
     BuyerChatController,
+    BuyerReservesController,
   ],
   providers: [BuyerReviewsService, BuyerTrustService],
 })

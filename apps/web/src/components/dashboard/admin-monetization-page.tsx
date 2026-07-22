@@ -2,11 +2,16 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
-import type { AdsSystemStatus, MonetizationSettings } from '@community-marketplace/types';
+import type {
+  AdsSystemStatus,
+  AiMarketingAccessStatus,
+  MonetizationSettings,
+} from '@community-marketplace/types';
 import { useAppFeedback } from '@community-marketplace/ui';
 import { DashboardCard } from '@community-marketplace/ui-dashboard';
 
 import { AdminMonetizationAdvertising } from '@/components/dashboard/admin-monetization-advertising';
+import { AdminMonetizationAiMarketing } from '@/components/dashboard/admin-monetization-ai-marketing';
 import { AdminMonetizationBuyerCashbackOverrides } from '@/components/dashboard/admin-monetization-buyer-cashback-overrides';
 import { AdminMonetizationFeeOverrides } from '@/components/dashboard/admin-monetization-fee-overrides';
 import { AdminMonetizationProductCatalog } from '@/components/dashboard/admin-monetization-product-catalog';
@@ -20,25 +25,29 @@ interface AdminMonetizationPageProps {
   role: AdminServiceRole;
 }
 
-type MonetizationTab = 'advertising' | 'fees' | 'catalog';
+type MonetizationTab = 'advertising' | 'ai-marketing' | 'fees' | 'catalog';
 type FeesSubTab = 'seller' | 'buyer';
 
 const MONETIZATION_TABS: { id: MonetizationTab; label: string }[] = [
   { id: 'advertising', label: 'Advertising' },
+  { id: 'ai-marketing', label: 'AI Marketing' },
   { id: 'fees', label: 'Platform fees & cashback' },
   { id: 'catalog', label: 'Listing promotions' },
 ];
 
 const PAGE_TITLES: Record<MonetizationTab, string> = {
   advertising: 'Advertising',
+  'ai-marketing': 'AI Marketing',
   fees: 'Platform fees & cashback',
   catalog: 'Listing promotions',
 };
 
 const PAGE_DESCRIPTIONS: Record<MonetizationTab, string> = {
-  advertising: 'Publish seller products, review Marketing Hub conversion, and check deploy flags.',
+  advertising: 'Publish boosts, featured placements, and display ads.',
+  'ai-marketing':
+    'AI Marketing Hub publish, free units, per-seller overrides, and usage analytics.',
   fees: 'Platform fee defaults, cashback settings, and per-user overrides.',
-  catalog: 'Manage listing boosts and featured placement products.',
+  catalog: 'Manage listing boost and featured placement SKUs.',
 };
 
 const FEES_SUB_TABS: { id: FeesSubTab; label: string }[] = [
@@ -50,6 +59,7 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
   const { success: feedbackSuccess, error: feedbackError } = useAppFeedback();
   const [settings, setSettings] = useState<MonetizationSettings | null>(null);
   const [adsSystem, setAdsSystem] = useState<AdsSystemStatus | null>(null);
+  const [aiAccess, setAiAccess] = useState<AiMarketingAccessStatus | null>(null);
   const [activeTab, setActiveTab] = useState<MonetizationTab>('advertising');
   const [feesSubTab, setFeesSubTab] = useState<FeesSubTab>('seller');
   const [loading, setLoading] = useState(true);
@@ -60,12 +70,14 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
     setLoading(true);
     setError(null);
     try {
-      const [data, adsStatus] = await Promise.all([
+      const [data, adsStatus, aiStatus] = await Promise.all([
         monetizationService.getMonetizationSettings(role),
         adsService.getAdsSystemStatus(role),
+        monetizationService.getAiMarketingAccessStatus(role),
       ]);
       setSettings(data);
       setAdsSystem(adsStatus);
+      setAiAccess(aiStatus);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load monetization settings');
     } finally {
@@ -129,15 +141,32 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
         displayAdsEnabled: settings.displayAdsEnabled,
         boostsEnabled: settings.boostsEnabled,
         featuredEnabled: settings.featuredEnabled,
-        aiMarketingEnabled: settings.aiMarketingEnabled,
       });
       setSettings(updated);
       const adsStatus = await adsService.getAdsSystemStatus(role);
       setAdsSystem(adsStatus);
-      feedbackSuccess(
-        'Settings saved',
-        'Advertising modules and AI Marketing Hub updated.',
-      );
+      feedbackSuccess('Settings saved', 'Advertising modules updated.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleSaveAiMarketing(event: React.FormEvent) {
+    event.preventDefault();
+    if (!settings) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await monetizationService.updateMonetizationSettings(role, {
+        aiMarketingEnabled: settings.aiMarketingEnabled,
+        aiMarketingFreeUnitsMonthly: settings.aiMarketingFreeUnitsMonthly,
+      });
+      setSettings(updated);
+      const aiStatus = await monetizationService.getAiMarketingAccessStatus(role);
+      setAiAccess(aiStatus);
+      feedbackSuccess('Settings saved', 'AI Marketing Hub settings updated.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings');
     } finally {
@@ -194,10 +223,27 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                 saving={saving}
                 onSettingsChange={setSettings}
                 onSave={handleSaveAdvertising}
+                onMessage={handlePanelMessage}
+                onError={handlePanelError}
                 onGoToCatalog={() => {
                   setActiveTab('catalog');
                   void refreshAdsSystemStatus();
                 }}
+                onGoToAiMarketing={() => setActiveTab('ai-marketing')}
+              />
+            )}
+
+            {activeTab === 'ai-marketing' && (
+              <AdminMonetizationAiMarketing
+                role={role}
+                settings={settings}
+                access={aiAccess}
+                saving={saving}
+                onSettingsChange={setSettings}
+                onSave={handleSaveAiMarketing}
+                onMessage={handlePanelMessage}
+                onError={handlePanelError}
+                onGoToAdvertising={() => setActiveTab('advertising')}
               />
             )}
 

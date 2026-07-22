@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { formatCurrency, formatDate } from '@community-marketplace/utils';
 import { DashboardCard } from '@community-marketplace/ui-dashboard';
+import type { MarketingHubAnalyticsResponse } from '@community-marketplace/types';
 
 import { DashboardPageShell } from '@/components/dashboard/async-resource';
 import {
@@ -156,6 +157,7 @@ export function AdminFinancePage({ role }: AdminFinancePageProps) {
   const [platformRevenue, setPlatformRevenue] = useState(0);
   const [activityVolume, setActivityVolume] = useState(0);
   const [currency, setCurrency] = useState('EUR');
+  const [hubAnalytics, setHubAnalytics] = useState<MarketingHubAnalyticsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<StatementExportFormat | null>(null);
@@ -176,19 +178,52 @@ export function AdminFinancePage({ role }: AdminFinancePageProps) {
     if (dateFrom > dateTo) {
       setError('Start date must be on or before end date');
       setRecords([]);
+      setHubAnalytics(null);
       setLoading(false);
       return;
     }
     setLoading(true);
     setError(null);
+    setHubAnalytics(null);
     try {
-      const data = await monetizationService.getFinanceReportSummary(role, filters);
+      const financePromise = monetizationService.getFinanceReportSummary(role, {
+        dateFrom,
+        dateTo,
+        categories: effectiveCategories,
+        search,
+      });
+      const hubPromise =
+        role === 'SUPER_ADMIN'
+          ? monetizationService.getMarketingHubAnalytics(role, { dateFrom, dateTo })
+          : Promise.resolve<MarketingHubAnalyticsResponse | null>(null);
+
+      const [financeSettled, hubSettled] = await Promise.allSettled([
+        financePromise,
+        hubPromise,
+      ]);
+
+      if (financeSettled.status === 'rejected') {
+        throw financeSettled.reason;
+      }
+
+      const data = financeSettled.value;
       setRecords(data.records);
       setPlatformRevenue(data.summary.totalRevenueGross);
       setActivityVolume(data.summary.activityVolumeGross);
       setCurrency(data.summary.currency);
+
+      if (role === 'SUPER_ADMIN') {
+        if (hubSettled.status === 'fulfilled') {
+          setHubAnalytics(hubSettled.value);
+        } else {
+          setHubAnalytics(null);
+        }
+      } else {
+        setHubAnalytics(null);
+      }
     } catch (err) {
       setRecords([]);
+      setHubAnalytics(null);
       setError(err instanceof Error ? err.message : 'Failed to load records');
     } finally {
       setLoading(false);
@@ -269,6 +304,42 @@ export function AdminFinancePage({ role }: AdminFinancePageProps) {
                 <span className="italic">(informational — not platform income)</span>
               </p>
             )}
+
+            {role === 'SUPER_ADMIN' && hubAnalytics ? (
+              (() => {
+                const aiCostEur = hubAnalytics.generations.amountEur;
+                const aiCurrency = hubAnalytics.currency;
+                const profitProxy = platformRevenue - aiCostEur;
+                const currencyMismatch = currency !== aiCurrency;
+
+                return (
+                  <div className="mt-2 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-[hsl(var(--dashboard-sidebar-bg))] p-3">
+                    <p className="text-xs font-medium text-[hsl(var(--dashboard-main-fg))]">
+                      Platform P&amp;L (proxy)
+                    </p>
+                    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                      <dt>Cost (AI overage)</dt>
+                      <dd className="text-right font-semibold tabular-nums text-[hsl(var(--dashboard-main-fg))]">
+                        {formatCurrency(aiCostEur, aiCurrency)}
+                      </dd>
+                      <dt>Sells</dt>
+                      <dd className="text-right font-semibold tabular-nums text-[hsl(var(--dashboard-main-fg))]">
+                        {formatCurrency(platformRevenue, currency)}
+                      </dd>
+                      <dt>Profit (proxy)</dt>
+                      <dd className="text-right font-semibold tabular-nums text-[hsl(var(--dashboard-main-fg))]">
+                        {formatCurrency(profitProxy, currency)}
+                      </dd>
+                    </dl>
+                    {currencyMismatch ? (
+                      <p className="mt-1 text-xs italic">
+                        Unconverted: AI cost is in {aiCurrency}, finance summary is {currency}.
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })()
+            ) : null}
           </div>
           <StatementExportButtons onDownload={handleDownload} downloading={downloading} />
         </div>

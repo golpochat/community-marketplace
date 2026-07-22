@@ -55,6 +55,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           category.description?.trim() ||
           `Browse ${category.name.toLowerCase()} from trusted local sellers in Ireland.`
         }
+        adsContext="category"
       />
       <div className="mx-auto max-w-6xl px-4 pb-12 md:px-6">
         <ContentHubLinks variant="compact" />

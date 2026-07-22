@@ -20,7 +20,12 @@ import type {
   ListingCondition,
   ListingDeliverySelection,
   ListingImage,
+  ListingReserveWindowHours,
   PricingPreview,
+} from "@community-marketplace/types";
+import {
+  LISTING_RESERVE_DEFAULT_WINDOW_HOURS,
+  LISTING_RESERVE_WINDOW_HOURS,
 } from "@community-marketplace/types";
 import {
   computeListingPricing,
@@ -74,6 +79,7 @@ export interface ListingFormData {
   categoryId: string;
   location: string;
   storeId?: string;
+  reserveWindowHours: ListingReserveWindowHours;
   images: File[];
   delivery: DeliveryFormState;
 }
@@ -93,6 +99,7 @@ const INITIAL: ListingFormData = {
   condition: "good",
   categoryId: "",
   location: "",
+  reserveWindowHours: LISTING_RESERVE_DEFAULT_WINDOW_HOURS,
   images: [],
   delivery: EMPTY_DELIVERY,
 };
@@ -102,7 +109,18 @@ function normalizeInitialData(
 ): Partial<ListingFormData> {
   if (!initial) return {};
   const salePrice = initial.salePrice ?? initial.price ?? "";
-  return { ...initial, salePrice, originalPrice: initial.originalPrice ?? "" };
+  const reserveWindowHours =
+    initial.reserveWindowHours === 4 ||
+    initial.reserveWindowHours === 12 ||
+    initial.reserveWindowHours === 24
+      ? initial.reserveWindowHours
+      : LISTING_RESERVE_DEFAULT_WINDOW_HOURS;
+  return {
+    ...initial,
+    salePrice,
+    originalPrice: initial.originalPrice ?? "",
+    reserveWindowHours,
+  };
 }
 
 interface ListingFormProps {
@@ -915,6 +933,32 @@ export function ListingForm({
             location={data.location}
             onApplySuggestedPrice={(price) => update({ salePrice: price })}
           />
+
+          <div className="border-t border-[hsl(var(--dashboard-sidebar-border))] pt-6">
+            <Label htmlFor="reserveWindowHours">Reserve hold length</Label>
+            <Select
+              id="reserveWindowHours"
+              value={String(data.reserveWindowHours)}
+              disabled={disabled || listingStatus === "reserved"}
+              onChange={(e) =>
+                update({
+                  reserveWindowHours: Number(
+                    e.target.value,
+                  ) as ListingReserveWindowHours,
+                })
+              }
+            >
+              {LISTING_RESERVE_WINDOW_HOURS.map((hours) => (
+                <option key={hours} value={hours}>
+                  {hours} hours after approval
+                </option>
+              ))}
+            </Select>
+            <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              How long a verified buyer can hold this item after you approve their
+              request. Reserve is free; they still pay via Buy now.
+            </p>
+          </div>
         </div>
       )}
 

@@ -5,6 +5,7 @@ import { EventsModule } from '../../events/events.module';
 import { JobsModule } from '../../jobs/jobs.module';
 import { LibsModule } from '../../libs/libs.module';
 import { DevUploadModule } from '../dev-upload/dev-upload.module';
+import { ChatModule } from '../chat/chat.module';
 import { ModerationModule } from '../moderation/moderation.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { SearchModule } from '../search/search.module';
@@ -25,6 +26,8 @@ import { ListingImagesService } from './services/listing-images.service';
 import { ListingImageProcessorService } from './services/listing-image-processor.service';
 import { ListingLifecycleService } from './services/listing-lifecycle.service';
 import { ListingExpiryJobService } from './services/listing-expiry.job';
+import { ListingReserveService } from './services/listing-reserve.service';
+import { ListingReserveExpiryJobService } from './services/listing-reserve-expiry.job';
 import { ListingR2StorageService } from './services/listing-r2-storage.service';
 import { ListingReviewService } from './services/listing-review.service';
 import { ListingReportsService } from './services/listing-reports.service';
@@ -53,6 +56,7 @@ import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
     UsersModule,
     NotificationsModule,
     DevUploadModule,
+    forwardRef(() => ChatModule),
     forwardRef(() => SellerVerificationModule),
     ModerationModule,
   ],
@@ -67,6 +71,8 @@ import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
     ListingAuditService,
     ListingLifecycleService,
     ListingExpiryJobService,
+    ListingReserveService,
+    ListingReserveExpiryJobService,
     ListingSearchService,
     SellerTrustService,
     StoresService,
@@ -92,6 +98,7 @@ import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
     ListingLifecycleService,
     ListingImagesService,
     ListingVisibilityService,
+    ListingReserveService,
     CategoriesService,
     DeliveryOptionsService,
     ListingDeliveryService,

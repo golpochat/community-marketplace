@@ -7,7 +7,12 @@ import type {
   ListingCondition,
   ListingDeliverySelection,
   ListingImage,
+  ListingReserveWindowHours,
   PricingPreview,
+} from "@community-marketplace/types";
+import {
+  LISTING_RESERVE_DEFAULT_WINDOW_HOURS,
+  LISTING_RESERVE_WINDOW_HOURS,
 } from "@community-marketplace/types";
 import { ListingFormSteps } from '@/components/seller/listing-form-steps';
 import { Button, Input, Label, Select, cn } from '@community-marketplace/ui';
@@ -113,6 +118,7 @@ export interface VehicleFormData {
   sellerNotes: string;
   salePrice: string;
   originalPrice: string;
+  reserveWindowHours: ListingReserveWindowHours;
   deliveryMode: VehicleDeliveryMode;
   customDeliveryLabel: string;
   feeDublin: string;
@@ -148,6 +154,7 @@ const INITIAL: VehicleFormData = {
   sellerNotes: "",
   salePrice: "",
   originalPrice: "",
+  reserveWindowHours: LISTING_RESERVE_DEFAULT_WINDOW_HOURS,
   deliveryMode: "collection",
   customDeliveryLabel: "",
   feeDublin: "",
@@ -1000,6 +1007,31 @@ export function VehicleListingForm({
             year={data.year || undefined}
             onApplySuggestedPrice={(price) => update({ salePrice: price })}
           />
+          <div>
+            <Label htmlFor="reserveWindowHours">Reserve hold length</Label>
+            <Select
+              id="reserveWindowHours"
+              value={String(data.reserveWindowHours)}
+              disabled={disabled || listingStatus === "reserved"}
+              onChange={(e) =>
+                update({
+                  reserveWindowHours: Number(
+                    e.target.value,
+                  ) as ListingReserveWindowHours,
+                })
+              }
+            >
+              {LISTING_RESERVE_WINDOW_HOURS.map((hours) => (
+                <option key={hours} value={hours}>
+                  {hours} hours after approval
+                </option>
+              ))}
+            </Select>
+            <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+              Free hold for a verified buyer after you approve. They still pay via
+              Buy now.
+            </p>
+          </div>
           <div>
             <Label htmlFor="location">Location *</Label>
             <Input

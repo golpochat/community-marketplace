@@ -2,7 +2,8 @@ import type PDFKit from 'pdfkit';
 
 import { PDF_MARGIN, PDF_PAGE } from './document-pdf.theme';
 
-export const PDF_FOOTER_RESERVE = 100;
+/** Slim enterprise footer: one legal line + page label. */
+export const PDF_FOOTER_RESERVE = 56;
 export const PDF_CONTENT_TOP = 56;
 
 export function contentBottomY(): number {

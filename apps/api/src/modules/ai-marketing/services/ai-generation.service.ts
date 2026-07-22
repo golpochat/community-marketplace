@@ -6,7 +6,6 @@ import {
 
 import {
   AI_MARKETING_DAILY_GENERATION_LIMIT,
-  AI_MARKETING_FREE_UNITS_MONTHLY,
   AI_MARKETING_LISTING_DAILY_GENERATION_LIMIT,
   AI_MARKETING_PROMPT_VERSION,
   AI_MARKETING_TASK_UNIT_COSTS,
@@ -25,6 +24,7 @@ import {
 } from '@community-marketplace/utils';
 
 import { PrismaService } from '../../../database/prisma.service';
+import { AiMarketingQuotaService } from '../../monetization/services/ai-marketing-quota.service';
 import { computeAiBilling } from '../lib/ai-billing.lib';
 import { AiContextAssemblerService } from './ai-context-assembler.service';
 import { AiCreditMeterService } from './ai-credit-meter.service';
@@ -41,6 +41,7 @@ export class AiGenerationService {
     private readonly safety: AiSafetyFilterService,
     private readonly meter: AiCreditMeterService,
     private readonly access: AiMarketingAccessService,
+    private readonly aiQuota: AiMarketingQuotaService,
   ) {}
 
   async getQuota(userId: string): Promise<AiMarketingQuotaSummary> {
@@ -53,6 +54,8 @@ export class AiGenerationService {
     }
 
     const sellerVerified = isSellerVerified(user.sellerStatus as SellerStatus);
+    const freeQuotaUnitsMonthly =
+      await this.aiQuota.getEffectiveFreeUnitsMonthly(userId);
     const [freeUnitsUsedThisMonth, dailyGenerationsUsed, walletBalance, access] =
       await Promise.all([
         this.meter.countFreeUnitsUsedThisMonth(userId),
@@ -61,17 +64,19 @@ export class AiGenerationService {
         this.access.getStatus(),
       ]);
 
-    const freeUnitsRemaining = sellerVerified
-      ? Math.max(0, AI_MARKETING_FREE_UNITS_MONTHLY - freeUnitsUsedThisMonth)
-      : 0;
+    const freeUnitsRemaining = Math.max(
+      0,
+      freeQuotaUnitsMonthly - freeUnitsUsedThisMonth,
+    );
 
     const providerReady = this.provider.isProviderReady();
     const enabled = access.effective && providerReady;
 
     return {
       sellerVerified,
-      freeQuotaUnitsMonthly: sellerVerified ? AI_MARKETING_FREE_UNITS_MONTHLY : 0,
-      freeUnitsUsedThisMonth: sellerVerified ? freeUnitsUsedThisMonth : 0,
+      freeQuotaUnitsMonthly,
+      freeUnitsUsedThisMonth:
+        freeQuotaUnitsMonthly > 0 ? freeUnitsUsedThisMonth : 0,
       freeUnitsRemaining,
       walletBalance,
       unitEurCost: AI_MARKETING_UNIT_EUR_COST,
@@ -106,6 +111,8 @@ export class AiGenerationService {
     }
 
     const sellerVerified = isSellerVerified(user.sellerStatus as SellerStatus);
+    const freeUnitsMonthly =
+      await this.aiQuota.getEffectiveFreeUnitsMonthly(userId);
     const dailyUsed = await this.meter.countGenerationsToday(userId);
     if (dailyUsed >= AI_MARKETING_DAILY_GENERATION_LIMIT) {
       throw new ForbiddenException(
@@ -135,6 +142,7 @@ export class AiGenerationService {
       sellerVerified,
       freeUnitsUsedThisMonth: freeUnitsUsed,
       creditUnits,
+      freeUnitsMonthly,
     });
 
     if (billingMethod === 'wallet' && amountEur > 0) {
@@ -142,7 +150,7 @@ export class AiGenerationService {
       if (balance < amountEur) {
         throw new ForbiddenException(
           `Not enough SellNearby Credit. This generation costs €${amountEur.toFixed(2)}. Your balance is €${balance.toFixed(2)}.${
-            sellerVerified
+            sellerVerified || freeUnitsMonthly > 0
               ? ''
               : ' Verified sellers also receive a monthly free AI allowance.'
           }`,
@@ -168,6 +176,7 @@ export class AiGenerationService {
         billingMethod,
         creditUnits,
         amountEur,
+        freeUnitsMonthly,
         inputSummary: this.contextAssembler.summarize(providerContext),
         outputText: text,
       });

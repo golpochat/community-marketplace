@@ -29,6 +29,7 @@ import { ListingDeliveryService } from "./listing-delivery.service";
 import { SellerTrustService } from "./seller-trust.service";
 import { SellerListingGateService } from "../../seller/services/seller-listing-gate.service";
 import { ListingAutoModerationService } from "./listing-auto-moderation.service";
+import { ListingReserveService } from "./listing-reserve.service";
 import { buildActiveFeaturedWhere } from "../../monetization/lib/featured.lib";
 import { computeListingPricing } from "../lib/listing-pricing.lib";
 import { CategoriesService } from "./categories.service";
@@ -63,6 +64,7 @@ export class ListingsCrudService {
     private readonly sellerTrust: SellerTrustService,
     private readonly sellerListingGate: SellerListingGateService,
     private readonly autoModeration: ListingAutoModerationService,
+    private readonly reserves: ListingReserveService,
   ) {}
 
   async findPublic(page = 1, limit = 20) {
@@ -157,14 +159,18 @@ export class ListingsCrudService {
     return { id: rows[0]!.id };
   }
 
-  async findById(id: string, incrementView = false): Promise<Listing> {
+  async findById(
+    id: string,
+    incrementView = false,
+    viewerId?: string,
+  ): Promise<Listing> {
     const row = await this.prisma.listing.findUnique({
       where: { id },
       include: listingInclude,
     });
     if (!row) throw new NotFoundException(`Listing ${id} not found`);
 
-    if (incrementView && row.status === "active") {
+    if (incrementView && (row.status === "active" || row.status === "reserved")) {
       await this.prisma.listing.update({
         where: { id },
         data: { viewCount: { increment: 1 } },
@@ -174,7 +180,7 @@ export class ListingsCrudService {
 
     const priceDroppedAt = await resolvePriceDroppedAt(this.prisma, id, row);
     const trustProfile = await this.sellerTrust.getProfile(row.sellerId);
-    return mapListingWithTrust(row, {
+    const listing = mapListingWithTrust(row, {
       priceDroppedAt,
       trust: {
         averageRating: trustProfile.averageRating,
@@ -184,6 +190,8 @@ export class ListingsCrudService {
         responseTimeMinutes: trustProfile.responseTimeMinutes,
       },
     });
+    listing.reservation = await this.reserves.getSummaryForListing(id, viewerId);
+    return listing;
   }
 
   async findSimilar(listingId: string, limit = 4): Promise<ListingSummary[]> {
@@ -341,6 +349,7 @@ export class ListingsCrudService {
         latitude: parsed.location.latitude,
         longitude: parsed.location.longitude,
         requiresFraudReview: fraud.requiresReview,
+        reserveWindowHours: parsed.reserveWindowHours ?? 12,
         ...(normalizedAttributes
           ? { attributes: normalizedAttributes as Prisma.InputJsonValue }
           : {}),
@@ -409,9 +418,11 @@ export class ListingsCrudService {
     }
 
     if (parsed.deliverySelections !== undefined) {
-      if (existing.status === "active") {
+      if (existing.status === "active" || existing.status === "reserved") {
         throw new BadRequestException(
-          "Use POST /seller/listings/:id/delivery/update to change delivery on active listings",
+          existing.status === "reserved"
+            ? "Cannot change delivery while the listing is reserved"
+            : "Use POST /seller/listings/:id/delivery/update to change delivery on active listings",
         );
       }
     }
@@ -421,9 +432,24 @@ export class ListingsCrudService {
       parsed.originalPrice !== undefined ||
       parsed.salePrice !== undefined;
 
-    if (pricingFieldsTouched && existing.status === "active") {
+    if (pricingFieldsTouched && (existing.status === "active" || existing.status === "reserved")) {
       throw new BadRequestException(
-        "Use POST /seller/listings/:id/pricing/update to change prices on active listings",
+        existing.status === "reserved"
+          ? "Cannot change price while the listing is reserved"
+          : "Use POST /seller/listings/:id/pricing/update to change prices on active listings",
+      );
+    }
+
+    if (
+      parsed.reserveWindowHours !== undefined &&
+      (existing.status === "reserved" ||
+        (await this.prisma.listingReserve.findFirst({
+          where: { listingId, status: { in: ["pending_seller", "active"] } },
+          select: { id: true },
+        })))
+    ) {
+      throw new BadRequestException(
+        "Cannot change the reserve window while a reservation is pending or active",
       );
     }
 
@@ -511,6 +537,9 @@ export class ListingsCrudService {
           : {}),
         ...(parsed.condition !== undefined
           ? { condition: parsed.condition }
+          : {}),
+        ...(parsed.reserveWindowHours !== undefined
+          ? { reserveWindowHours: parsed.reserveWindowHours }
           : {}),
         ...(parsed.location
           ? {

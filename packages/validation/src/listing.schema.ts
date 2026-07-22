@@ -70,6 +70,7 @@ export const listingStatusSchema = z.enum([
   "draft",
   "pending_review",
   "active",
+  "reserved",
   "paused",
   "expired",
   "sold",
@@ -216,6 +217,7 @@ export const createListingSchema = z.object({
     .optional(),
   attributes: z.record(z.string(), z.unknown()).optional(),
   status: z.enum(["draft", "active"]).optional().default("draft"),
+  reserveWindowHours: z.union([z.literal(4), z.literal(12), z.literal(24)]).optional(),
 });
 
 export const updateListingSchema = createListingSchema.partial().extend({

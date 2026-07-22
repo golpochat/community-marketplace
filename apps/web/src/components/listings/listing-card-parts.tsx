@@ -110,6 +110,12 @@ export function ListingCardImage({
         className="transition-transform duration-200 group-hover:scale-[1.02]"
       />
 
+      {listing.status === 'reserved' && (
+        <ListingBadge tone="reserved" className="absolute left-2 top-2 z-10">
+          Reserved
+        </ListingBadge>
+      )}
+
       {!isFree && (
         <SaleBadgeOverlay
           originalPrice={listing.originalPrice}

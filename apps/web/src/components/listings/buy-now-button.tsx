@@ -13,7 +13,7 @@ import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 import { paymentsService } from '@/services/payments.service';
 
 interface BuyNowButtonProps {
-  listing: Pick<Listing, 'id' | 'status' | 'sellerId'>;
+  listing: Pick<Listing, 'id' | 'status' | 'sellerId' | 'reservation'>;
   className?: string;
 }
 
@@ -59,7 +59,11 @@ export function BuyNowButton({ listing, className }: BuyNowButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (listing.status !== 'active') return null;
+  const isReservingBuyer = Boolean(listing.reservation?.iAmReservingBuyer);
+  const canBuy =
+    listing.status === 'active' || (listing.status === 'reserved' && isReservingBuyer);
+
+  if (!canBuy) return null;
   if (isAuthenticated && user?.id === listing.sellerId) return null;
 
   if (isAuthenticated && user?.role && !canActAsBuyer(user.role)) {

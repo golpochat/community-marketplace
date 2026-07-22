@@ -35,6 +35,7 @@ export const PLATFORM_PURCHASE_LABELS: Record<PlatformPurchaseType, string> = {
   ai_credit_5: 'AI Credits (€5)',
   ai_credit_10: 'AI Credits (€10)',
   featured_store: 'Featured storefront',
+  early_cashback_unlock: 'Early cashback unlock',
 };
 
 export function describePlatformPurchase(
@@ -85,6 +86,8 @@ export function describePlatformPurchase(
     }
     case 'featured_store':
       return 'Homepage featured storefront (24h)';
+    case 'early_cashback_unlock':
+      return 'Unlock pending SellNearby Credit before the cooling period ends';
     default:
       return PLATFORM_PURCHASE_LABELS[type];
   }

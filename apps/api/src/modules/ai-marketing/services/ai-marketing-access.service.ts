@@ -3,14 +3,9 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 
-import { PlatformSettingsService } from '../../monetization/services/platform-settings.service';
+import type { AiMarketingAccessStatus } from '@community-marketplace/types';
 
-export interface AiMarketingAccessStatus {
-  deployEnabled: boolean;
-  published: boolean;
-  /** True when sellers may use the hub (env allow + admin published). */
-  effective: boolean;
-}
+import { PlatformSettingsService } from '../../monetization/services/platform-settings.service';
 
 @Injectable()
 export class AiMarketingAccessService {

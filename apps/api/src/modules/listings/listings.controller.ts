@@ -1,5 +1,7 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { ListingsService } from './listings.service';
 
@@ -91,8 +93,9 @@ export class ListingsController {
   findOne(
     @Param('id') id: string,
     @Query('trackView') trackView?: string,
+    @CurrentUser() user?: AuthenticatedUser,
   ) {
-    return this.listingsService.findById(id, trackView !== 'false');
+    return this.listingsService.findById(id, trackView !== 'false', user?.id);
   }
 
   @Public()

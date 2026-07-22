@@ -12,6 +12,10 @@ import { PERMISSIONS } from '@community-marketplace/types';
 import {
   buyerCashbackOverrideSchema,
   cashbackGrantsAdminFiltersSchema,
+  displayAdCampaignCreateSchema,
+  displayAdCampaignStatusActionSchema,
+  displayAdCampaignUpdateSchema,
+  displayAdCreativeUploadUrlSchema,
   marketingHubAnalyticsQuerySchema,
   monetizationProductUpdateSchema,
   monetizationProductUpsertSchema,
@@ -19,6 +23,7 @@ import {
   platformPurchasesAdminFiltersSchema,
   platformSettingsUpdateSchema,
   sellerFeeOverrideSchema,
+  sellerAiFreeUnitsOverrideSchema,
   walletTransactionsAdminFiltersSchema,
 } from '@community-marketplace/validation';
 
@@ -45,6 +50,12 @@ export class AdminMonetizationController {
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('ai-marketing-access')
+  getAiMarketingAccessStatus() {
+    return this.monetization.getAiMarketingAccessStatus();
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
   @Patch('settings')
   updateSettings(@Body() body: unknown) {
     const dto = platformSettingsUpdateSchema.parse(body);
@@ -65,6 +76,22 @@ export class AdminMonetizationController {
   @Get('seller-fee-overrides')
   listSellerFeeOverrides() {
     return this.monetization.listSellerFeeOverrides();
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Post('seller-ai-free-units-override')
+  setSellerAiFreeUnitsOverride(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: unknown,
+  ) {
+    const dto = sellerAiFreeUnitsOverrideSchema.parse(body);
+    return this.monetization.setSellerAiFreeUnitsOverride(user.id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('seller-ai-free-units-overrides')
+  listSellerAiFreeUnitsOverrides() {
+    return this.monetization.listSellerAiFreeUnitsOverrides();
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
@@ -133,6 +160,52 @@ export class AdminMonetizationController {
       dateTo: query.dateTo,
     });
     return this.monetization.getMarketingHubAnalytics(filters);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('display-campaigns')
+  listDisplayAdCampaigns() {
+    return this.monetization.listDisplayAdCampaigns();
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Post('display-campaigns/upload-url')
+  createDisplayAdCreativeUploadUrl(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: unknown,
+  ) {
+    const dto = displayAdCreativeUploadUrlSchema.parse(body);
+    return this.monetization.createDisplayAdCreativeUploadUrl(user.id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Post('display-campaigns')
+  createDisplayAdCampaign(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() body: unknown,
+  ) {
+    const dto = displayAdCampaignCreateSchema.parse(body);
+    return this.monetization.createDisplayAdCampaign(user.id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('display-campaigns/:id')
+  getDisplayAdCampaign(@Param('id') id: string) {
+    return this.monetization.getDisplayAdCampaign(id);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Patch('display-campaigns/:id')
+  updateDisplayAdCampaign(@Param('id') id: string, @Body() body: unknown) {
+    const dto = displayAdCampaignUpdateSchema.parse(body);
+    return this.monetization.updateDisplayAdCampaign(id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Post('display-campaigns/:id/status')
+  applyDisplayAdCampaignStatus(@Param('id') id: string, @Body() body: unknown) {
+    const dto = displayAdCampaignStatusActionSchema.parse(body);
+    return this.monetization.applyDisplayAdCampaignStatus(id, dto.action);
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)

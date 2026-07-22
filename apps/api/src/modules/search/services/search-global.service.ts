@@ -16,7 +16,7 @@ export class SearchGlobalService {
 
     const listingFilter = includeRestricted
       ? undefined
-      : { filter: 'status = active AND sellerStatus = active' };
+      : { filter: 'status IN [active, reserved] AND sellerStatus = active' };
 
     const [listingsResult, categoriesResult, usersResult] = await Promise.all([
       this.meili.search('listings', input.q, {
