@@ -1,7 +1,7 @@
 /**
  * Hard-navigate after auth so the address bar updates immediately and dashboard
  * middleware sees cookies on a full request. Soft `router.push` leaves users on
- * /auth/login until the destination RSC finishes compiling.
+ * /auth/login until the destination RSC finishes compiling (especially slow in `pnpm dev`).
  */
 export function navigateAfterAuth(path: string | null | undefined): void {
   const normalized = typeof path === 'string' ? path.trim() : '';
@@ -10,5 +10,6 @@ export function navigateAfterAuth(path: string | null | undefined): void {
       ? normalized
       : `/${normalized}`
     : '/account';
-  window.location.assign(target);
+  // replace avoids keeping /auth/login in history after a successful sign-in.
+  window.location.replace(target);
 }

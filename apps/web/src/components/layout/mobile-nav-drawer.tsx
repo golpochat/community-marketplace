@@ -48,6 +48,9 @@ interface MobileNavDrawerProps {
   navLinks: UserNavLinks | null;
   menuItems: UserMenuItem[];
   sellHref: string;
+  /** Guest Sell link / member List an item CTA. Hidden for admin roles. */
+  showSellCta?: boolean;
+  sellCtaLabel?: string;
   onSignOut: () => void | Promise<void>;
   hideSignIn?: boolean;
   hideJoin?: boolean;
@@ -61,6 +64,8 @@ export function MobileNavDrawer({
   navLinks,
   menuItems,
   sellHref,
+  showSellCta = true,
+  sellCtaLabel = 'Sell',
   onSignOut,
   hideSignIn = false,
   hideJoin = false,
@@ -143,14 +148,16 @@ export function MobileNavDrawer({
               <ShoppingBag className="h-5 w-5 text-primary" aria-hidden />
               Buy
             </Link>
-            <Link
-              href={sellHref}
-              className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-foreground hover:bg-muted"
-              onClick={onClose}
-            >
-              <Store className="h-5 w-5 text-primary" aria-hidden />
-              Sell
-            </Link>
+            {showSellCta && !isAuthenticated ? (
+              <Link
+                href={sellHref}
+                className="flex items-center gap-3 rounded-lg px-3 py-3 text-[15px] font-medium text-foreground hover:bg-muted"
+                onClick={onClose}
+              >
+                <Store className="h-5 w-5 text-primary" aria-hidden />
+                Sell
+              </Link>
+            ) : null}
           </div>
 
           <div className="my-4 border-t border-border" />
@@ -202,13 +209,13 @@ export function MobileNavDrawer({
           )}
         </nav>
 
-        {isAuthenticated && (
+        {isAuthenticated && showSellCta ? (
           <div className="border-t border-border p-4">
             <Link href={sellHref} onClick={onClose}>
-              <Button className="h-11 w-full text-[15px] font-semibold">Sell an item</Button>
+              <Button className="h-11 w-full text-[15px] font-semibold">{sellCtaLabel}</Button>
             </Link>
           </div>
-        )}
+        ) : null}
       </div>
     </div>,
     document.body,

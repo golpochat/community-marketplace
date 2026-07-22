@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { Button, cn } from "@community-marketplace/ui";
+import { cn } from "@community-marketplace/ui";
 import { Menu } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
@@ -21,27 +21,9 @@ import { authService } from "@/services/auth.service";
 const NAV_LINK_CLASS =
   "relative rounded-lg px-3 py-2 text-[15px] font-medium text-foreground/75 transition-colors duration-150 hover:text-primary";
 
-function getSellHref(isAuthenticated: boolean, sellItem?: string): string {
-  const target = sellItem ?? WEB_APP_ROUTES.accountSelling;
-  if (isAuthenticated) return target;
-  return WEB_APP_ROUTES.login;
-}
-
 function isBuyRoute(pathname: string): boolean {
   return (
     pathname === WEB_APP_ROUTES.listings || pathname.startsWith("/listings/")
-  );
-}
-
-function isSellRoute(pathname: string): boolean {
-  return (
-    pathname.startsWith("/account/selling") ||
-    pathname.startsWith("/account/storefront") ||
-    pathname.startsWith("/account/marketing") ||
-    pathname.startsWith("/account/listings") ||
-    pathname.startsWith("/account/verification") ||
-    pathname.startsWith("/account/earnings") ||
-    pathname.startsWith("/seller")
   );
 }
 
@@ -74,7 +56,11 @@ export function Header() {
   const { user, session, isAuthenticated, clearUser, dashboardPath } =
     useAuth();
   const { profile } = useUserProfile();
-  const hasAuthState = isAuthenticated || !!user;
+  const onLoginPage = isAuthLoginRoute(pathname);
+  const onRegisterPage = isAuthRegisterRoute(pathname);
+  const onAuthPage = onLoginPage || onRegisterPage;
+  // Keep guest chrome on auth routes even after setAuth, until hard navigation leaves.
+  const hasAuthState = !onAuthPage && (isAuthenticated || !!user);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks =
@@ -95,11 +81,13 @@ export function Header() {
         ? "/admin/notifications"
         : WEB_APP_ROUTES.accountNotifications;
 
-  const sellHref = getSellHref(hasAuthState, navLinks?.sellItem);
+  const guestSellHref = WEB_APP_ROUTES.accountSelling;
+  const memberListHref = navLinks?.sellItem ?? WEB_APP_ROUTES.accountListingsCreate;
+  const showMemberListCta =
+    hasAuthState &&
+    !!user &&
+    (user.role === "MEMBER" || user.role === "BUYER" || user.role === "SELLER");
   const buyActive = isBuyRoute(pathname);
-  const sellActive = isSellRoute(pathname);
-  const onLoginPage = isAuthLoginRoute(pathname);
-  const onRegisterPage = isAuthRegisterRoute(pathname);
 
   async function handleSignOut() {
     try {
@@ -133,25 +121,17 @@ export function Header() {
               <HeaderNavLink href={WEB_APP_ROUTES.listings} active={buyActive}>
                 Buy
               </HeaderNavLink>
-              {!hasAuthState && (
-                <HeaderNavLink href={sellHref} active={sellActive}>
+              {!hasAuthState ? (
+                <HeaderNavLink href={guestSellHref} active={false}>
                   Sell
                 </HeaderNavLink>
-              )}
+              ) : null}
             </nav>
           </div>
 
           <div className="hidden shrink-0 items-center gap-3 md:flex">
             {hasAuthState && user && navLinks && menuUser ? (
               <>
-                <Link
-                  href={sellHref}
-                  aria-current={sellActive ? "page" : undefined}
-                >
-                  <Button size="default" className="shadow-brand-sm">
-                    Sell
-                  </Button>
-                </Link>
                 {user.role ? (
                   <NotificationBell href={notificationsHref} variant="site" />
                 ) : null}
@@ -198,7 +178,9 @@ export function Header() {
         userDisplayName={user?.displayName ?? user?.email ?? undefined}
         navLinks={navLinks}
         menuItems={menuItems}
-        sellHref={sellHref}
+        sellHref={hasAuthState ? memberListHref : guestSellHref}
+        showSellCta={!hasAuthState || showMemberListCta}
+        sellCtaLabel={showMemberListCta ? "List an item" : "Sell"}
         onSignOut={handleSignOut}
         hideSignIn={onLoginPage}
         hideJoin={onRegisterPage}

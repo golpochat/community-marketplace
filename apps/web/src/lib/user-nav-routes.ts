@@ -106,6 +106,7 @@ export function getUserMenuItems(role: RoleCodeValue, dashboardPath: string): Us
   if (role === 'MEMBER' || role === 'BUYER' || role === 'SELLER') {
     return [
       { href: dashboardPath, label: 'Account home', icon: 'dashboard' },
+      { href: WEB_APP_ROUTES.accountListingsCreate, label: 'List an item', icon: 'plus' },
       { href: WEB_APP_ROUTES.accountPurchases, label: 'Purchases', icon: 'package' },
       { href: WEB_APP_ROUTES.accountSaved, label: 'Saved items', icon: 'heart' },
       { href: WEB_APP_ROUTES.accountMessages, label: 'Messages', icon: 'messages' },
