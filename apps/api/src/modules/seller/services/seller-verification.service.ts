@@ -352,6 +352,16 @@ export class SellerVerificationService {
       status: requestStatus,
       ...(track === 'fast_track' ? { priority: true } : {}),
       ...(track === 'standard' ? { priority: false } : {}),
+      // Rejected queue is staff decisions only — hide auto-superseded siblings
+      // (runtime: "Superseded by …"; migration cleanup: "Superseded: …").
+      ...(view === 'rejected'
+        ? {
+            OR: [
+              { rejectionReason: null },
+              { NOT: { rejectionReason: { startsWith: 'Superseded' } } },
+            ],
+          }
+        : {}),
       user: {
         primaryRole: { code: { in: ['SELLER', 'MEMBER'] } },
         ...searchFilter,

@@ -141,13 +141,17 @@ export function AdminSellerVerificationPage({
 
   const rows = useMemo(() => {
     return data.map((item) => {
+      const rowKey = item.requestId ?? item.userId;
       const statusBadge =
-        item.requestStatus && activeView === 'pending'
+        item.requestStatus &&
+        (activeView === 'pending' ||
+          activeView === 'approved' ||
+          activeView === 'rejected')
           ? item.requestStatus
           : item.sellerStatus;
 
       return [
-        <div key={`${item.userId}-name`} className="min-w-0">
+        <div key={`${rowKey}-name`} className="min-w-0">
           <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">{item.sellerName ?? '—'}</p>
           <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">{item.email}</p>
           {item.priority && (
@@ -157,16 +161,16 @@ export function AdminSellerVerificationPage({
           )}
         </div>,
         item.submittedAt ? formatDateTime(item.submittedAt) : '—',
-        <SellerStatusBadge key={`${item.userId}-status`} status={statusBadge} />,
+        <SellerStatusBadge key={`${rowKey}-status`} status={statusBadge} />,
         activeView === 'approved' && item.verificationCompletedAt
           ? formatDateTime(item.verificationCompletedAt)
           : activeView === 'rejected'
             ? (
-                <TruncatedTableCell key={`${item.userId}-reason`} text={item.rejectionReason ?? '—'} />
+                <TruncatedTableCell key={`${rowKey}-reason`} text={item.rejectionReason ?? '—'} />
               )
             : activeView === 'pending'
               ? (
-                  <div key={`${item.userId}-track`} className="space-y-0.5 text-xs">
+                  <div key={`${rowKey}-track`} className="space-y-0.5 text-xs">
                     <span
                       className={
                         item.priority
@@ -190,7 +194,7 @@ export function AdminSellerVerificationPage({
                   </div>
                 )
               : '—',
-        <div key={`${item.userId}-actions`} className="flex flex-wrap gap-2">
+        <div key={`${rowKey}-actions`} className="flex flex-wrap gap-2">
           <IconActionGroup>
             <IconActionButton
               icon="eye"
