@@ -1,6 +1,6 @@
 # Notification Management (Admin)
 
-> **Screen:** `/dashboard/notifications` · **Permission:** `manage_notifications`
+> **Screen:** `/admin/notifications` · `/super-admin/notifications` · **Permission:** `manage_notifications`
 
 ## Capabilities
 

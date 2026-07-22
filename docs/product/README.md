@@ -16,9 +16,9 @@
 | [functional-requirements.md](./functional-requirements.md) | Feature requirements by domain |
 | [non-functional-requirements.md](./non-functional-requirements.md) | Performance, security, scalability targets |
 | [user-stories.md](./user-stories.md) | Stories by persona (buyer, seller, admin) |
-| [roadmap.md](./roadmap.md) | Phased delivery plan |
-| **[storefront-model.md](./storefront-model.md)** | **Account vs storefront** — listing limits, verification, paid store slots |
-| **[ai-marketing-hub.md](./ai-marketing-hub.md)** | **AI Marketing Hub** — Phases 0–3 live; seller-visible credits (€0.05/unit after free quota); price/posting/campaign free; video & credit packs deferred |
+| [roadmap.md](./roadmap.md) | Phased delivery plan (synced with shipped surface) |
+| **[storefront-model.md](./storefront-model.md)** | **Account vs storefront** — implemented v1: listing limits, verification, paid store slots |
+| **[ai-marketing-hub.md](./ai-marketing-hub.md)** | **AI Marketing Hub** — Phases 0–4 pilot-ready; credit packs + featured storefront live; video & forecast deferred |
 | **[listing-reserve.md](./listing-reserve.md)** | **Listing reserve** — free hold for ID-verified members after seller approval; seller sets 4/12/24h; Phase 2 polish |
 | **[display-ads-admin-campaigns.md](./display-ads-admin-campaigns.md)** | **Brand display ads** — admin-run campaigns into homepage, browse sidebar, and search/browse inline |
 

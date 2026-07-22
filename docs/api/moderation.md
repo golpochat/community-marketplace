@@ -309,5 +309,6 @@ Canonical Prisma schema: `apps/api/prisma/schema.prisma`
 
 | Role | Path |
 |------|------|
-| ADMIN | `/admin/dashboard/moderation` |
-| SUPER_ADMIN | `/super-admin/dashboard/moderation` |
+| ADMIN | `/admin/moderation` |
+| SUPER_ADMIN | `/super-admin/moderation` |
+| SUPER_ADMIN | `/super-admin/moderation` |

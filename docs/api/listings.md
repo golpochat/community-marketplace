@@ -31,7 +31,7 @@ Enterprise listings module backed by PostgreSQL (Prisma), Cloudflare R2 media up
 | `currency` | string | ISO 4217 (3 chars) |
 | `categoryId` | UUID | FK → Category |
 | `condition` | enum | `new`, `like_new`, `good`, `fair`, `poor` |
-| `status` | enum | `draft`, `active`, `sold`, `archived`, `banned` |
+| `status` | enum | `draft`, `pending_review`, `active`, `reserved`, `paused`, `expired`, `sold`, `ended`, `removed`, `rejected`, `flagged`, `under_investigation`, `suspended_seller` |
 | `location` | object | `{ label, latitude, longitude }` |
 | `viewCount` | int | Analytics |
 | `favoriteCount` | int | Denormalized counter |
@@ -70,7 +70,7 @@ Enterprise listings module backed by PostgreSQL (Prisma), Cloudflare R2 media up
 |--------|------|------------|-------------|
 | `GET` | `/seller/listings` | `view_listings` | My listings (optional `?status=`) |
 | `GET` | `/seller/listings/sold` | `view_listings` | My sold items |
-| `GET` | `/seller/listings/archived` | `view_listings` | My archived items |
+| `GET` | `/seller/listings/ended` | `view_listings` | My ended / archived items (status `ended`) |
 | `POST` | `/seller/listings` | `create_listing` | Create listing |
 | `PATCH` | `/seller/listings/:id` | `edit_listing` | Update own listing |
 | `DELETE` | `/seller/listings/:id` | `delete_listing` | Delete own listing |
@@ -196,13 +196,14 @@ Feeds are cached in **Redis** (60s TTL) with in-memory fallback when `REDIS_URL`
 
 | Transition | Who |
 |------------|-----|
+| `draft` → `pending_review` | Seller submit |
+| `pending_review` → `active` | Admin approve (or auto-publish path) |
 | `active` → `sold` | Seller (own) or Admin |
-| `active` → `archived` | Seller or Admin |
-| `archived` → `active` | Seller or Admin |
-| `active` → `banned` | Admin (`ban_listing`) |
-| `banned` → `active` | Admin (`ban_listing`) |
+| `active` → `paused` / `ended` | Seller pause / end (archive ≡ `ended`) |
+| `paused` → `active` | Seller resume |
+| `active` → `removed` | Admin remove / ban path (`bannedAt`) |
 
-All transitions write to `listing_audit_logs`.
+All transitions write to listing audit logs. There is **no** Prisma status value `archived` or `banned`.
 
 ---
 

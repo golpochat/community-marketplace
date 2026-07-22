@@ -6,7 +6,7 @@
 
 - Listing CRUD with categories, conditions, pricing
 - Multi-image upload (R2 presigned URLs, max 10 images)
-- Lifecycle: draft → active → sold → archived
+- Lifecycle: `draft` → `pending_review` → `active`; plus `reserved`, `paused`, `expired`, `sold`, `ended`, `removed`, `rejected`, `flagged`, `under_investigation`, `suspended_seller`. Archive maps to **`ended`**; admin ban uses **`removed`** / `bannedAt` (not `status: banned`).
 - Favorites, feeds, search integration
 - Buyer/seller reports (delegates to moderation)
 - Admin ban/unban with `moderationHiddenAt`

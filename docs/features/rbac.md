@@ -4,13 +4,14 @@
 
 ## Functional requirements
 
-- Role codes: `BUYER`, `SELLER`, `ADMIN`, `SUPER_ADMIN`
-- Granular permissions (e.g. `view_users`, `suspend_user`, `manage_roles`)
+- Role codes: `SUPER_ADMIN`, `ADMIN`, `MEMBER`, `SELLER`, `BUYER` (+ custom admin personas e.g. `ACCOUNTS_ADMIN`)
+- Default registration role: **`MEMBER`** (can satisfy `@RequireRole('BUYER'|'SELLER')` via capability mapping)
+- Granular permissions (e.g. `view_users`, `suspend_user`, `manage_roles`, `view_disputes`, `resolve_disputes`, `view_fraud`, `manage_fraud`)
 - Role → permission matrix stored in PostgreSQL
 - Per-user permission overrides (grant/deny)
 - Effective permission resolution at request time
 - `SUPER_ADMIN` bypasses all permission checks
-- Admin UI gated by effective permissions
+- Admin UI in `apps/web` gated by effective permissions
 
 ## Non-functional requirements
 

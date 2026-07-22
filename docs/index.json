@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-07-08T23:02:26.462Z",
-  "docCount": 90,
+  "generatedAt": "2026-07-22T16:35:42.985Z",
+  "docCount": 96,
   "categories": {
     "admin-panel.md": {
       "label": "admin-panel.md",
@@ -19,42 +19,42 @@
         {
           "path": "admin/listings-moderation.md",
           "title": "Listings & Moderation (Admin)",
-          "updatedAt": "2026-06-27"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "admin/notifications.md",
           "title": "Notification Management (Admin)",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "admin/payments.md",
           "title": "Payments & Refunds (Admin)",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "admin/README.md",
           "title": "Admin Panel — Operator Guide",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "admin/search.md",
           "title": "Search Management (Admin)",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "admin/seller-verification.md",
           "title": "Seller Verification (Admin)",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-15"
         },
         {
           "path": "admin/settings.md",
           "title": "System Settings (Super Admin)",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "admin/user-management.md",
           "title": "User Management (Admin)",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         }
       ]
     },
@@ -64,52 +64,52 @@
         {
           "path": "api/admin.md",
           "title": "Admin & Super-Admin API",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "api/auth.md",
           "title": "Auth API",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "api/chat.md",
           "title": "Chat API",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "api/listings.md",
           "title": "Listings API",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "api/moderation.md",
           "title": "Moderation API",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "api/notifications.md",
           "title": "Notifications API",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "api/payments.md",
           "title": "Payments API",
-          "updatedAt": "2026-06-30"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "api/README.md",
           "title": "API Documentation",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "api/search.md",
           "title": "Search API",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "api/users.md",
           "title": "Users API",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         }
       ]
     },
@@ -119,17 +119,17 @@
         {
           "path": "architecture/data-flow.md",
           "title": "Data Flow Diagrams",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "architecture/deployment-architecture.md",
           "title": "Deployment Architecture",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "architecture/domain-modules.md",
           "title": "Domain Modules",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "architecture/event-driven.md",
@@ -139,12 +139,12 @@
         {
           "path": "architecture/modular-monolith.md",
           "title": "Modular Monolith Architecture",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "architecture/module-boundaries.md",
           "title": "Module Boundaries",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "architecture/README.md",
@@ -159,7 +159,7 @@
         {
           "path": "architecture/system-overview.md",
           "title": "System Overview",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         }
       ]
     },
@@ -169,17 +169,17 @@
         {
           "path": "db/erd.md",
           "title": "Entity Relationship Diagram",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "db/migrations/README.md",
           "title": "Database Migrations",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "db/README.md",
           "title": "Database Documentation",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         }
       ]
     },
@@ -189,7 +189,7 @@
         {
           "path": "dev-credentials.md",
           "title": "Development Credentials",
-          "updatedAt": "2026-07-06"
+          "updatedAt": "2026-07-22"
         }
       ]
     },
@@ -199,12 +199,12 @@
         {
           "path": "features/admin-panel.md",
           "title": "Admin Panel",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "features/authentication.md",
           "title": "Authentication System",
-          "updatedAt": "2026-06-28"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "features/chat.md",
@@ -214,7 +214,7 @@
         {
           "path": "features/listings.md",
           "title": "Listings Module",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "features/moderation.md",
@@ -224,7 +224,7 @@
         {
           "path": "features/notifications.md",
           "title": "Notifications Module",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "features/payments.md",
@@ -234,17 +234,17 @@
         {
           "path": "features/rbac.md",
           "title": "RBAC System",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "features/README.md",
           "title": "Feature Specifications",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "features/search.md",
           "title": "Search Module",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "features/users.md",
@@ -259,17 +259,17 @@
         {
           "path": "frontend/architecture.md",
           "title": "Frontend Architecture",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "frontend/brand-theme.md",
           "title": "Brand & Theme Guide",
-          "updatedAt": "2026-06-25"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "frontend/buyer-flow.md",
-          "title": "Buyer Flow",
-          "updatedAt": "2026-06-24"
+          "title": "Buyer flow (unified account)",
+          "updatedAt": "2026-07-21"
         },
         {
           "path": "frontend/component-library.md",
@@ -284,22 +284,22 @@
         {
           "path": "frontend/README.md",
           "title": "Frontend Documentation",
-          "updatedAt": "2026-06-25"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "frontend/routing-map.md",
           "title": "Routing Map",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-17"
         },
         {
           "path": "frontend/seller-flow.md",
-          "title": "Seller Flow",
-          "updatedAt": "2026-06-24"
+          "title": "Seller flow (unified account)",
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "frontend/storefront.md",
           "title": "Storefront System",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         }
       ]
     },
@@ -319,7 +319,7 @@
         {
           "path": "infrastructure/README.md",
           "title": "Infrastructure — Community Marketplace",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         }
       ]
     },
@@ -329,12 +329,12 @@
         {
           "path": "onboarding/deployment.md",
           "title": "Deployment (Developer Guide)",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "onboarding/local-development.md",
           "title": "Local Development",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "onboarding/migrations.md",
@@ -344,7 +344,7 @@
         {
           "path": "onboarding/monorepo-setup.md",
           "title": "Monorepo Setup",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "onboarding/queues.md",
@@ -354,7 +354,7 @@
         {
           "path": "onboarding/quickstart.md",
           "title": "Developer Quickstart",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "onboarding/README.md",
@@ -372,24 +372,39 @@
       "label": "Product",
       "files": [
         {
+          "path": "product/ai-marketing-hub.md",
+          "title": "SellNearby AI Marketing Hub — Product Plan",
+          "updatedAt": "2026-07-22"
+        },
+        {
+          "path": "product/display-ads-admin-campaigns.md",
+          "title": "Display ads — Admin campaign MVP",
+          "updatedAt": "2026-07-22"
+        },
+        {
           "path": "product/functional-requirements.md",
           "title": "Functional Requirements",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "product/launch-checklist.md",
           "title": "Launch Readiness Checklist",
-          "updatedAt": "2026-07-08"
+          "updatedAt": "2026-07-22"
+        },
+        {
+          "path": "product/listing-reserve.md",
+          "title": "Listing Reserve — Product Spec",
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "product/master-blueprint-v1.md",
           "title": "SellNearby — Master Blueprint (v1)",
-          "updatedAt": "2026-06-27"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "product/monetization.md",
           "title": "Monetization",
-          "updatedAt": "2026-06-27"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "product/non-functional-requirements.md",
@@ -399,22 +414,27 @@
         {
           "path": "product/README.md",
           "title": "Product Documentation",
-          "updatedAt": "2026-07-08"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "product/roadmap.md",
           "title": "Product Roadmap",
-          "updatedAt": "2026-06-29"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "product/seo-audit.md",
           "title": "SellNearby.ie — Comprehensive SEO Audit & Enterprise Roadmap",
-          "updatedAt": "2026-07-08"
+          "updatedAt": "2026-07-22"
+        },
+        {
+          "path": "product/seo-operations.md",
+          "title": "SellNearby.ie — SEO keyword priority & monthly operations",
+          "updatedAt": "2026-07-15"
         },
         {
           "path": "product/storefront-model.md",
           "title": "Storefront & Account Model (v1)",
-          "updatedAt": "2026-06-29"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "product/user-stories.md",
@@ -429,7 +449,7 @@
         {
           "path": "README.md",
           "title": "Community Marketplace — Documentation",
-          "updatedAt": "2026-07-08"
+          "updatedAt": "2026-07-22"
         }
       ]
     },
@@ -454,22 +474,27 @@
         {
           "path": "runbooks/ovh-vps-deploy.md",
           "title": "OVH VPS deploy — SellNearby pilot",
-          "updatedAt": "2026-07-08"
+          "updatedAt": "2026-07-09"
+        },
+        {
+          "path": "runbooks/pilot-feedback.md",
+          "title": "Pilot feedback — form, invite copy, and check-ins",
+          "updatedAt": "2026-07-15"
         },
         {
           "path": "runbooks/pilot-kickoff.md",
           "title": "Pilot kickoff runbook",
-          "updatedAt": "2026-06-30"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "runbooks/pilot-vps-day-by-day.md",
           "title": "SellNearby.ie — VPS pilot day-by-day checklist",
-          "updatedAt": "2026-07-07"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "runbooks/README.md",
           "title": "Operational Runbooks",
-          "updatedAt": "2026-07-07"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "runbooks/restore-backup.md",
@@ -479,12 +504,17 @@
         {
           "path": "runbooks/rollback.md",
           "title": "Runbook: Rollback",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "runbooks/scaling.md",
           "title": "Runbook: Scaling",
           "updatedAt": "2026-06-24"
+        },
+        {
+          "path": "runbooks/unified-account-rollback.md",
+          "title": "Unified marketplace account — rollback",
+          "updatedAt": "2026-07-15"
         }
       ]
     },
@@ -499,7 +529,7 @@
         {
           "path": "security/authentication.md",
           "title": "Authentication Security",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "security/checklist.md",
@@ -509,7 +539,7 @@
         {
           "path": "security/rbac.md",
           "title": "RBAC Security Model",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "security/README.md",
@@ -534,7 +564,7 @@
         {
           "path": "TESTING.md",
           "title": "Testing Guide",
-          "updatedAt": "2026-07-06"
+          "updatedAt": "2026-07-22"
         }
       ]
     },
@@ -544,7 +574,7 @@
         {
           "path": "troubleshooting.md",
           "title": "Troubleshooting Guide",
-          "updatedAt": "2026-07-07"
+          "updatedAt": "2026-07-22"
         }
       ]
     }
@@ -562,147 +592,147 @@
       "title": "Listings & Moderation (Admin)",
       "category": "Admin Guide",
       "categoryId": "admin",
-      "updatedAt": "2026-06-27"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "admin/notifications.md",
       "title": "Notification Management (Admin)",
       "category": "Admin Guide",
       "categoryId": "admin",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "admin/payments.md",
       "title": "Payments & Refunds (Admin)",
       "category": "Admin Guide",
       "categoryId": "admin",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "admin/README.md",
       "title": "Admin Panel — Operator Guide",
       "category": "Admin Guide",
       "categoryId": "admin",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "admin/search.md",
       "title": "Search Management (Admin)",
       "category": "Admin Guide",
       "categoryId": "admin",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "admin/seller-verification.md",
       "title": "Seller Verification (Admin)",
       "category": "Admin Guide",
       "categoryId": "admin",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-15"
     },
     {
       "path": "admin/settings.md",
       "title": "System Settings (Super Admin)",
       "category": "Admin Guide",
       "categoryId": "admin",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "admin/user-management.md",
       "title": "User Management (Admin)",
       "category": "Admin Guide",
       "categoryId": "admin",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "api/admin.md",
       "title": "Admin & Super-Admin API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "api/auth.md",
       "title": "Auth API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "api/chat.md",
       "title": "Chat API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "api/listings.md",
       "title": "Listings API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "api/moderation.md",
       "title": "Moderation API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "api/notifications.md",
       "title": "Notifications API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "api/payments.md",
       "title": "Payments API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-06-30"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "api/README.md",
       "title": "API Documentation",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "api/search.md",
       "title": "Search API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "api/users.md",
       "title": "Users API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "architecture/data-flow.md",
       "title": "Data Flow Diagrams",
       "category": "Architecture",
       "categoryId": "architecture",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "architecture/deployment-architecture.md",
       "title": "Deployment Architecture",
       "category": "Architecture",
       "categoryId": "architecture",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "architecture/domain-modules.md",
       "title": "Domain Modules",
       "category": "Architecture",
       "categoryId": "architecture",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "architecture/event-driven.md",
@@ -716,14 +746,14 @@
       "title": "Modular Monolith Architecture",
       "category": "Architecture",
       "categoryId": "architecture",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "architecture/module-boundaries.md",
       "title": "Module Boundaries",
       "category": "Architecture",
       "categoryId": "architecture",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "architecture/README.md",
@@ -744,49 +774,49 @@
       "title": "System Overview",
       "category": "Architecture",
       "categoryId": "architecture",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "db/erd.md",
       "title": "Entity Relationship Diagram",
       "category": "Database",
       "categoryId": "db",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "db/migrations/README.md",
       "title": "Database Migrations",
       "category": "Database",
       "categoryId": "db",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "db/README.md",
       "title": "Database Documentation",
       "category": "Database",
       "categoryId": "db",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "dev-credentials.md",
       "title": "Development Credentials",
       "category": "dev-credentials.md",
       "categoryId": "dev-credentials.md",
-      "updatedAt": "2026-07-06"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "features/admin-panel.md",
       "title": "Admin Panel",
       "category": "Feature Specifications",
       "categoryId": "features",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "features/authentication.md",
       "title": "Authentication System",
       "category": "Feature Specifications",
       "categoryId": "features",
-      "updatedAt": "2026-06-28"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "features/chat.md",
@@ -800,7 +830,7 @@
       "title": "Listings Module",
       "category": "Feature Specifications",
       "categoryId": "features",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "features/moderation.md",
@@ -814,7 +844,7 @@
       "title": "Notifications Module",
       "category": "Feature Specifications",
       "categoryId": "features",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "features/payments.md",
@@ -828,21 +858,21 @@
       "title": "RBAC System",
       "category": "Feature Specifications",
       "categoryId": "features",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "features/README.md",
       "title": "Feature Specifications",
       "category": "Feature Specifications",
       "categoryId": "features",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "features/search.md",
       "title": "Search Module",
       "category": "Feature Specifications",
       "categoryId": "features",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "features/users.md",
@@ -856,21 +886,21 @@
       "title": "Frontend Architecture",
       "category": "frontend",
       "categoryId": "frontend",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "frontend/brand-theme.md",
       "title": "Brand & Theme Guide",
       "category": "frontend",
       "categoryId": "frontend",
-      "updatedAt": "2026-06-25"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "frontend/buyer-flow.md",
-      "title": "Buyer Flow",
+      "title": "Buyer flow (unified account)",
       "category": "frontend",
       "categoryId": "frontend",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-21"
     },
     {
       "path": "frontend/component-library.md",
@@ -891,28 +921,28 @@
       "title": "Frontend Documentation",
       "category": "frontend",
       "categoryId": "frontend",
-      "updatedAt": "2026-06-25"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "frontend/routing-map.md",
       "title": "Routing Map",
       "category": "frontend",
       "categoryId": "frontend",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-17"
     },
     {
       "path": "frontend/seller-flow.md",
-      "title": "Seller Flow",
+      "title": "Seller flow (unified account)",
       "category": "frontend",
       "categoryId": "frontend",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "frontend/storefront.md",
       "title": "Storefront System",
       "category": "frontend",
       "categoryId": "frontend",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "infrastructure.md",
@@ -926,21 +956,21 @@
       "title": "Infrastructure — Community Marketplace",
       "category": "Infrastructure",
       "categoryId": "infrastructure",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "onboarding/deployment.md",
       "title": "Deployment (Developer Guide)",
       "category": "Developer Onboarding",
       "categoryId": "onboarding",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "onboarding/local-development.md",
       "title": "Local Development",
       "category": "Developer Onboarding",
       "categoryId": "onboarding",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "onboarding/migrations.md",
@@ -954,7 +984,7 @@
       "title": "Monorepo Setup",
       "category": "Developer Onboarding",
       "categoryId": "onboarding",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "onboarding/queues.md",
@@ -968,7 +998,7 @@
       "title": "Developer Quickstart",
       "category": "Developer Onboarding",
       "categoryId": "onboarding",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "onboarding/README.md",
@@ -985,32 +1015,53 @@
       "updatedAt": "2026-06-24"
     },
     {
+      "path": "product/ai-marketing-hub.md",
+      "title": "SellNearby AI Marketing Hub — Product Plan",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-07-22"
+    },
+    {
+      "path": "product/display-ads-admin-campaigns.md",
+      "title": "Display ads — Admin campaign MVP",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-07-22"
+    },
+    {
       "path": "product/functional-requirements.md",
       "title": "Functional Requirements",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "product/launch-checklist.md",
       "title": "Launch Readiness Checklist",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-07-08"
+      "updatedAt": "2026-07-22"
+    },
+    {
+      "path": "product/listing-reserve.md",
+      "title": "Listing Reserve — Product Spec",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "product/master-blueprint-v1.md",
       "title": "SellNearby — Master Blueprint (v1)",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-06-27"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "product/monetization.md",
       "title": "Monetization",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-06-27"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "product/non-functional-requirements.md",
@@ -1024,28 +1075,35 @@
       "title": "Product Documentation",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-07-08"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "product/roadmap.md",
       "title": "Product Roadmap",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-06-29"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "product/seo-audit.md",
       "title": "SellNearby.ie — Comprehensive SEO Audit & Enterprise Roadmap",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-07-08"
+      "updatedAt": "2026-07-22"
+    },
+    {
+      "path": "product/seo-operations.md",
+      "title": "SellNearby.ie — SEO keyword priority & monthly operations",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-07-15"
     },
     {
       "path": "product/storefront-model.md",
       "title": "Storefront & Account Model (v1)",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-06-29"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "product/user-stories.md",
@@ -1059,7 +1117,7 @@
       "title": "Community Marketplace — Documentation",
       "category": "README.md",
       "categoryId": "README.md",
-      "updatedAt": "2026-07-08"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "RELEASE.md",
@@ -1080,28 +1138,35 @@
       "title": "OVH VPS deploy — SellNearby pilot",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-07-08"
+      "updatedAt": "2026-07-09"
+    },
+    {
+      "path": "runbooks/pilot-feedback.md",
+      "title": "Pilot feedback — form, invite copy, and check-ins",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-07-15"
     },
     {
       "path": "runbooks/pilot-kickoff.md",
       "title": "Pilot kickoff runbook",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-06-30"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "runbooks/pilot-vps-day-by-day.md",
       "title": "SellNearby.ie — VPS pilot day-by-day checklist",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-07-07"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "runbooks/README.md",
       "title": "Operational Runbooks",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-07-07"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "runbooks/restore-backup.md",
@@ -1115,7 +1180,7 @@
       "title": "Runbook: Rollback",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "runbooks/scaling.md",
@@ -1123,6 +1188,13 @@
       "category": "Runbooks",
       "categoryId": "runbooks",
       "updatedAt": "2026-06-24"
+    },
+    {
+      "path": "runbooks/unified-account-rollback.md",
+      "title": "Unified marketplace account — rollback",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-07-15"
     },
     {
       "path": "security/api-security.md",
@@ -1136,7 +1208,7 @@
       "title": "Authentication Security",
       "category": "Security",
       "categoryId": "security",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "security/checklist.md",
@@ -1150,7 +1222,7 @@
       "title": "RBAC Security Model",
       "category": "Security",
       "categoryId": "security",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "security/README.md",
@@ -1171,14 +1243,14 @@
       "title": "Testing Guide",
       "category": "TESTING.md",
       "categoryId": "TESTING.md",
-      "updatedAt": "2026-07-06"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "troubleshooting.md",
       "title": "Troubleshooting Guide",
       "category": "troubleshooting.md",
       "categoryId": "troubleshooting.md",
-      "updatedAt": "2026-07-07"
+      "updatedAt": "2026-07-22"
     }
   ]
 }

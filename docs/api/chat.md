@@ -183,8 +183,9 @@ Triggered when user settings allow (`messageAlerts`, `push`):
 
 | Role | Path |
 |------|------|
-| BUYER | `/buyer/dashboard/chat` |
-| SELLER | `/seller/dashboard/chat` |
+| BUYER | `/account/messages` |
+| SELLER | `/account/messages` |
+| MEMBER | `/account/messages` |
 
 ---
 

@@ -50,18 +50,31 @@ flowchart TB
 | Worker | `infra/docker/Dockerfile.worker` | BullMQ background jobs |
 | Redis | `infra/docker/Dockerfile.redis` | Custom redis.conf + AOF |
 | Meilisearch | `infra/docker/Dockerfile.meilisearch` | Search engine |
+| Admin (legacy) | `infra/docker/Dockerfile.admin` | **Deprecated** — do not deploy for new work |
 
-**Compose:** `docker-compose.dev.yml` (local) · `docker-compose.prod.yml` (prod simulation)
+**Compose:** `docker-compose.dev.yml` (local) · `docker-compose.prod.yml` (pilot/prod) — **no admin service**
 
 **Health:** `GET /api/health/live` · `GET /api/health/ready` · `GET /api/metrics`
 
+## Feature flags
+
+| Flag | Purpose |
+|------|---------|
+| `ADS_SYSTEM_ENABLED` / `NEXT_PUBLIC_ADS_SYSTEM_ENABLED` | Ads master kill switch |
+| `ADS_PREVIEW_MODE` / `NEXT_PUBLIC_ADS_PREVIEW_MODE` | Empty placement shells |
+| `displayAdsEnabled` / `boostsEnabled` / `featuredEnabled` / `aiMarketingEnabled` | `platform_settings` publish toggles |
+| `AI_MARKETING_ENABLED` | AI Marketing Hub |
+| `OTP_PILOT_MODE` / `NEXT_PUBLIC_OTP_PILOT_MODE` | Log OTP / show pilot banner |
+
 ## Kubernetes
+
+Optional / future scaffolding:
 
 ```
 infra/k8s/base/ + overlays/dev | staging | prod
 ```
 
-Per-environment isolation: separate DB, Redis, R2 bucket, and namespace.
+Includes leftover admin deployment manifests. **Pilot production uses Docker Compose on OVH** — see [ovh-vps-deploy.md](../runbooks/ovh-vps-deploy.md).
 
 ## CI/CD
 
@@ -76,7 +89,7 @@ Per-environment isolation: separate DB, Redis, R2 bucket, and namespace.
 
 See sections in this doc's extended reference — full detail preserved from Feature 12 implementation:
 
-- **Secrets:** K8s Secrets, GitHub Actions secrets, `packages/config` Zod validation, `rotate-secrets.sh`
+- **Secrets:** Compose/env secrets, GitHub Actions secrets, `packages/config` Zod validation, `rotate-secrets.sh`
 - **Logging:** Pino (API), Traefik JSON access logs, Loki aggregation
 - **Monitoring:** Prometheus + Grafana + alerts (`infra/observability/`)
 - **Queues:** BullMQ with `BULLMQ_MODE` producer/worker split
@@ -87,7 +100,8 @@ See sections in this doc's extended reference — full detail preserved from Fea
 
 | Procedure | Document |
 |-----------|----------|
-| Deploy | [runbooks/deploy.md](../runbooks/deploy.md) |
+| OVH / Compose deploy | [runbooks/ovh-vps-deploy.md](../runbooks/ovh-vps-deploy.md) |
+| Deploy (K8s notes) | [runbooks/deploy.md](../runbooks/deploy.md) |
 | Rollback | [runbooks/rollback.md](../runbooks/rollback.md) |
 | Restore backup | [runbooks/restore-backup.md](../runbooks/restore-backup.md) |
 | Scale services | [runbooks/scaling.md](../runbooks/scaling.md) |

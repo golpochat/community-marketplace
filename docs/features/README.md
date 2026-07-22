@@ -15,6 +15,8 @@ Functional specifications for Community Marketplace domain features. Each doc fo
 | Moderation | [moderation.md](./moderation.md) | [moderation.md](../api/moderation.md) |
 | Admin Panel | [admin-panel.md](./admin-panel.md) | [admin.md](../api/admin.md) |
 
+**Also live (see product / admin docs until dedicated feature specs exist):** monetization & display ads, AI Marketing Hub, seller verification, disputes, fraud, storefronts / store slots, listing reserve.
+
 ## Document template
 
 Every feature doc includes:

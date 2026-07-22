@@ -6,7 +6,7 @@
 
 ```mermaid
 flowchart LR
-  Client[Web / Admin] --> Traefik[Traefik]
+  Client[apps/web] --> Traefik[Traefik]
   Traefik --> API[NestJS API]
   API --> Guard[Auth + RBAC Guards]
   Guard --> Pipe[ValidationPipe + Zod]

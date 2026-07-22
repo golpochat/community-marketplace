@@ -19,7 +19,6 @@ Community Marketplace uses a **modular monolith** pattern: a single deployable A
 flowchart TB
   subgraph Clients
     WEB[apps/web]
-    ADMIN[apps/admin]
   end
 
   subgraph API["apps/api (NestJS)"]
@@ -35,7 +34,7 @@ flowchart TB
     CFG[packages/config]
   end
 
-  WEB & ADMIN --> CTRL
+  WEB --> CTRL
   CTRL --> SVC
   SVC --> REPO
   SVC --> EVT
@@ -57,7 +56,7 @@ flowchart TB
 |------|---------|----------------------|
 | API | `node dist/main.js` | ✅ HPA |
 | Worker | `node dist/worker.js` | ✅ HPA |
-| Web / Admin | Next.js standalone | ✅ HPA |
+| Web | Next.js standalone | ✅ HPA / Compose scale |
 | Postgres / Redis / Meili | Stateful or managed | Per environment |
 
 ## Related

@@ -42,8 +42,9 @@ pnpm dev
 
 | App | URL |
 |-----|-----|
-| Web | http://localhost:3000 |
-| Admin | http://localhost:3001 |
+| Web (marketplace + `/account` + `/admin` + `/super-admin`) | http://localhost:3000 |
+| Admin dashboard | http://localhost:3000/admin/dashboard |
+| Super-admin dashboard | http://localhost:3000/super-admin/dashboard |
 | API | http://localhost:4000/api/health |
 
 ## 6. Login

@@ -1,6 +1,10 @@
 # Entity Relationship Diagram
 
-> Canonical schema: [`apps/api/prisma/schema.prisma`](../../apps/api/prisma/schema.prisma)
+> **Canonical schema:** [`apps/api/prisma/schema.prisma`](../../apps/api/prisma/schema.prisma)  
+> **Migrations:** [`apps/api/prisma/migrations/`](../../apps/api/prisma/migrations/) — see [migrations/README.md](./migrations/README.md)  
+> This ERD is an overview. Prefer Prisma for field-level truth. `docs/db/schema.prisma` is a **stale mirror — do not migrate from it**.
+
+**Last reviewed:** 2026-07-22
 
 ## RBAC
 
@@ -11,10 +15,11 @@ erDiagram
     USER }o--|| ROLE : primary_role
     USER ||--o{ USER_PERMISSION : overrides
     PERMISSION ||--o{ USER_PERMISSION : targeted_by
+    USER ||--o{ ADMIN_INVITATION : invited_as
 
     ROLE {
         uuid id PK
-        enum code UK
+        string code UK
         string name
         boolean is_system
     }
@@ -26,11 +31,6 @@ erDiagram
         string action
     }
 
-    ROLE_PERMISSION {
-        uuid role_id PK_FK
-        uuid permission_id PK_FK
-    }
-
     USER_PERMISSION {
         uuid id PK
         uuid user_id FK
@@ -40,31 +40,32 @@ erDiagram
     }
 ```
 
-**Roles:** `SUPER_ADMIN`, `ADMIN`, `SELLER`, `BUYER`
+**Role codes:** `SUPER_ADMIN`, `ADMIN`, `MEMBER` (default marketplace), `SELLER`, `BUYER` (+ admin personas e.g. `ACCOUNTS_ADMIN`).
 
-**Override semantics:** `user_permissions.effect` — `GRANT` adds a permission; `DENY` revokes it even if the role grants it.
+**Override semantics:** `GRANT` adds a permission; `DENY` revokes it even if the role grants it.
 
 ## Domain (core)
 
 ```mermaid
 erDiagram
+    USER ||--o{ STORE : owns
     USER ||--o{ LISTING : sells
+    STORE ||--o{ LISTING : contains
     USER ||--o{ PAYMENT : "buys/sells"
-    USER ||--o{ CONVERSATION : participates
+    USER ||--o{ CHAT_THREAD : participates
     USER ||--o{ NOTIFICATION : receives
-    USER ||--o{ REPORT : files
-    USER ||--o{ BAN : "subject of"
+    USER ||--o| BUYER_WALLET : has
     USER ||--o| USER_PROFILE : has
-    USER ||--o{ USER_VERIFICATION : has
+    USER ||--o{ SELLER_VERIFICATION_REQUEST : submits
     USER ||--o| STRIPE_CONNECT_ACCOUNT : owns
-    USER ||--o{ DEVICE_TOKEN : registers
 
     LISTING ||--o{ LISTING_IMAGE : has
     LISTING }o--|| CATEGORY : "belongs to"
-    LISTING ||--o{ PAYMENT : "paid for"
-    LISTING ||--o{ CONVERSATION : "context for"
+    LISTING ||--o{ LISTING_RESERVE : holds
+    LISTING ||--o{ PLATFORM_PURCHASE : boosted_by
 
-    CONVERSATION ||--o{ CHAT_MESSAGE : contains
+    BUYER_WALLET ||--o{ WALLET_TRANSACTION : records
+    BUYER_WALLET ||--o{ CASHBACK_GRANT : earns
 
     USER {
         uuid id PK
@@ -72,34 +73,24 @@ erDiagram
         uuid primary_role_id FK
         string display_name
         enum status
-        datetime created_at
-        datetime updated_at
+    }
+
+    STORE {
+        uuid id PK
+        uuid user_id FK
+        string slug UK
+        string name
     }
 
     LISTING {
         uuid id PK
         uuid seller_id FK
+        uuid store_id FK
         uuid category_id FK
         string title
-        text description
         decimal price
         string currency
-        enum condition
         enum status
-        string location
-        datetime created_at
-        datetime updated_at
-    }
-
-    CHAT_MESSAGE {
-        uuid id PK
-        uuid conversation_id FK
-        uuid sender_id FK
-        uuid recipient_id FK
-        enum type
-        text content
-        enum status
-        datetime created_at
     }
 
     PAYMENT {
@@ -108,57 +99,74 @@ erDiagram
         uuid seller_id FK
         uuid listing_id FK
         decimal amount
-        string currency
-        enum method
         enum status
         string stripe_payment_intent_id
-        datetime created_at
     }
 
-    NOTIFICATION {
-        uuid id PK
-        uuid user_id FK
-        enum type
-        string title
-        text body
-        boolean read
-        datetime created_at
+    BUYER_WALLET {
+        uuid user_id PK
+        decimal balance
     }
 
-    REPORT {
+    LISTING_RESERVE {
         uuid id PK
-        uuid reporter_id FK
-        enum target_type
-        uuid target_id
-        string reason
+        uuid listing_id FK
+        uuid buyer_id FK
         enum status
-        datetime created_at
-    }
-
-    BAN {
-        uuid id PK
-        uuid user_id FK
-        uuid banned_by FK
-        enum type
-        enum scope
-        string reason
         datetime expires_at
-        boolean is_active
     }
 ```
 
-## Index strategy (planned)
+### Listing status (Prisma)
 
-| Table | Index | Purpose |
-|-------|-------|---------|
-| `listings` | `(status, created_at DESC)` | Browse feed |
-| `listings` | `(seller_id)` | Seller dashboard |
-| `listings` | `(category_id)` | Category filter |
-| `chat_messages` | `(conversation_id, created_at)` | Message history |
-| `notifications` | `(user_id, read, created_at DESC)` | Unread feed |
-| `payments` | `(buyer_id)`, `(seller_id)` | User payment history |
+`draft`, `pending_review`, `active`, `reserved`, `paused`, `expired`, `sold`, `ended`, `removed`, `rejected`, `flagged`, `under_investigation`, `suspended_seller`
+
+## Monetization & ads
+
+```mermaid
+erDiagram
+    PLATFORM_SETTINGS ||--|| PLATFORM : configures
+    MONETIZATION_PRODUCT ||--o{ PLATFORM_PURCHASE : sold_as
+    USER ||--o{ PLATFORM_PURCHASE : buys
+    DISPLAY_AD_CAMPAIGN ||--o{ PLATFORM : serves_on
+
+    PLATFORM_SETTINGS {
+        boolean displayAdsEnabled
+        boolean boostsEnabled
+        boolean featuredEnabled
+        boolean aiMarketingEnabled
+    }
+
+    PLATFORM_PURCHASE {
+        uuid id PK
+        uuid user_id FK
+        string type
+        enum status
+        string stripe_payment_intent_id
+    }
+
+    DISPLAY_AD_CAMPAIGN {
+        uuid id PK
+        string placement
+        enum status
+        datetime starts_at
+        datetime ends_at
+        int impressions
+        int clicks
+    }
+
+    AI_GENERATION_LOG {
+        uuid id PK
+        uuid user_id FK
+        string task
+        int units_charged
+    }
+```
+
+Also in schema: `MarketplaceDispute`, fraud signals, chat flags, short links / share, notification templates/providers, title/price/delivery change logs.
 
 ## Related
 
-- [schema.prisma](./schema.prisma)
-- [migrations/](./migrations/)
+- Canonical: `apps/api/prisma/schema.prisma`
+- [migrations/README.md](./migrations/README.md)
+- Product: [storefront-model.md](../product/storefront-model.md), [monetization.md](../product/monetization.md), [listing-reserve.md](../product/listing-reserve.md)

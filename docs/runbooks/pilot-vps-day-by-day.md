@@ -72,7 +72,7 @@ cd /opt/sellnearby
 - [x] [https://api.sellnearby.ie/api/health/ready](https://api.sellnearby.ie/api/health/ready) returns OK
 - [x] Super-admin login → [https://sellnearby.ie/super-admin/dashboard](https://sellnearby.ie/super-admin/dashboard)
 - [x] Admin login → [https://sellnearby.ie/admin/dashboard](https://sellnearby.ie/admin/dashboard)
-- [x] Demo seller login → [https://sellnearby.ie/seller/dashboard](https://sellnearby.ie/seller/dashboard)
+- [x] Demo member login → [https://sellnearby.ie/account](https://sellnearby.ie/account) (legacy `/seller/dashboard` redirects)
 
 
 

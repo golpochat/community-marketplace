@@ -1,7 +1,7 @@
 # Launch Readiness Checklist
 
-> **As of:** 2026-06-27 · **App version:** 0.1.0 (pre-1.0)  
-> **Related:** [functional-requirements.md](./functional-requirements.md) · [non-functional-requirements.md](./non-functional-requirements.md) · [master-blueprint-v1.md](./master-blueprint-v1.md) · [deployment runbook](../runbooks/deploy.md)
+> **As of:** 2026-07-22 · **App version:** 0.1.0 (pre-1.0)  
+> **Related:** [functional-requirements.md](./functional-requirements.md) · [non-functional-requirements.md](./non-functional-requirements.md) · [master-blueprint-v1.md](./master-blueprint-v1.md) · [deployment runbook](../runbooks/deploy.md) · [ovh-vps-deploy.md](../runbooks/ovh-vps-deploy.md)
 
 Single canonical checklist for **closed pilot** vs **public Ireland launch**. Tick items as you complete them.
 
@@ -71,7 +71,7 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 
 | ID | Feature | Sub-features | Pilot | Public | Status |
 |----|---------|--------------|-------|--------|--------|
-| FR-2.1 | Listing CRUD | Create, edit, delete, seller dashboard | Must | Must | ✅ |
+| FR-2.1 | Listing CRUD | Create, edit; delete drafts/rejected only; pause/end after publish | Must | Must | ✅ |
 | FR-2.2 | Browse | Homepage, category, pagination | Must | Must | ✅ |
 | FR-2.3 | Listing metadata | Categories, images, condition, price, location | Must | Must | ✅ |
 | FR-2.4 | Lifecycle | Draft → active → sold → expired → renew | Must | Must | ✅ (+ expiry jobs) |
@@ -137,7 +137,7 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 | — | Refunds | Admin / dispute-driven | Should | Must | ⚠️ Webhook path exists; ops playbook needed |
 | — | Disputes module | Buyer/seller dispute CRUD | Should | Must | ✅ UI + API |
 | — | Buyer protection SKU | Optional checkout add-on | 📋 | 📋 | ❌ Phase 5 (legal gate) |
-| — | Wallet spend at checkout | Credits + card split | 📋 | 📋 | ❌ Phase 2 |
+| — | Wallet spend at checkout | Credits + card split on listing GMV | 📋 | 📋 | ❌ Still Phase 2+ (platform purchases already support credits) |
 | — | Apple Pay / Google Pay | Express checkout | 📋 | Nice | ❌ Phase 7+ |
 | — | Bank transfer | Off-card payments | 📋 | 📋 | ❌ Explicitly out of v1 |
 
@@ -228,12 +228,16 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 
 | Feature | Sub-features | Pilot | Public | Status |
 |---------|--------------|-------|--------|--------|
-| Platform fee + cashback | 10%/8%, 1.5% earn-only wallet | Must | Must | ✅ |
+| Platform fee + cashback | 10%/8%, 1.5% cashback wallet | Must | Must | ✅ |
 | Listing boosts | 7d/30d, Stripe, badge, ranking | Nice | Should | ✅ |
 | Featured slots | Homepage/category, caps, expiry | Nice | Should | ✅ |
 | Fast-track verification | €2.99, priority queue | Nice | Should | ✅ |
-| Wallet spend | Credits → boosts / early unlock | 📋 | 📋 | ❌ Phase 2 |
-| Buyer micro-SKUs | Early unlock, alerts, wanted ads | 📋 | 📋 | ❌ Phase 4 |
+| Wallet spend | Credits → boosts / fast-track / early unlock | Nice | Should | ✅ |
+| Display ad campaigns | Admin creatives → homepage / browse / search slots | Nice | Nice | ✅ (env + publish gated) |
+| AI Marketing Hub | Credits, text/image tools, Growth Pack, featured store | Nice | Nice | ✅ (publish gated) |
+| Store slots / featured store | Extra storefronts + homepage strip | Nice | Nice | ✅ |
+| Listing reserve | Verified-buyer hold after seller approval | Nice | Should | ✅ |
+| Buyer micro-SKUs | Alerts, wanted ads (beyond early unlock) | 📋 | 📋 | ❌ Phase 4 |
 | Seller packages | Starter / Pro / Premium bundles | 📋 | 📋 | ❌ Phase 6 |
 
 **Pilot checklist**

@@ -1,6 +1,6 @@
 # Payments & Refunds (Admin)
 
-> **Screen:** `/dashboard/payments` · **Permission:** `view_payments`, `approve_refunds`
+> **Screen:** `/admin/payments` · `/admin/finance` · **Permission:** `view_payments`, `refund_payment` / `manage_payments`
 
 ## Capabilities
 

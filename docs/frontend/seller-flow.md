@@ -25,6 +25,7 @@ Account shell: `AccountDashboardLayout` (`theme` = seller when setup/active).
 | `/account/listings/create` | Create listing |
 | `/account/verification` | Identity verification |
 | `/account/earnings` | Earnings & Stripe Connect |
+| `/account/marketing` | AI Marketing Hub |
 
 ## Rules
 

@@ -1,19 +1,20 @@
 # Admin Panel
 
-> **Feature:** Enterprise admin console · **Apps:** `apps/admin`
+> **Feature:** Enterprise admin console · **App:** `apps/web` (`/admin/*`, `/super-admin/*`)  
+> **Note:** `apps/admin` is retired; do not run or document it as a live app.
 
 ## Functional requirements
 
-- Dual namespaces: `/admin/dashboard/*`, `/super-admin/dashboard/*`
+- Dual namespaces: `/admin/*` (operators) and `/super-admin/*` (governance)
 - Permission-aware navigation and UI gates
 - Dashboard with platform stats and charts
-- Management screens: users, verifications, listings, moderation, payments, notifications, search, audit, analytics, RBAC, admins, settings
+- Management screens: users, seller verification, listings, moderation queues (title/price/delivery/message), payments, finance, monetization (boosts/featured/display ads/AI hub), fraud, disputes, notifications, search, audit, analytics, RBAC, admins, invitations, settings
 - Dark mode, toast feedback, data tables
 
 ## Non-functional requirements
 
 - Server-side RBAC on every protected page
-- Stats cached 120s (Redis)
+- Stats cached (Redis where applicable)
 - Responsive layout for desktop operators
 
 ## User flows
@@ -30,7 +31,7 @@ flowchart TD
 | Case | Behavior |
 |------|----------|
 | Missing permission | 403 page / hidden nav item |
-| SUPER_ADMIN | Full access |
+| SUPER_ADMIN | Full access; `/admin` → `/super-admin` rewrite |
 | Session expired | Redirect to login |
 
 ## Acceptance criteria

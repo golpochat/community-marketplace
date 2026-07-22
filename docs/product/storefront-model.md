@@ -1,7 +1,7 @@
 # Storefront & Account Model (v1)
 
-> **Status:** Approved direction — implementation spec  
-> **Last updated:** 2026-06-29
+> **Status:** Implemented (v1) — core rules live in API + `/account/storefront`  
+> **Last updated:** 2026-07-22
 
 Canonical rules for separating **login accounts** from **storefronts**, listing limits, verification, and paid store slots.
 
@@ -26,25 +26,25 @@ Canonical rules for separating **login accounts** from **storefronts**, listing 
 - Legal name is captured at admin approval of verification; never shown on public storefronts.
 - Verified badge copy: **“Verified seller”** (not the legal name).
 - Buyers interact with **store names** (e.g. Hijabi Gift), not passport names.
-- **Buyers do not get storefronts.** Only seller accounts.
+- **Buyers do not get storefronts.** Only seller accounts. Default registration role is **`MEMBER`** (unified `/account` hub).
 
 ---
 
-## 2. API separation
+## 2. API & web separation
 
-Seller-facing and public APIs must treat account and storefront as distinct resources.
+Seller-facing and public APIs treat account and storefront as distinct resources.
 
 | Surface | Owns |
 |---------|------|
-| `/account/*` or `/me/*` | Personal profile, credentials |
-| `/seller/verification/*` | ID submission, verification status |
-| `/seller/stores/*` | Storefront CRUD, branding, slug, policies |
-| `/seller/stores/:storeId/listings/*` | Listings scoped to a store |
-| Public `/stores/:slug` | Buyer-facing storefront |
+| `/account/*` (web) · `/api/users/me/*` | Personal profile, credentials |
+| `/api/seller/verification/*` | ID submission, verification status |
+| `/api/seller/stores/*` | Storefront CRUD, branding, slug, policies |
+| Public **API** `GET /api/stores/:slug` | Buyer-facing storefront JSON |
+| Public **web** `/store/[slug]` | Buyer-facing storefront page |
 
 **Data model**
 
-- Introduce a `Store` entity (`userId`, 1:N with account; **enforce 1 store at v1 launch**).
+- `Store` entity exists (`userId`, 1:N with account). Unverified sellers are gated to **1** free store; verified sellers may purchase slots.
 - Listings carry `storeId` (retain `sellerId` for payouts, disputes, bans).
 - Reviews, store analytics, and public branding are **per storefront**.
 - Trust & safety actions (ban, suspend) apply at **account** level (all stores).
@@ -58,7 +58,7 @@ Seller-facing and public APIs must treat account and storefront as distinct reso
 | First storefront | **Free and mandatory** for sellers; must set store name **before creating** the first listing (draft or submit) |
 | Additional storefronts | **Verified accounts only** + paid store slot |
 | Default limit | `storeSlotLimit = 1` on account |
-| Multi-store UX (v1) | Enforce max 1 store in product; schema supports N |
+| Multi-store UX | Partially shipped — storefront settings support tabs / create / slots; listing-create store picker may still polish |
 | Per-store isolation | Separate listings, reviews/ratings, analytics, slug, branding, policies |
 
 ---
@@ -129,10 +129,10 @@ Buyers always see the live title until an admin approves the amendment.
 - Drafts may be saved without photos.
 - Submit for review requires **at least one photo** (API + seller UI).
 
-### Extra fraud cap (not the unverified 5)
+### Extra fraud cap (planned — not coded)
 
-- New seller accounts (&lt;30 days) may create at most **5 draft listings per calendar day**.
-- Independent of the 5 admin-approved live listing quota.
+- Spec once proposed: new seller accounts (&lt;30 days) ≤ **5 draft listings per calendar day**.
+- **Not implemented** in seller/listing gate services as of 2026-07-22. Do not treat as live policy.
 
 ### `under_review` seller status
 
@@ -143,7 +143,7 @@ Buyers always see the live title until an admin approves the amendment.
 
 ## 6. Multi-storefront monetization
 
-Ship store-slot SKUs in the **same release** as the `Store` entity (not before).
+Store-slot SKUs (`store_slot_2/3`, `store_bundle_3`) are **live** alongside the `Store` entity.
 
 ### Purchase rules
 
@@ -191,11 +191,11 @@ Register as seller
 
 ## 8. Implementation phases
 
-| Phase | Scope |
-|-------|--------|
-| **v1** | `Store` table, API split, `storeId` on listings, approval-based 5-cap, no-delete-after-publish, 1 store enforced, migrate `businessName` → store |
-| **v1 (same release)** | Store-slot SKUs, `storeSlotLimit`, verified-only purchase gate |
-| **v2** | Multi-store UI (switcher, pick store on listing create), bundle merchandising |
+| Phase | Scope | Status |
+|-------|--------|--------|
+| **v1** | `Store` table, API split, `storeId` on listings, approval-based 5-cap, no-delete-after-publish, migrate `businessName` → store | ✅ Live |
+| **v1 (same release)** | Store-slot SKUs, `storeSlotLimit`, verified-only purchase gate | ✅ Live |
+| **v2 polish** | Listing-create store picker polish, bundle merchandising | Partial / ongoing |
 
 ---
 
@@ -209,6 +209,7 @@ Register as seller
 | 2026-06-29 | No seller delete after publish | Audit trail, dispute support, anti-gaming |
 | 2026-06-29 | Extra stores: verified + paid | Abuse prevention + monetization without paywalling first shop |
 | 2026-06-29 | `Store` entity (1 enforced, N ready) | Clean API; avoids re-conflating profile fields |
+| 2026-07-22 | Status → Implemented (v1) | Core storefront model shipped; web path `/store/[slug]` |
 
 ---
 

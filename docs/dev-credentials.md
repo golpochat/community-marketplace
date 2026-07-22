@@ -37,9 +37,10 @@ All dashboards run in the **unified web app** on port **3000**. There is no sepa
 | Role | Dashboard URL |
 |------|----------------|
 | `SUPER_ADMIN` | http://localhost:3000/super-admin/dashboard |
-| `ADMIN` | http://localhost:3000/admin/dashboard |
-| `SELLER` | http://localhost:3000/seller/dashboard |
-| `BUYER` | http://localhost:3000/buyer/dashboard |
+| `ADMIN` (+ personas) | http://localhost:3000/admin/dashboard |
+| `MEMBER` / `SELLER` / `BUYER` | http://localhost:3000/account |
+
+Canonical marketplace hub is **`/account`**. Legacy `/seller/*` and `/buyer/*` trees still exist but middleware redirects many paths to `/account/*`.
 
 ---
 
@@ -58,7 +59,6 @@ docker compose -f infra/docker/docker-compose.dev.yml up -d postgres redis meili
 # 2. Migrate + seed (from repo root)
 pnpm --filter @community-marketplace/api prisma:migrate:deploy
 pnpm seed:rbac
-pnpm seed:dev-users
 
 # 3. Web only (port 3000)
 pnpm dev:web
@@ -76,7 +76,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 Docker runs **infrastructure only**; API and web run on the host.
 
 ```bash
-# 1. Start infra only (no api / web / admin containers)
+# 1. Start infra only (no api / web containers)
 docker compose -f infra/docker/docker-compose.dev.yml up -d postgres redis meilisearch
 
 # 2. Copy env files
@@ -91,7 +91,6 @@ cp apps/web/.env.example apps/web/.env
 # 4. Migrate + seed, then start both apps
 pnpm --filter @community-marketplace/api prisma:migrate:deploy
 pnpm seed:rbac
-pnpm seed:dev-users
 pnpm dev
 ```
 
@@ -105,45 +104,36 @@ pnpm dev
 
 ---
 
-## Seeded application users (one per role)
+## Seeded application users (bootstrap)
 
-Run seeds in order:
+Run:
 
 ```bash
-pnpm seed:all
+pnpm seed:rbac
 ```
 
-Or step by step: `pnpm seed:rbac` → `pnpm seed:dev-users` → `pnpm seed:test-data`.
+This seeds RBAC roles/permissions and bootstrap users from `apps/api/src/database/bootstrap-users.seed.data.ts`. There is **no** `pnpm seed:all` / `seed:dev-users` / `seed:test-data` at the repo root.
 
-See [TESTING.md](./TESTING.md) for full fixture and automated test documentation.
+See [TESTING.md](./TESTING.md) for automated test documentation.
 
 | Role | Email | Password | Display name | User ID | After login |
 |------|-------|----------|--------------|---------|-------------|
-| `SUPER_ADMIN` | `superadmin@community.market` | `ChangeMe!SuperAdmin1` | Super Admin | `00000000-0000-4000-8000-000000000010` | `/super-admin/dashboard` |
-| `ADMIN` | `admin@community.market` | `ChangeMe!Admin1` | Platform Admin | `00000000-0000-4000-8000-000000000011` | `/admin/dashboard` |
-| `ACCOUNTS_ADMIN` | `accounts-admin@community.market` | `ChangeMe!Accounts1` | Accounts Admin | `00000000-0000-4000-8000-000000000014` | `/admin/dashboard` |
-| `MODERATION_ADMIN` | `moderation-admin@community.market` | `ChangeMe!Moderation1` | Moderation Admin | `00000000-0000-4000-8000-000000000015` | `/admin/dashboard` |
-| `FINANCIAL_ADMIN` | `financial-admin@community.market` | `ChangeMe!Financial1` | Financial Admin | `00000000-0000-4000-8000-000000000016` | `/admin/dashboard` |
-| `SELLER` | `seller@community.market` | `ChangeMe!Seller1` | Demo Seller | `00000000-0000-4000-8000-000000000012` | `/seller/dashboard` |
-| `BUYER` | `buyer@community.market` | `ChangeMe!Buyer1` | Demo Buyer | `00000000-0000-4000-8000-000000000013` | `/buyer/dashboard` |
+| `SUPER_ADMIN` | `superadmin@sellnearby.ie` | `ChangeMe!SuperAdmin1` | Super Admin | `00000000-0000-4000-8000-000000000010` | `/super-admin/dashboard` |
+| `ADMIN` | `admin@sellnearby.ie` | `ChangeMe!Admin1` | Platform Admin | `00000000-0000-4000-8000-000000000011` | `/admin/dashboard` |
+| `ACCOUNTS_ADMIN` | `accounts-admin@sellnearby.ie` | `ChangeMe!Accounts1` | Accounts Admin | `00000000-0000-4000-8000-000000000014` | `/admin/dashboard` |
+| `MODERATION_ADMIN` | `moderation-admin@sellnearby.ie` | `ChangeMe!Moderation1` | Moderation Admin | `00000000-0000-4000-8000-000000000015` | `/admin/dashboard` |
+| `FINANCIAL_ADMIN` | `financial-admin@sellnearby.ie` | `ChangeMe!Financial1` | Financial Admin | `00000000-0000-4000-8000-000000000016` | `/admin/dashboard` |
+| `MEMBER` | `member@sellnearby.ie` | `ChangeMe!Member1` | Marketplace Member | `00000000-0000-4000-8000-000000000017` | `/account` |
 
-### Additional test sellers (`pnpm seed:test-data`)
+Sign in at http://localhost:3000/auth/login. All roles use the same web app; middleware sends each role to the correct dashboard.
 
-| Email | Password | Notes |
-|-------|----------|-------|
-| `seller-unverified@community.market` | `ChangeMe!Seller2` | Unverified seller |
-| `seller-suspended@community.market` | `ChangeMe!Seller3` | Suspended seller |
-
-Sign in at http://localhost:3000/auth/login with any row above. All roles use the same web app; middleware sends each role to the correct dashboard.
-
-### Phone numbers (seller / buyer)
+### Phone number (member)
 
 | Role | Phone |
 |------|-------|
-| `SELLER` | `+353871000001` |
-| `BUYER` | `+353871000002` |
+| `MEMBER` | `+353871000099` |
 
-Seller and buyer accounts support **email + password** login and OTP flows when needed.
+Register additional marketplace accounts via the normal OTP flow for buyer/seller testing.
 
 ---
 
@@ -153,12 +143,12 @@ The bootstrap `SUPER_ADMIN` account is **seed-only**:
 
 | Rule | Enforced |
 |------|----------|
-| Only one `SUPER_ADMIN` exists | Created by `pnpm seed:rbac` / `pnpm seed:dev-users` |
+| Only one `SUPER_ADMIN` exists | Created by `pnpm seed:rbac` |
 | Cannot create another `SUPER_ADMIN` via API | `POST /api/super-admin/users/assign-role` with `SUPER_ADMIN` role → **403** |
 | Cannot suspend, ban, or reassign the bootstrap account | Admin user management → **403** |
 | Cannot delete the bootstrap account | Protected at service layer |
 
-Additional `ADMIN`, `SELLER`, and `BUYER` users may be created through normal registration or admin tools.
+Additional `ADMIN` and marketplace (`MEMBER`) users may be created through invitations, registration, or admin tools.
 
 ---
 
@@ -168,14 +158,18 @@ Configured in `apps/api/.env`:
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `RBAC_SUPER_ADMIN_EMAIL` | `superadmin@community.market` | Bootstrap super-admin email |
+| `RBAC_SUPER_ADMIN_EMAIL` | `superadmin@sellnearby.ie` | Bootstrap super-admin email |
 | `RBAC_SUPER_ADMIN_PASSWORD` | `ChangeMe!SuperAdmin1` | Bootstrap super-admin password |
 | `RBAC_SUPER_ADMIN_DISPLAY_NAME` | `Super Admin` | Display name |
 | `RBAC_SEED_RESET_PASSWORD` | `false` | Set `true` to re-hash passwords on next seed |
 | `RBAC_SEED_ENABLED` | `true` | Disable seeding when `false` |
 | `RBAC_SEED_FORCE` | `false` | Allow seed in production when `true` (recovery only) |
+| `OTP_PILOT_MODE` | `true` (typical local) | API: log OTP codes instead of live SMS |
+| `NEXT_PUBLIC_OTP_PILOT_MODE` | `true` (typical local) | Web: OTP pilot banner (build-time) |
+| `ADS_SYSTEM_ENABLED` / `NEXT_PUBLIC_ADS_*` | `false` | Ads master switch (+ preview mode) |
+| `AI_MARKETING_ENABLED` | `true` (example) | AI Marketing Hub master switch |
 
-Dev user passwords (`ADMIN`, `SELLER`, `BUYER`) are defined in `apps/api/src/database/dev-users.seed.data.ts` and follow the same `RBAC_SEED_RESET_PASSWORD` behaviour.
+Bootstrap passwords for all seeded users live in `bootstrap-users.seed.data.ts` and follow `RBAC_SEED_RESET_PASSWORD`.
 
 ---
 
@@ -256,7 +250,6 @@ Stripe, SendGrid, FCM, OpenAI, and R2 keys are **empty** in `.env.example` until
    ```bash
    pnpm --filter @community-marketplace/api prisma:migrate:deploy
    pnpm seed:rbac
-   pnpm seed:dev-users
    ```
 3. Start web:
    - **Mode A:** `pnpm dev:web`
@@ -265,10 +258,9 @@ Stripe, SendGrid, FCM, OpenAI, and R2 keys are **empty** in `.env.example` until
 
 | Role | Email | Password |
 |------|-------|----------|
-| Super admin | `superadmin@community.market` | `ChangeMe!SuperAdmin1` |
-| Admin | `admin@community.market` | `ChangeMe!Admin1` |
-| Seller | `seller@community.market` | `ChangeMe!Seller1` |
-| Buyer | `buyer@community.market` | `ChangeMe!Buyer1` |
+| Super admin | `superadmin@sellnearby.ie` | `ChangeMe!SuperAdmin1` |
+| Admin | `admin@sellnearby.ie` | `ChangeMe!Admin1` |
+| Member | `member@sellnearby.ie` | `ChangeMe!Member1` |
 
 ### Troubleshooting
 
@@ -296,7 +288,7 @@ API keys alone are not enough. The **platform** Stripe account must enroll in Co
 
 1. Open [Stripe Dashboard → Connect (Test mode)](https://dashboard.stripe.com/test/connect).
 2. Complete the short Connect setup wizard (Express accounts, marketplace / platform).
-3. Restart the API, then try **Seller → Earnings → Connect with Stripe** again.
+3. Restart the API, then try **Account → Earnings → Connect with Stripe** again.
 
 If you see *"You can only create new accounts if you've signed up for Connect"*, this step was skipped.
 
@@ -316,9 +308,9 @@ Our app shows a **branded pre-flight screen** on `/account/earnings` before redi
 
 ### End-to-end payment test flow
 
-1. **Seller** — sign in as `seller@community.market`, open **Seller → Earnings**, click **Connect with Stripe**, complete Express onboarding (test business details are fine in test mode).
-2. **Seller** — create an **active** listing (admin approval may be required depending on seed data).
-3. **Buyer** — sign in as `buyer@community.market`, open **Buyer → Purchases**, select the listing, pay with test card `4242 4242 4242 4242` (any future expiry, any CVC).
+1. **Seller** — register or use `member@sellnearby.ie`, complete seller onboarding, open **Account → Earnings**, click **Connect with Stripe**, complete Express onboarding (test business details are fine in test mode).
+2. **Seller** — create an **active** listing (admin approval may be required).
+3. **Buyer** — register a second marketplace account, open **Account → Purchases**, select the listing, pay with test card `4242 4242 4242 4242` (any future expiry, any CVC).
 4. Confirm the listing moves to **sold** and payment status is **succeeded**.
 
 ### Local webhooks (recommended)

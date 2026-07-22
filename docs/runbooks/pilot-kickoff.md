@@ -30,7 +30,7 @@ This runbook is the **execution order**. The launch checklist is the **full inve
 .\scripts\smoke-pilot.ps1
 
 # Optional: login smoke with dev seller
-.\scripts\smoke-pilot.ps1 -LoginEmail "seller@community.market" -LoginPassword "ChangeMe!Seller1"
+.\scripts\smoke-pilot.ps1 -LoginEmail "member@sellnearby.ie" -LoginPassword "ChangeMe!Member1"
 ```
 
 Manual browser checks (15 min):

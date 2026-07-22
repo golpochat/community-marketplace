@@ -362,5 +362,5 @@ GET /api/admin/payments/:id
 
 | Role | Route |
 |------|-------|
-| `BUYER` | `/buyer/payments` |
-| `SELLER` | `/seller/earnings` |
+| Marketplace | `/account/purchases`, `/account/wallet` |
+| Seller earnings | `/account/earnings` |

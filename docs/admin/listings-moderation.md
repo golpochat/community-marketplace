@@ -1,6 +1,6 @@
 # Listings & Moderation (Admin)
 
-> **Screens:** `/dashboard/listings`, `/dashboard/moderation`
+> **Screens:** `/admin/listings`, `/admin/listing-moderation`, `/admin/moderation` (and `/super-admin/*` equivalents)
 
 ## Listings management
 

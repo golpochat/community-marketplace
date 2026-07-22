@@ -26,10 +26,17 @@ Enterprise authentication for Community Marketplace: **phone OTP registration**,
 | `POST` | `/login` | Public | Password login → session tokens + RBAC redirect |
 | `POST` | `/otp/send` | Public | Send rate-limited OTP (phone or email) |
 | `POST` | `/otp/verify` | Public | Verify OTP; register purpose returns phone verification token only |
-| `POST` | `/activate` | Public | Validate activation JWT → create user → optional auto-login |
+| `POST` | `/activate` | Public | Validate activation JWT + set password → create user → optional auto-login |
+| `POST` | `/activate/preview` | Public | Preview activation token (email, account type) |
 | `POST` | `/activate/resend` | Public | Resend activation email for pending registration |
+| `POST` | `/password/forgot` | Public | Request password reset email |
+| `POST` | `/password/reset/preview` | Public | Preview reset token |
+| `POST` | `/password/reset` | Public | Complete password reset → optional auto-login |
+| `POST` | `/password/change` | Bearer | Change password (authenticated) |
 | `POST` | `/refresh` | Public | Rotate refresh token (body or `cm_refresh_token` cookie) |
 | `POST` | `/logout` | Bearer | Revoke session(s); clears refresh cookie |
+| `POST` | `/admin-invite/preview` | Public | Preview admin invitation |
+| `POST` | `/admin-invite/accept` | Public | Accept admin invitation → session |
 
 All successful responses are wrapped as `{ "data": ... }`.
 
@@ -147,10 +154,14 @@ Signed JWT (`type: email_activation`, 24h TTL):
 POST /api/auth/activate
 Content-Type: application/json
 
-{ "token": "eyJ..." }
+{
+  "token": "eyJ...",
+  "password": "SecurePass1!",
+  "confirmPassword": "SecurePass1!"
+}
 ```
 
-Creates the user with `email_verified_at` and `phone_verified_at` set. Returns auto-login session on first activation:
+Creates the user with `email_verified_at` and `phone_verified_at` set. Default marketplace role is **`MEMBER`**. Returns auto-login session on first activation:
 
 ```json
 {
@@ -159,13 +170,13 @@ Creates the user with `email_verified_at` and `phone_verified_at` set. Returns a
     "email": "jane@example.com",
     "userId": "uuid",
     "login": {
-      "user": { "id": "...", "role": "BUYER", "..." : "..." },
+      "user": { "id": "...", "role": "MEMBER", "..." : "..." },
       "accessToken": "eyJ...",
       "refreshToken": "eyJ...",
       "expiresIn": 900,
       "sessionId": "uuid",
       "issuedAt": "2026-06-24T12:00:00.000Z",
-      "redirectPath": "/buyer/dashboard",
+      "redirectPath": "/account",
       "appTarget": "web"
     }
   }
@@ -232,10 +243,11 @@ Revokes the session and clears the refresh cookie.
 
 | Role | `redirectPath` | `appTarget` |
 |------|----------------|-------------|
-| `SUPER_ADMIN` | `/super-admin/dashboard` | `admin` |
-| `ADMIN` | `/admin/dashboard` | `admin` |
-| `SELLER` | `/seller/dashboard` | `web` |
-| `BUYER` | `/buyer/dashboard` | `web` |
+| `SUPER_ADMIN` | `/super-admin/dashboard` | `web` |
+| `ADMIN` (+ personas) | `/admin/dashboard` | `web` |
+| `MEMBER` / `SELLER` / `BUYER` | `/account` | `web` |
+
+All roles use the unified `apps/web` frontend (`appTarget` is always `web`).
 
 Protected API routes use global `AuthGuard` + `RolesPermissionsGuard` with `@RequireRole` / `@RequirePermissions`.
 

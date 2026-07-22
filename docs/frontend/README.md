@@ -1,6 +1,6 @@
 # Frontend Documentation
 
-Documentation for the Community Marketplace web app (`apps/web`).
+Documentation for the SellNearby web app (`apps/web`) — public marketplace, unified `/account` hub, and `/admin` · `/super-admin` operator consoles.
 
 | Document | Description |
 |----------|-------------|

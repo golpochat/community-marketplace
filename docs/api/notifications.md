@@ -167,8 +167,7 @@ Same routes under `/api/seller/notifications`.
 
 | Role | Route |
 |------|-------|
-| `BUYER` | `/buyer/notifications` |
-| `SELLER` | `/seller/notifications` |
+| All marketplace roles | `/account/notifications` |
 
 ---
 

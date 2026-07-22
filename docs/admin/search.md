@@ -1,6 +1,6 @@
 # Search Management (Admin)
 
-> **Screen:** `/dashboard/search` · **Permission:** `manage_search_index`
+> **Screen:** `/admin/search` · `/super-admin/search` · **Permission:** `manage_search_index`
 
 ## Operations
 

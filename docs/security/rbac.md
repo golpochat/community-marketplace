@@ -4,10 +4,13 @@
 
 | Code | Description |
 |------|-------------|
-| `BUYER` | Marketplace buyer |
-| `SELLER` | Listing seller |
-| `ADMIN` | Scoped operator |
-| `SUPER_ADMIN` | Full platform access |
+| `SUPER_ADMIN` | Full platform access (bypass) |
+| `ADMIN` | Scoped operator (+ personas e.g. `ACCOUNTS_ADMIN`) |
+| `MEMBER` | Default marketplace account (unified `/account`) |
+| `SELLER` | Listing seller capability |
+| `BUYER` | Marketplace buyer capability |
+
+`MEMBER` can satisfy `@RequireRole('BUYER'|'SELLER')` via capability mapping in the API.
 
 ## Permission enforcement
 

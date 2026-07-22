@@ -244,10 +244,9 @@ Login responses include RBAC-aware `redirectPath`:
 
 | Role | Path | App |
 |------|------|-----|
-| `SUPER_ADMIN` | `/super-admin/dashboard` | admin |
-| `ADMIN` | `/admin/dashboard` | admin |
-| `SELLER` | `/seller/dashboard` | web |
-| `BUYER` | `/buyer/dashboard` | web |
+| `SUPER_ADMIN` | `/super-admin/dashboard` | web |
+| `ADMIN` (+ personas) | `/admin/dashboard` | web |
+| `MEMBER` / `SELLER` / `BUYER` | `/account` | web |
 
 Dashboard pages consume:
 

@@ -3,8 +3,8 @@
 > **Status:** Approved direction — single canonical planning document  
 > **Scope:** Ireland-wide marketplace · card-only payments · haram-free catalog  
 > **Audience:** Engineering, Product, Design, Admin, Investors  
-> **Last updated:** 2026-06-27  
-> **Implementation:** Foundation ✅ · Growth **Phase 1**, **1.5**, **3** ✅ shipped · **Phase 2**, **4–6+** 📋 planned
+> **Last updated:** 2026-07-22  
+> **Implementation:** Foundation ✅ · Growth **Phase 1**, **1.5**, **2**, **3** ✅ shipped · **Phase 4–6+** 📋 planned · Admin display-ad campaigns ✅ (self-serve later)
 
 **Covers:** Monetization · Pricing · Rollout · Revenue model · UX flows · Safety · Moderation · Category tree
 
@@ -51,11 +51,12 @@ SellNearby is a **free-to-start, trust-first, micro-priced** community marketpla
 
 - Platform fees on card sales (live today)
 - Listing boosts, featured listings, fast-track verification (**live** — Phases 1, 1.5, 3)
-- Buyer micro-SKUs, wallet credit economy, seller packages (planned — Phases 2, 4–6)
+- Wallet credit spend on boosts / fast-track / early unlock (**live** — Phase 2)
+- Buyer micro-SKUs and seller packages (planned — Phases 4–6)
 
 **Safety:** No haram products, illegal items, or unsafe content — family-friendly, Ireland-appropriate, high-trust.
 
-**Live today:** 10% platform fee (8% auto-applied for verified sellers), 1.5% buyer cashback (earn-only wallet), paid boosts + featured slots + fast-track verification, free core (list, message, browse, verify, Stripe onboarding).
+**Live today:** 10% platform fee (8% auto-applied for verified sellers), 1.5% buyer cashback (earn + spend on platform purchases), paid boosts + featured slots + fast-track verification, free core (list, message, browse, verify, Stripe onboarding). Admin-run brand display ads MVP.
 
 This blueprint defines everything needed to build, scale, and govern SellNearby.
 
@@ -72,7 +73,7 @@ This blueprint defines everything needed to build, scale, and govern SellNearby.
 | No buyer platform fee | Buyers pay listing price only |
 | Card-only v1 | No bank transfer in growth phases |
 | Micro-pricing | €0.49–€4.99 impulse band |
-| Cashback wallet | Earn → spend loop (earn-only live; spend Phase 2) |
+| Cashback wallet | Earn → spend loop (spend live on boosts / fast-track / early unlock; full GMV checkout wallet+card still Phase 2+) |
 | No haram products | Policy + keyword + category enforcement |
 | No subscriptions | Until seller packages / buyer alerts (Phase 6+) |
 
@@ -85,7 +86,7 @@ This blueprint defines everything needed to build, scale, and govern SellNearby.
 | Featured listings | €2.99 / €1.99 | 1.5 | ✅ Live |
 | Fast-track verification | €2.99 | 3 | ✅ Live |
 | Buyer SKUs | €0.49–€1.99 | 4–5 | 📋 Planned |
-| Wallet spend | Credits | 2 | 📋 Planned |
+| Wallet spend | Credits → boosts / fast-track / early unlock | 2 | ✅ Live |
 | Seller packages | €2.99–€9.99 | 6 | 📋 Planned |
 
 **Economics:** 10% fee − 1.5% cashback ≈ 8.5% net · 8% verified ≈ 6.5% net.
@@ -568,7 +569,7 @@ SellNearby monetization should feel:
 | **Foundation 3** | UX + messaging | ✅ Live | Supports conversion |
 | **1** | Paid listing boosts + verified 8% fee | ✅ Live (2026-06-27) | Seller visibility |
 | **1.5** | Featured listing slots | ✅ Live (2026-06-27) | Seller visibility |
-| **2** | Wallet spend (credit economy) | 📋 Planned | Closed-loop credits |
+| **2** | Wallet spend (credit economy) | ✅ Live | Credits → boosts / fast-track / early unlock |
 | **3** | Fast-track verification | ✅ Live (2026-06-27) | Trust / speed |
 | **4** | Buyer micro-SKUs | 📋 Planned | Buyer convenience |
 | **5** | Buyer protection | 📋 Planned (legal gate) | Buyer safety |
@@ -4250,4 +4251,4 @@ This Master Blueprint defines **monetization, pricing, rollout, revenue model, U
 
 **Sections 0–10** = executive blueprint. **Appendices A–L** = complete detail from all consolidated planning documents.
 
-**Next step:** Implement **Phase 2 — wallet spend** (credits → boosts + early unlock). Phases **1**, **1.5**, and **3** are live — see [Growth phases](#growth-phases) and [Appendix B](#appendix-b--phase-1-technical-specification).
+**Next step:** Pilot ops (Stripe live, SendGrid, legal pack) and demand-gated **Phases 4–6+**. Growth **Phases 1–3** (including wallet spend) and admin display-ad campaigns are live — see [Growth phases](#growth-phases), [monetization.md](./monetization.md), and [display-ads-admin-campaigns.md](./display-ads-admin-campaigns.md).

@@ -1,61 +1,52 @@
 # Deployment Architecture
 
-> **Category:** Architecture
+> **Category:** Architecture · **Last updated:** 2026-07-22
 
-End-to-end deployment: GitHub Actions → container registry → Kubernetes → Traefik ingress.
+**Primary (pilot / current production):** GitHub Actions (optional) or manual build → Docker images → **OVH VPS Docker Compose** + Traefik. See [ovh-vps-deploy.md](../runbooks/ovh-vps-deploy.md).
+
+**Optional / future:** Kubernetes overlays under `infra/k8s/` (includes leftover admin deployment manifests — **not** required for the unified web app).
 
 ```mermaid
 flowchart TB
-  subgraph CI[GitHub Actions]
-    BUILD[build.yml]
-    DEPLOY_DEV[deploy-dev.yml]
-    DEPLOY_STG[deploy-staging.yml]
-    DEPLOY_PROD[deploy-prod.yml]
+  subgraph CI[CI / build]
+    BUILD[Docker build api + web + worker]
   end
 
-  subgraph Registry
-    GHCR[ghcr.io images]
-  end
-
-  subgraph K8s[Kubernetes Cluster]
-    ING[Ingress / Traefik]
-    API_POD[API Deployment]
-    WEB_POD[Web Deployment]
-    ADMIN_POD[Admin Deployment]
-    WORKER_POD[Worker Deployment]
+  subgraph VPS[OVH VPS — primary]
+    TRAEFIK[Traefik]
+    WEB[Web container]
+    API[API container]
+    WORKER[Worker]
     DATA[(Postgres + Redis + Meili)]
   end
 
-  BUILD --> GHCR
-  DEPLOY_DEV & DEPLOY_STG & DEPLOY_PROD --> GHCR
-  DEPLOY_DEV & DEPLOY_STG & DEPLOY_PROD --> K8s
-  ING --> WEB_POD & ADMIN_POD & API_POD
-  API_POD & WORKER_POD --> DATA
+  BUILD --> WEB & API & WORKER
+  TRAEFIK --> WEB & API
+  API & WORKER --> DATA
 ```
 
-## Environment matrix
+## Environment matrix (Compose)
 
-| Env | Branch trigger | Namespace | Overlay |
-|-----|----------------|-----------|---------|
-| Development | `develop` | `community-marketplace` | `overlays/dev` |
-| Staging | `main` | `community-marketplace-staging` | `overlays/staging` |
-| Production | Manual workflow | `community-marketplace` | `overlays/prod` |
+| Env | Typical path | Notes |
+|-----|--------------|-------|
+| Local | `infra/docker/docker-compose.dev.yml` | Infra + optional API |
+| Pilot / prod | `infra/docker/docker-compose.prod.yml` | Web + API + worker + data — **no separate admin service** |
 
 ## TLS & routing
 
-- Traefik terminates TLS (Let's Encrypt ACME)
-- Host-based routing: `api.*`, `community.market`, `admin.*`
-- Middlewares: rate limit, compression, security headers
+- Traefik terminates TLS (Let's Encrypt ACME) where configured
+- Host-based routing for **web** + **api** (e.g. `sellnearby.ie`, `api.*`)
+- Admin UI is **path-based** on the web app (`/admin`, `/super-admin`) — no `admin.*` host required
+- Middlewares: rate limit, compression, security headers (where enabled)
 
 ## Post-deploy verification
 
-1. `kubectl rollout status deployment/<env>-api`
-2. `curl https://api.<domain>/api/health/ready`
-3. Grafana: error rate, latency, `bullmq_queue_waiting`
-4. Smoke test: login, listing search, admin dashboard
+1. Compose health: `docker compose … ps` / API `GET /api/health/ready`
+2. Smoke: login → `/account` or `/admin/dashboard`
+3. Grafana / logs if observability stack is enabled
 
 ## Related
 
 - [Infrastructure](../infrastructure/README.md)
-- [Deploy runbook](../runbooks/deploy.md)
-- [Rollback runbook](../runbooks/rollback.md)
+- [OVH VPS deploy](../runbooks/ovh-vps-deploy.md)
+- [Deploy runbook](../runbooks/deploy.md) (K8s-oriented — demoted vs Compose for pilot)

@@ -23,13 +23,13 @@ kubectl rollout status deployment/prod-api -n community-marketplace
 curl https://api.community.market/api/health/ready
 ```
 
-Repeat for `web`, `admin`, `worker` deployments.
+Repeat for `web` and `worker` deployments (there is no separate admin deployment in the Compose pilot).
 
 ## Docker Compose rollback
 
 ```bash
 # Re-tag previous images and redeploy
-docker compose -f infra/docker/docker-compose.prod.yml up -d api web admin
+docker compose -f infra/docker/docker-compose.prod.yml up -d api web worker
 ```
 
 ## Unified marketplace account rollback

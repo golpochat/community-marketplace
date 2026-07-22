@@ -1,7 +1,9 @@
 # Community Marketplace — Documentation
 
-> **Version:** 0.1.0 · **Last updated:** 2026-06-24  
-> Central index for architecture, API, features, infrastructure, security, and operations.
+> **Version:** 0.1.0 · **Last updated:** 2026-07-22  
+> Central index for architecture, API, features, infrastructure, security, and operations.  
+> **Frontend:** unified `apps/web` (marketplace + `/account` + `/admin` + `/super-admin`). `apps/admin` is deprecated.  
+> **Pilot deploy:** prefer [OVH VPS runbook](./runbooks/ovh-vps-deploy.md) over K8s-first guides.
 
 ---
 
@@ -52,7 +54,7 @@ docs/
 | [Event-Driven Architecture](./architecture/event-driven.md) | Events, jobs, async flows |
 | [Data Flow](./architecture/data-flow.md) | Request & data flow diagrams |
 | [Sequence Diagrams](./architecture/sequence-diagrams.md) | Auth, payments, chat |
-| [Deployment Architecture](./architecture/deployment-architecture.md) | K8s + Traefik + CI/CD |
+| [Deployment Architecture](./architecture/deployment-architecture.md) | Docker Compose (pilot) + optional K8s / Traefik |
 | [Module Boundaries](./architecture/module-boundaries.md) | Cross-module rules |
 
 ### API reference
@@ -61,13 +63,15 @@ docs/
 |----------|-----------|
 | [Auth](./api/auth.md) | `/api/auth` |
 | [Users](./api/users.md) | `/api/users`, `/api/admin/users` |
-| [Listings](./api/listings.md) | `/api/listings`, `/api/seller/listings` |
+| [Listings](./api/listings.md) | `/api/listings`, `/api/seller/listings`, `/api/stores` |
 | [Chat](./api/chat.md) | `/api/chat`, WebSocket |
-| [Payments](./api/payments.md) | `/api/payments` |
+| [Payments](./api/payments.md) | `/api/buyer/payments`, `/api/seller/earnings`, `/api/checkout` |
 | [Notifications](./api/notifications.md) | `/api/notifications` |
 | [Search](./api/search.md) | `/api/search` |
 | [Moderation](./api/moderation.md) | `/api/moderation` |
 | [Admin APIs](./api/admin.md) | `/api/admin`, `/api/super-admin` |
+
+Also live (see [api/README](./api/README.md)): monetization `/api/ads`, AI marketing hub, verification, disputes, fraud, share, statements/finance, platform.
 
 ### Features (functional specs)
 
@@ -109,7 +113,7 @@ docs/
 | [Developer Quickstart](./onboarding/quickstart.md) | 15-minute setup |
 | [Launch checklist](./product/launch-checklist.md) | Pilot vs public launch readiness |
 | [SEO audit & roadmap](./product/seo-audit.md) | Current SEO status, gaps, phased plan |
-| [AI Marketing Hub](./product/ai-marketing-hub.md) | Phases 0–3 live: credits, text/image tools, free price & posting guidance |
+| [AI Marketing Hub](./product/ai-marketing-hub.md) | Phases 0–4 pilot-ready: credits, text/image tools, Growth Pack, featured storefront; video/forecast deferred |
 | [Storefront model](./product/storefront-model.md) | Account vs storefront, listing limits, verification |
 | [Product index](./product/README.md) | Full product doc index |
 | [Product Requirements](./product/functional-requirements.md) | Functional scope |

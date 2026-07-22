@@ -97,9 +97,11 @@ Document navigations use `NetworkOnly` in the service worker — HTML is not sta
 
 ---
 
-## Part 2 — Critical gaps (honest)
+## Part 2 — Critical gaps (historical audit findings)
 
-### P0 — Blocking issues for ranking
+> **Historical:** Findings below describe the platform **before** the July 2026 SEO implementation. They are kept for audit trail. For live status, use [Part 5](#part-5--implementation-status) / production checklist (Part 11) and [seo-operations.md](./seo-operations.md).
+
+### P0 — Blocking issues for ranking (pre-fix)
 
 #### 1. No `robots.txt` (confirmed live 404)
 

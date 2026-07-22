@@ -7,11 +7,11 @@
 ```
 community-marketplace/
 ├── apps/
-│   ├── web/          # Buyer/seller UI — no direct DB access
-│   ├── admin/        # Admin UI — no direct DB access
+│   ├── web/          # Marketplace + /account + /admin + /super-admin — no direct DB access
+│   ├── admin/        # DEPRECATED — do not use
 │   └── api/          # Sole owner of business logic & persistence
 ├── packages/         # Shared, framework-agnostic code
-└── infra/            # Docker, Traefik, K8s, scripts
+└── infra/            # Docker, Traefik, optional K8s, scripts
 ```
 
 ## API domain modules
@@ -68,9 +68,9 @@ flowchart LR
 | Package | Consumed by | Must not contain |
 |---------|-------------|------------------|
 | `types` | all apps | Runtime logic |
-| `validation` | api, web, admin | NestJS / React deps |
+| `validation` | api, web | NestJS / React deps |
 | `utils` | all apps | Framework code |
-| `ui` | web, admin | API calls |
+| `ui` / `ui-dashboard` | web | API calls |
 | `config` | all apps | Secrets (only env loaders) |
 
 ## Future considerations

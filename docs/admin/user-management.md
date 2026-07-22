@@ -1,6 +1,6 @@
 # User Management (Admin)
 
-> **Screen:** `/dashboard/users` · **Permission:** `view_users`, `suspend_user`
+> **Screen:** `/admin/users` · `/super-admin/users` · **Permission:** `view_users`, `suspend_user`
 
 ## Workflow
 

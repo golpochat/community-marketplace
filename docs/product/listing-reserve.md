@@ -373,15 +373,15 @@ Guards: buyer must be verified; approve/decline only listing owner.
 
 ## 15. Approval checklist
 
-Before coding:
+Product decisions (implemented):
 
 - [x] Verified = seller ID verification  
 - [x] Reserve free forever  
 - [x] Seller approval required  
 - [x] Seller-set 4 / 12 / 24h  
-- [ ] Confirm pending TTL **2 hours**  
-- [ ] Confirm others can Buy now while request is pending  
-- [ ] Listing status migration for `reserved`  
-- [ ] Verification CTA path from Reserve button  
+- [x] Pending TTL **2 hours**  
+- [x] Others can Buy now while request is pending  
+- [x] Listing status includes `reserved`  
+- [x] Verification CTA path from Reserve button  
 
-**Out of scope until approved:** schema, APIs, UI implementation.
+**Still not in scope:** Phase 3 seller opt-out (`allowReservations` or similar) — not coded.

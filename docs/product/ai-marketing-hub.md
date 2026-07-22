@@ -1,7 +1,7 @@
 # SellNearby AI Marketing Hub — Product Plan
 
 **Status:** **Pilot-ready** (Phases 0–4 + Marketing Hub home + shop banner apply + AI credit packs + featured storefront). Publish in admin and smoke. Deferred: video, forecast.  
-**Last reviewed:** 2026-07-17  
+**Last reviewed:** 2026-07-22  
 **Related:** [master-blueprint-v1.md](./master-blueprint-v1.md), [monetization.md](./monetization.md), [roadmap.md](./roadmap.md)  
 **External reference:** [Zeely.ai](https://zeely.ai/) (inspiration only — not a core dependency)
 
@@ -180,7 +180,7 @@ Connect AI Hub to existing SellNearby monetization (boosts / featured / storefro
 | Feature | Complexity | Priority | Status |
 |---------|------------|----------|--------|
 | “Generate creative → Boost listing” flow | M | P0 | **Done** — 3-step funnel in campaign panel + `source` on boost intent |
-| “Generate shop banner → Feature storefront” | M | P1 | **Partial** — AI shop banner + apply live; dedicated featured-store SKU deferred (CTA → listings) |
+| “Generate shop banner → Feature storefront” | M | P1 | **Done** — AI shop banner + apply + `featured_store` SKU + Featured shops strip |
 | Seller growth packs (credits + boost discount) | M | P0 | **Done** — `seller_growth_pack` SKU (€6.99 · €5 credit · 25% hub boost) |
 | Admin analytics: hub usage → boost conversion | M | P1 | **Done** — Monetization → Advertising analytics panel |
 | Partner / sponsor creatives into display slots later | L | Later | **Not started** |
@@ -330,15 +330,15 @@ Align with SellNearby’s free-to-start, micro-priced philosophy (see master blu
 
 Unit costs match §14 tables and `AI_MARKETING_TASK_UNIT_COSTS` in `@community-marketplace/types`.
 
-### 9.2 Future packaging options (not live SKUs)
+### 9.2 Packaging options
 
 | Package | What sellers get | Suggested price band (IE) | Notes |
 |---------|------------------|---------------------------|-------|
 | Free starter | Limited AI generations / month (live: 10 text-equivalent units) | €0 | Already live for verified |
-| AI Credits packs | Pay-as-you-go top-ups | Micro packs e.g. €1.99 / €4.99 / €9.99 | **Not shipped** — use Growth Pack or cashback Credit |
+| AI Credits packs | Pay-as-you-go top-ups | €1.99 / €4.99 / €9.99 → €2 / €5 / €10 Credit | **Live** — `ai_credit_2` / `_5` / `_10` |
 | Seller Growth Pack | €5 Credit + 25% off one Marketing Hub boost | **€6.99** (default) | **Live** — campaign funnel step 2 |
 | Pro Seller (optional later) | Higher monthly allowance + image tools | e.g. €9.99–€19.99 / mo | Only if usage proves sticky |
-| Enterprise / agency (later) | Multi-storefront bulk | Custom | Phase 4+ |
+| Enterprise / agency (later) | Multi-storefront bulk | Custom | Later |
 
 ### 9.3 Credit cost table (live)
 
@@ -440,7 +440,7 @@ AI Hub should increase:
 
 ---
 
-## 14. Implementation status (as of 2026-07-17)
+## 14. Implementation status (as of 2026-07-22)
 
 ### 14.0 Summary — where we are
 

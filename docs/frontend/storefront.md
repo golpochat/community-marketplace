@@ -36,6 +36,6 @@ Types live in `packages/types/src/storefront.ts`:
 
 `SellerCard` on listing detail links to `/store/{sellerSlug}` when a slug is known.
 
-## Future API
+## API
 
-Backend endpoint `GET /stores/:slug` is reserved; web client is ready to consume it when implemented.
+Backend `GET /api/stores/:slug` is **live** (`StoresController`). Web page: `/store/[slug]`. Client may still fall back to mock data when the API is unavailable.

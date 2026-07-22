@@ -22,9 +22,12 @@ src/
 
 ## Auth & RBAC
 
-- `middleware.ts` protects `/buyer/*` and `/seller/*` via the `cm-role` cookie.
-- `WebRoleDashboardShell` bridges Zustand auth state into `@community-marketplace/ui-dashboard`.
+- `middleware.ts` protects dashboard prefixes: `/account/*`, `/admin/*`, `/super-admin/*`, `/buyer/*`, `/seller/*` (via `cm-role` cookie and `route-guards`).
+- Super Admins hitting `/admin/*` are rewritten to `/super-admin/*`.
+- Many legacy `/buyer/*` and `/seller/*` paths redirect to `/account/*`.
+- Account shell + `WebRoleDashboardShell` bridge Zustand auth into `@community-marketplace/ui-dashboard`.
 - Public routes live under the `(site)` route group with `PublicLayout`.
+- Operator consoles: `/admin/*` and `/super-admin/*` (not a separate admin app).
 
 ## Realtime
 

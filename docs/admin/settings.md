@@ -1,10 +1,10 @@
 # System Settings (Super Admin)
 
-> **Screen:** `/dashboard/settings` · **Role:** `SUPER_ADMIN` only
+> **Screen:** `/super-admin/settings` · **Role:** `SUPER_ADMIN` only
 
 ## Platform configuration
 
-Stored in Redis (`platform:settings`):
+Stored in PostgreSQL `platform_settings` (via `PlatformSettingsService`). Monetization publish toggles (`displayAdsEnabled`, `boostsEnabled`, `featuredEnabled`, `aiMarketingEnabled`, etc.) are edited under **Monetization** in admin.
 
 - Platform fee percentage
 - Feature flags
@@ -15,8 +15,8 @@ Stored in Redis (`platform:settings`):
 
 | Screen | Path | Description |
 |--------|------|-------------|
-| RBAC | `/dashboard/rbac` | Role-permission matrix |
-| Admins | `/dashboard/admins` | Create/manage admin users |
+| RBAC | `/super-admin/rbac` | Role-permission matrix |
+| Admins | `/super-admin/admins` | Create/manage admin users |
 
 ## API
 

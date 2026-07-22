@@ -1,16 +1,15 @@
 # System Overview
 
-> **Category:** Architecture · **Version:** 0.1.0
+> **Category:** Architecture · **Version:** 0.1.0 · **Last updated:** 2026-07-22
 
-Community Marketplace is a pnpm monorepo with three client apps, a NestJS API, shared packages, BullMQ workers, and supporting infrastructure services.
+SellNearby (Community Marketplace) is a pnpm monorepo with a **unified Next.js web app**, a NestJS API, shared packages, BullMQ workers, and supporting infrastructure.
 
 ## High-level architecture
 
 ```mermaid
 flowchart TB
     subgraph Clients
-        WEB[apps/web<br/>Next.js PWA]
-        ADMIN[apps/admin<br/>Next.js Dashboard]
+        WEB[apps/web<br/>Next.js — marketplace + /account + /admin + /super-admin]
     end
 
     subgraph Edge
@@ -27,6 +26,7 @@ flowchart TB
         VAL[packages/validation]
         UTILS[packages/utils]
         UI[packages/ui]
+        UID[packages/ui-dashboard]
         CFG[packages/config]
     end
 
@@ -42,12 +42,9 @@ flowchart TB
     end
 
     WEB --> TRAEFIK
-    ADMIN --> TRAEFIK
     TRAEFIK --> WEB
-    TRAEFIK --> ADMIN
     TRAEFIK --> API
     WEB -. REST .-> API
-    ADMIN -. REST .-> API
     WEB -. WS .-> WS
     API --> WS
     API --> PG
@@ -58,27 +55,29 @@ flowchart TB
     API --> TYPES
     API --> VAL
     WEB --> UI
-    ADMIN --> UI
+    WEB --> UID
 ```
+
+> **`apps/admin` is deprecated.** Admin UI lives under `apps/web` at `/admin` and `/super-admin`. Leftover `Dockerfile.admin` / K8s admin manifests are legacy scaffolding.
 
 ## Service map
 
 | Service | Port | Responsibility |
 |---------|------|----------------|
-| `web` | 3000 | Public marketplace UI |
-| `admin` | 3001 | Operations dashboard |
+| `web` | 3000 | Marketplace + `/account` + operator consoles |
 | `api` | 4000 | REST + WebSocket backend |
 | `meilisearch` | 7700 | Full-text search |
-| `postgres` | 5432 | Primary datastore |
-| `redis` | 6379 | Cache, sessions, job queues |
+| `postgres` | 5432 (host map often 5434) | Primary datastore |
+| `redis` | 6379 (host map often 6380) | Cache, sessions, job queues |
 | `traefik` | 80/443 | Routing, TLS termination |
 
 ## Deployment targets
 
 | Environment | Tooling |
 |-------------|---------|
-| Local | `docker compose` + `infra/scripts/deploy.sh` |
-| Kubernetes | `infra/k8s/base` + overlays (`dev`, `staging`, `prod`) |
+| Local | `docker compose` (`infra/docker`) + `pnpm dev` |
+| **Pilot / production (current)** | OVH VPS + Docker Compose — see [ovh-vps-deploy.md](../runbooks/ovh-vps-deploy.md) |
+| Kubernetes | Optional / future scaffolding in `infra/k8s/` (not the primary pilot path) |
 
 ## Related docs
 

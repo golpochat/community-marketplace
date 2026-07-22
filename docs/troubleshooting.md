@@ -440,19 +440,17 @@ Run seeds **in order** from repo root:
 
 ```bash
 pnpm seed:rbac
-pnpm seed:dev-users
 ```
 
 ### Test credentials
 
-See [dev-credentials.md](./dev-credentials.md#seeded-application-users-one-per-role).
+See [dev-credentials.md](./dev-credentials.md#seeded-application-users-bootstrap).
 
 | Role | Email | Password |
 |------|-------|----------|
-| Super Admin | `superadmin@community.market` | `ChangeMe!SuperAdmin1` |
-| Admin | `admin@community.market` | `ChangeMe!Admin1` |
-| Seller | `seller@community.market` | `ChangeMe!Seller1` |
-| Buyer | `buyer@community.market` | `ChangeMe!Buyer1` |
+| Super Admin | `superadmin@sellnearby.ie` | `ChangeMe!SuperAdmin1` |
+| Admin | `admin@sellnearby.ie` | `ChangeMe!Admin1` |
+| Member | `member@sellnearby.ie` | `ChangeMe!Member1` |
 
 ### OTP in development
 
@@ -462,7 +460,7 @@ OTP codes are printed in the **API console** when you request one — there is n
 
 SMS is **not** sent until a provider (e.g. Twilio) is integrated. During pilot:
 
-1. The register page shows a **Pilot mode** banner when `OTP_PILOT_MODE=true` (baked into the web image at build).
+1. The register page shows a **Pilot mode** banner when `NEXT_PUBLIC_OTP_PILOT_MODE=true` (baked into the web image at build; API uses `OTP_PILOT_MODE`).
 2. Codes appear in API container logs:
 
 ```bash
@@ -511,7 +509,6 @@ docker compose -f infra/docker/docker-compose.dev.yml down -v
 docker compose -f infra/docker/docker-compose.dev.yml up -d postgres redis meilisearch
 pnpm --filter @community-marketplace/api prisma:migrate:deploy
 pnpm seed:rbac
-pnpm seed:dev-users
 ```
 
 ---

@@ -5,11 +5,13 @@
 ## Functional requirements
 
 - Full-text listing search with filters (category, price, geo)
+- Optional semantic hybrid search when OpenAI embeddings are configured (`semantic=true`)
 - Global search across listings/users (scoped)
 - Autocomplete with Redis cache
 - Admin reindex, synonyms, stop-words, relevance tuning
 - Nightly sync job
 - DB fallback when Meilisearch down
+- Primary public UI: `/listings`
 
 ## Non-functional requirements
 

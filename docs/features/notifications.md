@@ -5,12 +5,13 @@
 ## Functional requirements
 
 - In-app notification inbox
-- Push (FCM), email (SendGrid), SMS hooks
+- Push (FCM) and email (SendGrid / stub) — **SMS is not a live dispatch channel**
 - User preference matrix per channel/type
 - Template engine with variable substitution
 - Admin broadcast and targeted send
 - Provider health monitoring
 - Rate limits per user and provider
+- Primary web UI: `/account/notifications`
 
 ## Non-functional requirements
 

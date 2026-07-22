@@ -17,7 +17,7 @@
 
 | ID | Requirement | Priority |
 |----|-------------|----------|
-| FR-2.1 | Sellers can create, edit, and delete listings | P0 |
+| FR-2.1 | Sellers can create, edit, and delete draft/rejected listings; pause or end after publish | P0 |
 | FR-2.2 | Buyers can browse and search listings | P0 |
 | FR-2.3 | Listings support categories, images, and conditions | P0 |
 | FR-2.4 | Listings have lifecycle states (draft → active → sold) | P1 |

@@ -1,36 +1,39 @@
 # Database Migrations
 
-> **Status:** Placeholder — migrations will be generated from `schema.prisma`.
+> **Canonical location:** `apps/api/prisma/migrations/` (do **not** use `docs/db/schema.prisma` as the migrate source — that mirror may be stale).
+
+Prisma migrations are applied from the API package:
+
+```bash
+pnpm --filter @community-marketplace/api prisma:migrate:deploy
+# or locally:
+cd apps/api && pnpm prisma migrate dev --name <description>
+```
 
 ## Structure
 
 ```
-migrations/
-├── 0001_init/              # Initial schema (users, listings, categories)
-├── 0002_payments/          # Payments + Stripe Connect
-├── 0003_chat/              # Conversations + messages
-├── 0004_moderation/        # Reports + bans
-└── README.md
+apps/api/prisma/migrations/
+├── <timestamp>_<name>/
+│   └── migration.sql
+└── migration_lock.toml
 ```
 
-## Workflow (future)
+Dozens of migrations are already applied in the repo (auth, listings, payments, monetization, display ads, AI marketing, stores, reserves, etc.). Prefer `prisma migrate status` over any placeholder log here.
+
+## Workflow
 
 ```bash
 # Generate migration from schema changes
-npx prisma migrate dev --name <description> --schema docs/db/schema.prisma
+cd apps/api
+pnpm prisma migrate dev --name <description>
 
-# Apply in production
-npx prisma migrate deploy --schema docs/db/schema.prisma
+# Apply in production / VPS
+pnpm prisma migrate deploy
 ```
-
-## Migration log
-
-| # | Name | Description | Status |
-|---|------|-------------|--------|
-| — | — | No migrations applied yet | Pending |
 
 ## Rollback policy
 
 - Production rollbacks require a new forward migration (no `migrate reset` in prod)
-- Test all migrations against staging before production deploy
-- Backup before applying: `./infra/scripts/backup.sh`
+- Test all migrations against staging / a backup restore before production deploy
+- Backup before applying: see [restore-backup.md](../runbooks/restore-backup.md) / infra backup scripts

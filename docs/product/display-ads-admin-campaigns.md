@@ -43,7 +43,7 @@ Sell sponsorships **offline**, run creatives from **Admin** into existing displa
 - `imageKey` / `imageUrl`, `clickUrl`, `altText`
 - `priority` — higher wins if two campaigns overlap on the same placement
 
-**Serve rule:** `status ∈ {live, scheduled}` AND `startsAt ≤ now ≤ endsAt`, order by `priority DESC`, then `startsAt ASC`. Still gated by `ADS_SYSTEM_ENABLED` + `displayAdsEnabled` (or preview mode for empty shells only — preview does not show paid creatives unless module is effective).
+**Serve rule:** `status ∈ {live, scheduled}` AND `startsAt ≤ now ≤ endsAt`, order by `priority DESC`, then `startsAt ASC`. Still gated by `ADS_SYSTEM_ENABLED` + platform `displayAdsEnabled`. `ADS_PREVIEW_MODE` / `NEXT_PUBLIC_ADS_PREVIEW_MODE` show empty placement shells only — preview does not show paid creatives unless the module is effective. Public routes are Nest `GET/POST /api/ads/*` (`PublicAdsController`).
 
 ## Admin surfaces
 

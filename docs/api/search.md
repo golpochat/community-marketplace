@@ -149,10 +149,9 @@ Returns popular keywords, zero-result queries, trending categories, CTR.
 
 | Audience | Access |
 |----------|--------|
-| Public | Listing search, autocomplete, global (public data) |
-| `BUYER` | `/buyer/search/*` |
-| `SELLER` | `/seller/search/*` |
-| `ADMIN` | Admin tools + restricted global search |
+| Public | Listing search, autocomplete, global (public data) — primary UI `/listings` |
+| `BUYER` / `SELLER` / `MEMBER` | API mirrors `/buyer/search/*`, `/seller/search/*`; UI browse is `/listings` |
+| `ADMIN` | Admin tools + restricted global search (`/admin/search`) |
 | `SUPER_ADMIN` | Full access |
 
 ---
@@ -172,8 +171,8 @@ Returns popular keywords, zero-result queries, trending categories, CTR.
 
 | Role | Route |
 |------|-------|
-| `BUYER` | `/buyer/search` |
-| `SELLER` | `/seller/search` |
+| Public browse | `/listings` |
+| API mirrors | `/api/buyer/search/*`, `/api/seller/search/*` |
 
 ---
 

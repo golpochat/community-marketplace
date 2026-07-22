@@ -1,81 +1,60 @@
 # Product Roadmap
 
-> **Status:** Placeholder — subject to change.
+> **Status:** Living roadmap · **Last updated:** 2026-07-22  
+> **Canonical monetization detail:** [master-blueprint-v1.md](./master-blueprint-v1.md)  
+> **Launch readiness:** [launch-checklist.md](./launch-checklist.md)
 
-## Phase 0 — Foundation ✅ (current)
+Timeline below reflects **what is shipped in code** vs **what remains planned**. Calendar quarters are indicative, not commitments.
 
-- [x] Monorepo scaffold (pnpm workspaces)
-- [x] Shared packages (types, validation, utils, config, ui)
-- [x] Apps: web, admin, api
-- [x] API domain module scaffolds
-- [x] Infrastructure placeholders (Docker, Traefik, K8s)
-- [x] Documentation skeleton
+## Shipped foundation (2026)
 
-## Phase 1 — MVP (Q3 2026)
+- [x] Monorepo (pnpm) · NestJS API · Next.js `apps/web` (marketplace + `/admin` + `/super-admin`)
+- [x] Prisma + migrations · Docker Compose (local + OVH pilot) · Traefik / optional K8s scaffolding
+- [x] Auth: phone OTP register, email activate (+ password), JWT sessions, password reset
+- [x] Listings CRUD + moderation lifecycle · Meilisearch · chat (REST + WebSocket)
+- [x] Stripe Connect + card checkout · notifications (in-app / push / email)
+- [x] Unified `/account` hub (MEMBER / BUYER / SELLER); legacy `/buyer/*` · `/seller/*` still present
+- [x] Storefront model · listing reserve · SEO Phases 0–4 in web · AI Marketing Hub Phases 0–4
+- [x] Monetization Growth Phases 1 / 1.5 / 2 / 3 (boosts, featured, wallet spend on boosts/fast-track/early unlock, fast-track)
+- [x] Admin display-ad campaigns (homepage + browse sidebar + search inline)
 
-**Goal:** End-to-end listing browse, auth, and chat.
+> **Note:** `apps/admin` is **deprecated** — do not treat it as a delivery target.
 
-| Area | Deliverables |
-|------|-------------|
-| Auth | Password + OTP login, JWT, email activation |
-| Listings | CRUD, categories, image URLs |
-| Chat | REST + WebSocket messaging |
-| Search | Meilisearch listing index |
-| Infra | Docker Compose local stack |
-| DB | Prisma schema + initial migrations |
+## Near-term (pilot → public)
 
-## Phase 2 — Transactions (Q4 2026)
+| Area | Focus |
+|------|--------|
+| Ops / legal | Prod deploy checklist, Stripe live, SendGrid, lawyer-reviewed legal pack |
+| Monetization | Phases 4–6+ per blueprint (buyer micro-SKUs, seller packages) — demand-gated |
+| AI Hub | Video / forecast only after pilot demand |
+| Ads | Self-serve brand portal remains **Enterprise** (admin MVP already live) |
+| Account UX | Continue consolidating on `/account/*`; retire parallel buyer/seller trees when ready |
 
-**Goal:** Enable secure payments between buyers and sellers.
-
-| Area | Deliverables |
-|------|-------------|
-| Payments | Stripe Connect onboarding + card payments |
-| Notifications | FCM push for messages and payments |
-| Moderation | Reports, bans, admin review queue |
-| Admin | Full dashboard with audit log |
-| Infra | Staging K8s deployment |
-
-## Phase 3 — Growth (Q1 2027)
-
-**Goal:** Scale, optimize, and expand marketplace features.
-
-| Area | Deliverables |
-|------|-------------|
-| Search | Faceted filters, geo search, autocomplete |
-| Listings | Image upload (S3), saved items, seller ratings |
-| Performance | CDN, Redis caching, API HPA tuning |
-| Observability | Logging, tracing, alerting |
-| Mobile | Enhanced PWA, push notification polish |
-
-## Phase 4 — Enterprise (Q2 2027+)
-
-**Goal:** Multi-community support and enterprise features.
+## Later (Enterprise+)
 
 | Area | Deliverables |
 |------|-------------|
 | Multi-tenancy | Community / neighborhood scopes |
-| Analytics | Seller insights, platform metrics |
-| Compliance | GDPR tooling, data export |
-| Integrations | Webhooks, public API, partner SDK |
-| Advertising | Self-serve display ads for external brands/sponsors (creatives into existing slots) |
+| Analytics | Deeper seller insights, platform metrics polish |
+| Compliance | GDPR tooling, data export automation |
+| Integrations | Public webhooks / partner SDK |
+| Advertising | Advertiser self-serve into display slots |
 
-## Milestone timeline
+## Milestone overview
 
 ```mermaid
 gantt
-    title Community Marketplace Roadmap
+    title SellNearby roadmap (actual vs planned)
     dateFormat YYYY-MM
-    section Foundation
-    Monorepo + scaffolds     :done, 2026-06, 2026-06
-    section MVP
-    Auth + Listings + Chat   :2026-07, 2026-09
-    Search + Docker deploy   :2026-08, 2026-09
-    section Transactions
-    Stripe + Notifications   :2026-10, 2026-12
-    Moderation + Admin       :2026-11, 2026-12
-    section Growth
-    Scale + PWA polish       :2027-01, 2027-03
+    section Shipped
+    Foundation + MVP + transactions   :done, 2026-06, 2026-07
+    Growth monetization 1-3 + AI hub  :done, 2026-07, 2026-07
+    SEO + display ads MVP             :done, 2026-07, 2026-07
+    section Next
+    Pilot ops + public launch gate    :2026-07, 2026-09
+    Monetization 4-6+ (demand)        :2026-09, 2027-03
+    section Later
+    Enterprise self-serve ads         :2027-01, 2027-06
 ```
 
 ## Decision log
@@ -86,5 +65,8 @@ gantt
 | 2026-06 | NestJS modular API | Clean architecture per domain |
 | 2026-06 | Meilisearch | Fast full-text search, simple ops |
 | 2026-06 | Stripe Connect | Marketplace payment splits |
-| TBD | Prisma ORM | Type-safe DB access (pending wiring) |
+| 2026-06 | Prisma ORM | Type-safe DB access (live in `apps/api`) |
 | 2026-06-29 | Account vs storefront model | See [storefront-model.md](./storefront-model.md) |
+| 2026-07 | Admin UI in `apps/web` | Single frontend; `apps/admin` retired |
+| 2026-07 | Unified `/account` hub | MEMBER default role; buyer/seller namespaces legacy |
+| 2026-07-22 | Roadmap rewritten to match shipped code | Prior placeholder timeline was obsolete |
