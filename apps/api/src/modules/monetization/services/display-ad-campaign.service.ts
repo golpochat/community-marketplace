@@ -33,6 +33,8 @@ function mapCampaign(row: {
   clickUrl: string;
   altText: string | null;
   priority: number;
+  impressionCount: number;
+  clickCount: number;
   createdByAdminId: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -51,6 +53,8 @@ function mapCampaign(row: {
     clickUrl: row.clickUrl,
     altText: row.altText ?? undefined,
     priority: row.priority,
+    impressionCount: row.impressionCount,
+    clickCount: row.clickCount,
     createdByAdminId: row.createdByAdminId ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
@@ -237,10 +241,61 @@ export class DisplayAdCampaignService {
     return {
       campaignId: row.id,
       imageUrl: row.imageUrl,
-      clickUrl: row.clickUrl,
+      clickUrl: this.buildTrackedClickUrl(row.id),
       altText: row.altText ?? undefined,
       advertiserName: row.advertiserName,
     };
+  }
+
+  async recordImpression(campaignId: string): Promise<boolean> {
+    const result = await this.prisma.displayAdCampaign.updateMany({
+      where: {
+        id: campaignId,
+        status: { in: ['live', 'scheduled'] },
+      },
+      data: { impressionCount: { increment: 1 } },
+    });
+    return result.count > 0;
+  }
+
+  /**
+   * Increment click counter and return the destination URL for a 302 redirect.
+   * Returns null when the campaign is missing or the destination is unsafe.
+   */
+  async recordClickAndGetDestination(campaignId: string): Promise<string | null> {
+    const row = await this.prisma.displayAdCampaign.findUnique({
+      where: { id: campaignId },
+      select: { id: true, clickUrl: true, status: true },
+    });
+    if (!row) return null;
+
+    const destination = this.sanitizeDestinationUrl(row.clickUrl);
+    if (!destination) return null;
+
+    if (row.status === 'live' || row.status === 'scheduled') {
+      await this.prisma.displayAdCampaign.update({
+        where: { id: row.id },
+        data: { clickCount: { increment: 1 } },
+      });
+    }
+
+    return destination;
+  }
+
+  private buildTrackedClickUrl(campaignId: string): string {
+    const port = process.env.PORT ?? '4000';
+    const base = (process.env.API_PUBLIC_URL ?? `http://localhost:${port}`).replace(/\/$/, '');
+    return `${base}/api/ads/click/${campaignId}`;
+  }
+
+  private sanitizeDestinationUrl(raw: string): string | null {
+    try {
+      const url = new URL(raw.trim());
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+      return url.toString();
+    } catch {
+      return null;
+    }
   }
 
   private assertImageKey(key: string) {

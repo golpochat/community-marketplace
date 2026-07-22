@@ -132,6 +132,8 @@ export const WEB_API_ROUTES = {
     featuredStores: '/stores/featured',
     listingSearch: '/listings/search',
     adsPlacements: '/ads/placements',
+    adsImpression: '/ads/impression',
+    adsClick: '/ads/click',
     search: '/search',
     autocomplete: '/search/autocomplete',
     globalSearch: '/search/global',

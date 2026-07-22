@@ -23,8 +23,9 @@ Sell sponsorships **offline**, run creatives from **Admin** into existing displa
 
 1. Admin creates a campaign (advertiser name, placement, schedule, image, click URL).
 2. Admin publishes (or pauses / ends).
-3. Public `GET /ads/placements` returns the winning live creative for each slot when display ads are effective.
-4. Homepage renders the creative instead of an empty shell.
+3. Public `GET /ads/placements` returns the winning live creative for each slot when display ads are effective (creative `clickUrl` is a tracking redirect).
+4. Homepage / browse / search render the creative; mount fires `POST /ads/impression/:id`; clicks hit `GET /ads/click/:id` → 302 to the destination.
+5. Admin list shows impression / click counters.
 
 ## Placements (existing)
 
@@ -52,8 +53,7 @@ Sell sponsorships **offline**, run creatives from **Admin** into existing displa
 ## Non-goals (later)
 
 - Advertiser self-serve portal
-- In-product payment / SKUs / CPM auction
-- Impression / click billing
+- In-product payment / SKUs / CPM auction / billed impressions
 - Targeting beyond placement + date range
 
 ## Suggested offline rate card (not in code)
@@ -68,7 +68,10 @@ Sell sponsorships **offline**, run creatives from **Admin** into existing displa
 
 1. **Phase 1:** Homepage serve + admin CRUD + upload ✅  
 2. **Phase 2:** Wire browse/search/category slots in the web app ✅  
-3. Optional click redirect + basic counters  
+3. Optional click redirect + basic counters ✅  
+   - `GET /ads/click/:campaignId` → increment click → 302 to destination  
+   - `POST /ads/impression/:campaignId` on creative mount  
+   - Admin campaign list shows impressions / clicks  
 4. Self-serve only after real demand + traffic (roadmap Enterprise)
 
 ## Success criteria

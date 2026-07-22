@@ -26,6 +26,17 @@ export const adsService = {
     }
   },
 
+  async recordImpression(campaignId: string): Promise<void> {
+    try {
+      await apiClient(`${WEB_API_ROUTES.public.adsImpression}/${encodeURIComponent(campaignId)}`, {
+        method: 'POST',
+        body: '{}',
+      });
+    } catch {
+      // Best-effort counter; never block ad render.
+    }
+  },
+
   async getAdsSystemStatus(role: AdminApiRole): Promise<AdsSystemStatus | null> {
     try {
       const response = await apiClient<AdsSystemStatus>(

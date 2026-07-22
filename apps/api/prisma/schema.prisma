@@ -1965,6 +1965,8 @@ model DisplayAdCampaign {
   clickUrl        String                  @map("click_url") @db.VarChar(2048)
   altText         String?                 @map("alt_text") @db.VarChar(200)
   priority        Int                     @default(0)
+  impressionCount Int                     @default(0) @map("impression_count")
+  clickCount      Int                     @default(0) @map("click_count")
   createdByAdminId String?                @map("created_by_admin_id")
   createdAt       DateTime                @default(now()) @map("created_at")
   updatedAt       DateTime                @updatedAt @map("updated_at")

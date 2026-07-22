@@ -35,6 +35,7 @@ export interface DisplayAdSlot {
 export interface DisplayAdCreative {
   campaignId: string;
   imageUrl: string;
+  /** Tracking redirect URL (counts click, then 302 to destination). */
   clickUrl: string;
   altText?: string;
   advertiserName: string;
@@ -61,6 +62,8 @@ export interface DisplayAdCampaign {
   clickUrl: string;
   altText?: string;
   priority: number;
+  impressionCount: number;
+  clickCount: number;
   createdByAdminId?: string;
   createdAt: string;
   updatedAt: string;

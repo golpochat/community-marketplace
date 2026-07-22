@@ -424,6 +424,7 @@ export function AdminMonetizationDisplayCampaigns({
                 <th className="py-2 pr-3 font-medium">Advertiser</th>
                 <th className="py-2 pr-3 font-medium">Placement</th>
                 <th className="py-2 pr-3 font-medium">Status</th>
+                <th className="py-2 pr-3 font-medium">Impr / Clicks</th>
                 <th className="py-2 pr-3 font-medium">Schedule</th>
                 <th className="py-2 font-medium">Actions</th>
               </tr>
@@ -437,6 +438,9 @@ export function AdminMonetizationDisplayCampaigns({
                   <td className="py-2 pr-3">{campaign.advertiserName}</td>
                   <td className="py-2 pr-3 text-xs">{campaign.placement}</td>
                   <td className="py-2 pr-3">{STATUS_LABELS[campaign.status]}</td>
+                  <td className="py-2 pr-3 text-xs tabular-nums text-[hsl(var(--dashboard-sidebar-muted))]">
+                    {campaign.impressionCount} / {campaign.clickCount}
+                  </td>
                   <td className="py-2 pr-3 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                     {new Date(campaign.startsAt).toLocaleString()} →{' '}
                     {new Date(campaign.endsAt).toLocaleString()}

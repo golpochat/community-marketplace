@@ -1,10 +1,22 @@
+'use client';
+
+import { useEffect } from 'react';
+
 import type { DisplayAdSlot } from '@community-marketplace/types';
+
+import { adsService } from '@/services/ads.service';
 
 interface DisplayAdSlotProps {
   slot: DisplayAdSlot;
 }
 
 export function DisplayAdSlot({ slot }: DisplayAdSlotProps) {
+  useEffect(() => {
+    const campaignId = slot.creative?.campaignId;
+    if (!campaignId) return;
+    void adsService.recordImpression(campaignId);
+  }, [slot.creative?.campaignId]);
+
   if (slot.creative) {
     return (
       <aside
