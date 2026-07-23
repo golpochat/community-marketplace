@@ -21,15 +21,32 @@
 
 ## Production rollout checklist
 
-1. [ ] Deploy `main` and run migrations (`keyword_filters`, `category_review_flags`)
-2. [ ] Restart API so Prisma client picks up new fields
-3. [ ] Smoke-test image upload with a filename containing `weapon` / `beer` (expect 400 + `IMAGE_FLAG_*`)
-4. [ ] In staging, enable text filters:  
-      `PATCH /api/admin/monetization/settings` → `{ "keywordFilters": { "enabled": true } }`
-5. [ ] Smoke-test listing title/description with hard term (expect 400 + `PROHIBITED_*` + `policyUrl`) and soft term (expect queue / `SOFT_BLOCK_REVIEW`)
-6. [ ] In `/admin/categories`, mark restricted cats `requiresReview` (perfumes, wellness, supplements, collectibles) and hide any legacy prohibited trees
-7. [ ] Reindex categories search after hiding cats (admin Search → reindex categories)
-8. [ ] Keep `keywordFilters.enabled = false` in prod until staging sign-off
+### Local / staging (done on local DB 2026-07-23)
+
+1. [x] Migrations applied (`keyword_filters`, `category_review_flags`)
+2. [x] Matcher smoke: hard `PROHIBITED_ALCOHOL`, soft perfume, image `IMAGE_FLAG_WEAPON`
+3. [x] `keywordFilters.enabled = true` on local `platform_settings`
+4. [x] Restricted categories created with `requiresReview`: perfumes, wellness, supplements, collectibles
+5. [x] Public `GET /api/listings/categories` returns the new flagged categories
+
+Apply again anytime: `cd apps/api && node scripts/haram-rollout-apply.js`  
+(requires `packages/utils` dist built: `pnpm --filter @community-marketplace/utils exec tsc -p tsconfig.json --outDir dist`)
+
+### VPS / production (run on a machine with SSH)
+
+```bash
+cd /opt/sellnearby
+git pull origin main
+./infra/scripts/vps-update.sh
+# inside API container or host with DATABASE_URL:
+# node apps/api/scripts/haram-rollout-apply.js
+# then reindex categories from admin Search if needed
+```
+
+1. [ ] Deploy `main` + migrations on VPS
+2. [ ] Run `haram-rollout-apply.js` against prod DB (or enable filters + flags via admin UI)
+3. [ ] Reindex categories (admin Search)
+4. [ ] Smoke-test one hard-term listing create and one image upload with a banned filename
 
 ## Phase E — Vision provider (deferred)
 
