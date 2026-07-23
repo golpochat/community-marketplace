@@ -34,7 +34,20 @@ const HARD_CATEGORY_CODES: Record<KeywordHardCategory, ProhibitedErrorCode> = {
 function imageHintCode(hint: string): ProhibitedErrorCode {
   const h = hint.toLowerCase();
   if (
-    ['alcohol', 'beer', 'wine', 'vodka', 'whiskey', 'whisky', 'gin', 'rum', 'tequila'].includes(h)
+    [
+      'alcohol',
+      'beer',
+      'wine',
+      'vodka',
+      'whiskey',
+      'whisky',
+      'gin',
+      'rum',
+      'tequila',
+      'champagne',
+      'prosecco',
+      'cava',
+    ].includes(h)
   ) {
     return 'IMAGE_FLAG_ALCOHOL';
   }

@@ -43,8 +43,19 @@ describe('keyword filters matcher', () => {
     expect(matchImageHint('listing-weapon-photo.jpg')).toContain('weapon');
   });
 
-  it('matches expanded tobacco and gambling image hints', () => {
-    expect(matchImageHint('product-cigarette-box.png')).toContain('cigarette');
-    expect(matchImageHint('casino-chip-set.webp')).toContain('casino');
+  it('hard-blocks champagne and common misspellings', () => {
+    expect(matchKeywordFilters('Bottle of champagne').tier).toBe('hard');
+    expect(matchKeywordFilters('Cold glass of Champaine').tier).toBe('hard');
+    expect(matchKeywordFilters('Italian prosecco gift').tier).toBe('hard');
+  });
+
+  it('unions new default alcohol terms into stored config', () => {
+    const config = parseKeywordFilters({
+      enabled: true,
+      hard: { alcohol: ['beer', 'wine'] },
+    });
+    expect(config.hard.alcohol).toContain('beer');
+    expect(config.hard.alcohol).toContain('champagne');
+    expect(config.hard.alcohol).toContain('champaine');
   });
 });

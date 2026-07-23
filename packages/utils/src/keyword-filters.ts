@@ -32,6 +32,10 @@ export const DEFAULT_KEYWORD_FILTERS: KeywordFiltersConfig = {
       'cider',
       'lager',
       'stout',
+      'champagne',
+      'champaine',
+      'prosecco',
+      'cava',
       'alcohol',
       'alcoholic',
       'spirits',
@@ -127,6 +131,8 @@ export const DEFAULT_KEYWORD_FILTERS: KeywordFiltersConfig = {
     'wine',
     'vodka',
     'whiskey',
+    'champagne',
+    'prosecco',
     'pork',
     'bacon',
     'ham',
@@ -163,6 +169,11 @@ function asStringArray(value: unknown): string[] {
     .filter(Boolean);
 }
 
+/** Keep stored admin terms and always include current defaults. */
+function unionTerms(defaults: string[], stored: string[]): string[] {
+  return [...new Set([...defaults, ...stored])];
+}
+
 function parseAllowlist(value: unknown): KeywordAllowlistRule[] {
   if (!Array.isArray(value)) return DEFAULT_KEYWORD_FILTERS.allowlist;
   const rules: KeywordAllowlistRule[] = [];
@@ -177,12 +188,14 @@ function parseAllowlist(value: unknown): KeywordAllowlistRule[] {
 }
 
 function parseHard(value: unknown): KeywordFiltersConfig['hard'] {
-  const base = { ...DEFAULT_KEYWORD_FILTERS.hard };
+  const base = structuredClone(DEFAULT_KEYWORD_FILTERS.hard);
   if (!isRecord(value)) return base;
   for (const category of HARD_CATEGORIES) {
     if (category in value) {
       const terms = asStringArray(value[category]);
-      if (terms.length > 0) base[category] = terms;
+      if (terms.length > 0) {
+        base[category] = unionTerms(DEFAULT_KEYWORD_FILTERS.hard[category], terms);
+      }
     }
   }
   return base;
@@ -197,12 +210,16 @@ export function parseKeywordFilters(value: unknown): KeywordFiltersConfig {
     hard: parseHard(value.hard),
     soft: (() => {
       const soft = asStringArray(value.soft);
-      return soft.length > 0 ? soft : [...DEFAULT_KEYWORD_FILTERS.soft];
+      return soft.length > 0
+        ? unionTerms(DEFAULT_KEYWORD_FILTERS.soft, soft)
+        : [...DEFAULT_KEYWORD_FILTERS.soft];
     })(),
     allowlist: parseAllowlist(value.allowlist),
     imageHints: (() => {
       const hints = asStringArray(value.imageHints);
-      return hints.length > 0 ? hints : [...DEFAULT_KEYWORD_FILTERS.imageHints];
+      return hints.length > 0
+        ? unionTerms(DEFAULT_KEYWORD_FILTERS.imageHints, hints)
+        : [...DEFAULT_KEYWORD_FILTERS.imageHints];
     })(),
   };
 }

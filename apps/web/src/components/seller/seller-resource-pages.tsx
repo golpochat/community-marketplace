@@ -105,12 +105,43 @@ import { listingsService } from "@/services/listings.service";
 import { ReviewBuyerPromptDialog } from "@/components/trust/review-buyer-prompt-dialog";
 import { trustService } from "@/services/trust.service";
 
-function formatSellerApiError(err: unknown, fallback: string): string {
+type SellerFormError = {
+  message: string;
+  policyUrl?: string;
+};
+
+function sellerFormErrorFromUnknown(err: unknown, fallback: string): SellerFormError {
   if (err instanceof ApiClientError) {
-    const base = err.message || fallback;
-    return err.policyUrl ? `${base} See ${err.policyUrl}` : base;
+    return {
+      message: err.message || fallback,
+      policyUrl: err.policyUrl,
+    };
   }
-  return err instanceof Error ? err.message : fallback;
+  return {
+    message: err instanceof Error ? err.message : fallback,
+  };
+}
+
+function SellerFormErrorBanner({ error }: { error: SellerFormError | null }) {
+  if (!error) return null;
+  return (
+    <p className="mb-4 text-sm text-destructive">
+      {error.message}
+      {error.policyUrl ? (
+        <>
+          {" "}
+          <Link
+            href={error.policyUrl}
+            className="font-medium underline underline-offset-2"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Review Prohibited Items Policy
+          </Link>
+        </>
+      ) : null}
+    </p>
+  );
 }
 
 function buildListingCreatePayload(
@@ -925,7 +956,7 @@ export function SellerCreateListingPage() {
   const [categories, setCategories] = useState<SellerCategoryOption[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<SellerFormError | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [shareSuccess, setShareSuccess] =
     useState<ListingShareSuccessContext | null>(null);
@@ -1047,7 +1078,7 @@ export function SellerCreateListingPage() {
         setGateModalOpen(true);
         setBlockMessage(err.message);
       }
-      setError(formatSellerApiError(err, "Failed to save listing draft"));
+      setError(sellerFormErrorFromUnknown(err, "Failed to save listing draft"));
     } finally {
       setSubmitting(false);
     }
@@ -1121,7 +1152,7 @@ export function SellerCreateListingPage() {
         setGateModalOpen(true);
         setBlockMessage(err.message);
       }
-      setError(formatSellerApiError(err, "Failed to save listing draft"));
+      setError(sellerFormErrorFromUnknown(err, "Failed to save listing draft"));
     } finally {
       setSubmitting(false);
     }
@@ -1147,7 +1178,7 @@ export function SellerCreateListingPage() {
         "Submitted for review. Keep preparing share assets while you wait.",
       );
     } catch (err) {
-      setError(formatSellerApiError(err, "Failed to submit for review"));
+      setError(sellerFormErrorFromUnknown(err, "Failed to submit for review"));
     } finally {
       setSubmittingReview(false);
     }
@@ -1187,7 +1218,7 @@ export function SellerCreateListingPage() {
         </Card>
       ) : shareSuccess ? (
         <>
-          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          {error ? <SellerFormErrorBanner error={error} /> : null}
           <ListingShareSuccessPanel
             context={shareSuccess}
             submittingReview={submittingReview}
@@ -1238,7 +1269,7 @@ export function SellerCreateListingPage() {
       {categoriesError && (
         <p className="mb-4 text-sm text-destructive">{categoriesError}</p>
       )}
-      {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+      <SellerFormErrorBanner error={error} />
       {success && <p className="mb-4 text-sm text-green-700">{success}</p>}
       {submitting && (
         <p className="mb-4 text-sm text-[hsl(var(--dashboard-main-fg))]">Saving draft…</p>
@@ -1284,7 +1315,7 @@ export function SellerEditListingPage({
   const [moderationNotes, setModerationNotes] = useState<string | undefined>();
   const [review, setReview] = useState<ListingReviewContext | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<SellerFormError | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deliverySelections, setDeliverySelections] = useState<
     ListingDeliverySelection[]
@@ -1332,7 +1363,7 @@ export function SellerEditListingPage({
         ]);
         setCategories(cats.map((c) => ({ id: c.id, name: c.name, slug: c.slug })));
         if (!listing) {
-          setError("Listing not found.");
+          setError({ message: "Listing not found." });
           return;
         }
         setListingStatus(listing.status);
@@ -1419,7 +1450,7 @@ export function SellerEditListingPage({
           }
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load listing");
+        setError(sellerFormErrorFromUnknown(err, "Failed to load listing"));
       } finally {
         setLoading(false);
       }
@@ -1446,7 +1477,7 @@ export function SellerEditListingPage({
       );
       setExistingImages(reordered);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reorder photos");
+      setError(sellerFormErrorFromUnknown(err, "Failed to reorder photos"));
     } finally {
       setReorderingImages(false);
     }
@@ -1459,7 +1490,7 @@ export function SellerEditListingPage({
       await sellerService.removeListingImage(listingId, imageId);
       setExistingImages((prev) => prev.filter((image) => image.id !== imageId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to remove photo");
+      setError(sellerFormErrorFromUnknown(err, "Failed to remove photo"));
     } finally {
       setRemovingImageId(null);
     }
@@ -1505,7 +1536,7 @@ export function SellerEditListingPage({
       }
       router.push("/account/listings");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update listing");
+      setError(sellerFormErrorFromUnknown(err, "Failed to update listing"));
     } finally {
       setSubmitting(false);
     }
@@ -1570,7 +1601,7 @@ export function SellerEditListingPage({
       }
       router.push("/account/listings");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update listing");
+      setError(sellerFormErrorFromUnknown(err, "Failed to update listing"));
     } finally {
       setSubmitting(false);
     }
@@ -1581,11 +1612,11 @@ export function SellerEditListingPage({
       title="Edit Listing"
       description="Update your listing details."
       loading={loading}
-      error={error}
     >
       {submitting && (
         <p className="mb-4 text-sm text-[hsl(var(--dashboard-main-fg))]">Saving changes…</p>
       )}
+      <SellerFormErrorBanner error={error} />
       {showDuplicatedBanner && listingStatus === "draft" && (
         <div className="mb-4 flex items-start justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
           <p>
