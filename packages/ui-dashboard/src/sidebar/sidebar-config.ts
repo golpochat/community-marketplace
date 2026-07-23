@@ -108,6 +108,12 @@ export function getListingsSidebarChildren(routePrefix: AdminRoutePrefix): Sideb
       href: `${routePrefix}/title-reviews`,
       permission: PERMISSIONS.MANAGE_LISTINGS,
     },
+    {
+      id: 'listings-categories',
+      label: 'Categories',
+      href: `${routePrefix}/categories`,
+      permission: PERMISSIONS.MANAGE_LISTINGS,
+    },
   ];
 }
 

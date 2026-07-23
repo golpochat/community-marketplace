@@ -149,7 +149,7 @@ export class SearchIndexingService implements OnModuleInit, OnModuleDestroy {
       where: { id: categoryId },
       include: { parent: true },
     });
-    if (!row || !row.isActive) {
+    if (!row || !row.isActive || row.isHidden) {
       await this.meili.deleteDocument('categories', categoryId);
       return;
     }
@@ -217,7 +217,7 @@ export class SearchIndexingService implements OnModuleInit, OnModuleDestroy {
 
   private async reindexCategories() {
     const rows = await this.prisma.category.findMany({
-      where: { isActive: true },
+      where: { isActive: true, isHidden: false },
       include: { parent: true },
     });
     const docs = rows.map(toMeiliCategoryDocument);

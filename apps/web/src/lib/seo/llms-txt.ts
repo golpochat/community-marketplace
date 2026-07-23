@@ -40,6 +40,7 @@ export function buildLlmsTxt(): string {
     line(`- Terms: ${base}/terms`),
     line(`- Privacy: ${base}/privacy`),
     line(`- Community rules: ${base}/community-rules`),
+    line(`- Prohibited items: ${base}/policies/prohibited-items`),
     line(),
     line('## Optional'),
     line(`- Sitemap: ${base}/sitemap.xml`),

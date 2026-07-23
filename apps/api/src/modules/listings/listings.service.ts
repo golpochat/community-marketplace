@@ -74,6 +74,14 @@ export class ListingsService {
     return this.categories.findAll();
   }
 
+  findCategoriesForAdmin() {
+    return this.categories.findAllForAdmin();
+  }
+
+  updateCategoryFlags(categoryId: string, input: unknown) {
+    return this.categories.updateFlags(categoryId, input);
+  }
+
   create(sellerId: string, input: unknown) {
     return this.crud.create(sellerId, input);
   }

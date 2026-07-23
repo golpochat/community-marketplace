@@ -25,7 +25,9 @@ export class SearchGlobalService {
       }),
       this.meili.search('categories', input.q, {
         limit: Math.ceil(limit / 2),
-        filter: includeRestricted ? undefined : 'isActive = true',
+        filter: includeRestricted
+          ? undefined
+          : 'isActive = true AND isHidden = false',
       }),
       this.meili.search('users', input.q, {
         limit: Math.ceil(limit / 2),

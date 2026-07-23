@@ -6,4 +6,6 @@ export class CategoryEntity extends BaseEntity {
   description?: string;
   parentId?: string;
   isActive!: boolean;
+  requiresReview!: boolean;
+  isHidden!: boolean;
 }

@@ -139,6 +139,8 @@ export const categorySchema = z.object({
   description: z.string().max(500).optional(),
   parentId: uuidSchema.optional(),
   isActive: z.boolean(),
+  requiresReview: z.boolean(),
+  isHidden: z.boolean(),
   createdAt: isoDateSchema,
   updatedAt: isoDateSchema,
 });
@@ -345,7 +347,23 @@ export const createCategorySchema = z.object({
   icon: z.string().max(120).optional(),
   description: z.string().max(500).optional(),
   parentId: uuidSchema.optional(),
+  requiresReview: z.boolean().optional(),
+  isHidden: z.boolean().optional(),
 });
+
+export const updateCategoryFlagsSchema = z
+  .object({
+    requiresReview: z.boolean().optional(),
+    isHidden: z.boolean().optional(),
+    isActive: z.boolean().optional(),
+  })
+  .refine(
+    (data) =>
+      data.requiresReview !== undefined ||
+      data.isHidden !== undefined ||
+      data.isActive !== undefined,
+    { message: 'At least one flag is required' },
+  );
 
 export type ListingInput = z.infer<typeof listingSchema>;
 export type ListingSummaryInput = z.infer<typeof listingSummarySchema>;
@@ -362,3 +380,4 @@ export type ListingModerationActionInput = z.infer<
 export type ListingAdminFiltersInput = z.infer<
   typeof listingAdminFiltersSchema
 >;
+export type UpdateCategoryFlagsInput = z.infer<typeof updateCategoryFlagsSchema>;

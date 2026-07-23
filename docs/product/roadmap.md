@@ -19,6 +19,7 @@ Timeline below reflects **what is shipped in code** vs **what remains planned**.
 - [x] Buyer SKUs (partial): early cashback unlock · paid buyer statement
 - [x] Seller ARPU: Growth Pack · AI credit packs · paid store slots · featured storefront
 - [x] Admin display-ad campaigns (homepage + browse sidebar + search inline)
+- [x] Haram enforcement Phases A–D + policy page (F) — see [haram-enforcement-roadmap.md](./haram-enforcement-roadmap.md)
 
 > **Note:** `apps/admin` is **deprecated** — do not treat it as a delivery target.
 

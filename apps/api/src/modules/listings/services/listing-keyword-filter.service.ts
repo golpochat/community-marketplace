@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 
 import type { KeywordMatchResult } from '@community-marketplace/types';
 import {
+  matchImageHint,
   matchKeywordFilters,
   parseKeywordFilters,
 } from '@community-marketplace/utils';
@@ -32,6 +33,30 @@ export class ListingKeywordFilterService {
       throw new BadRequestException(this.formatHardMessage(match));
     }
     return match;
+  }
+
+  /**
+   * Filename / URL heuristics (Phase D). Always on using configured imageHints.
+   * Throws when a prohibited hint appears so sellers must replace the file.
+   */
+  async assertImageSourcesClean(sources: string[]): Promise<void> {
+    const hits = await this.collectImageHintHits(sources);
+    if (hits.length === 0) return;
+    throw new BadRequestException(
+      `This image isn’t allowed on SellNearby (matched: ${hits.slice(0, 6).join(', ')}). ` +
+        `Remove or replace it with a different photo before continuing.`,
+    );
+  }
+
+  async collectImageHintHits(sources: string[]): Promise<string[]> {
+    const config = await this.loadConfig();
+    const hits = new Set<string>();
+    for (const source of sources) {
+      for (const hint of matchImageHint(source, config)) {
+        hits.add(hint);
+      }
+    }
+    return [...hits];
   }
 
   formatSoftReasons(match: KeywordMatchResult | null): string[] {

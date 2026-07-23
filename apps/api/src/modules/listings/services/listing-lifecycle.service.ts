@@ -27,6 +27,7 @@ import {
 import { listingInclude, mapListing } from '../mappers/listing.mapper';
 import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 import { ListingAuditService } from './listing-audit.service';
+import { CategoriesService } from './categories.service';
 import { ListingKeywordFilterService } from './listing-keyword-filter.service';
 import { ListingReserveService } from './listing-reserve.service';
 
@@ -69,6 +70,7 @@ export class ListingLifecycleService {
     private readonly eventBus: EventBusService,
     private readonly sellerListingGate: SellerListingGateService,
     private readonly keywordFilters: ListingKeywordFilterService,
+    private readonly categories: CategoriesService,
     private readonly reserves: ListingReserveService,
   ) {}
 
@@ -83,9 +85,19 @@ export class ListingLifecycleService {
       );
     }
 
+    const images = await this.prisma.listingImage.findMany({
+      where: { listingId },
+      select: { url: true },
+    });
+    await this.keywordFilters.assertImageSourcesClean(images.map((img) => img.url));
+
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
-      select: { title: true, description: true },
+      select: {
+        title: true,
+        description: true,
+        category: { select: { name: true, requiresReview: true } },
+      },
     });
     if (!listing) {
       throw new NotFoundException(`Listing ${listingId} not found`);
@@ -95,7 +107,11 @@ export class ListingLifecycleService {
       listing.title,
       listing.description,
     );
-    const softReasons = this.keywordFilters.formatSoftReasons(keywordMatch);
+    const categoryReason = this.categories.requiresReviewReason(listing.category);
+    const softReasons = [
+      ...this.keywordFilters.formatSoftReasons(keywordMatch),
+      ...(categoryReason ? [categoryReason] : []),
+    ];
 
     const result = await this.transition({
       listingId,

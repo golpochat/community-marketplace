@@ -194,6 +194,7 @@ export {
   listingModerationActionSchema,
   listingAdminFiltersSchema,
   createCategorySchema,
+  updateCategoryFlagsSchema,
   type ListingInput,
   type ListingSummaryInput,
   type CreateListingInput,
@@ -203,6 +204,7 @@ export {
   type ReportListingInput,
   type ListingModerationActionInput,
   type ListingAdminFiltersInput,
+  type UpdateCategoryFlagsInput,
 } from './listing.schema';
 
 export {

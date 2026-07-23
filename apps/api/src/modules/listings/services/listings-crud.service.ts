@@ -270,7 +270,7 @@ export class ListingsCrudService {
     input: unknown,
   ): Promise<Listing & { sellerNudgeMessage?: string }> {
     const parsed = createListingSchema.parse(input);
-    await this.categoriesService.findById(parsed.categoryId);
+    const category = await this.categoriesService.assertAssignable(parsed.categoryId);
 
     const pricingInput = {
       originalPrice: parsed.originalPrice,
@@ -379,6 +379,7 @@ export class ListingsCrudService {
       timestamp: new Date(),
     });
 
+    const categoryReason = this.categoriesService.requiresReviewReason(category);
     void this.autoModeration.evaluateOnCreate({
       listingId: row.id,
       sellerId,
@@ -387,7 +388,10 @@ export class ListingsCrudService {
       price: computed.price,
       fraudRequiresReview: fraud.requiresReview,
       fraudReasons: fraud.reasons,
-      keywordSoftReasons: this.keywordFilters.formatSoftReasons(keywordMatch),
+      keywordSoftReasons: [
+        ...this.keywordFilters.formatSoftReasons(keywordMatch),
+        ...(categoryReason ? [categoryReason] : []),
+      ],
     });
 
     if (parsed.deliverySelections?.length) {
@@ -425,8 +429,11 @@ export class ListingsCrudService {
       );
     }
 
+    let categoryRequiresReviewReason: string | null = null;
     if (parsed.categoryId) {
-      await this.categoriesService.findById(parsed.categoryId);
+      const category = await this.categoriesService.assertAssignable(parsed.categoryId);
+      categoryRequiresReviewReason =
+        this.categoriesService.requiresReviewReason(category);
     }
 
     if (parsed.deliverySelections !== undefined) {
@@ -585,7 +592,10 @@ export class ListingsCrudService {
       timestamp: new Date(),
     });
 
-    const softReasons = this.keywordFilters.formatSoftReasons(keywordMatch);
+    const softReasons = [
+      ...this.keywordFilters.formatSoftReasons(keywordMatch),
+      ...(categoryRequiresReviewReason ? [categoryRequiresReviewReason] : []),
+    ];
     if (
       softReasons.length > 0 &&
       (existing.status === "active" || existing.status === "paused")

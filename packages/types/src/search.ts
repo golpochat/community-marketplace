@@ -71,6 +71,7 @@ export interface CategorySearchDocument {
   parentId?: string;
   parentSlug?: string;
   isActive: boolean;
+  isHidden: boolean;
 }
 
 export interface ChatThreadSearchDocument {

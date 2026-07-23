@@ -12,6 +12,7 @@ import { SearchModule } from '../search/search.module';
 import { SellerVerificationModule } from '../seller/seller-verification.module';
 import { UsersModule } from '../users/users.module';
 import { AdminChatController } from './admin-chat.controller';
+import { AdminCategoriesController } from './admin-categories.controller';
 import { AdminListingsController } from './admin-listings.controller';
 import { AdminModerationController } from './admin-moderation.controller';
 import { AdminNotificationsController } from './admin-notifications.controller';
@@ -47,6 +48,7 @@ import { RbacScopePolicy } from './rbac/rbac-scope.policy';
   controllers: [
     AdminController,
     AdminListingsController,
+    AdminCategoriesController,
     AdminChatController,
     AdminPaymentsController,
     AdminModerationController,

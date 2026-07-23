@@ -42,4 +42,9 @@ describe('keyword filters matcher', () => {
   it('matches image hints in filenames', () => {
     expect(matchImageHint('listing-weapon-photo.jpg')).toContain('weapon');
   });
+
+  it('matches expanded tobacco and gambling image hints', () => {
+    expect(matchImageHint('product-cigarette-box.png')).toContain('cigarette');
+    expect(matchImageHint('casino-chip-set.webp')).toContain('casino');
+  });
 });

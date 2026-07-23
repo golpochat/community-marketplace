@@ -22,6 +22,7 @@ const FOOTER_LINKS = {
   legal: [
     { href: '/terms', label: 'Terms' },
     { href: '/privacy', label: 'Privacy' },
+    { href: '/policies/prohibited-items', label: 'Prohibited items' },
   ],
   account: [
     { href: '/auth/login', label: 'Sign in' },

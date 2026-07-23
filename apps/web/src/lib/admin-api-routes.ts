@@ -41,6 +41,7 @@ function superAdminUsesAdminNamespace(path: string): boolean {
     path.startsWith('/seller-verification') ||
     path.startsWith('/seller/') ||
     path.startsWith('/listings') ||
+    path.startsWith('/categories') ||
     path.startsWith('/chat') ||
     path.startsWith('/moderation') ||
     path.startsWith('/monetization') ||

@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { ContentPageShell } from '@/components/public/content-page-shell';
 import { publicPageMetadata } from '@/lib/seo/canonical';
 
@@ -20,7 +22,11 @@ export default function CommunityRulesPage() {
         </li>
         <li>
           <strong>No illegal items.</strong> Weapons, stolen goods, counterfeit products, and
-          prohibited items are not allowed.
+          other{' '}
+          <Link href="/policies/prohibited-items" className="text-primary underline-offset-4 hover:underline">
+            prohibited items
+          </Link>{' '}
+          are not allowed.
         </li>
         <li>
           <strong>No abusive behaviour.</strong> Harassment, hate speech, and threats result in

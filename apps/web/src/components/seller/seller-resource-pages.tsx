@@ -1155,7 +1155,7 @@ export function SellerCreateListingPage() {
       description={
         shareSuccess
           ? "Prepare captions and creatives for your new draft."
-          : "Add a new item to your store."
+          : "Add a new item to your store. Listings must follow our prohibited items policy."
       }
     >
       <SellerConnectBanner className="mb-4" />
@@ -1215,6 +1215,17 @@ export function SellerCreateListingPage() {
       {nudgeMessage && (
         <VerificationBanner type="info" message={nudgeMessage} className="mb-4" />
       )}
+      <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+        Before you list, review our{" "}
+        <Link
+          href="/policies/prohibited-items"
+          className="font-medium text-[hsl(var(--dashboard-accent))] underline"
+        >
+          Prohibited Items Policy
+        </Link>
+        . Alcohol, pork, adult items, gambling, intoxicants, weapons, and illegal goods are not
+        allowed.
+      </p>
       {categoriesLoading && (
         <p className="mb-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           Loading categories…

@@ -118,7 +118,7 @@ export class SearchService {
         },
       }),
       this.prisma.user.count({ where: { status: 'active' } }),
-      this.prisma.category.count({ where: { isActive: true } }),
+      this.prisma.category.count({ where: { isActive: true, isHidden: false } }),
       this.prisma.chatThread.count(),
     ]);
 

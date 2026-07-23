@@ -164,6 +164,10 @@ export interface Category {
   description?: string;
   parentId?: string;
   isActive: boolean;
+  /** Soft-block: listings inherit pending review. */
+  requiresReview: boolean;
+  /** Hidden from public picker, browse, and search facets. */
+  isHidden: boolean;
   createdAt: string;
   updatedAt: string;
 }

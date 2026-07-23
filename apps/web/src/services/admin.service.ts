@@ -1,6 +1,7 @@
 import type {
   AdminDashboardStats,
   AdminNotificationLogEntry,
+  Category,
   Listing,
   ListingReviewContext,
   MarketplaceDispute,
@@ -242,6 +243,27 @@ export const adminService = {
 
   async getListing(role: AdminApiRole, listingId: string): Promise<Listing> {
     const response = await apiClient<Listing>(`${adminApiPath(role, '/listings')}/${listingId}`);
+    return response.data;
+  },
+
+  async listCategories(role: AdminApiRole): Promise<Category[]> {
+    const response = await apiClient<Category[]>(adminApiPath(role, '/categories'));
+    return response.data;
+  },
+
+  async updateCategoryFlags(
+    role: AdminApiRole,
+    categoryId: string,
+    flags: {
+      requiresReview?: boolean;
+      isHidden?: boolean;
+      isActive?: boolean;
+    },
+  ): Promise<Category> {
+    const response = await apiClient<Category>(
+      `${adminApiPath(role, '/categories')}/${categoryId}`,
+      { method: 'PATCH', body: JSON.stringify(flags) },
+    );
     return response.data;
   },
 

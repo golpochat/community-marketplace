@@ -335,7 +335,7 @@ export class MeilisearchService implements OnModuleInit, OnModuleDestroy {
 
     await this.client.index('categories').updateSettings({
       searchableAttributes: ['name', 'slug'],
-      filterableAttributes: ['isActive', 'parentId'],
+      filterableAttributes: ['isActive', 'isHidden', 'parentId'],
     });
 
     await this.client.index('chat_threads').updateSettings({

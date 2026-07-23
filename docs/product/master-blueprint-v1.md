@@ -76,7 +76,7 @@ This blueprint defines everything needed to build, scale, and govern SellNearby.
 | Card-only v1 | No bank transfer in growth phases |
 | Micro-pricing | €0.49–€4.99 impulse band |
 | Cashback wallet | Earn → spend loop (spend live on boosts / fast-track / early unlock; **GMV listing checkout** wallet+card still later) |
-| No haram products | Policy documented; fraud/scam keyword checks live; **haram hard/soft keyword tiers + category/image vision enforcement still planned** (see §7) |
+| No haram products | Policy page live; fraud/scam keyword checks live; haram hard/soft keyword tiers + category flags + image filename heuristics shipped (enable `keywordFilters.enabled` for text enforcement); vision still planned |
 | No subscriptions | Until seller packages / buyer alerts (Phase 6+) |
 
 ### 1.2 Revenue streams
@@ -374,7 +374,7 @@ Alcohol bottles · Pork food · Adult content · Drugs/paraphernalia · Weapons
 
 ### 7.5 Implementation
 
-> **Status (2026-07-23):** **Phases A–B shipped** — admin-editable `keyword_filters` + matcher; when `enabled`, hard terms reject listing save/submit/approve (`400`), soft terms queue `pending_review`. **Still planned (C–F):** category flags, image vision, public policy page — see [haram-enforcement-roadmap.md](./haram-enforcement-roadmap.md).
+> **Status (2026-07-23):** **Phases A–D + F (policy page) shipped** — admin-editable `keyword_filters` + matcher; when `enabled`, hard terms reject listing save/submit/approve (`400`), soft terms queue `pending_review`. Category `requiresReview` / `isHidden` flags soft-queue and hide from public facets. Image filename heuristics always reject matching uploads and block submit until replaced. Public `/policies/prohibited-items` + listing-create link live. **Still planned:** vision provider (E), structured audit codes / admin metrics — see [haram-enforcement-roadmap.md](./haram-enforcement-roadmap.md).
 
 - Hard → `400` + error code · Soft → `pending_review` · Image → pause + queue *(Phase B / D)*
 - Store lists in `platform_settings.keyword_filters` (admin-editable) ✅ Phase A
@@ -3049,7 +3049,7 @@ SellNearby aims to be a **safe, inclusive marketplace for everyone in Ireland**,
 | Listing hide from search | ✅ `moderationHiddenAt` |
 | Admin review queue | ✅ `/admin/moderation` |
 | Category blocklist for haram SKUs | 📋 Planned — align categories + automated rules with §1–2 |
-| Public policy page (`/policies/prohibited-items`) | 📋 Planned — surface this policy to sellers at listing create |
+| Public policy page (`/policies/prohibited-items`) | ✅ Live — linked from footer, community rules, listing create |
 
 **Monetization note:** Policy enforcement is **not** a revenue line. Prohibited listings cannot be boosted, featured, or sold via platform payments.
 
@@ -3544,7 +3544,7 @@ Placed on **listing create / edit** screen.
 
 ### 8. Help center / policy page copy
 
-**Route (planned):** `/policies/prohibited-items`
+**Route:** `/policies/prohibited-items`
 
 #### Section header
 
@@ -4084,7 +4084,7 @@ Listings in these categories **always** enter soft-block / review path (in addit
 | **Collectible bottles (empty only)** | Alcohol association | Soft-block + admin review |
 | **Pet food** | Pork content risk | Auto-flag if pork keywords detected |
 
-**Schema suggestion (future):** `categories.requiresReview: boolean`
+**Schema:** `categories.requiresReview: boolean`, `categories.isHidden: boolean` (Phase C)
 
 ---
 
@@ -4265,14 +4265,14 @@ Do not show in browse filters or listing create. Admin may reassign listings.
 
 ### 9. Implementation checklist (when approved)
 
-- [ ] Migration: seed v1 tree with stable UUIDs
-- [ ] Map existing listings from old slugs → new slugs
-- [ ] `categories.requiresReview`, `categories.isHidden` (or flags in JSON `metadata`)
-- [ ] Listing create: inherit review flag from category
-- [ ] Search index: exclude hidden categories from filters
-- [ ] Admin category CRUD + analytics
+- [x] `categories.requiresReview`, `categories.isHidden` (or flags in JSON `metadata`)
+- [x] Listing create: inherit review flag from category
+- [x] Search index: exclude hidden categories from filters
+- [x] Admin category CRUD + analytics
 - [ ] Update [dev-categories.seed.data.ts](../../apps/api/src/database/dev-categories.seed.data.ts)
 - [ ] Public category shortcuts on homepage reflect new tree
+- [ ] Migration: seed v1 tree with stable UUIDs
+- [ ] Map existing listings from old slugs → new slugs
 
 ---
 

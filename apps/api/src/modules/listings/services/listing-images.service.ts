@@ -17,8 +17,8 @@ import { EventBusService } from '../../../events/event-bus.service';
 import { mapListingImage } from '../mappers/listing.mapper';
 import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 import { ListingAuditService } from './listing-audit.service';
-import { ListingAutoModerationService } from './listing-auto-moderation.service';
 import { ListingImageProcessorService } from './listing-image-processor.service';
+import { ListingKeywordFilterService } from './listing-keyword-filter.service';
 import { ListingR2StorageService } from './listing-r2-storage.service';
 import { DevUploadService } from '../../dev-upload/dev-upload.service';
 import { R2StorageService } from '../../users/services/r2-storage.service';
@@ -32,7 +32,7 @@ export class ListingImagesService {
     private readonly audit: ListingAuditService,
     private readonly eventBus: EventBusService,
     private readonly sellerListingGate: SellerListingGateService,
-    private readonly autoModeration: ListingAutoModerationService,
+    private readonly keywordFilters: ListingKeywordFilterService,
     private readonly r2: R2StorageService,
     private readonly devUpload: DevUploadService,
   ) {}
@@ -83,6 +83,8 @@ export class ListingImagesService {
       }
     }
 
+    await this.keywordFilters.assertImageSourcesClean(parsed.keys);
+
     const processed = await Promise.all(
       parsed.keys.map(async (key) => {
         try {
@@ -119,19 +121,6 @@ export class ListingImagesService {
       timestamp: new Date(),
     });
 
-    const listing = await this.prisma.listing.findUnique({
-      where: { id: listingId },
-      select: { title: true, description: true },
-    });
-    if (listing) {
-      const prohibited = ['weapon', 'drug', 'counterfeit', 'fake-id'];
-      const haystack = `${listing.title} ${listing.description} ${parsed.keys.join(' ')}`.toLowerCase();
-      const hit = prohibited.find((term) => haystack.includes(term));
-      if (hit) {
-        void this.autoModeration.onProhibitedContent(listingId, hit);
-      }
-    }
-
     return created.map(mapListingImage);
   }
 
@@ -156,6 +145,8 @@ export class ListingImagesService {
     }
 
     const sourceKey = `listing-images/${sellerId}/${listingId}/${randomUUID()}.webp`;
+    await this.keywordFilters.assertImageSourcesClean([sourceKey]);
+
     if (this.r2.isConfigured()) {
       await this.r2.putObject(sourceKey, buffer, 'image/webp');
     } else {

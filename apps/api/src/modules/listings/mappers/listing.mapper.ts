@@ -78,6 +78,8 @@ export function mapCategory(row: {
   description: string | null;
   parentId: string | null;
   isActive: boolean;
+  requiresReview: boolean;
+  isHidden: boolean;
   createdAt: Date;
   updatedAt: Date;
 }): Category {
@@ -89,6 +91,8 @@ export function mapCategory(row: {
     description: row.description ?? undefined,
     parentId: row.parentId ?? undefined,
     isActive: row.isActive,
+    requiresReview: row.requiresReview,
+    isHidden: row.isHidden,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };

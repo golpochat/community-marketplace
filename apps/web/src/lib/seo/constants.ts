@@ -18,6 +18,7 @@ export const STATIC_SITEMAP_PATHS = [
   '/help',
   '/safety',
   '/community-rules',
+  '/policies/prohibited-items',
   '/terms',
   '/privacy',
   '/contact',

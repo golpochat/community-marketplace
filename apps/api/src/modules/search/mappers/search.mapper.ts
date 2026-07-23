@@ -101,6 +101,7 @@ export function toMeiliCategoryDocument(row: {
   slug: string;
   parentId: string | null;
   isActive: boolean;
+  isHidden: boolean;
   parent?: { slug: string } | null;
 }): CategorySearchDocument {
   return {
@@ -110,6 +111,7 @@ export function toMeiliCategoryDocument(row: {
     parentId: row.parentId ?? undefined,
     parentSlug: row.parent?.slug,
     isActive: row.isActive,
+    isHidden: row.isHidden,
   };
 }
 
