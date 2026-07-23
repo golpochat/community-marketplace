@@ -42,6 +42,7 @@ import { ListingsController } from './listings.controller';
 import { StoresController } from './stores.controller';
 import { ListingsService } from './listings.service';
 import { ListingAutoModerationService } from './services/listing-auto-moderation.service';
+import { ListingKeywordFilterService } from './services/listing-keyword-filter.service';
 import { ListingAutoModerationListener } from './listeners/listing-auto-moderation.listener';
 import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
 
@@ -89,6 +90,7 @@ import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
     ListingDeliveryService,
     ListingPricingService,
     ListingTitleService,
+    ListingKeywordFilterService,
     ListingAutoModerationService,
     ListingAutoModerationListener,
     ListingOgCacheListener,
@@ -105,6 +107,7 @@ import { ListingOgCacheListener } from './listeners/listing-og-cache.listener';
     ListingPricingService,
     ListingTitleService,
     SellerTrustService,
+    ListingKeywordFilterService,
   ],
 })
 export class ListingsModule {}

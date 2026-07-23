@@ -21,6 +21,7 @@
 | **[ai-marketing-hub.md](./ai-marketing-hub.md)** | **AI Marketing Hub** — Phases 0–4 pilot-ready; credit packs + featured storefront live; video & forecast deferred |
 | **[listing-reserve.md](./listing-reserve.md)** | **Listing reserve** — free hold for ID-verified members after seller approval; seller sets 4/12/24h; Phase 2 polish |
 | **[display-ads-admin-campaigns.md](./display-ads-admin-campaigns.md)** | **Brand display ads** — admin-run campaigns into homepage, browse sidebar, and search/browse inline |
+| **[haram-enforcement-roadmap.md](./haram-enforcement-roadmap.md)** | **Haram / prohibited enforcement** — Phase A config+matcher; B–F keyword/category/image |
 
 ## Redirects
 

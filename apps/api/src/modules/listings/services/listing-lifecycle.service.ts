@@ -27,6 +27,7 @@ import {
 import { listingInclude, mapListing } from '../mappers/listing.mapper';
 import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 import { ListingAuditService } from './listing-audit.service';
+import { ListingKeywordFilterService } from './listing-keyword-filter.service';
 import { ListingReserveService } from './listing-reserve.service';
 
 type PrismaListingStatus = ListingStatus;
@@ -67,6 +68,7 @@ export class ListingLifecycleService {
     private readonly audit: ListingAuditService,
     private readonly eventBus: EventBusService,
     private readonly sellerListingGate: SellerListingGateService,
+    private readonly keywordFilters: ListingKeywordFilterService,
     private readonly reserves: ListingReserveService,
   ) {}
 
@@ -80,14 +82,32 @@ export class ListingLifecycleService {
         'Add at least one photo before submitting this listing for review.',
       );
     }
-    return this.transition({
+
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { title: true, description: true },
+    });
+    if (!listing) {
+      throw new NotFoundException(`Listing ${listingId} not found`);
+    }
+
+    const keywordMatch = await this.keywordFilters.assertNotHardBlocked(
+      listing.title,
+      listing.description,
+    );
+    const softReasons = this.keywordFilters.formatSoftReasons(keywordMatch);
+
+    const result = await this.transition({
       listingId,
       actorId: sellerId,
       actorRole: 'SELLER',
       toStatus: 'pending_review',
       changedByType: 'SELLER',
       eventType: 'listing.submitted_for_review',
+      ...(softReasons.length ? { reason: softReasons.join('; ') } : {}),
     });
+
+    return result;
   }
 
   cancelReview(listingId: string, sellerId: string): Promise<Listing> {
@@ -524,6 +544,11 @@ export class ListingLifecycleService {
     await this.sellerListingGate.assertCanActivateListing(
       listing.sellerId,
       isFirstActivation,
+    );
+
+    await this.keywordFilters.assertNotHardBlocked(
+      listing.title,
+      listing.description,
     );
 
     const now = new Date();

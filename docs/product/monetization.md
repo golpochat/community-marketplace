@@ -8,7 +8,7 @@ The single canonical planning document is:
 
 It includes monetization, pricing, rollout, revenue model, UX flows, safety, moderation, and category tree — with full engineering specs, copy, and policy in appendices A–L.
 
-**Implementation status (2026-07-22):** Foundation, Phase 1 (boosts), Phase 1.5 (featured listings), Phase 2 wallet spend (boosts + fast-track credits + early cashback unlock), and Phase 3 (fast-track) are live. Featured listing slots remain **card-only** (no credit mix). Phases 4–6+ remain planned — see the blueprint header and [Growth phases](./master-blueprint-v1.md#growth-phases).
+**Implementation status (2026-07-23):** Foundation through Growth Phases 1 / 1.5 / 2 / 3 are live, plus wallet spend (boosts / fast-track / early unlock), buyer statements, store slots, featured storefront, AI credit packs, and Seller Growth Pack. Featured listing slots remain **card-only** (no credit mix). GMV listing checkout remains **card-only**. Still open: priority message (no purchase type), buyer protection (legal), Starter/Pro/Premium ledger packages, advertiser self-serve ads, GMV wallet+card mix — see [§1.2 Revenue streams](./master-blueprint-v1.md#12-revenue-streams) and [Growth phases](./master-blueprint-v1.md#growth-phases).
 
 ### External display advertising (brands / sponsors)
 

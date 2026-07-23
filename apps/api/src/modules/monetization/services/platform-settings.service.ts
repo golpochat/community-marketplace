@@ -12,6 +12,7 @@ import {
   mapPlatformSettings,
   mergePricingUpdate,
 } from '../mappers/monetization.mapper';
+import { parseKeywordFilters } from '@community-marketplace/utils';
 
 @Injectable()
 export class PlatformSettingsService {
@@ -56,6 +57,17 @@ export class PlatformSettingsService {
       input.categorySlotsPerDay !== undefined ||
       input.aiMarketingFreeUnitsMonthly !== undefined;
 
+    const keywordFilters =
+      input.keywordFilters !== undefined
+        ? parseKeywordFilters({
+            ...current.keywordFilters,
+            ...input.keywordFilters,
+            hard: input.keywordFilters.hard
+              ? { ...current.keywordFilters.hard, ...input.keywordFilters.hard }
+              : current.keywordFilters.hard,
+          })
+        : undefined;
+
     const row = await this.prisma.platformSettings.update({
       where: { id: 'default' },
       data: {
@@ -97,6 +109,9 @@ export class PlatformSettingsService {
         ...(pricingChanged
           ? { pricing: pricing as unknown as Prisma.InputJsonValue }
           : {}),
+        ...(keywordFilters !== undefined
+          ? { keywordFilters: keywordFilters as unknown as Prisma.InputJsonValue }
+          : {}),
       },
     });
     return mapPlatformSettings(row);
@@ -118,6 +133,7 @@ export class PlatformSettingsService {
         cashbackMinOrderAmount: defaults.cashbackMinOrderAmount,
         allowedCashbackMethods: defaults.allowedCashbackMethods,
         pricing: DEFAULT_PLATFORM_PRICING as unknown as Prisma.InputJsonValue,
+        keywordFilters: defaults.keywordFilters as unknown as Prisma.InputJsonValue,
         boostsEnabled: defaults.boostsEnabled,
         featuredEnabled: defaults.featuredEnabled,
         displayAdsEnabled: defaults.displayAdsEnabled,

@@ -3,8 +3,8 @@
 > **Status:** Approved direction — single canonical planning document  
 > **Scope:** Ireland-wide marketplace · card-only payments · haram-free catalog  
 > **Audience:** Engineering, Product, Design, Admin, Investors  
-> **Last updated:** 2026-07-22  
-> **Implementation:** Foundation ✅ · Growth **Phase 1**, **1.5**, **2**, **3** ✅ shipped · **Phase 4–6+** 📋 planned · Admin display-ad campaigns ✅ (self-serve later)
+> **Last updated:** 2026-07-23  
+> **Implementation:** Foundation ✅ · Growth **Phase 1**, **1.5**, **2**, **3** ✅ · Buyer SKUs **partial** (statement + early unlock) ✅ · Seller Growth Pack / AI credits / store slots / featured storefront ✅ · Admin display ads ✅ · **Still planned:** priority message (priced/off), buyer protection (legal), advertiser self-serve, remaining Phase 6+ bundles
 
 **Covers:** Monetization · Pricing · Rollout · Revenue model · UX flows · Safety · Moderation · Category tree
 
@@ -49,14 +49,16 @@ SellNearby is a **free-to-start, trust-first, micro-priced** community marketpla
 
 **Revenue:**
 
-- Platform fees on card sales (live today)
+- Platform fees on card sales (**live**)
 - Listing boosts, featured listings, fast-track verification (**live** — Phases 1, 1.5, 3)
 - Wallet credit spend on boosts / fast-track / early unlock (**live** — Phase 2)
-- Buyer micro-SKUs and seller packages (planned — Phases 4–6)
+- Buyer convenience SKUs: early cashback unlock + paid statement PDF (**live**); priority message priced but disabled; buyer protection still planned (Phase 5 / legal)
+- Seller ARPU: Growth Pack, AI credit packs, paid store slots, featured storefront (**live**); broader package catalog still expandable
+- Brand display ads — admin campaign MVP (**live**); advertiser self-serve **planned**
 
 **Safety:** No haram products, illegal items, or unsafe content — family-friendly, Ireland-appropriate, high-trust.
 
-**Live today:** 10% platform fee (8% auto-applied for verified sellers), 1.5% buyer cashback (earn + spend on platform purchases), paid boosts + featured slots + fast-track verification, free core (list, message, browse, verify, Stripe onboarding). Admin-run brand display ads MVP.
+**Live today:** 10% platform fee (8% for verified sellers), 1.5% buyer cashback (earn + spend on platform purchases), boosts + featured listings + fast-track, wallet spend, early unlock, buyer statements, store slots, featured storefront, AI credit packs, Seller Growth Pack, free core (list, message, browse, verify, Stripe onboarding), admin-run brand display ads.
 
 This blueprint defines everything needed to build, scale, and govern SellNearby.
 
@@ -73,8 +75,8 @@ This blueprint defines everything needed to build, scale, and govern SellNearby.
 | No buyer platform fee | Buyers pay listing price only |
 | Card-only v1 | No bank transfer in growth phases |
 | Micro-pricing | €0.49–€4.99 impulse band |
-| Cashback wallet | Earn → spend loop (spend live on boosts / fast-track / early unlock; full GMV checkout wallet+card still Phase 2+) |
-| No haram products | Policy + keyword + category enforcement |
+| Cashback wallet | Earn → spend loop (spend live on boosts / fast-track / early unlock; **GMV listing checkout** wallet+card still later) |
+| No haram products | Policy documented; fraud/scam keyword checks live; **haram hard/soft keyword tiers + category/image vision enforcement still planned** (see §7) |
 | No subscriptions | Until seller packages / buyer alerts (Phase 6+) |
 
 ### 1.2 Revenue streams
@@ -85,11 +87,23 @@ This blueprint defines everything needed to build, scale, and govern SellNearby.
 | Listing boosts | €1.99 / €4.99 | 1 | ✅ Live |
 | Featured listings | €2.99 / €1.99 | 1.5 | ✅ Live |
 | Fast-track verification | €2.99 | 3 | ✅ Live |
-| Buyer SKUs | €0.49–€1.99 | 4–5 | 📋 Planned |
 | Wallet spend | Credits → boosts / fast-track / early unlock | 2 | ✅ Live |
-| Seller packages | €2.99–€9.99 | 6 | 📋 Planned |
+| Early cashback unlock | €0.99 | 2 / 4 | ✅ Live |
+| Buyer statement (PDF) | €0.99 | 4 | ✅ Live |
+| Priority message | €0.49 | 4 | ⏸ Pricing stub (`enabled: false`) · **no purchase type / fulfillment** |
+| Buyer protection add-on | €0.49–€1.99 | 5 | 📋 Planned (legal gate) |
+| Paid store slots / bundle | €4.99 / €7.99 | Storefront | ✅ Live |
+| Featured storefront | €2.99 / 24h homepage | Hub | ✅ Live |
+| AI credit packs | €1.99 / €4.99 / €9.99 | AI Hub | ✅ Live |
+| Seller Growth Pack | €6.99 (credit + boost discount) | Hub / 4 | ✅ Live |
+| Brand display ads | Admin campaigns (offline payment) | Ads MVP | ✅ Live (admin) · self-serve 📋 |
 
 **Economics:** 10% fee − 1.5% cashback ≈ 8.5% net · 8% verified ≈ 6.5% net.
+
+**Notes (code truth, 2026-07-23):**
+
+- “Buyer SKUs” and “Seller packages” are **not** all still planned — several SKUs already ship via `platform_purchases` (`DEFAULT_PLATFORM_PRICING` in `apps/api/.../boost.lib.ts`).
+- Remaining gaps: **priority message** (no purchase type), **buyer protection**, Starter/Pro/Premium ledger packages, **advertiser self-serve** for display ads, GMV checkout wallet mix.
 
 ### 1.3 Platform purchases (non-GMV revenue)
 
@@ -175,7 +189,7 @@ All prices **EUR (€)**. Admin-configurable via `platform_settings.pricing` JSO
 | Unlock | 14 days |
 | Caps | €10/order · €20/month |
 | Expiry | 6 months |
-| Spend | Phase 2+ (boosts, early unlock first) |
+| Spend | ✅ Live on boosts, fast-track verification, early unlock (full credit or hybrid card). Not on GMV listing checkout, featured slots, protection, or alerts |
 
 ---
 
@@ -188,12 +202,12 @@ All prices **EUR (€)**. Admin-configurable via `platform_settings.pricing` JSO
 | ✅ | Foundation | Platform fee + earn-only cashback |
 | ✅ | 1 | Paid boosts + verified 8% auto-fee | Highest ROI |
 | ✅ | 1.5 | Featured listings (slot caps) | Scarcity revenue |
-| 2 | Wallet spend (boosts + early unlock only) | Credit loop |
+| ✅ | 2 | Wallet spend (boosts + fast-track + early unlock) | Credit loop |
 | ✅ | 3 | Fast-track verification | Trust / speed |
-| 4 | Buyer micro-SKUs | Priority msg, early unlock |
-| 5 | Buyer protection | **Legal sign-off required** |
-| 6 | Seller packages | Bundle existing SKUs |
-| 7+ | Buyer alerts, wanted ads, analytics Pro, etc. | Volume-gated |
+| ✅ Partial | 4 | Buyer micro-SKUs | Early unlock + statement live; priority msg off |
+| 📋 | 5 | Buyer protection | **Legal sign-off required** |
+| ✅ Partial | 6 | Seller packages / ARPU | Growth Pack, AI credits, store slots, featured store live; Starter/Pro/Premium ledger still planned |
+| 📋 | 7+ | Buyer alerts, wanted ads, analytics Pro, ads self-serve | Volume-gated |
 
 ### 3.2 Why this order
 
@@ -209,7 +223,7 @@ All prices **EUR (€)**. Admin-configurable via `platform_settings.pricing` JSO
 
 **In (shipped):** Boost prices, Stripe payment, `boostedUntil`, ranking bump, badge, `PlatformPurchase`, 8% on verify approve.
 
-**Deferred to later phases:** Wallet spend (2), buyer protection (5), packages (6), urgent badge, auto-refresh.
+**Deferred after Phase 1 (status as of 2026-07-23):** buyer protection (5), priority message fulfillment, Starter/Pro/Premium package ledger (6), urgent badge, auto-refresh. *(Wallet spend, featured, fast-track, Growth Pack / AI packs / store slots have since shipped — see [§1.2](#12-revenue-streams).)*
 
 ---
 
@@ -269,11 +283,12 @@ All prices **EUR (€)**. Admin-configurable via `platform_settings.pricing` JSO
 
 ### 5.4 Buyer SKUs
 
-| SKU | Flow |
-|-----|------|
-| Priority message | Checkbox in chat (€0.49) → pinned in seller inbox |
-| Early unlock | Wallet or order detail → confirm receipt → pay €0.99 → credit available |
-| Buyer protection | Checkout toggle (€0.49–€1.99) → badge on purchase (Phase 5 + legal) |
+| SKU | Flow | Status |
+|-----|------|--------|
+| Early unlock | Wallet → unlock pending cashback early for €0.99 | ✅ Live |
+| Buyer statement | Purchases → pay €0.99 → download monthly PDF/CSV | ✅ Live |
+| Priority message | Checkbox in chat (€0.49) → pinned in seller inbox | ⏸ Pricing stub only · no `PlatformPurchaseType` |
+| Buyer protection | Checkout toggle (€0.49–€1.99) → badge on purchase | 📋 Phase 5 + legal |
 
 ---
 
@@ -359,9 +374,11 @@ Alcohol bottles · Pork food · Adult content · Drugs/paraphernalia · Weapons
 
 ### 7.5 Implementation
 
-- Hard → `400` + error code · Soft → `pending_review` · Image → pause + queue
-- Store lists in `platform_settings.keyword_filters` (admin-editable)
-- Extend `ListingAutoModerationService` + `ModerationContentCheckService`
+> **Status (2026-07-23):** **Phases A–B shipped** — admin-editable `keyword_filters` + matcher; when `enabled`, hard terms reject listing save/submit/approve (`400`), soft terms queue `pending_review`. **Still planned (C–F):** category flags, image vision, public policy page — see [haram-enforcement-roadmap.md](./haram-enforcement-roadmap.md).
+
+- Hard → `400` + error code · Soft → `pending_review` · Image → pause + queue *(Phase B / D)*
+- Store lists in `platform_settings.keyword_filters` (admin-editable) ✅ Phase A
+- Extend `ListingAutoModerationService` + `ModerationContentCheckService` beyond scam/fraud *(Phase B)*
 
 ---
 
@@ -571,12 +588,12 @@ SellNearby monetization should feel:
 | **1.5** | Featured listing slots | ✅ Live (2026-06-27) | Seller visibility |
 | **2** | Wallet spend (credit economy) | ✅ Live | Credits → boosts / fast-track / early unlock |
 | **3** | Fast-track verification | ✅ Live (2026-06-27) | Trust / speed |
-| **4** | Buyer micro-SKUs | 📋 Planned | Buyer convenience |
+| **4** | Buyer micro-SKUs | ✅ Partial — statement + early unlock live; priority message off | Buyer convenience |
 | **5** | Buyer protection | 📋 Planned (legal gate) | Buyer safety |
-| **6** | Seller packages (bundles) | 📋 Planned | ARPU bundles |
-| **7+** | Future expansion | 🔮 Volume-gated | Platform scale |
+| **6** | Seller packages (bundles) | ✅ Partial — Growth Pack + AI credits + store slots + featured store live | ARPU bundles |
+| **7+** | Future expansion | 🔮 Volume-gated | Platform scale · ads self-serve |
 
-**Card-only** for all monetization through Phase 6. No bank transfer reconciliation in growth phases until Phase 7+.
+**Card-first:** GMV listing checkout remains **card-only**. Platform SKUs may use card, full credit, or hybrid where coded (boosts / fast-track / early unlock). No bank transfer reconciliation until Phase 7+.
 
 ---
 
@@ -606,12 +623,13 @@ SellNearby monetization should feel:
 - Auto **8%** fee on verification approval
 - `platform_purchases` table
 
-#### Out of scope (later phases)
+#### Out of scope (later / gated)
 
 - Buyer protection (Phase 5 — legal gate)
+- Priority message fulfillment (SKU priced; currently disabled)
 - Buyer alerts & wanted ads (Phase 6+)
-- Wallet spend (Phase 2)
-- Seller packages (Phase 6)
+- Broader seller package merchandising beyond Growth Pack / AI packs / store slots
+- Advertiser self-serve display ads (admin campaign MVP already live)
 - Urgent badge & auto-refresh (priced in table; not built)
 
 ---
@@ -696,8 +714,8 @@ SellNearby monetization should feel:
 | Cashback earn rate | **1.5%** | Platform-funded |
 | Cashback unlock | Free | After **14 days** |
 | Cashback expiry | Free | **6 months** from unlock |
-| Credit top-up *(future)* | **€5 / €10** | Optional buyer top-ups |
-| Credit spend | Free *(uses balance)* | Boosts, protection, alerts *(Phase 2+)* |
+| Credit top-up | **€2 / €5 / €10** AI packs · Growth Pack credit | ✅ Live via AI credit packs + Growth Pack (general wallet) |
+| Credit spend | Free *(uses balance)* | ✅ Live on boosts / fast-track / early unlock · not GMV checkout, featured, protection, or alerts |
 
 ---
 
@@ -705,38 +723,51 @@ SellNearby monetization should feel:
 
 Store SKU prices in **`platform_settings.pricing`** (JSON). Fee percentages remain columns (`default_platform_fee_percent`, `verified_seller_fee_percent`).
 
+> **Code defaults (2026-07-23)** — mirrors `DEFAULT_PLATFORM_PRICING` in `apps/api/src/modules/monetization/lib/boost.lib.ts`. Planned SKUs that are not purchase types yet are omitted or noted.
+
 ```json
 {
   "currency": "EUR",
   "skus": {
-    "boost_7d": { "amount": 1.99, "enabled": true, "phase": 1 },
-    "boost_30d": { "amount": 4.99, "enabled": true, "phase": 1 },
-    "urgent_badge": { "amount": 0.99, "enabled": false, "phase": 2 },
-    "auto_refresh": { "amount": 1.49, "enabled": false, "phase": 2 },
-    "featured_homepage": { "amount": 2.99, "enabled": false, "phase": 1.5 },
-    "featured_category": { "amount": 1.99, "enabled": false, "phase": 1.5 },
-    "fast_track_verification": { "amount": 2.99, "enabled": false, "phase": 3 },
-    "priority_message": { "amount": 0.49, "enabled": false, "phase": 4 },
-    "early_cashback_unlock": { "amount": 0.99, "enabled": false, "phase": 4 },
-    "buyer_protection_low": { "amount": 0.49, "enabled": false, "phase": 5 },
-    "buyer_protection_high": { "amount": 1.99, "enabled": false, "phase": 5 },
-    "wanted_ad": { "amount": 0.99, "enabled": false, "phase": 6 },
-    "buyer_alerts_monthly": { "amount": 1.99, "enabled": false, "phase": 6 },
-    "package_starter": { "amount": 2.99, "enabled": false, "phase": 6 },
-    "package_pro": { "amount": 5.99, "enabled": false, "phase": 6 },
-    "package_premium": { "amount": 9.99, "enabled": false, "phase": 6 }
+    "boost_7d": { "amount": 1.99, "enabled": true },
+    "boost_30d": { "amount": 4.99, "enabled": true },
+    "featured_homepage": { "amount": 2.99, "enabled": true },
+    "featured_category": { "amount": 1.99, "enabled": true },
+    "fast_track_verification": { "amount": 2.99, "enabled": true },
+    "store_slot_2": { "amount": 4.99, "enabled": true },
+    "store_slot_3": { "amount": 4.99, "enabled": true },
+    "store_bundle_3": { "amount": 7.99, "enabled": true },
+    "buyer_statement": { "amount": 0.99, "enabled": true },
+    "priority_message": { "amount": 0.49, "enabled": false },
+    "early_cashback_unlock": { "amount": 0.99, "enabled": true },
+    "seller_growth_pack": {
+      "amount": 6.99,
+      "enabled": true,
+      "walletCreditEur": 5,
+      "boostDiscountPercent": 25
+    },
+    "ai_credit_2": { "amount": 1.99, "enabled": true, "walletCreditEur": 2 },
+    "ai_credit_5": { "amount": 4.99, "enabled": true, "walletCreditEur": 5 },
+    "ai_credit_10": { "amount": 9.99, "enabled": true, "walletCreditEur": 10 },
+    "featured_store_homepage": { "amount": 2.99, "enabled": true }
   },
   "promos": {
     "first_boost_discount_percent": 50
   },
   "featured": {
     "homepage_slots_per_day": 8,
-    "category_slots_per_day": 4
+    "category_slots_per_day": 4,
+    "store_homepage_slots_per_day": 6
+  },
+  "aiMarketing": {
+    "freeUnitsMonthly": 10
   }
 }
 ```
 
-`enabled: false` until the phase ships — admin can set prices early without exposing checkout.
+**Not in live defaults / purchase types yet:** `urgent_badge`, `auto_refresh`, `buyer_protection_*`, `wanted_ad`, `buyer_alerts_monthly`, `package_starter` / `package_pro` / `package_premium`. `priority_message` appears in pricing with `enabled: false` but has **no** `PlatformPurchaseType` / fulfillment path.
+
+`enabled: false` keeps a SKU priced but hidden from checkout until product enables it.
 
 ---
 
@@ -924,7 +955,7 @@ Use **Payment** / **Purchase** — not “Order”.
 
 ## Growth phases
 
-Implemented: **1**, **1.5**, **3** · Planned: **2**, **4**, **5**, **6+**
+Implemented: **1**, **1.5**, **2**, **3** ✅ · **4** partial (early unlock + statement) · **6** partial (Growth Pack / AI packs / store slots / featured store) · Planned: **5**, remaining **4**/ **6+**, ads self-serve
 
 ### Phase 1 — Paid listing boosts + verified seller fee ✅
 
@@ -987,7 +1018,7 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 - Curated placement (replaces “newest = featured” on homepage when slots sold)
 - Limited slots per day (e.g. 8 homepage, 4 per category)
 
-**Codebase:** `listings.isFeatured` exists but unused.
+**Codebase:** Featured placement uses `featuredUntil` / `featuredPlacement` (and related feed queries). Do not treat legacy `isFeatured` alone as the source of truth.
 
 **Requires:**
 
@@ -1017,15 +1048,18 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 
 | Included | Not included (Phase 2) |
 |----------|------------------------|
-| Spend credits on listing boosts | Full checkout partial wallet + card |
+| Spend credits on listing boosts | GMV / listing checkout (wallet + card) |
 | Spend on early cashback unlock | Bank transfer |
+| Spend on fast-track verification | Featured listing slots (card-only) |
 | Debit `wallet_transactions` type `spent` | Referral program |
 
-**Spend targets (priority order):**
+**Spend targets (live):**
 
 1. Listing boosts (sellers / buyer-sellers) ✅
-2. Early cashback unlock (€0.99 equivalent in credits or hybrid) ✅
-3. Featured slots (Phase 1.5)
+2. Fast-track verification ✅
+3. Early cashback unlock (€0.99 equivalent in credits or hybrid) ✅
+
+**Not wallet-spendable yet:** featured listing slots (card-only), buyer protection, alerts, GMV checkout.
 
 #### Rules
 
@@ -1035,11 +1069,12 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 
 #### Outcomes
 
-- [ ] Wallet spend debit type + balance checks
-- [ ] Boost checkout accepts credits (full or partial + card)
-- [ ] Admin wallet transaction filter for `spent`
-- [ ] Updated wallet UI — show spend history
-
+- [x] Wallet spend debit type + balance checks
+- [x] Boost checkout accepts credits (full or partial + card)
+- [x] Fast-track checkout accepts credits (full or partial + card)
+- [x] Early unlock accepts credits (full or partial + card)
+- [x] Updated wallet UI — spend targets + early unlock
+- [ ] Admin wallet transaction filter for `spent` *(verify / polish)*
 ---
 
 ### Phase 3 — Fast-track verification ✅
@@ -1069,24 +1104,26 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 
 ---
 
-### Phase 4 — Buyer micro-SKUs 📋
+### Phase 4 — Buyer micro-SKUs ✅ Partial
 
-**Timeline:** 2–3 weeks · **Status:** 📋 Planned · **Depends on:** Phase 2 wallet (optional) or direct payment
+**Timeline:** 2–3 weeks · **Status:** ✅ Partial live · **Depends on:** Phase 2 wallet (optional) or direct payment
 
 **Goal:** Tiny optional buyer upgrades — never burden core experience.
 
-| SKU | Price | Description |
-|-----|-------|-------------|
-| Early cashback unlock | €0.99 | Unlock pending credit after confirm receipt |
-| Priority messaging | €0.49 | Message pinned to top of seller inbox |
-| Wanted ads | €0.99 | Post “Looking for…” ads (new content type) |
-| Buyer alerts | €1.99/month | Instant push for saved searches (subscription) |
+| SKU | Price | Description | Status |
+|-----|-------|-------------|--------|
+| Early cashback unlock | €0.99 | Unlock pending credit early | ✅ Live |
+| Buyer statement | €0.99 | Paid monthly PDF/CSV/XLSX | ✅ Live |
+| Priority messaging | €0.49 | Message pinned to top of seller inbox | ⏸ Pricing stub · no purchase type |
+| Wanted ads | €0.99 | Post “Looking for…” ads (new content type) | 📋 Planned |
+| Buyer alerts | €1.99/month | Instant push for saved searches (subscription) | 📋 Planned (often framed as 6+/7+) |
 
 **Not charged:** browsing, chat, search, standard cashback.
 
 #### Outcomes
 
-- [ ] Early unlock extends `CashbackGrant.unlockAt` or status
+- [x] Early unlock extends `CashbackGrant.unlockAt` / earns immediately on pay
+- [x] Buyer statement purchase + download
 - [ ] Priority message flag on chat messages
 - [ ] Wanted ads CRUD + feed (Phase 4b)
 - [ ] Saved search alerts + Stripe Billing subscription (Phase 4c)
@@ -1120,11 +1157,22 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 
 ---
 
-### Phase 6 — Seller packages (bundles)
+### Phase 6 — Seller packages (bundles) ✅ Partial
 
-**Timeline:** ~2 weeks · **Status:** 📋 Planned · **Depends on:** Phases 1, 1.5, 3 stable
+**Timeline:** ~2 weeks · **Status:** ✅ Partial live · **Depends on:** Phases 1, 1.5, 3 stable
 
-**Goal:** Increase ARPU by bundling existing SKUs — no new features inside bundles.
+**Goal:** Increase ARPU by bundling visibility / credits — without inventing new core marketplace features.
+
+#### Shipped package-like SKUs (not the original Starter/Pro/Premium names)
+
+| SKU | Price | Includes | Status |
+|-----|-------|----------|--------|
+| **Seller Growth Pack** | €6.99 | Wallet credit + boost discount | ✅ Live |
+| **AI credit packs** | €1.99 / €4.99 / €9.99 | Wallet credit for Marketing Hub | ✅ Live |
+| **Store slots / bundle** | €4.99 / €7.99 | Extra store entitlements | ✅ Live |
+| **Featured storefront** | €2.99 / 24h | Homepage store placement | ✅ Live |
+
+#### Still planned — entitlement-ledger packages
 
 | Package | Price | Includes |
 |---------|-------|----------|
@@ -1132,19 +1180,18 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 | **Pro** | €5.99 | 3× boost credits + 1× featured slot |
 | **Premium** | €9.99 | Boost credits (capped) + 2× featured/month + seller analytics |
 
-**Rules:**
+**Rules (for planned ledger packages):**
 
 - Never sell instant verified badge — verification stays admin-approved
 - “Unlimited boosts” → enforce caps (e.g. 10× 7-day/month)
 - If already verified, substitute credits or featured slots
-- Deliver via `seller_boost_credits` / credit ledger, not instant listing mutation
+- Deliver via credit ledger, not instant listing mutation alone
 
 #### Outcomes
 
-- [ ] Package purchase → credit grants
-- [ ] Package catalog UI on seller dashboard
-- [ ] Admin package pricing config
-
+- [x] Growth Pack / AI packs / store slots / featured store purchase + fulfillment
+- [ ] Starter / Pro / Premium package catalog as originally specified
+- [ ] Admin package pricing for ledger bundles
 ---
 
 ### Phase 7+ — Future expansion
@@ -1189,7 +1236,7 @@ Non-GMV revenue uses **`platform_purchases`** — separate from buyer→seller `
 
 | Field | Purpose |
 |-------|---------|
-| `type` | `listing_boost`, `featured_slot`, `fast_track_verification`, `priority_message`, `early_cashback_unlock`, `buyer_protection`, `wanted_ad`, … |
+| `type` | **Live:** `listing_boost`, `featured_slot`, `fast_track_verification`, `store_slot_2` / `store_slot_3` / `store_bundle_3`, `buyer_statement`, `seller_growth_pack`, `ai_credit_2` / `5` / `10`, `featured_store`, `early_cashback_unlock`. **Not purchase types yet:** `priority_message`, `buyer_protection`, `wanted_ad`, … |
 | `user_id` | Purchaser |
 | `amount` / `currency` | Snapshotted at checkout (EUR) |
 | `listing_id` | Target when applicable |
@@ -1266,13 +1313,12 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 1. Foundation 1–3 — ✅ Done
 2. **Phase 1** — Paid boosts + verified 8% fee — ✅ Done (2026-06-27)
 3. **Phase 1.5** — Featured slots — ✅ Done (2026-06-27)
-4. **Phase 2** — Wallet spend
+4. **Phase 2** — Wallet spend — ✅ Done (boosts / fast-track / early unlock)
 5. **Phase 3** — Fast-track verification — ✅ Done (2026-06-27)
-6. **Phase 4** — Buyer micro-SKUs
-7. **Phase 5** — Buyer protection (after legal)
-8. **Phase 6** — Seller packages
-9. **Phase 7+** — As volume justifies
-
+6. **Phase 4** — Buyer micro-SKUs — ✅ Partial (early unlock + statement); priority message / wanted / alerts open
+7. **Phase 5** — Buyer protection (after legal) — 📋
+8. **Phase 6** — Seller packages — ✅ Partial (Growth Pack / AI packs / store slots / featured store); Starter/Pro/Premium ledger open
+9. **Phase 7+** — As volume justifies (alerts, ads self-serve, GMV wallet mix, …)
 ---
 
 ### Fraud & idempotency checklist
@@ -1293,10 +1339,14 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 - [x] Featured slot cap enforced before payment
 - [x] Fast-track purchase cap per account per 90 days
 
-#### Growth phases (2+) 📋
+#### Growth phases (2+) 
 
-- [ ] Wallet spend debits with balance checks
-- [ ] Early unlock via credits or hybrid payment
+- [x] Wallet spend debits with balance checks (boosts / fast-track / early unlock)
+- [x] Early unlock via credits or hybrid payment
+- [ ] Priority message purchase + inbox pin
+- [ ] Buyer protection checkout add-on (legal gate)
+- [ ] Starter / Pro / Premium ledger packages
+- [ ] GMV listing checkout wallet + card mix
 
 ---
 
@@ -1309,7 +1359,7 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 | 3 | Boost extend vs replace | Extend from `max(now, boostedUntil)` | 1 ✅ |
 | 4 | Currency | EUR for Ireland launch | 1 ✅ |
 | 5 | Monthly cap overflow at unlock | Skip remainder | Foundation ✅ |
-| 6 | Wallet spend trigger | After boosts live 30 days | 2 |
+| 6 | Wallet spend trigger | Shipped — boosts / fast-track / early unlock | 2 ✅ |
 | 7 | Buyer protection legal | External review before build | 5 |
 
 ---
@@ -1334,6 +1384,7 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 | 2026-06-27 | **Phase 3 shipped** — fast-track verification | Commits `ae0de5a`, `5d39a47`; `priority` on verification requests, admin queue sort, seller + admin UI |
 | 2026-06-27 | Force-reverify notification fix | Migration adds `seller_verification_nudge` to `NotificationType`; commit `5d39a47` |
 | 2026-06-27 | Snapshot-tested Phases 1–3 | Boost (Stripe CLI confirm), featured homepage, fast-track Priority UI, admin priority via API |
+| 2026-07-23 | Full blueprint status audit vs code | Phase 2/4/6 partials, pricing JSON, keyword-filter claims corrected |
 
 ---
 
@@ -2022,18 +2073,19 @@ Most data model and UI already exist (`packageType`, `boostedUntil`, package dia
 
 ---
 
-### 8. Phase 4 — Buyer micro-SKUs 📋
+### 8. Phase 4 — Buyer micro-SKUs ✅ Partial
 
 **Goal:** Light, optional buyer upgrades (convenience, not tax).
 
-**Timeline:** 2–3 weeks · **Risk:** Low–Medium · **Revenue:** Low–Medium
+**Timeline:** 2–3 weeks · **Risk:** Low–Medium · **Revenue:** Low–Medium · **Status:** early unlock + buyer statement ✅ · priority message 📋
 
 #### Scope
 
-| SKU | Price | Delivery |
-|-----|-------|----------|
-| Priority messaging | €0.49 | Pinned in seller inbox |
-| Early cashback unlock | €0.99 | Grant unlocked after confirm receipt |
+| SKU | Price | Delivery | Status |
+|-----|-------|----------|--------|
+| Early cashback unlock | €0.99 | Grant unlocked / earned early (wallet or hybrid) | ✅ Live |
+| Buyer statement | €0.99 | Paid monthly statement download | ✅ Live |
+| Priority messaging | €0.49 | Pinned in seller inbox | 📋 Not built |
 
 **Out of scope for Phase 4:** wanted ads, buyer alerts (Phase 7+).
 
@@ -2041,10 +2093,10 @@ Most data model and UI already exist (`packageType`, `boostedUntil`, package dia
 
 #### Exit criteria
 
+- [x] Early unlock with payment (credits and/or card)
+- [x] Buyer statement purchase + download
 - [ ] Priority message flag + inbox sort
-- [ ] Early unlock with confirm-receipt gate
-- [ ] Dispute later → manual review flag on grant
-
+- [ ] Dispute later → manual review flag on grant *(ops polish)*
 ---
 
 ### 9. Phase 5 — Buyer protection
@@ -2077,13 +2129,22 @@ Most data model and UI already exist (`packageType`, `boostedUntil`, package dia
 
 ---
 
-### 10. Phase 6 — Seller packages
+### 10. Phase 6 — Seller packages ✅ Partial
 
-**Goal:** Bundle existing SKUs into simple plans.
+**Goal:** Bundle visibility / credits into simple paid offers.
 
-**Timeline:** 2–3 weeks · **Risk:** Medium · **Revenue:** High (ARPU)
+**Timeline:** 2–3 weeks · **Risk:** Medium · **Revenue:** High (ARPU) · **Status:** Growth Pack / AI packs / store slots / featured store ✅ · Starter/Pro/Premium ledger 📋
 
-#### Scope
+#### Shipped
+
+| SKU | Price | Notes |
+|-----|-------|-------|
+| Seller Growth Pack | €6.99 | Wallet credit + boost discount |
+| AI credit packs | €1.99–€9.99 | Wallet top-up for Marketing Hub |
+| Store slots / bundle | €4.99 / €7.99 | Extra store entitlements |
+| Featured storefront | €2.99 / 24h | Homepage store placement |
+
+#### Still planned — entitlement ledger packages
 
 | Package | Price | Includes |
 |---------|-------|----------|
@@ -2091,16 +2152,16 @@ Most data model and UI already exist (`packageType`, `boostedUntil`, package dia
 | Pro | €5.99 | 3× boost credits + 1× featured + 8% fee if not on verified rate |
 | Premium | €9.99 | Capped boost credits + 2× featured/month + analytics |
 
-- Package purchase → **credit ledger** (boost credits, featured credits)
+- Planned packages → **credit ledger** (boost credits, featured credits)
 - Fee override for Pro/Premium where applicable
 - Abuse caps (max boosts/featured per month)
 - **Never** sell instant verified badge
 
 #### Exit criteria
 
-- [ ] Package purchase grants credits, not instant entitlements
-- [ ] Credits consumable via existing boost/featured flows
-
+- [x] Growth Pack / AI packs / store slots / featured store purchase + fulfillment
+- [ ] Starter/Pro/Premium grants credits (not only instant entitlements)
+- [ ] Credits consumable via existing boost/featured flows for ledger packages
 ---
 
 ### 11. Phase 7+ — Buyer alerts, wanted ads & advanced monetization
@@ -2258,10 +2319,13 @@ Net after cashback (~1.5% platform-funded): weighted **~7.7%** on GMV.
 | # | Stream | Phase |
 |---|--------|-------|
 | 1 | Platform fee on card sales | Foundation ✅ Live |
-| 2 | Listing boosts | Phase 1 |
-| 3 | Featured listings | Phase 1.5 |
-| 4 | Buyer SKUs | Phase 4–5 |
-| 5 | Seller packages | Phase 6 |
+| 2 | Listing boosts | Phase 1 ✅ Live |
+| 3 | Featured listings | Phase 1.5 ✅ Live |
+| 4 | Wallet spend + early unlock | Phase 2 ✅ Live |
+| 5 | Fast-track verification | Phase 3 ✅ Live |
+| 6 | Buyer SKUs (statement + early unlock) | Phase 4 ✅ Partial · priority msg / protection still open |
+| 7 | Seller ARPU (Growth Pack, AI packs, store slots, featured store) | Phase 6 ✅ Partial · Starter/Pro/Premium ledger planned |
+| 8 | Brand display ads (admin) | Ads MVP ✅ · self-serve 📋 |
 
 ---
 
@@ -2798,10 +2862,12 @@ Phase 1 build detail: [monetization-phase-1-spec.md](#appendix-b--phase-1-techni
 |---------|-----------|--------|
 | Boost modal + payment + badge | Phase 1 | ✅ |
 | Featured modal + slots | Phase 1.5 | ✅ |
-| Wallet “Use credits” toggle | Phase 2 | 📋 |
+| Wallet “Use credits” toggle (boosts / fast-track / early unlock) | Phase 2 | ✅ |
 | Fast-track on verification tab | Phase 3 | ✅ |
-| Priority message + early unlock | Phase 4 | 📋 |
+| Early unlock + buyer statement | Phase 4 | ✅ |
+| Priority message in chat | Phase 4 | 📋 |
 | Buyer protection toggle | Phase 5 (post-legal) | 📋 |
+| Growth Pack / AI packs / store slots / featured store | Hub / Phase 6 | ✅ |
 
 ---
 
@@ -4215,23 +4281,43 @@ Do not show in browse filters or listing create. Admin may reassign listings.
 
 ## Appendix K — Admin pricing JSON reference
 
+Canonical defaults match `DEFAULT_PLATFORM_PRICING` (`apps/api/src/modules/monetization/lib/boost.lib.ts`). See also [Admin-configurable pricing](#admin-configurable-pricing) in Appendix A.
+
 ```json
 {
   "currency": "EUR",
   "skus": {
     "boost_7d": { "amount": 1.99, "enabled": true },
     "boost_30d": { "amount": 4.99, "enabled": true },
-    "featured_homepage": { "amount": 2.99, "enabled": false },
-    "featured_category": { "amount": 1.99, "enabled": false },
-    "fast_track_verification": { "amount": 2.99, "enabled": false },
+    "featured_homepage": { "amount": 2.99, "enabled": true },
+    "featured_category": { "amount": 1.99, "enabled": true },
+    "fast_track_verification": { "amount": 2.99, "enabled": true },
+    "store_slot_2": { "amount": 4.99, "enabled": true },
+    "store_slot_3": { "amount": 4.99, "enabled": true },
+    "store_bundle_3": { "amount": 7.99, "enabled": true },
+    "buyer_statement": { "amount": 0.99, "enabled": true },
     "priority_message": { "amount": 0.49, "enabled": false },
-    "early_cashback_unlock": { "amount": 0.99, "enabled": false }
+    "early_cashback_unlock": { "amount": 0.99, "enabled": true },
+    "seller_growth_pack": {
+      "amount": 6.99,
+      "enabled": true,
+      "walletCreditEur": 5,
+      "boostDiscountPercent": 25
+    },
+    "ai_credit_2": { "amount": 1.99, "enabled": true, "walletCreditEur": 2 },
+    "ai_credit_5": { "amount": 4.99, "enabled": true, "walletCreditEur": 5 },
+    "ai_credit_10": { "amount": 9.99, "enabled": true, "walletCreditEur": 10 },
+    "featured_store_homepage": { "amount": 2.99, "enabled": true }
   },
   "promos": { "first_boost_discount_percent": 50 },
-  "featured": { "homepage_slots_per_day": 8 }
+  "featured": {
+    "homepage_slots_per_day": 8,
+    "category_slots_per_day": 4,
+    "store_homepage_slots_per_day": 6
+  },
+  "aiMarketing": { "freeUnitsMonthly": 10 }
 }
 ```
-
 ---
 
 ## Appendix L — Related engineering docs
@@ -4251,4 +4337,4 @@ This Master Blueprint defines **monetization, pricing, rollout, revenue model, U
 
 **Sections 0–10** = executive blueprint. **Appendices A–L** = complete detail from all consolidated planning documents.
 
-**Next step:** Pilot ops (Stripe live, SendGrid, legal pack) and demand-gated **Phases 4–6+**. Growth **Phases 1–3** (including wallet spend) and admin display-ad campaigns are live — see [Growth phases](#growth-phases), [monetization.md](./monetization.md), and [display-ads-admin-campaigns.md](./display-ads-admin-campaigns.md).
+**Next step:** Pilot ops (Stripe live, SendGrid, legal pack). Demand-gated remaining work: **priority message**, **buyer protection (legal)**, Starter/Pro/Premium ledger packages, **ads self-serve**, GMV wallet+card checkout. Growth Phases **1–3**, wallet spend, partial buyer/seller SKUs, AI Hub core, and admin display-ad campaigns are live — see [§1.2](#12-revenue-streams), [Growth phases](#growth-phases), [monetization.md](./monetization.md), and [display-ads-admin-campaigns.md](./display-ads-admin-campaigns.md).

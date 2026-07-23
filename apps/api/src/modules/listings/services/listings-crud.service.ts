@@ -29,6 +29,7 @@ import { ListingDeliveryService } from "./listing-delivery.service";
 import { SellerTrustService } from "./seller-trust.service";
 import { SellerListingGateService } from "../../seller/services/seller-listing-gate.service";
 import { ListingAutoModerationService } from "./listing-auto-moderation.service";
+import { ListingKeywordFilterService } from "./listing-keyword-filter.service";
 import { ListingReserveService } from "./listing-reserve.service";
 import { buildActiveFeaturedWhere } from "../../monetization/lib/featured.lib";
 import { computeListingPricing } from "../lib/listing-pricing.lib";
@@ -64,6 +65,7 @@ export class ListingsCrudService {
     private readonly sellerTrust: SellerTrustService,
     private readonly sellerListingGate: SellerListingGateService,
     private readonly autoModeration: ListingAutoModerationService,
+    private readonly keywordFilters: ListingKeywordFilterService,
     private readonly reserves: ListingReserveService,
   ) {}
 
@@ -322,6 +324,12 @@ export class ListingsCrudService {
       normalizedAttributes,
     );
 
+    const description = parsed.description.trim();
+    const keywordMatch = await this.keywordFilters.assertNotHardBlocked(
+      resolvedTitle,
+      description,
+    );
+
     const fraud = detectListingFraudSignals({
       title: resolvedTitle,
       price: computed.price,
@@ -337,7 +345,7 @@ export class ListingsCrudService {
         storeId,
         categoryId: parsed.categoryId,
         title: resolvedTitle,
-        description: parsed.description.trim(),
+        description,
         price: computed.price,
         originalPrice: computed.originalPrice ?? null,
         salePrice: computed.salePrice ?? computed.price,
@@ -360,6 +368,9 @@ export class ListingsCrudService {
     await this.audit.record(row.id, "listing_created", sellerId, {
       toStatus: row.status,
       ...(fraud.requiresReview ? { fraudReasons: fraud.reasons } : {}),
+      ...(keywordMatch?.tier === "soft"
+        ? { keywordSoftMatches: keywordMatch.softMatches }
+        : {}),
     });
 
     this.eventBus.publish({
@@ -371,11 +382,12 @@ export class ListingsCrudService {
     void this.autoModeration.evaluateOnCreate({
       listingId: row.id,
       sellerId,
-      title: parsed.title,
-      description: parsed.description,
+      title: resolvedTitle,
+      description,
       price: computed.price,
       fraudRequiresReview: fraud.requiresReview,
       fraudReasons: fraud.reasons,
+      keywordSoftReasons: this.keywordFilters.formatSoftReasons(keywordMatch),
     });
 
     if (parsed.deliverySelections?.length) {
@@ -512,6 +524,16 @@ export class ListingsCrudService {
             )
           : undefined;
 
+    const nextTitle = resolvedTitle ?? existing.title;
+    const nextDescription =
+      parsed.description !== undefined
+        ? parsed.description.trim()
+        : existing.description;
+    const keywordMatch = await this.keywordFilters.assertNotHardBlocked(
+      nextTitle,
+      nextDescription,
+    );
+
     const row = await this.prisma.listing.update({
       where: { id: listingId },
       data: {
@@ -562,6 +584,14 @@ export class ListingsCrudService {
       payload: { listingId },
       timestamp: new Date(),
     });
+
+    const softReasons = this.keywordFilters.formatSoftReasons(keywordMatch);
+    if (
+      softReasons.length > 0 &&
+      (existing.status === "active" || existing.status === "paused")
+    ) {
+      await this.autoModeration.queueForKeywordSoftBlock(listingId, softReasons);
+    }
 
     if (parsed.deliverySelections !== undefined) {
       await this.delivery.saveForDraftListing(

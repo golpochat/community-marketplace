@@ -6,6 +6,7 @@ import type {
   PlatformPricingConfig,
   PlatformPurchase,
 } from '@community-marketplace/types';
+import { DEFAULT_KEYWORD_FILTERS, parseKeywordFilters } from '@community-marketplace/utils';
 
 import {
   DEFAULT_PLATFORM_PRICING,
@@ -25,6 +26,7 @@ const DEFAULT_SETTINGS = {
   cashbackMinOrderAmount: 5,
   allowedCashbackMethods: ['card'] as PaymentMethod[],
   pricing: DEFAULT_PLATFORM_PRICING,
+  keywordFilters: DEFAULT_KEYWORD_FILTERS,
   boostsEnabled: true,
   featuredEnabled: true,
   displayAdsEnabled: false,
@@ -51,6 +53,7 @@ export function mapPlatformSettings(row: {
   cashbackMinOrderAmount: Prisma.Decimal;
   allowedCashbackMethods: Prisma.JsonValue;
   pricing: Prisma.JsonValue | null;
+  keywordFilters?: Prisma.JsonValue | null;
   boostsEnabled: boolean;
   featuredEnabled: boolean;
   displayAdsEnabled: boolean;
@@ -71,6 +74,7 @@ export function mapPlatformSettings(row: {
     cashbackMinOrderAmount: Number(row.cashbackMinOrderAmount),
     allowedCashbackMethods: row.allowedCashbackMethods as PaymentMethod[],
     pricing,
+    keywordFilters: parseKeywordFilters(row.keywordFilters ?? null),
     boostsEnabled: row.boostsEnabled,
     featuredEnabled: row.featuredEnabled,
     displayAdsEnabled: row.displayAdsEnabled,

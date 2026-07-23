@@ -1,6 +1,6 @@
 # Product Roadmap
 
-> **Status:** Living roadmap · **Last updated:** 2026-07-22  
+> **Status:** Living roadmap · **Last updated:** 2026-07-23  
 > **Canonical monetization detail:** [master-blueprint-v1.md](./master-blueprint-v1.md)  
 > **Launch readiness:** [launch-checklist.md](./launch-checklist.md)
 
@@ -15,7 +15,9 @@ Timeline below reflects **what is shipped in code** vs **what remains planned**.
 - [x] Stripe Connect + card checkout · notifications (in-app / push / email)
 - [x] Unified `/account` hub (MEMBER / BUYER / SELLER); legacy `/buyer/*` · `/seller/*` still present
 - [x] Storefront model · listing reserve · SEO Phases 0–4 in web · AI Marketing Hub Phases 0–4
-- [x] Monetization Growth Phases 1 / 1.5 / 2 / 3 (boosts, featured, wallet spend on boosts/fast-track/early unlock, fast-track)
+- [x] Monetization Growth Phases 1 / 1.5 / 2 / 3 (boosts, featured, wallet spend, fast-track)
+- [x] Buyer SKUs (partial): early cashback unlock · paid buyer statement
+- [x] Seller ARPU: Growth Pack · AI credit packs · paid store slots · featured storefront
 - [x] Admin display-ad campaigns (homepage + browse sidebar + search inline)
 
 > **Note:** `apps/admin` is **deprecated** — do not treat it as a delivery target.
@@ -25,7 +27,7 @@ Timeline below reflects **what is shipped in code** vs **what remains planned**.
 | Area | Focus |
 |------|--------|
 | Ops / legal | Prod deploy checklist, Stripe live, SendGrid, lawyer-reviewed legal pack |
-| Monetization | Phases 4–6+ per blueprint (buyer micro-SKUs, seller packages) — demand-gated |
+| Monetization | Enable priority message when ready; buyer protection (legal); optional extra package merchandising |
 | AI Hub | Video / forecast only after pilot demand |
 | Ads | Self-serve brand portal remains **Enterprise** (admin MVP already live) |
 | Account UX | Continue consolidating on `/account/*`; retire parallel buyer/seller trees when ready |
@@ -70,3 +72,4 @@ gantt
 | 2026-07 | Admin UI in `apps/web` | Single frontend; `apps/admin` retired |
 | 2026-07 | Unified `/account` hub | MEMBER default role; buyer/seller namespaces legacy |
 | 2026-07-22 | Roadmap rewritten to match shipped code | Prior placeholder timeline was obsolete |
+| 2026-07-23 | Monetization status corrected | Buyer/seller SKUs beyond Phase 3 marked live where coded |

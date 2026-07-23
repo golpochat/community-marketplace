@@ -23,6 +23,7 @@ import { EventBusService } from '../../../events/event-bus.service';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { SellerListingGateService } from '../../seller/services/seller-listing-gate.service';
 import { mapTitleChangeLog } from '../mappers/title.mapper';
+import { ListingKeywordFilterService } from './listing-keyword-filter.service';
 
 const AMENDABLE_STATUSES = new Set(['active', 'paused']);
 
@@ -33,6 +34,7 @@ export class ListingTitleService {
     private readonly eventBus: EventBusService,
     private readonly notifications: NotificationsService,
     private readonly sellerListingGate: SellerListingGateService,
+    private readonly keywordFilters: ListingKeywordFilterService,
   ) {}
 
   async getSellerTitleState(
@@ -93,6 +95,8 @@ export class ListingTitleService {
     const parsed = updateListingTitleSchema.parse(input);
     const proposed = normalizeListingTitle(parsed.title);
     const liveTitle = listing.title;
+
+    await this.keywordFilters.assertNotHardBlocked(proposed, listing.description);
 
     if (normalizeListingTitle(liveTitle) === proposed) {
       return { status: 'unchanged', liveTitle };

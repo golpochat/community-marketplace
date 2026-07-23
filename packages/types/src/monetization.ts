@@ -1,4 +1,5 @@
 import type { PaymentMethod } from './payment';
+import type { KeywordFiltersConfig } from './keyword-filters';
 import type { ListingPackageType } from './listing';
 
 export type WalletTransactionType =
@@ -137,6 +138,8 @@ export interface MonetizationSettings {
   cashbackMinOrderAmount: number;
   allowedCashbackMethods: PaymentMethod[];
   pricing: PlatformPricingConfig;
+  /** Haram / prohibited keyword filter config (Phase A+). */
+  keywordFilters: KeywordFiltersConfig;
   boostsEnabled: boolean;
   featuredEnabled: boolean;
   displayAdsEnabled: boolean;

@@ -44,6 +44,7 @@ export class ListingAutoModerationService {
     price: number;
     fraudRequiresReview: boolean;
     fraudReasons: string[];
+    keywordSoftReasons?: string[];
   }): Promise<void> {
     const reasons = await this.collectReasons(params.sellerId, {
       title: params.title,
@@ -52,6 +53,10 @@ export class ListingAutoModerationService {
       fraudRequiresReview: params.fraudRequiresReview,
       fraudReasons: params.fraudReasons,
     });
+
+    if (params.keywordSoftReasons?.length) {
+      reasons.push(...params.keywordSoftReasons);
+    }
 
     if (reasons.length) {
       await this.queueForReview(params.listingId, reasons, 'pending_review');
@@ -109,6 +114,12 @@ export class ListingAutoModerationService {
       [`Prohibited content detected: ${detail}`],
       'pending_review',
     );
+  }
+
+  /** Soft keyword hits on an already-public listing → pending_review. */
+  async queueForKeywordSoftBlock(listingId: string, reasons: string[]): Promise<void> {
+    if (reasons.length === 0) return;
+    await this.queueForReview(listingId, reasons, 'pending_review');
   }
 
   async onSellerSuspended(sellerId: string): Promise<void> {

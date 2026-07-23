@@ -35,6 +35,24 @@ export const platformSettingsUpdateSchema = z.object({
   storeBundle3Price: z.number().min(0).max(999).optional(),
   homepageSlotsPerDay: z.number().int().min(1).max(100).optional(),
   categorySlotsPerDay: z.number().int().min(1).max(100).optional(),
+  /** Replace keyword filter config (haram / prohibited content). */
+  keywordFilters: z
+    .object({
+      enabled: z.boolean(),
+      hard: z.record(z.string(), z.array(z.string().min(1).max(80)).max(200)).optional(),
+      soft: z.array(z.string().min(1).max(80)).max(200).optional(),
+      allowlist: z
+        .array(
+          z.object({
+            ifContains: z.array(z.string().min(1).max(80)).min(1).max(10),
+            ignoreHardTerms: z.array(z.string().min(1).max(80)).max(50),
+          }),
+        )
+        .max(100)
+        .optional(),
+      imageHints: z.array(z.string().min(1).max(80)).max(200).optional(),
+    })
+    .optional(),
 });
 
 export const boostPackageTypeSchema = z.enum(['PAID_7D', 'PAID_30D']);

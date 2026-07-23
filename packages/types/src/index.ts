@@ -498,6 +498,14 @@ export type {
 export { STORE_PLATFORM_MAX } from './store';
 export type { PaginationMeta, ApiResponse, ApiError, PaginatedResult } from './api';
 export type {
+  KeywordHardCategory,
+  KeywordAllowlistRule,
+  KeywordFiltersConfig,
+  KeywordMatchTier,
+  KeywordHardMatch,
+  KeywordMatchResult,
+} from './keyword-filters';
+export type {
   AdminDashboardStats,
   PlatformSettings,
   AdminMeResponse,

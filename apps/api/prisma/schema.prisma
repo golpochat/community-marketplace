@@ -1283,6 +1283,8 @@ model PlatformSettings {
   cashbackMinOrderAmount   Decimal  @map("cashback_min_order_amount") @db.Decimal(12, 2)
   allowedCashbackMethods   Json     @map("allowed_cashback_methods")
   pricing                  Json?
+  /// Haram / prohibited keyword filter config (JSON). Null = use code defaults.
+  keywordFilters           Json?    @map("keyword_filters")
   boostsEnabled            Boolean  @default(true) @map("boosts_enabled")
   featuredEnabled          Boolean  @default(true) @map("featured_enabled")
   displayAdsEnabled        Boolean  @default(false) @map("display_ads_enabled")
