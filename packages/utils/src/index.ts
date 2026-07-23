@@ -114,3 +114,10 @@ export {
   matchKeywordFilters,
   matchImageHint,
 } from './keyword-filters';
+export {
+  PROHIBITED_ITEMS_POLICY_PATH,
+  hardBlockErrorCode,
+  imageFlagErrorCode,
+  prohibitedErrorPayload,
+  type ProhibitedErrorCode,
+} from './prohibited-errors';

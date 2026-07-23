@@ -374,7 +374,7 @@ Alcohol bottles · Pork food · Adult content · Drugs/paraphernalia · Weapons
 
 ### 7.5 Implementation
 
-> **Status (2026-07-23):** **Phases A–D + F (policy page) shipped** — admin-editable `keyword_filters` + matcher; when `enabled`, hard terms reject listing save/submit/approve (`400`), soft terms queue `pending_review`. Category `requiresReview` / `isHidden` flags soft-queue and hide from public facets. Image filename heuristics always reject matching uploads and block submit until replaced. Public `/policies/prohibited-items` + listing-create link live. **Still planned:** vision provider (E), structured audit codes / admin metrics — see [haram-enforcement-roadmap.md](./haram-enforcement-roadmap.md).
+> **Status (2026-07-23):** **Phases A–D + F shipped** (vision Phase E deferred). Admin-editable `keyword_filters`; when `enabled`, hard terms reject with `PROHIBITED_*` + `policyUrl`, soft terms queue `pending_review`. Category flags, always-on image filename heuristics (`IMAGE_FLAG_*`), and `/policies/prohibited-items` are live. See [haram-enforcement-roadmap.md](./haram-enforcement-roadmap.md).
 
 - Hard → `400` + error code · Soft → `pending_review` · Image → pause + queue *(Phase B / D)*
 - Store lists in `platform_settings.keyword_filters` (admin-editable) ✅ Phase A

@@ -38,6 +38,8 @@ export class ApiClientError extends Error {
     message: string,
     public status: number,
     public code?: string,
+    public policyUrl?: string,
+    public details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = 'ApiClientError';
@@ -100,6 +102,8 @@ export async function apiClient<T>(
       error?.message ?? `Request failed with status ${response.status}`,
       response.status,
       error?.code,
+      error?.policyUrl,
+      error?.details,
     );
   }
 

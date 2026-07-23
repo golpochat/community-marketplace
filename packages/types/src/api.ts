@@ -13,6 +13,8 @@ export interface ApiError {
   code: string;
   message: string;
   details?: Record<string, unknown>;
+  /** Relative or absolute link to policy (e.g. prohibited items). */
+  policyUrl?: string;
 }
 
 export interface PaginatedResult<T> {

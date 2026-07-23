@@ -2,9 +2,12 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 
 import type { KeywordMatchResult } from '@community-marketplace/types';
 import {
+  hardBlockErrorCode,
+  imageFlagErrorCode,
   matchImageHint,
   matchKeywordFilters,
   parseKeywordFilters,
+  prohibitedErrorPayload,
 } from '@community-marketplace/utils';
 
 import { PrismaService } from '../../../database/prisma.service';
@@ -30,7 +33,16 @@ export class ListingKeywordFilterService {
     const match = await this.getMatch(title, description);
     if (!match) return null;
     if (match.tier === 'hard') {
-      throw new BadRequestException(this.formatHardMessage(match));
+      throw new BadRequestException(
+        prohibitedErrorPayload({
+          code: hardBlockErrorCode(match),
+          message: this.formatHardMessage(match),
+          details: {
+            hardMatches: match.hardMatches.slice(0, 10),
+            softMatches: match.softMatches.slice(0, 10),
+          },
+        }),
+      );
     }
     return match;
   }
@@ -43,8 +55,13 @@ export class ListingKeywordFilterService {
     const hits = await this.collectImageHintHits(sources);
     if (hits.length === 0) return;
     throw new BadRequestException(
-      `This image isn’t allowed on SellNearby (matched: ${hits.slice(0, 6).join(', ')}). ` +
-        `Remove or replace it with a different photo before continuing.`,
+      prohibitedErrorPayload({
+        code: imageFlagErrorCode(hits),
+        message:
+          `This image isn’t allowed on SellNearby (matched: ${hits.slice(0, 6).join(', ')}). ` +
+          `Remove or replace it with a different photo before continuing.`,
+        details: { imageHints: hits.slice(0, 12) },
+      }),
     );
   }
 
@@ -62,7 +79,7 @@ export class ListingKeywordFilterService {
   formatSoftReasons(match: KeywordMatchResult | null): string[] {
     if (!match || match.tier !== 'soft' || match.softMatches.length === 0) return [];
     return [
-      `Restricted content pending review: ${match.softMatches.slice(0, 8).join(', ')}`,
+      `SOFT_BLOCK_REVIEW: Restricted content pending review: ${match.softMatches.slice(0, 8).join(', ')}`,
     ];
   }
 

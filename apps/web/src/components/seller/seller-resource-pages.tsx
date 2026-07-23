@@ -105,6 +105,14 @@ import { listingsService } from "@/services/listings.service";
 import { ReviewBuyerPromptDialog } from "@/components/trust/review-buyer-prompt-dialog";
 import { trustService } from "@/services/trust.service";
 
+function formatSellerApiError(err: unknown, fallback: string): string {
+  if (err instanceof ApiClientError) {
+    const base = err.message || fallback;
+    return err.policyUrl ? `${base} See ${err.policyUrl}` : base;
+  }
+  return err instanceof Error ? err.message : fallback;
+}
+
 function buildListingCreatePayload(
   data: ListingFormData,
   categories: Array<{ id: string; name: string }>,
@@ -1039,9 +1047,7 @@ export function SellerCreateListingPage() {
         setGateModalOpen(true);
         setBlockMessage(err.message);
       }
-      setError(
-        err instanceof Error ? err.message : "Failed to save listing draft",
-      );
+      setError(formatSellerApiError(err, "Failed to save listing draft"));
     } finally {
       setSubmitting(false);
     }
@@ -1115,9 +1121,7 @@ export function SellerCreateListingPage() {
         setGateModalOpen(true);
         setBlockMessage(err.message);
       }
-      setError(
-        err instanceof Error ? err.message : "Failed to save listing draft",
-      );
+      setError(formatSellerApiError(err, "Failed to save listing draft"));
     } finally {
       setSubmitting(false);
     }
@@ -1143,7 +1147,7 @@ export function SellerCreateListingPage() {
         "Submitted for review. Keep preparing share assets while you wait.",
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit for review");
+      setError(formatSellerApiError(err, "Failed to submit for review"));
     } finally {
       setSubmittingReview(false);
     }
