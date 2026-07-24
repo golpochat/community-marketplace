@@ -223,7 +223,11 @@ export function ChatPageClient({
     onReadReceipt: handleReadReceipt,
   });
 
-  const handleSend = async (content: string, attachmentUrl?: string) => {
+  const handleSend = async (
+    content: string,
+    attachmentUrl?: string,
+    platformPurchaseId?: string,
+  ) => {
     if (!activeThreadId) return;
     try {
       const sent = await chatService.sendMessage(
@@ -231,6 +235,7 @@ export function ChatPageClient({
         content,
         attachmentUrl ? 'image' : 'text',
         attachmentUrl,
+        platformPurchaseId,
       );
       setMessages((prev) =>
         prev.some((m) => m.id === sent.id) ? prev : [...prev, sent],

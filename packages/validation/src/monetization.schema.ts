@@ -85,6 +85,16 @@ export const confirmEarlyCashbackUnlockSchema = z.object({
   purchaseId: uuidSchema,
 });
 
+export const createPriorityMessageIntentSchema = z.object({
+  threadId: uuidSchema,
+  /** EUR credits to apply (0..price). Omitted/0 = card only. */
+  creditsAmount: z.number().min(0).max(999).optional(),
+});
+
+export const confirmPriorityMessageSchema = z.object({
+  purchaseId: uuidSchema,
+});
+
 export const createGrowthPackIntentSchema = z.object({});
 
 export const confirmGrowthPackSchema = z.object({
@@ -255,6 +265,8 @@ export const platformPurchasesAdminFiltersSchema = paginationSchema.extend({
       'ai_credit_5',
       'ai_credit_10',
       'featured_store',
+      'early_cashback_unlock',
+      'priority_message',
     ])
     .optional(),
   status: z.enum(['pending', 'succeeded', 'failed', 'refunded']).optional(),
@@ -326,6 +338,10 @@ export type CreateEarlyCashbackUnlockIntentInput = z.infer<
   typeof createEarlyCashbackUnlockIntentSchema
 >;
 export type ConfirmEarlyCashbackUnlockInput = z.infer<typeof confirmEarlyCashbackUnlockSchema>;
+export type CreatePriorityMessageIntentInput = z.infer<
+  typeof createPriorityMessageIntentSchema
+>;
+export type ConfirmPriorityMessageInput = z.infer<typeof confirmPriorityMessageSchema>;
 export type CreateStoreSlotIntentInput = z.infer<typeof createStoreSlotIntentSchema>;
 export type ConfirmStoreSlotInput = z.infer<typeof confirmStoreSlotSchema>;
 export type CreateBuyerStatementIntentInput = z.infer<typeof createBuyerStatementIntentSchema>;

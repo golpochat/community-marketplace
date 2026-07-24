@@ -11,6 +11,8 @@ export interface ChatMessage {
   content: string;
   messageType: ChatMessageType;
   attachmentUrl?: string;
+  isPriority?: boolean;
+  priorityUntil?: string;
   readBy: string[];
   editedAt?: string;
   deletedAt?: string;
@@ -24,6 +26,8 @@ export interface ChatThread {
   listingId: string;
   lastMessageAt?: string;
   lastMessagePreview?: string;
+  /** ISO timestamp while the thread is pinned for priority messaging. */
+  priorityBoostUntil?: string;
   isBlocked: boolean;
   blockedBy?: string;
   archivedByBuyer: boolean;
@@ -61,6 +65,8 @@ export interface ChatInboxItem {
   thread: ChatThread;
   lastMessage?: ChatMessage;
   unreadCount: number;
+  /** True when priorityBoostUntil is still in the future. */
+  hasPriority: boolean;
   listing: ChatListingPreview;
   participant: ChatParticipantPreview;
 }

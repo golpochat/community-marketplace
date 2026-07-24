@@ -44,6 +44,11 @@ export function ConversationList({
                     <p className="text-sm font-medium text-foreground">
                       {item.participant.displayName ?? 'User'}
                     </p>
+                    {item.hasPriority && (
+                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                        Priority
+                      </span>
+                    )}
                     <ChatVerificationBadge
                       verified={item.participant.verificationBadge}
                       role={item.participant.role}

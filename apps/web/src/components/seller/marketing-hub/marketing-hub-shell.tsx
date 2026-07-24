@@ -34,7 +34,7 @@ function MarketingHubTopUpControl() {
         variant={urgent ? "default" : "outline"}
         onClick={() => setOpen(true)}
       >
-        Top up credits
+        Top up SellNearby Credit
       </Button>
       <AiCreditPackDialog
         open={open}
@@ -118,7 +118,7 @@ function MarketingHubChrome({
 
       {urgent ? (
         <p className="mt-2 text-xs text-amber-800">
-          No free units or credit left for paid AI tools. Top up SellNearby Credit
+          No free units or SellNearby Credit left for paid AI tools. Top up SellNearby Credit
           (€0.05/unit), or get verified for a monthly free allowance.
         </p>
       ) : null}

@@ -332,8 +332,8 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                     <DashboardCard title="Buyer cashback defaults">
                       <p className="mb-4 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                         Tunable below: cashback %, cooling days, min order, and caps. Fixed in code:
-                        card payments only, no cashback on refunds or disputes, wallet credit expires
-                        6 months after unlock. Buyer verification is not required.
+                        card payments only, no cashback on refunds or disputes, SellNearby Credit
+                        expires 6 months after unlock. Buyer verification is not required.
                       </p>
                       <form
                         onSubmit={(e) => void handleSaveBuyerSettings(e)}

@@ -42,6 +42,8 @@ export function computeBoostFulfillment(
   return { boostedUntil, expiresAt };
 }
 
+export const PRIORITY_MESSAGE_DURATION_HOURS = 24;
+
 export const DEFAULT_PLATFORM_PRICING: PlatformPricingConfig = {
   currency: 'EUR',
   skus: {
@@ -54,7 +56,7 @@ export const DEFAULT_PLATFORM_PRICING: PlatformPricingConfig = {
     store_slot_3: { amount: 4.99, enabled: true },
     store_bundle_3: { amount: 7.99, enabled: true },
     buyer_statement: { amount: 0.99, enabled: true },
-    priority_message: { amount: 0.49, enabled: false },
+    priority_message: { amount: 0.49, enabled: true },
     early_cashback_unlock: { amount: 0.99, enabled: true },
     seller_growth_pack: {
       amount: 6.99,

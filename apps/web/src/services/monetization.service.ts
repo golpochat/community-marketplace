@@ -18,6 +18,8 @@ import type {
   AiMarketingAccessStatus,
   DisplayAdCampaign,
   PlatformPurchase,
+  PriorityMessageConfigResponse,
+  PriorityMessageIntentResponse,
   SellerAiFreeUnitsOverrideEntry,
   SellerFeeOverrideEntry,
   SellerMonetizationSearchResult,
@@ -107,6 +109,38 @@ export const monetizationService = {
   async confirmEarlyCashbackUnlock(purchaseId: string): Promise<PlatformPurchase> {
     const response = await apiClient<PlatformPurchase>(
       WEB_API_ROUTES.buyer.earlyUnlockConfirm,
+      {
+        method: 'POST',
+        body: JSON.stringify({ purchaseId }),
+      },
+    );
+    return response.data!;
+  },
+
+  async getPriorityMessageConfig(): Promise<PriorityMessageConfigResponse> {
+    const response = await apiClient<PriorityMessageConfigResponse>(
+      WEB_API_ROUTES.buyer.priorityMessageConfig,
+    );
+    return response.data!;
+  },
+
+  async createPriorityMessageIntent(body: {
+    threadId: string;
+    creditsAmount?: number;
+  }): Promise<PriorityMessageIntentResponse> {
+    const response = await apiClient<PriorityMessageIntentResponse>(
+      WEB_API_ROUTES.buyer.priorityMessageIntent,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      },
+    );
+    return response.data!;
+  },
+
+  async confirmPriorityMessage(purchaseId: string): Promise<PlatformPurchase> {
+    const response = await apiClient<PlatformPurchase>(
+      WEB_API_ROUTES.buyer.priorityMessageConfirm,
       {
         method: 'POST',
         body: JSON.stringify({ purchaseId }),

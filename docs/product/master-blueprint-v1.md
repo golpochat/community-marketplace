@@ -3,18 +3,18 @@
 > **Status:** Approved direction — single canonical planning document  
 > **Scope:** Ireland-wide marketplace · card-only payments · haram-free catalog  
 > **Audience:** Engineering, Product, Design, Admin, Investors  
-> **Last updated:** 2026-07-23  
-> **Implementation:** Foundation ✅ · Growth **Phase 1**, **1.5**, **2**, **3** ✅ · Buyer SKUs **partial** (statement + early unlock) ✅ · Seller Growth Pack / AI credits / store slots / featured storefront ✅ · Admin display ads ✅ · **Still planned:** priority message (priced/off), buyer protection (legal), advertiser self-serve, remaining Phase 6+ bundles
+> **Last updated:** 2026-07-24  
+> **Implementation:** Foundation ✅ · Growth **Phase 1**, **1.5**, **2**, **3** ✅ · Buyer SKUs **partial** (statement + early unlock + priority message) ✅ · Seller Growth Pack / AI credits / store slots / featured storefront ✅ · Admin display ads ✅ · **Still planned:** buyer protection (legal), advertiser self-serve, remaining Phase 6+ bundles
 
-**Covers:** Monetization · Pricing · Rollout · Revenue model · UX flows · Safety · Moderation · Category tree
+**Covers:** Monetization · Pricing · Rollout · Revenue model · Competitive positioning · Year-1 GTM · Execution plan · UX flows · Safety · Moderation · Category tree
 
-> **Note:** Sections 0–10 are the executive blueprint. Appendices A–L contain the full detail from all previously separate planning documents.
+> **Note:** Sections 0–12 are the executive blueprint. Appendices A–L contain the full detail from all previously separate planning documents.
 
 ---
 
 ## Table of contents
 
-### Main blueprint (sections 0–10)
+### Main blueprint (sections 0–12)
 - [0. Executive summary](#0-executive-summary)
 - [1. Monetization model](#1-monetization-model)
 - [2. Pricing table](#2-pricing-table)
@@ -26,6 +26,8 @@
 - [8. UX copy](#8-ux-copy)
 - [9. Admin moderation workflow](#9-admin-moderation-workflow)
 - [10. Category tree adjustments](#10-category-tree-adjustments)
+- [11. Competitive positioning & Year-1 GTM](#11-competitive-positioning--year-1-gtm)
+- [12. Year-1 execution plan](#12-year-1-execution-plan)
 
 ### Appendices (full detail from consolidated docs)
 - [A. Full monetization strategy](#appendix-a--full-monetization-strategy)
@@ -52,13 +54,17 @@ SellNearby is a **free-to-start, trust-first, micro-priced** community marketpla
 - Platform fees on card sales (**live**)
 - Listing boosts, featured listings, fast-track verification (**live** — Phases 1, 1.5, 3)
 - Wallet credit spend on boosts / fast-track / early unlock (**live** — Phase 2)
-- Buyer convenience SKUs: early cashback unlock + paid statement PDF (**live**); priority message priced but disabled; buyer protection still planned (Phase 5 / legal)
+- Buyer convenience SKUs: early cashback unlock + paid statement PDF + priority message (**live**); buyer protection still planned (Phase 5 / legal)
 - Seller ARPU: Growth Pack, AI credit packs, paid store slots, featured storefront (**live**); broader package catalog still expandable
 - Brand display ads — admin campaign MVP (**live**); advertiser self-serve **planned**
 
 **Safety:** No haram products, illegal items, or unsafe content — family-friendly, Ireland-appropriate, high-trust.
 
 **Live today:** 10% platform fee (8% for verified sellers), 1.5% buyer cashback (earn + spend on platform purchases), boosts + featured listings + fast-track, wallet spend, early unlock, buyer statements, store slots, featured storefront, AI credit packs, Seller Growth Pack, free core (list, message, browse, verify, Stripe onboarding), admin-run brand display ads.
+
+**Positioning:** SellNearby does not displace DoneDeal / Adverts / Facebook Marketplace nationally in Year 1. Users multi-home. We win when the job is **safer card checkout, verified counterparties, curated catalog, and seller tools** — see [§11](#11-competitive-positioning--year-1-gtm).
+
+**Revenue planning stance (canonical default — bootstrap):** Solo founder · **€30–€50/month** platform marketing cash · **no hurry**. Realistic Year-1 platform revenue **€3k–€15k** (stretch to ~€25k if density clicks). **Ops cash BEP** (fee covers infra + marketing, stop pocket top-ups): typically **~3–8 months** — [§12.13](#1213-break-even--reinvest-rules). Former “operating €95k–€120k in Year 1” is a **later milestone** (~24–36 months). Higher cash marketing bands are optional later only. Detail: [§4](#4-revenue-projection-12-months) · [§12](#12-year-1-execution-plan).
 
 This blueprint defines everything needed to build, scale, and govern SellNearby.
 
@@ -103,7 +109,7 @@ This blueprint defines everything needed to build, scale, and govern SellNearby.
 **Notes (code truth, 2026-07-23):**
 
 - “Buyer SKUs” and “Seller packages” are **not** all still planned — several SKUs already ship via `platform_purchases` (`DEFAULT_PLATFORM_PRICING` in `apps/api/.../boost.lib.ts`).
-- Remaining gaps: **priority message** (no purchase type), **buyer protection**, Starter/Pro/Premium ledger packages, **advertiser self-serve** for display ads, GMV checkout wallet mix.
+- Remaining gaps: **buyer protection**, Starter/Pro/Premium ledger packages, **advertiser self-serve** for display ads, GMV checkout wallet mix.
 
 ### 1.3 Platform purchases (non-GMV revenue)
 
@@ -229,25 +235,66 @@ All prices **EUR (€)**. Admin-configurable via `platform_settings.pricing` JSO
 
 ## 4. Revenue projection (12 months)
 
-**Moderate scenario** (most realistic):
+> **How to read this:** Figures are **illustrative**. ~80%+ of revenue is platform fee on GMV. **Canonical default = bootstrap** (solo + €30–€50/mo marketing) — see [§4.3](#43-marketplace-marketing-expenditure-required) and [§12](#12-year-1-execution-plan). The moderate/stretch tables below are a **capital-backed reference path**, not the solo Year-1 commitment. Full assumptions: [Appendix D](#appendix-d--revenue-projection-model-detailed).
+
+### 4.1 Planning stance
+
+| Label | Horizon | Platform revenue | Marketing cash | Staff |
+|-------|---------|------------------|----------------|-------|
+| **Bootstrap (canonical default)** | **Year 1** | **€3,000 – €15,000** (stretch ~€25k) | **€30–€50 / month** (~€360–€600 / year) | **Founder only** |
+| Bootstrap → operating | **~24–36 months** | **€95,000 – €120,000** | Still micro until fee covers growth | Founder (+ help only when revenue funds it) |
+| Capital organic-led | Year 1 (if funded) | €95k–€120k | €35k–€80k | — |
+| Capital stretch / paid | Year 1 (if funded + gates) | ~€165k–€175k | €120k–€250k | — |
+
+**Honesty rule:** With **€30–€50/mo** and one person, do **not** plan Year-1 revenue as €95k+. That path needs either much more cash, much more time, or luck + compounding SEO/community. Your job is **gradual density**, not a hockey stick.
+
+**Revenue clock:** Month 1 = first full month of **real liquidity** (Stripe live, real sellers/buyers) — not “code shipped.”
+
+**Gross vs net fee:** ~9.2% weighted gross fee; after ~1.5% cashback ≈ **~7.7%** contribution on GMV before infra.
+
+### 4.2 Reference mix (capital / stretch path — not bootstrap Year 1)
+
+Kept for investors or a future funded push. Assumes public Month-1 GMV ~€60k → Month-12 ~€250k (~€1.55M Year-1 GMV).
 
 | Stream | 12-month total |
 |--------|----------------|
-| Platform fee | €144,000 |
-| Boosts | €12,500 |
+| Platform fee (gross @ ~9.2%) | €144,000 |
+| Boosts | ~€3,700 – €12,500 |
 | Featured | €12,000 |
 | Buyer SKUs | €5,000 |
-| Packages | €2,100 |
-| **Total** | **€175,600** |
+| Packages / seller ARPU | €2,100+ |
+| **Total** | **~€165,000 – €175,000** |
 
-| Scenario | Year 1 range |
-|----------|----------------|
-| Conservative | €95,000 – €120,000 |
-| Aggressive | €250,000 – €320,000 |
+| Scenario | Year 1 range | Notes |
+|----------|----------------|--------|
+| **Bootstrap (default)** | **€3k – €15k** (~€25k stretch) | Solo + €30–50/mo |
+| Conservative (funded organic) | €95,000 – €120,000 | Needs €35k–€80k marketing or equivalent |
+| Moderate (stretch) | ~€165,000 – €175,000 | Needs capital + density |
+| Aggressive | €250,000 – €320,000 | Paid scale |
 
-**Year 1 mix:** Platform fee ~82% · Boosts ~7% · Featured ~7% · Buyer SKUs ~3% · Packages ~1%.
+**Bootstrap Year-1 mix:** almost entirely **platform fee** on small GMV; boosts/featured are incidental until inventory is thick.
 
-**Key levers:** Boost visibility, first-boost discount, fast-track promo, wallet spend, verification trust, GMV growth.
+**Key levers (bootstrap):** founder hours on seller recruiting · free community groups · SEO compound · verification trust · multi-home (DoneDeal/FB + SellNearby link). **Not** paid acquisition.
+
+### 4.3 Marketplace marketing expenditure (required)
+
+| Band | Cash | Mix | Status |
+|------|------|-----|--------|
+| **Bootstrap micro (canonical)** | **€30–€50 / month** (~€360–€600 / year) | Domain/tools crumbs, rare print, **zero** scale ads; **founder time = real budget** | **Default** |
+| Organic-led (funded) | €35k–€80k / year | Partnerships, SEO contractors, light paid | Optional later |
+| Paid-accelerated | €120k–€250k / year | Meta/Google scale | Optional later; gated |
+
+**What €30–€50/month may buy (examples):** Canva/pro tool slice · occasional Meta **boost of a post** (€10–20 test, rare) · SIM/top-up for outreach · printing a few flyers · nothing else. **Do not** buy always-on ads.
+
+**Contribution (bootstrap Year 1, illustrative):**
+
+| Gross revenue | Cashback | Marketing cash | After cashback + marketing* |
+|---------------|----------|----------------|------------------------------|
+| €3k–€15k | small | €360–€600 | **Mostly kept** (then pay hosting/Stripe/legal) |
+
+\*Excludes founder living costs and infra. Win condition = **survive and compound**, not Year-1 profit maximisation.
+
+**CAC:** with micro budget, treat any paid euro as a **one-off experiment**, not a channel. Detail: [§12.12](#1212-marketing--cac-budget).
 
 ---
 
@@ -537,16 +584,349 @@ Jobs (jobs)
 
 ---
 
-# Appendices
+## 11. Competitive positioning & Year-1 GTM
 
-> Full reference material — engineering specs, detailed flows, copy, and policy.
+### 11.1 Reality check — multi-home, don’t displace
+
+Irish buyers and sellers already use **DoneDeal**, **Adverts.ie**, **Facebook Marketplace**, and (less so) **Gumtree**. Year 1 success is **not** “everyone leaves those apps.” It is:
+
+1. Become the **default for a specific job** (trust + card pay + curated catalog + seller tools)
+2. Earn **multi-home share** — list/buy here when that job matters
+3. Build **local density** in a wedge before national breadth
+
+### 11.2 Competitor jobs vs SellNearby wedge
+
+| Competitor | They win on | SellNearby wins when the user needs |
+|------------|-------------|-------------------------------------|
+| **DoneDeal / Adverts** | Inventory density, habit, SEO, free classifieds | Card checkout, ID-verified counterparties, structured trust, less scam friction |
+| **Facebook Marketplace** | Free reach, social graph | Safer payments, reserves, clearer rules, less noise |
+| **Gumtree** | Brand familiarity (stronger UK than IE) | Ireland-local product, modern UX, payments + verification |
+
+### 11.3 Product differentiators (defensible in product, not ads copy alone)
+
+| Differentiator | Status | Why it matters |
+|----------------|--------|----------------|
+| Free ID verification + optional fast-track | Live | Trust without paywalling safety |
+| Stripe Connect card sales (10% / 8% verified) | Live | Cash-meetup alternative; fee = primary revenue |
+| Haram-free / prohibited catalog | Policy + enforcement in progress | Values + safety niche incumbents will not brand around |
+| Listing reserve (verified members) | Live | Fixes “sold while chatting” without deposits |
+| Cashback wallet → boosts / fast-track / early unlock | Live | Retention loop classifieds lack |
+| Storefronts + paid slots / featured store | Live | Serious sellers get a shop, not only a single ad |
+| AI Marketing Hub + credit packs | Pilot-ready | Listing-native marketing; ARPU + quality |
+| Micro-priced upside (€0.49–€4.99) | Live | Pay for visibility/speed — never for core access |
+
+**Not a Year-1 moat:** feature count. **Moat candidates:** liquidity in the wedge + trust reputation + payment habit.
+
+### 11.4 Year-1 GTM wedge
+
+| Priority | Choice | Rationale |
+|----------|--------|-----------|
+| Geography | 1–2 counties / metro first (e.g. Dublin + one corridor) | Density beats thin national inventory |
+| Audience | Trust-sensitive buyers + verified / serious sellers | Matches card + verify + reserve story |
+| Catalog niche (optional accelerator) | Community / family-safe / values-aligned categories | Haram-free policy is a real segment signal |
+| Acquisition | SEO + community partnerships + seller tools loop (AI → better listings → share off-platform) | Paid only after conversion math is known |
+| Avoid | “DoneDeal but newer” with empty categories nationwide | Loses to incumbents on habit |
+
+### 11.5 Roadmap that funds the revenue model
+
+```text
+Pilot ops gate     → Stripe live, SendGrid, lawyer-reviewed legal, support playbook
+                   → See launch-checklist.md
+
+Public liquidity   → Open Ireland signup + real GMV
+                   → Unlocks ~80%+ of Year-1 revenue (platform fee)
+
+Near-term product  → Verification adoption, reserve usage, boost/featured merchandising
+                   → Priority message / buyer protection only when legal + demand ready
+
+Later              → Ads self-serve, broader packages, national expansion after density
+```
+
+**Implication:** Monetization is largely shipped. Under **bootstrap** constraints, growth is **founder time + micro cash (€30–50/mo)**, not a large GTM budget. Execute [§12](#12-year-1-execution-plan).
+
+---
+
+## 12. Year-1 execution plan
+
+> **Purpose:** Solo, gradual, micro-budget execution.  
+> **Constraints (locked):** **1 staff = founder** · marketplace marketing cash **€30–€50/month** · **not in a hurry**.  
+> **Related:** [launch-checklist.md](./launch-checklist.md) · [pilot-kickoff.md](../runbooks/pilot-kickoff.md) · [roadmap.md](./roadmap.md)  
+> **Status:** Living · refreshed 2026-07-24 (bootstrap default)
+
+### 12.1 Commit order (bootstrap)
+
+| Priority | Target | Rough GMV needed | When |
+|----------|--------|------------------|------|
+| **A — Year 1 (commit)** | Platform revenue **€3k–€15k** | ~€40k–€160k Year-1 GMV | Solo + €30–50/mo |
+| **A2 — Ops cash BEP** | Fee covers infra + marketing (~€50–100/mo) | ~€550–€1,100 GMV/mo | **Stop pocket top-ups** — [§12.13](#1213-break-even--reinvest-rules) |
+| **B — Year 1 stretch** | Up to **~€25k** revenue | ~€250k+ GMV | Only if density compounds |
+| **C — Later (24–36 mo)** | **€95k–€120k** revenue | ~€1.0M–€1.3M GMV | After proof; reinvest profits |
+| **D — Capital paths** | §4.2 reference tables | — | Only if you raise / invest more later |
+
+Do **not** use the old “€95k in Year 1” as your personal OKR under these constraints.
+
+### 12.2 North-star metrics (weekly — keep tiny)
+
+1. **Card GMV** this week / month  
+2. **Live listings in wedge** (Dublin + one niche)  
+3. **Verified sellers with ≥1 live listing**  
+4. **Card checkouts completed**  
+5. **Founder GTM hours** (your real budget) + **cash marketing ≤ €50**  
+
+Ignore vanity: national MAU, empty categories, boost revenue %.
+
+### 12.3 Lock the wedge (6+ months)
+
+| Decision | Pick | Rule |
+|----------|------|------|
+| Staff | **You only** | No hiring until fee revenue comfortably funds help |
+| Cash marketing | **€30–€50/mo** | Cap hard; unused rolls or stays unspent |
+| Geography | **Dublin metro** (or one town you can physically support) | No “all Ireland” push |
+| Niche | **One** community/values **or** one category | Depth > breadth |
+| Time | **8–15 hrs/week** GTM + ops (sustainable) | Consistency beats bursts |
+| Demand | Share **listing links**, not empty homepage | Multi-home OK |
+
+### 12.4 Phase 0 — Open the money pipe (Weeks 1–4, unhurried)
+
+| # | Action | Done when |
+|---|--------|-----------|
+| 1 | Prod + smoke | Site on real domain |
+| 2 | Stripe live + Connect | €1 test sale works |
+| 3 | Email (SendGrid) | Activation works |
+| 4 | Basic legal pages | Published (lawyer when you can afford) |
+| 5 | Support = your email/WhatsApp | You reply within 24–48h |
+| 6 | Simple KPI notes (sheet or Notion) | Weekly 20 min |
+
+**Exit:** real money possible. **Spend:** €0 of the €30–50 on ads — save for tools/print later.
+
+### 12.5 Phase 1 — First loop (Months 1–3)
+
+**Targets (honest):** 10–30 sellers · 40–120 live listings · **€1k–€5k GMV/month** by month 3 · **first 5–15 card sales**.
+
+#### Weekly cadence (solo)
+
+| Block | Focus |
+|-------|--------|
+| 2–3 sessions | Personal seller invites (WhatsApp, DoneDeal/FB sellers you know, community) — **3–5 serious sellers/week**, not 15 |
+| 1 session | Help them list, verify, Connect |
+| 1 session | Post **specific listings** into 2–3 Dublin/community groups |
+| Friday 20 min | KPI + unblock tickets |
+| Rest | Product only if something is **blocking sales** |
+
+#### Script
+
+> I’m building SellNearby.ie — card pay + verified sellers, family-safe catalog. Free to list. I can help you set up this week. Dublin collection.
+
+**Promo (almost free):** waive or 100% discount first boost for sellers who complete a card sale — **max 5–10 total**, not 20. Cost = forgone ~€2–€5 each, not cash outlay.
+
+#### Continue if
+
+- ≥5 card sales by ~week 12, or clear weekly GMV trend up  
+- You can sustain the hours without burnout  
+
+If stuck: shrink niche further; do not spend more cash.
+
+### 12.6 Phase 2 — Slow densify (Months 4–12)
+
+**Year-1 GMV path (bootstrap):**
+
+| Month | GMV (indicative) | Focus |
+|-------|------------------|--------|
+| 4–6 | €3k–€10k / mo | Same wedge; weekly seller help; SEO 1 page/month for **stocked** niche |
+| 7–9 | €5k–€15k / mo | Soft open signup; still no paid scale |
+| 10–12 | €8k–€20k / mo | Double down on what worked; document playbook |
+
+**Year-1 revenue outcome:** mostly fee on that GMV → roughly **€3k–€15k** (see §4.1). Hitting €25k needs the upper GMV band.
+
+#### Habits (no budget)
+
+1. Verify queue when you can (same day / next day)  
+2. Every listing &gt; €50 → Connect nudge  
+3. Ask every seller to add SellNearby link on their other ads  
+4. One free community touch / week (group, mosque, society, charity stall — **conversation**, not sponsorship fees)  
+5. Ship SEO only for categories you actually have  
+
+#### Month-12 gate (bootstrap)
+
+| If Year-1 GMV… | Then |
+|----------------|------|
+| Growing and ≥ ~€80k–€150k cumulative | Continue bootstrap; aim **Year 2** toward €95k path slowly |
+| Flat / &lt; ~€40k cumulative | Shrink wedge again; fix friction; **do not** buy ads to “fix” it |
+| Strong and you have surplus fee cash | Optional: raise marketing to €100–200/mo **tests** only |
+
+### 12.7 Years 2–3 — Toward former “operating” (€95k)
+
+Only after Year 1 proves the loop:
+
+| Year | Aim | Still |
+|------|-----|--------|
+| 2 | €30k–€70k platform revenue (wide) | Solo or tiny help; marketing still mostly time |
+| 3 | Approach **€95k–€120k** if compounding works | Hire only when revenue pays for it |
+
+Former capital bands (€35k–€80k marketing) remain **optional** if you later choose to invest more — not the plan now.
+
+### 12.8 Channel playbook (€0–€50/mo)
+
+| Channel | Action | Cash |
+|---------|--------|------|
+| Warm network | Personal invites every week | €0 |
+| Community groups | 2–3 posts/week — **listing URLs** | €0 |
+| Partnerships | Coffee chats, free talks — no sponsorship fees | €0 |
+| Seller success | You WhatsApp top sellers | €0 |
+| SEO | 1 useful page/month when stocked | €0 |
+| Micro tools | Canva / domain extras from the €30–50 | ≤ €50 |
+| Paid ads | **Default off** | €0 |
+
+### 12.9 Friday dashboard (20 minutes)
+
+| Metric | Healthy Year 1 |
+|--------|----------------|
+| GMV this month | On §12.6 band (or trending up) |
+| Card checkouts | ≥1 most weeks after month 2 |
+| Live wedge listings | Slowly up |
+| Marketing cash MTD | **≤ €50** |
+| Founder GTM hours | Sustainable (not heroic) |
+| Fee vs ops burn | Toward / at [§12.13](#1213-break-even--reinvest-rules) ops BEP |
+| Unresolved support &gt; 48h | Near 0 |
+
+### 12.10 Anti-patterns
+
+- Comparing yourself to the old €95k Year-1 table  
+- Spending the €50 on ads before 5 organic card sales  
+- Hiring or agencies  
+- National empty launch  
+- Building more SKUs instead of recruiting 3 sellers  
+- Burning out on 40h/week GTM  
+
+### 12.11 Next 14 days (checklist)
+
+- [ ] Phase 0: Stripe live, email, legal basics, support channel  
+- [ ] One-pager: **Dublin + [one niche]**  
+- [ ] Cap marketing wallet at **€50/mo** (and mostly don’t spend it)  
+- [ ] Invite **10 people** personally; get **5 listings live**  
+- [ ] Aim for **first card sale** (even €20)  
+- [ ] Book a recurring weekly GTM block (e.g. 3× 2 hours)  
+- [ ] Write down your **ops burn** (VPS + tools + ≤ €50) — BEP target in [§12.13](#1213-break-even--reinvest-rules)  
+
+### 12.12 Marketing & CAC budget (bootstrap)
+
+> **Canonical cash budget: €30–€50 per month** for platform marketing. Founder time is the primary investment.
+
+#### Allowed spend (examples)
+
+| Use | Typical | Notes |
+|-----|---------|--------|
+| Design/tooling slice | €0–€15 | Free tiers first |
+| Occasional print / QR | €0–€20 | Only if you have an event |
+| Rare social boost of **one** post | €0–€20 | Experiment, not always-on |
+| Buffer | Rest of €50 | Leave unspent — fine |
+
+#### Forbidden (for now)
+
+- Always-on Meta/Google campaigns  
+- Influencer fees  
+- Paid community sponsorships  
+- Agencies / contractors for GTM  
+- Burning promo boosts beyond **5–10** total early waivers  
+
+#### Optional later bands (not default)
+
+| Band | Cash | When |
+|------|------|------|
+| Bootstrap micro | **€30–€50/mo** | **Now** |
+| Light organic | €100–€300/mo | Only after surplus fee revenue |
+| Funded organic / paid | €35k–€250k/year | Only with capital + gates — see old reference in [Appendix D §11](#11-marketplace-marketing--cac-expenditure) |
+
+#### Contribution view
+
+```text
+Gross platform revenue
+− Cashback
+− Marketing cash (≤ €50/mo)
+− Promo COGS (rare boost waivers)
+≈ Contribution before hosting / Stripe / legal / your living costs
+```
+
+### 12.13 Break-even & reinvest rules
+
+> **Moto:** Stop funding ops/marketing from pocket **ASAP**, then grow by **reinvesting platform profit** — not by raising personal cash burn.
+
+#### What BEP means (use these definitions)
+
+| Level | Meaning | Your goal? |
+|-------|---------|------------|
+| **1. Ops cash BEP** | Monthly **platform fee revenue** ≥ monthly cash out (VPS + domain + email/tools + ≤ €50 marketing) | **Yes — primary** |
+| **2. Growth BEP** | Ops BEP **plus** surplus to reinvest | Yes — next |
+| **3. Living wage** | Marketplace pays personal salary | **No** for early years — ignore |
+
+Do **not** define BEP as “€95k/year revenue.”
+
+#### Lean monthly burn to cover (estimate)
+
+| Item | Typical |
+|------|---------|
+| OVH VPS + domain | ~€10–25 |
+| Email / R2 (prefer free tiers) | ~€0–15 |
+| Marketing cap | **€30–50** |
+| **Ops burn target** | **~€50–90 / month** (keep ≤ ~€100) |
+
+Stripe processing fees and cashback (~1.5% GMV) come out of transactions — track separately from the flat ops burn.
+
+#### GMV needed for ops cash BEP (~9% fee ballpark)
+
+| Monthly ops burn | Approx. GMV / month | Approx. fee |
+|------------------|---------------------|-------------|
+| €50 | ~€550 | ~€50 |
+| €80 | ~€900 | ~€80 |
+| €100 | ~€1,100 | ~€100 |
+
+A few card sales of ordinary ticket sizes can clear this — density matters more than ad spend.
+
+#### Realistic timing (solo + €30–50/mo)
+
+| Milestone | Timing | Condition |
+|-----------|--------|-----------|
+| First card sales | **1–3 months** after Stripe live + recruiting | Weekly seller outreach |
+| **Ops cash BEP** | **~3–8 months** | Sustained ~€800–€1,500 GMV/mo |
+| **Stable BEP** (3 months in a row) | **~6–12 months** | Wedge density holds |
+| Pocket = €0 for ops/marketing | **From the month after stable BEP** | Reinvest surplus only |
+| Toward €95k revenue path | **~24–36 months** | Still prefer organic / reinvest |
+
+**Best case:** ops BEP ~3–4 months. **Normal:** ~6 months. **Slow OK:** up to ~8–12 months.  
+If still pocket-funding ops after **12 months** with almost no GMV → fix liquidity/friction; **do not** raise the €50 ad cap to “solve” it.
+
+#### Cash rules
+
+```text
+UNTIL ops cash BEP:
+  Pocket may pay: infra + ≤ €50/mo marketing only
+  No extra “growth investment” from pocket
+  Prefer leaving the €50 unspent if outreach is working
+
+AFTER stable ops BEP (3 consecutive months fee ≥ ops burn):
+  Pocket for ops/marketing = €0
+  Surplus = fee revenue − cashback − infra − marketing − promo COGS
+  Reinvest 50–100% of surplus (tools, rare tests, SEO, tiny print)
+  Keep a buffer = 1–2 months of infra burn
+  Optional: raise marketing to €100–€300/mo only from surplus — never from new pocket
+```
+
+#### Friday check (add to §12.9)
+
+| Metric | Healthy |
+|--------|---------|
+| Ops burn this month | ≤ ~€100 |
+| Fee revenue this month | Rising toward / above burn |
+| Months at ops BEP | Count toward “stable” (need 3) |
+| Pocket top-up this month | €0 after stable BEP |
+
+**Canonical references:** [§4.1](#41-planning-stance) · [§4.3](#43-marketplace-marketing-expenditure-required) · [§12.12](#1212-marketing--cac-budget).
 
 ---
 
 # Appendices
 
 > Full reference material — engineering specs, detailed flows, copy, and policy.
-
 
 ---
 
@@ -588,7 +968,7 @@ SellNearby monetization should feel:
 | **1.5** | Featured listing slots | ✅ Live (2026-06-27) | Seller visibility |
 | **2** | Wallet spend (credit economy) | ✅ Live | Credits → boosts / fast-track / early unlock |
 | **3** | Fast-track verification | ✅ Live (2026-06-27) | Trust / speed |
-| **4** | Buyer micro-SKUs | ✅ Partial — statement + early unlock live; priority message off | Buyer convenience |
+| **4** | Buyer micro-SKUs | ✅ Statement + early unlock + priority message | Buyer convenience |
 | **5** | Buyer protection | 📋 Planned (legal gate) | Buyer safety |
 | **6** | Seller packages (bundles) | ✅ Partial — Growth Pack + AI credits + store slots + featured store live | ARPU bundles |
 | **7+** | Future expansion | 🔮 Volume-gated | Platform scale · ads self-serve |
@@ -738,7 +1118,7 @@ Store SKU prices in **`platform_settings.pricing`** (JSON). Fee percentages rema
     "store_slot_3": { "amount": 4.99, "enabled": true },
     "store_bundle_3": { "amount": 7.99, "enabled": true },
     "buyer_statement": { "amount": 0.99, "enabled": true },
-    "priority_message": { "amount": 0.49, "enabled": false },
+    "priority_message": { "amount": 0.49, "enabled": true },
     "early_cashback_unlock": { "amount": 0.99, "enabled": true },
     "seller_growth_pack": {
       "amount": 6.99,
@@ -765,7 +1145,7 @@ Store SKU prices in **`platform_settings.pricing`** (JSON). Fee percentages rema
 }
 ```
 
-**Not in live defaults / purchase types yet:** `urgent_badge`, `auto_refresh`, `buyer_protection_*`, `wanted_ad`, `buyer_alerts_monthly`, `package_starter` / `package_pro` / `package_premium`. `priority_message` appears in pricing with `enabled: false` but has **no** `PlatformPurchaseType` / fulfillment path.
+**Not in live defaults / purchase types yet:** `urgent_badge`, `auto_refresh`, `buyer_protection_*`, `wanted_ad`, `buyer_alerts_monthly`, `package_starter` / `package_pro` / `package_premium`. `priority_message` is a live purchase type (€0.49, chat composer + inbox pin).
 
 `enabled: false` keeps a SKU priced but hidden from checkout until product enables it.
 
@@ -804,15 +1184,15 @@ Store SKU prices in **`platform_settings.pricing`** (JSON). Fee percentages rema
 
 ### Revenue projection (Year 1)
 
-Full model: **[monetization-revenue-model.md](#appendix-d--revenue-projection-model-detailed)**
+Full model: **[Appendix D](#appendix-d--revenue-projection-model-detailed)** · executive: [§4](#4-revenue-projection-12-months) · positioning: [§11](#11-competitive-positioning--year-1-gtm)
 
-| Scenario | Year 1 total |
-|----------|--------------|
-| Conservative | €95,000 – €120,000 |
-| **Moderate** | **~€175,600** |
-| Aggressive | €250,000 – €320,000 |
+| Scenario | Year 1 total | Use |
+|----------|--------------|-----|
+| Conservative | €95,000 – €120,000 | **Operating baseline** |
+| Moderate (stretch) | ~€165,000 – €175,000 | OKRs after public GMV proven |
+| Aggressive | €250,000 – €320,000 | Paid acquisition + dense supply |
 
-**Moderate mix:** Platform fee 82% · Boosts 7% · Featured 7% · Buyer SKUs 3% · Packages 1%
+**Stretch mix:** Platform fee ~80–85% · Featured ~7% · Boosts ~2–7% · Buyer SKUs ~3% · Packages / ARPU ~1%+
 
 ---
 
@@ -1236,7 +1616,7 @@ Non-GMV revenue uses **`platform_purchases`** — separate from buyer→seller `
 
 | Field | Purpose |
 |-------|---------|
-| `type` | **Live:** `listing_boost`, `featured_slot`, `fast_track_verification`, `store_slot_2` / `store_slot_3` / `store_bundle_3`, `buyer_statement`, `seller_growth_pack`, `ai_credit_2` / `5` / `10`, `featured_store`, `early_cashback_unlock`. **Not purchase types yet:** `priority_message`, `buyer_protection`, `wanted_ad`, … |
+| `type` | **Live:** `listing_boost`, `featured_slot`, `fast_track_verification`, `store_slot_2` / `store_slot_3` / `store_bundle_3`, `buyer_statement`, `seller_growth_pack`, `ai_credit_2` / `5` / `10`, `featured_store`, `early_cashback_unlock`, `priority_message`. **Not purchase types yet:** `buyer_protection`, `wanted_ad`, … |
 | `user_id` | Purchaser |
 | `amount` / `currency` | Snapshotted at checkout (EUR) |
 | `listing_id` | Target when applicable |
@@ -1315,7 +1695,7 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 3. **Phase 1.5** — Featured slots — ✅ Done (2026-06-27)
 4. **Phase 2** — Wallet spend — ✅ Done (boosts / fast-track / early unlock)
 5. **Phase 3** — Fast-track verification — ✅ Done (2026-06-27)
-6. **Phase 4** — Buyer micro-SKUs — ✅ Partial (early unlock + statement); priority message / wanted / alerts open
+6. **Phase 4** — Buyer micro-SKUs — ✅ Statement + early unlock + priority message; wanted / alerts open
 7. **Phase 5** — Buyer protection (after legal) — 📋
 8. **Phase 6** — Seller packages — ✅ Partial (Growth Pack / AI packs / store slots / featured store); Starter/Pro/Premium ledger open
 9. **Phase 7+** — As volume justifies (alerts, ads self-serve, GMV wallet mix, …)
@@ -1385,6 +1765,11 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 | 2026-06-27 | Force-reverify notification fix | Migration adds `seller_verification_nudge` to `NotificationType`; commit `5d39a47` |
 | 2026-06-27 | Snapshot-tested Phases 1–3 | Boost (Stripe CLI confirm), featured homepage, fast-track Priority UI, admin priority via API |
 | 2026-07-23 | Full blueprint status audit vs code | Phase 2/4/6 partials, pricing JSON, keyword-filter claims corrected |
+| 2026-07-23 | Revenue sanity + §11 positioning/GTM | Operating €95–120k vs stretch ~€165–175k; MAU/listing math fixed; multi-home wedge vs DoneDeal/FB |
+| 2026-07-23 | §12 Year-1 execution plan | Operating-first GMV plan: Phase 0–3, Month-6 gate, 14-day checklist |
+| 2026-07-23 | §4.3 / §12.12 marketing & CAC budget | Organic €35–80k vs paid €120–250k; contribution after cashback + marketing |
+| 2026-07-24 | Bootstrap default (solo + €30–50/mo) | Year-1 revenue €3–15k; €95k deferred ~24–36 mo; capital bands optional |
+| 2026-07-24 | §12.13 ops cash BEP + reinvest rules | Stop pocket ASAP (~3–8 mo); grow from surplus after stable BEP |
 
 ---
 
@@ -2077,7 +2462,7 @@ Most data model and UI already exist (`packageType`, `boostedUntil`, package dia
 
 **Goal:** Light, optional buyer upgrades (convenience, not tax).
 
-**Timeline:** 2–3 weeks · **Risk:** Low–Medium · **Revenue:** Low–Medium · **Status:** early unlock + buyer statement ✅ · priority message 📋
+**Timeline:** 2–3 weeks · **Risk:** Low–Medium · **Revenue:** Low–Medium · **Status:** early unlock + buyer statement + priority message ✅
 
 #### Scope
 
@@ -2252,27 +2637,38 @@ Uses **conservative**, **moderate**, and **aggressive** scenarios.
 
 Based on Irish local marketplace behavior, the [pricing table](#appendix-a--full-monetization-strategy#pricing-table-v1), phased rollout, typical conversion rates, and current platform architecture.
 
+> **Sanity rules (2026-07-23):** (1) MAU endpoints must match the stated monthly growth rate. (2) New listings/month ≈ `MAU × active-seller% × listings-per-seller`. (3) **Month 1 of the revenue model = first full public-liquidity month**, not code-complete or closed pilot. (4) Platform fee tables are **gross** (~9.2%); net after cashback ≈ **~7.7% of GMV**.
+
 #### User growth
 
-| Scenario | MAU (Month 1 → 12) | Monthly growth |
-|----------|---------------------|----------------|
-| Conservative | 5,000 → 15,000 | 5% |
-| Moderate | 5,000 → 30,000 | 10% |
-| Aggressive | 5,000 → 50,000 | 15% |
+Compound monthly growth from Month-1 MAU. Endpoints and rates are **paired** (earlier drafts mismatched “10%” with “→ 30k”).
 
-#### Seller activity
+| Scenario | MAU (Month 1 → 12) | Monthly compound growth | Notes |
+|----------|---------------------|-------------------------|--------|
+| Conservative | 5,000 → ~12,800 | ~8% | Operating planning |
+| Moderate (stretch) | 5,000 → ~14,300 | 10% | Organic-heavy stretch |
+| Moderate + acquisition | 5,000 → ~30,000 | ~18% | Requires paid/partner channels |
+| Aggressive | 5,000 → ~50,000 | ~21% | High-burn growth |
 
-- **8–12%** of MAU are active sellers
-- **1.5–2.5** listings per seller per month
+#### Seller activity & listing supply
+
+- **8–12%** of MAU are active sellers (use **10%** for base math)
+- **1.5–2.5** new listings per active seller per month (use **2.0** for base math)
 - **20–30%** of listings sell within 30 days
+- **Derived new listings (base):** `MAU × 0.10 × 2.0 = MAU × 0.20`
+  - Month 1 @ 5k MAU → **~1,000** listings (not 3,000)
+  - Month 12 @ ~14.3k MAU → **~2,850** listings
+- **Dense supply case** (power sellers / multi-list): 12% sellers × 4–5 listings can approach ~2,500–3,000 Month-1 listings — use only if pilot data shows it
 
 #### GMV (gross merchandise volume)
 
-| Scenario | Monthly GMV (Month 1 → 12) |
-|----------|----------------------------|
-| Conservative | €40,000 → €120,000 |
-| Moderate | €60,000 → €250,000 |
-| Aggressive | €80,000 → €400,000 |
+| Scenario | Monthly GMV (Month 1 → 12) | Implied Year-1 GMV (approx.) |
+|----------|----------------------------|------------------------------|
+| Conservative | €40,000 → €120,000 | ~€0.9M–€1.0M |
+| Moderate (stretch) | €60,000 → €250,000 | ~€1.5M–€1.6M |
+| Aggressive | €80,000 → €400,000 | ~€2.5M+ |
+
+Moderate fee line (€144k @ 9.2%) implies **~€1.57M** Year-1 GMV — the binding constraint for stretch revenue.
 
 #### Platform fee
 
@@ -2280,11 +2676,11 @@ Based on Irish local marketplace behavior, the [pricing table](#appendix-a--full
 |------|-------|
 | Default | 10% |
 | Verified sellers | 8% |
-| **Weighted average** | **9.2%** (after verification discount adoption) |
+| **Weighted average (gross)** | **9.2%** (after verification discount adoption) |
 
-Net after cashback (~1.5% platform-funded): weighted **~7.7%** on GMV.
+Net after cashback (~1.5% platform-funded): weighted **~7.7%** on GMV. Admin should report **gross fee revenue** and **cashback cost** separately.
 
-#### Boost conversion (% of listings boosted)
+#### Boost conversion (% of new listings boosted)
 
 | Scenario | Rate |
 |----------|------|
@@ -2329,39 +2725,43 @@ Net after cashback (~1.5% platform-funded): weighted **~7.7%** on GMV.
 
 ---
 
-### 4. 12-month projection — moderate scenario
+### 4. 12-month projection — moderate (stretch) scenario
 
-Most realistic baseline for SellNearby Year 1.
+Stretch path if **public** GMV follows €60k → €250k/month. Prefer **conservative (€95k–€120k)** for operating plans until that GMV is evidenced.
 
 #### 4.1 Platform fee revenue
 
-**Formula:** `GMV × 9.2%` (weighted fee)
+**Formula:** `GMV × 9.2%` (weighted **gross** fee)
 
-| Month | GMV | Platform fee revenue |
-|-------|-----|-------------------|
+| Month | GMV | Platform fee revenue (gross) |
+|-------|-----|------------------------------|
 | 1 | €60,000 | €5,520 |
 | 3 | €80,000 | €7,360 |
 | 6 | €120,000 | €11,040 |
 | 9 | €180,000 | €16,560 |
 | 12 | €250,000 | €23,000 |
 
-**12-month total:** **€144,000**
+**12-month total (gross fee):** **€144,000**  
+**Approx. contribution after ~1.5% cashback:** ~€120,000 on the same GMV path (order-of-magnitude; track actual grant cost).
 
 #### 4.2 Listing boost revenue
 
-**Formula:** `Listings × boost conversion (5%) × €3.49 blended`
+**Formula:** `Listings × boost conversion (5%) × €3.49 blended`  
+**Listings (base):** `MAU × 0.20` with MAU growing 10%/month from 5,000.
 
-| Month | Listings | Boosts (5%) | Revenue |
-|-------|----------|-------------|---------|
-| 1 | 3,000 | 150 | €523 |
-| 3 | 4,000 | 200 | €698 |
-| 6 | 6,000 | 300 | €1,047 |
-| 9 | 8,000 | 400 | €1,396 |
-| 12 | 10,000 | 500 | €1,745 |
+| Month | MAU (approx.) | Listings (base) | Boosts (5%) | Revenue |
+|-------|---------------|-----------------|-------------|---------|
+| 1 | 5,000 | 1,000 | 50 | €175 |
+| 3 | 6,050 | 1,210 | 61 | €213 |
+| 6 | 8,050 | 1,610 | 81 | €283 |
+| 9 | 10,700 | 2,140 | 107 | €373 |
+| 12 | 14,300 | 2,860 | 143 | €499 |
 
-**12-month total:** **€12,500**
+**12-month total (base supply):** **~€3,700**
 
-*Assumes Phase 1 boosts live from Month 1. Adjust if rollout is later.*
+*Dense supply case* (early multi-list sellers → ~3× listings): boosts can approach the legacy **~€12,500** band. Do not assume dense supply without pilot evidence.
+
+*Assumes boosts are live from public Month 1 (already true in product). Feature code ≠ liquidity.*
 
 #### 4.3 Featured listing revenue
 
@@ -2377,11 +2777,11 @@ Most realistic baseline for SellNearby Year 1.
 
 **12-month total:** **€12,000**
 
-*Assumes Phase 1.5 featured live from Month 1. Category featured (€1.99) is upside.*
+*Assumes featured live from public Month 1. Category featured (€1.99) is upside.*
 
 #### 4.4 Buyer SKU revenue
 
-Priority messaging, early unlock, buyer protection (partial year).
+Priority messaging, early unlock, buyer protection (partial year). Statement PDF + early unlock are already live; protection remains legal-gated.
 
 | Month | Revenue |
 |-------|---------|
@@ -2393,11 +2793,9 @@ Priority messaging, early unlock, buyer protection (partial year).
 
 **12-month total:** **€5,000**
 
-*Ramps as Phase 4–5 SKUs ship (typically H2).*
+#### 4.5 Seller package / ARPU revenue
 
-#### 4.5 Seller package revenue (Phase 6)
-
-**Assume:** 1–3% of active sellers purchase a package.
+**Assume:** 1–3% of active sellers purchase a package / growth SKU. Growth Pack, AI credits, store slots, and featured storefront are live — treat this line as a **floor**; actual ARPU may exceed it if merchandised.
 
 | Month | Revenue |
 |-------|---------|
@@ -2406,72 +2804,77 @@ Priority messaging, early unlock, buyer protection (partial year).
 | 11 | €600 |
 | 12 | €750 |
 
-**12-month total:** **€2,100**
+**12-month total (ledger packages floor):** **€2,100**
 
 ---
 
-### 5. Total revenue — moderate scenario
+### 5. Total revenue — moderate (stretch) scenario
 
 | Revenue stream | 12-month total |
 |----------------|----------------|
-| Platform fee | €144,000 |
-| Listing boosts | €12,500 |
+| Platform fee (gross) | €144,000 |
+| Listing boosts (base → dense) | ~€3,700 – €12,500 |
 | Featured listings | €12,000 |
 | Buyer SKUs | €5,000 |
-| Seller packages | €2,100 |
-| **Total** | **€175,600** |
+| Seller packages / ARPU floor | €2,100 |
+| **Total** | **~€165,000 – €175,000** |
+
+Legacy headline **€175,600** assumed dense Month-1 listing supply (~3,000). Base supply math lands nearer **~€167,000**. Keep **€165k–€175k** as the stretch band.
 
 ---
 
 ### 6. Conservative & aggressive scenarios
 
-#### Conservative
+#### Conservative — **operating baseline**
 
 - Lower GMV (€40k → €120k/month)
-- 2% boost conversion
+- 2% boost conversion · base listing supply
 - 20% featured fill rate
-- Delayed buyer SKU rollout
+- Delayed / thin buyer SKU uptake
+- Public launch later than product-complete
 
-**Projected Year 1:** **€95,000 – €120,000**
+**Projected Year 1:** **€95,000 – €120,000** ← default for budgets
 
 #### Aggressive
 
 - Higher GMV (€80k → €400k/month)
-- 8% boost conversion
+- 8% boost conversion · dense supply
 - 80% featured fill rate
-- Strong buyer SKU adoption
+- Strong buyer SKU + seller ARPU adoption
+- ~18–21% MAU compound growth (paid acquisition)
 
 **Projected Year 1:** **€250,000 – €320,000**
 
 ---
 
-### 7. Revenue mix — moderate scenario (Year 1)
+### 7. Revenue mix — stretch Year 1
 
-| Stream | % of total |
-|--------|------------|
-| Platform fee | 82% |
-| Boosts | 7% |
-| Featured | 7% |
-| Buyer SKUs | 3% |
-| Packages | 1% |
+| Stream | % of total (approx.) |
+|--------|----------------------|
+| Platform fee | 80–85% |
+| Featured | ~7% |
+| Boosts | 2–7% |
+| Buyer SKUs | ~3% |
+| Packages / ARPU | ~1%+ |
 
 Healthy for a local marketplace Year 1. Secondary streams diversify but GMV fee remains dominant until scale.
 
-**Note:** Strategic docs earlier cited 65–75% GMV share — that applies **once boosts mature in Year 2+**. Year 1 moderate model above reflects phased rollout timing.
+**Note:** Strategic docs earlier cited 65–75% GMV share — that applies **once boosts mature in Year 2+**. Year 1 remains fee-heavy.
 
 ---
 
 ### 8. Key levers to increase revenue
 
-1. Increase boost visibility (ranking bump + badge must work)
-2. **First boost 50% off** launch promo
-3. Promote fast-track verification (Phase 3)
-4. Enable wallet spend (Phase 2) — credits → boosts
-5. Add buyer protection after legal sign-off (Phase 5)
-6. Launch seller packages (Phase 6)
-7. Buyer alerts subscription (Phase 6+)
-8. Referral bonuses (Phase 7+)
-9. Increase GMV via trust + verification + verified 8% fee incentive
+1. Hit public GMV path (density wedge — see [§11](#11-competitive-positioning--year-1-gtm))
+2. Increase boost visibility (ranking bump + badge must work)
+3. **First boost 50% off** launch promo
+4. Promote fast-track verification (Phase 3) — already live
+5. Wallet spend (Phase 2) — already live; merchandise credits → boosts
+6. Add buyer protection after legal sign-off (Phase 5)
+7. Merchandise seller ARPU (Growth Pack, AI packs, store slots) — already live
+8. Buyer alerts subscription (Phase 6+)
+9. Referral bonuses (Phase 7+)
+10. Increase GMV via trust + verification + verified 8% fee incentive
 
 ---
 
@@ -2482,26 +2885,76 @@ Track monthly:
 | KPI | Source |
 |-----|--------|
 | GMV | `payments` where `status = succeeded` |
-| Platform fee revenue | Sum of `platformFee` on payments |
+| Platform fee revenue (gross) | Sum of `platformFee` on payments |
+| Cashback cost | Sum of earned grants (platform cost, not revenue) |
+| Net fee contribution | Gross fee − cashback cost (approx.) |
 | Boost revenue | `platform_purchases` where `type = listing_boost` |
 | Featured revenue | `platform_purchases` where `type = featured_slot` |
 | Buyer SKU revenue | `platform_purchases` (priority_message, early_unlock, etc.) |
 | Boost conversion | Boosts / new listings |
 | Featured fill rate | Featured purchases / (slots × days) |
 | Verified seller % | Sellers at 8% fee / active sellers |
-| Cashback cost | Sum of earned grants (platform cost, not revenue) |
+| New listings vs formula | Actual vs `MAU × 0.20` (flags density assumptions) |
+| Marketing / GTM cash spend | Ops ledger (ads, partnerships, promo COGS, GTM contractors) |
+| Paid CAC vs 90-day fee | Cohort sheet — must pass 5× rule before scale |
+| Contribution after cashback + marketing | Gross revenue − cashback − marketing − promo COGS |
 
 ---
 
 ### 10. Summary
 
-SellNearby can realistically target:
+| Planning label | Platform **revenue** |
+|----------------|----------------------|
+| **Bootstrap Year 1 (canonical)** | **€3,000 – €15,000** (~€25k stretch) |
+| Bootstrap → operating | **€95k–€120k** over **~24–36 months** |
+| Capital Year-1 reference | €95k–€175k+ (see §4–5 above) |
 
-**€175,000+ in Year 1** (moderate scenario)
+| Planning label | Marketplace **marketing** cash |
+|----------------|--------------------------------|
+| **Bootstrap micro (canonical)** | **€30–€50 / month** (~€360–€600 / year) |
+| Funded organic / paid | €35k–€250k / year (optional later only) |
 
-with a low-friction, micro-priced, card-only monetization model.
+**Default path:** solo founder, micro cash, gradual density. Do not treat capital Year-1 tables as the personal commitment under bootstrap constraints.
 
-**Biggest drivers:** platform fee → boosts → featured → buyer SKUs & packages (Year 2 weight).
+**See also:** [§4](#4-revenue-projection-12-months) · [§4.3](#43-marketplace-marketing-expenditure-required) · [§12](#12-year-1-execution-plan) · [§12.12](#1212-marketing--cac-budget)
+
+---
+
+### 11. Marketplace marketing & CAC expenditure
+
+#### 11.1 Canonical: bootstrap micro
+
+| Item | Value |
+|------|--------|
+| Staff | Founder only |
+| Marketing cash | **€30–€50 / month** |
+| Year-1 marketing total | **~€360 – €600** |
+| Primary “spend” | Founder GTM hours (8–15 hrs/week sustainable) |
+| Paid ads | **Off** by default |
+
+Allowed: tiny tools, rare print, rare €10–20 post boost. Forbidden: always-on ads, agencies, sponsorship fees, GTM hires.
+
+#### 11.2 Optional later bands (capital)
+
+| Band | Year-1 cash | Use |
+|------|-------------|-----|
+| Organic-led | €35k–€80k | Only if you choose to invest more |
+| Paid-accelerated | €120k–€250k | Only with CAC gates — high risk of negative contribution |
+
+#### 11.3 Contribution (bootstrap Year 1)
+
+```text
+Gross platform revenue (€3k–€15k typical)
+− Cashback (small)
+− Marketing cash (€360–€600)
+≈ Contribution before hosting / Stripe / legal / living costs
+```
+
+Most bootstrap years keep almost all fee revenue after micro marketing — the constraint is **growth speed**, not marketing burn.
+
+#### 11.4 CAC
+
+Irrelevant at scale until you voluntarily spend paid euros. Any paid test: one-off; stop if no card GMV within 30 days.
 
 ---
 
@@ -4296,7 +4749,7 @@ Canonical defaults match `DEFAULT_PLATFORM_PRICING` (`apps/api/src/modules/monet
     "store_slot_3": { "amount": 4.99, "enabled": true },
     "store_bundle_3": { "amount": 7.99, "enabled": true },
     "buyer_statement": { "amount": 0.99, "enabled": true },
-    "priority_message": { "amount": 0.49, "enabled": false },
+    "priority_message": { "amount": 0.49, "enabled": true },
     "early_cashback_unlock": { "amount": 0.99, "enabled": true },
     "seller_growth_pack": {
       "amount": 6.99,
@@ -4333,8 +4786,10 @@ Canonical defaults match `DEFAULT_PLATFORM_PRICING` (`apps/api/src/modules/monet
 
 ## Final summary
 
-This Master Blueprint defines **monetization, pricing, rollout, revenue model, UX flows, safety policy, keyword filters, UX copy, moderation workflow, and category tree** for SellNearby v1 — one document, Ireland-ready, trust-first, micro-priced.
+This Master Blueprint defines **monetization, pricing, rollout, revenue model, competitive positioning, Year-1 GTM, Year-1 execution, UX flows, safety policy, keyword filters, UX copy, moderation workflow, and category tree** for SellNearby v1 — one document, Ireland-ready, trust-first, micro-priced.
 
-**Sections 0–10** = executive blueprint. **Appendices A–L** = complete detail from all consolidated planning documents.
+**Sections 0–12** = executive blueprint. **Appendices A–L** = complete detail from all consolidated planning documents.
 
-**Next step:** Pilot ops (Stripe live, SendGrid, legal pack). Demand-gated remaining work: **priority message**, **buyer protection (legal)**, Starter/Pro/Premium ledger packages, **ads self-serve**, GMV wallet+card checkout. Growth Phases **1–3**, wallet spend, partial buyer/seller SKUs, AI Hub core, and admin display-ad campaigns are live — see [§1.2](#12-revenue-streams), [Growth phases](#growth-phases), [monetization.md](./monetization.md), and [display-ads-admin-campaigns.md](./display-ads-admin-campaigns.md).
+**Revenue stance (canonical):** **Bootstrap** — solo · **€30–€50/mo** marketing · Year-1 revenue **€3k–€15k** · **ops cash BEP ~3–8 months** then reinvest profit ([§12.13](#1213-break-even--reinvest-rules)) · €95k deferred **~24–36 months** ([§4](#4-revenue-projection-12-months), [§12](#12-year-1-execution-plan)). Positioning: [§11](#11-competitive-positioning--year-1-gtm).
+
+**Next step:** Run [§12.11](#1211-next-14-days-checklist) — Phase 0, wedge, first sales — and track fee vs ops burn per [§12.13](#1213-break-even--reinvest-rules). Live monetization: [§1.2](#12-revenue-streams), [monetization.md](./monetization.md).

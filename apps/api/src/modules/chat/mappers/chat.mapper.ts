@@ -56,6 +56,8 @@ export function mapChatMessage(row: {
   content: string;
   messageType: string;
   attachmentUrl: string | null;
+  isPriority?: boolean;
+  priorityUntil?: Date | null;
   readBy: string[];
   editedAt: Date | null;
   deletedAt: Date | null;
@@ -68,6 +70,8 @@ export function mapChatMessage(row: {
     content: row.deletedAt ? '[Message deleted]' : row.content,
     messageType: row.messageType as ChatMessage['messageType'],
     attachmentUrl: resolveOptionalAssetPublicUrl(row.attachmentUrl),
+    isPriority: Boolean(row.isPriority),
+    priorityUntil: row.priorityUntil?.toISOString(),
     readBy: row.readBy,
     editedAt: row.editedAt?.toISOString(),
     deletedAt: row.deletedAt?.toISOString(),
@@ -82,6 +86,7 @@ export function mapChatThread(row: {
   listingId: string;
   lastMessageAt: Date | null;
   lastMessagePreview: string | null;
+  priorityBoostUntil?: Date | null;
   isBlocked: boolean;
   blockedBy: string | null;
   archivedByBuyer: boolean;
@@ -96,6 +101,7 @@ export function mapChatThread(row: {
     listingId: row.listingId,
     lastMessageAt: row.lastMessageAt?.toISOString(),
     lastMessagePreview: row.lastMessagePreview ?? undefined,
+    priorityBoostUntil: row.priorityBoostUntil?.toISOString(),
     isBlocked: row.isBlocked,
     blockedBy: row.blockedBy ?? undefined,
     archivedByBuyer: row.archivedByBuyer,
@@ -110,14 +116,18 @@ export function mapInboxItem(
   lastMessage: ChatMessage | undefined,
   unreadCount: number,
   viewerId: string,
+  now = new Date(),
 ): ChatInboxItem {
   const participant =
     thread.buyerId === viewerId ? thread.seller : thread.buyer;
+  const priorityBoostUntil = thread.priorityBoostUntil ?? null;
+  const hasPriority = Boolean(priorityBoostUntil && priorityBoostUntil > now);
 
   return {
     thread: mapChatThread(thread),
     lastMessage,
     unreadCount,
+    hasPriority,
     listing: {
       id: thread.listing.id,
       title: thread.listing.title,

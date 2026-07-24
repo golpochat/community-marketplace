@@ -36,6 +36,7 @@ export const PLATFORM_PURCHASE_LABELS: Record<PlatformPurchaseType, string> = {
   ai_credit_10: 'AI Credits (€10)',
   featured_store: 'Featured storefront',
   early_cashback_unlock: 'Early cashback unlock',
+  priority_message: 'Priority message',
 };
 
 export function describePlatformPurchase(
@@ -88,6 +89,8 @@ export function describePlatformPurchase(
       return 'Homepage featured storefront (24h)';
     case 'early_cashback_unlock':
       return 'Unlock pending SellNearby Credit before the cooling period ends';
+    case 'priority_message':
+      return 'Priority message — pin your chat at the top of the seller inbox';
     default:
       return PLATFORM_PURCHASE_LABELS[type];
   }

@@ -25,7 +25,8 @@ export type PlatformPurchaseType =
   | 'ai_credit_5'
   | 'ai_credit_10'
   | 'featured_store'
-  | 'early_cashback_unlock';
+  | 'early_cashback_unlock'
+  | 'priority_message';
 
 export type PlatformPurchaseStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
@@ -200,6 +201,22 @@ export interface EarlyCashbackUnlockIntentResponse {
   creditsApplied?: number;
   amountDue?: number;
   grantId: string;
+}
+
+export interface PriorityMessageConfigResponse {
+  enabled: boolean;
+  amount: number;
+  currency: string;
+  /** Hours the Priority tag / inbox pin remains active after send. */
+  durationHours: number;
+}
+
+export interface PriorityMessageIntentResponse {
+  purchase: PlatformPurchase;
+  clientSecret: string | null;
+  creditsApplied?: number;
+  amountDue?: number;
+  threadId: string;
 }
 
 export interface StoreSlotIntentResponse {

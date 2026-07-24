@@ -1,6 +1,8 @@
 # Functional Requirements
 
-> **Status:** Placeholder — v0.1 draft
+> **Status:** Placeholder — v0.1 draft. Canonical domain contracts live in
+> `@community-marketplace/types` and `docs/product/master-blueprint-v1.md`.
+> Do not treat this FR list as the source of truth for statuses or MEMBER/account IA.
 
 ## FR-1: User management
 
@@ -20,7 +22,7 @@
 | FR-2.1 | Sellers can create, edit, and delete draft/rejected listings; pause or end after publish | P0 |
 | FR-2.2 | Buyers can browse and search listings | P0 |
 | FR-2.3 | Listings support categories, images, and conditions | P0 |
-| FR-2.4 | Listings have lifecycle states (draft → active → sold) | P1 |
+| FR-2.4 | Listings have lifecycle states including draft, pending_review, active, reserved, paused, sold, ended, and moderation states (flagged, under_investigation, suspended_seller) | P1 |
 | FR-2.5 | Admins can approve or reject listings | P2 |
 
 ## FR-3: Messaging

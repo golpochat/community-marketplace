@@ -10,6 +10,9 @@ interface MessageBubbleProps {
 export function MessageBubble({ message, currentUserId }: MessageBubbleProps) {
   const isMine = message.senderId === currentUserId;
   const isSystem = message.messageType === 'system';
+  const isActivePriority =
+    Boolean(message.isPriority) &&
+    (!message.priorityUntil || new Date(message.priorityUntil).getTime() > Date.now());
 
   if (isSystem) {
     return (
@@ -28,6 +31,15 @@ export function MessageBubble({ message, currentUserId }: MessageBubbleProps) {
           isMine ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
         }`}
       >
+        {isActivePriority && (
+          <p
+            className={`mb-1 text-[10px] font-semibold uppercase tracking-wide ${
+              isMine ? 'text-primary-foreground/80' : 'text-amber-700 dark:text-amber-400'
+            }`}
+          >
+            Priority
+          </p>
+        )}
         {message.attachmentUrl && message.messageType === 'image' ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img

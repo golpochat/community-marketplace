@@ -15,7 +15,11 @@ interface ChatLayoutProps {
   typingLabel?: string;
   threadHeader?: React.ReactNode;
   onSelectThread: (threadId: string | undefined) => void;
-  onSend: (content: string, attachmentUrl?: string) => void;
+  onSend: (
+    content: string,
+    attachmentUrl?: string,
+    platformPurchaseId?: string,
+  ) => void | Promise<void>;
   onTyping?: () => void;
   onReportMessage?: (messageId: string) => void;
   onBlockConversation?: () => void;
@@ -70,6 +74,7 @@ export function ChatLayout({
             listing={activeInboxItem?.listing}
             participant={activeInboxItem?.participant}
             isBlocked={activeInboxItem?.thread.isBlocked}
+            canSendPriority={activeInboxItem?.thread.buyerId === currentUserId}
             onSend={onSend}
             onTyping={onTyping}
             onReportMessage={onReportMessage}

@@ -60,7 +60,7 @@ export function ListingCashbackCue({ listingId, embedded = false }: ListingCashb
           <p className="text-xs text-muted-foreground">
             Card payments only.{' '}
             <Link href="/account/wallet" className="font-medium text-primary hover:underline">
-              View your wallet
+              View your SellNearby Credit
             </Link>
           </p>
         </div>

@@ -319,6 +319,7 @@ enum PlatformPurchaseType {
   ai_credit_10
   featured_store
   early_cashback_unlock
+  priority_message
 }
 
 enum PlatformPurchaseStatus {
@@ -1764,6 +1765,8 @@ model ChatThread {
   listingId           String    @map("listing_id")
   lastMessageAt       DateTime? @map("last_message_at")
   lastMessagePreview  String?   @map("last_message_preview")
+  /** Active until this time — used to pin thread in seller/buyer inbox. */
+  priorityBoostUntil  DateTime? @map("priority_boost_until")
   isBlocked           Boolean   @default(false) @map("is_blocked")
   blockedBy           String?   @map("blocked_by")
   archivedByBuyer     Boolean   @default(false) @map("archived_by_buyer")
@@ -1780,6 +1783,8 @@ model ChatThread {
   @@unique([buyerId, sellerId, listingId])
   @@index([buyerId, lastMessageAt(sort: Desc)])
   @@index([sellerId, lastMessageAt(sort: Desc)])
+  @@index([buyerId, priorityBoostUntil(sort: Desc)])
+  @@index([sellerId, priorityBoostUntil(sort: Desc)])
   @@index([listingId])
   @@map("chat_threads")
 }
@@ -1791,6 +1796,8 @@ model ChatMessage {
   content       String
   messageType   ChatMessageType @default(text) @map("message_type")
   attachmentUrl String?         @map("attachment_url")
+  isPriority    Boolean         @default(false) @map("is_priority")
+  priorityUntil DateTime?       @map("priority_until")
   readBy        String[]        @default([]) @map("read_by")
   editedAt      DateTime?       @map("edited_at")
   deletedAt     DateTime?       @map("deleted_at")

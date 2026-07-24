@@ -28,7 +28,7 @@ export default function BuyerWalletPage() {
       const data = await monetizationService.getBuyerWallet();
       setWallet(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load wallet');
+      setError(err instanceof Error ? err.message : 'Failed to load SellNearby Credit');
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ export default function BuyerWalletPage() {
       />
       {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
       {loading && (
-        <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading wallet…</p>
+        <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading SellNearby Credit…</p>
       )}
       {wallet && (
         <div className="space-y-6">
@@ -92,8 +92,8 @@ export default function BuyerWalletPage() {
               {formatCurrency(wallet.balance, 'EUR')}
             </p>
             <p className="mt-3 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-              Use credits on listing boosts, fast-track verification, and early cashback unlock.
-              Card covers any remainder when your balance is lower than the price.
+              Use SellNearby Credit on listing boosts, fast-track verification, and early cashback
+              unlock. Card covers any remainder when your balance is lower than the price.
             </p>
           </DashboardCard>
 

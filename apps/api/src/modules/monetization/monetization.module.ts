@@ -11,6 +11,7 @@ import { UsersModule } from '../users/users.module';
 import { AdminMonetizationController } from './admin-monetization.controller';
 import { PublicAdsController } from './public-ads.controller';
 import { BuyerWalletController } from './buyer-wallet.controller';
+import { PriorityMessageController } from './priority-message.controller';
 import { SellerBoostsController } from './seller-boosts.controller';
 import { SellerFeaturedController } from './seller-featured.controller';
 import { SellerFeaturedStoreController } from './seller-featured-store.controller';
@@ -71,6 +72,7 @@ import { AiMarketingModule } from '../ai-marketing/ai-marketing.module';
     AdminMonetizationController,
     PublicAdsController,
     BuyerWalletController,
+    PriorityMessageController,
     SellerBoostsController,
     SellerFeaturedController,
     SellerFeaturedStoreController,

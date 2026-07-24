@@ -74,7 +74,67 @@ export class ChatMessagesService {
       throw new ForbiddenException('System messages cannot be sent by users');
     }
 
+    const wantPriority = Boolean(parsed.platformPurchaseId);
+    let priorityUntil: Date | null = null;
+
+    if (wantPriority) {
+      if (thread.buyerId !== senderId) {
+        throw new ForbiddenException('Only the buyer can send a priority message');
+      }
+      if (!parsed.platformPurchaseId) {
+        throw new BadRequestException('platformPurchaseId is required for priority messages');
+      }
+
+      const purchase = await this.prisma.platformPurchase.findUnique({
+        where: { id: parsed.platformPurchaseId },
+      });
+      if (!purchase || purchase.type !== 'priority_message') {
+        throw new NotFoundException('Priority message purchase not found');
+      }
+      if (purchase.userId !== senderId) {
+        throw new ForbiddenException('You can only use your own priority purchase');
+      }
+      if (purchase.status !== 'succeeded') {
+        throw new BadRequestException('Priority message payment is not complete');
+      }
+
+      const meta = (purchase.metadata ?? {}) as Record<string, unknown>;
+      if (meta.consumed === true) {
+        throw new BadRequestException('This priority purchase was already used');
+      }
+      if (meta.threadId !== parsed.threadId) {
+        throw new BadRequestException('Priority purchase does not match this conversation');
+      }
+
+      const durationHours =
+        typeof meta.durationHours === 'number' && meta.durationHours > 0
+          ? meta.durationHours
+          : 24;
+      priorityUntil = new Date();
+      priorityUntil.setHours(priorityUntil.getHours() + durationHours);
+    }
+
     const row = await this.prisma.$transaction(async (tx) => {
+      if (wantPriority && parsed.platformPurchaseId) {
+        const purchase = await tx.platformPurchase.findUnique({
+          where: { id: parsed.platformPurchaseId },
+        });
+        if (!purchase) throw new NotFoundException('Priority message purchase not found');
+        const meta = (purchase.metadata ?? {}) as Record<string, unknown>;
+        if (meta.consumed === true) {
+          throw new BadRequestException('This priority purchase was already used');
+        }
+        await tx.platformPurchase.update({
+          where: { id: purchase.id },
+          data: {
+            metadata: {
+              ...meta,
+              consumed: true,
+            } as object,
+          },
+        });
+      }
+
       const message = await tx.chatMessage.create({
         data: {
           threadId: parsed.threadId,
@@ -83,6 +143,8 @@ export class ChatMessagesService {
           messageType: parsed.messageType,
           attachmentUrl: parsed.attachmentUrl,
           readBy: [senderId],
+          isPriority: wantPriority,
+          priorityUntil: wantPriority ? priorityUntil : null,
         },
       });
 
@@ -91,6 +153,9 @@ export class ChatMessagesService {
         data: {
           lastMessageAt: message.createdAt,
           lastMessagePreview: messagePreview(parsed.content),
+          ...(wantPriority && priorityUntil
+            ? { priorityBoostUntil: priorityUntil }
+            : {}),
         },
       });
 

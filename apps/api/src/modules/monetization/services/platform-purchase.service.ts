@@ -23,6 +23,8 @@ import type {
   GrowthPackCatalogResponse,
   GrowthPackIntentResponse,
   PlatformPurchase,
+  PriorityMessageConfigResponse,
+  PriorityMessageIntentResponse,
   StoreSlotIntentResponse,
 } from '@community-marketplace/types';
 import type {
@@ -33,6 +35,7 @@ import type {
   ConfirmFeaturedInput,
   ConfirmFeaturedStoreInput,
   ConfirmGrowthPackInput,
+  ConfirmPriorityMessageInput,
   ConfirmStoreSlotInput,
   CreateAiCreditPackIntentInput,
   CreateBoostIntentInput,
@@ -40,6 +43,7 @@ import type {
   CreateFeaturedIntentInput,
   CreateFeaturedStoreIntentInput,
   CreateFastTrackIntentInput,
+  CreatePriorityMessageIntentInput,
   CreateStoreSlotIntentInput,
 } from '@community-marketplace/validation';
 
@@ -57,6 +61,7 @@ import { StripeConnectService } from '../../payments/services/stripe-connect.ser
 import { VerificationService } from '../../verification/services/verification.service';
 import {
   DEFAULT_PLATFORM_PRICING,
+  PRIORITY_MESSAGE_DURATION_HOURS,
   roundMoney,
 } from '../lib/boost.lib';
 import {
@@ -834,6 +839,153 @@ export class PlatformPurchaseService {
     return true;
   }
 
+  async getPriorityMessageConfig(): Promise<PriorityMessageConfigResponse> {
+    const settings = await this.settings.get();
+    const sku =
+      settings.pricing.skus.priority_message ??
+      DEFAULT_PLATFORM_PRICING.skus.priority_message!;
+    return {
+      enabled: Boolean(sku.enabled),
+      amount: roundMoney(Number(sku.amount)),
+      currency: settings.pricing.currency.toUpperCase(),
+      durationHours: PRIORITY_MESSAGE_DURATION_HOURS,
+    };
+  }
+
+  async createPriorityMessageIntent(
+    buyerId: string,
+    dto: CreatePriorityMessageIntentInput,
+  ): Promise<PriorityMessageIntentResponse> {
+    await this.assertIntentRateLimit(buyerId, 'priority_message');
+
+    const settings = await this.settings.get();
+    const sku =
+      settings.pricing.skus.priority_message ??
+      DEFAULT_PLATFORM_PRICING.skus.priority_message!;
+    if (!sku.enabled) {
+      throw new BadRequestException('Priority messaging is not available');
+    }
+
+    const thread = await this.prisma.chatThread.findUnique({
+      where: { id: dto.threadId },
+    });
+    if (!thread) throw new NotFoundException('Conversation not found');
+    if (thread.buyerId !== buyerId) {
+      throw new ForbiddenException('Only the buyer can send a priority message');
+    }
+    if (thread.isBlocked) {
+      throw new BadRequestException('This conversation is blocked');
+    }
+
+    const existing = await this.prisma.platformPurchase.findFirst({
+      where: {
+        userId: buyerId,
+        type: 'priority_message',
+        status: 'pending',
+        metadata: { path: ['threadId'], equals: dto.threadId },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        'A priority message payment is already in progress for this conversation',
+      );
+    }
+
+    const amount = roundMoney(Number(sku.amount));
+    const mix = await this.resolveCreditsMix(buyerId, amount, dto.creditsAmount);
+
+    const purchase = await this.prisma.platformPurchase.create({
+      data: {
+        userId: buyerId,
+        type: 'priority_message',
+        status: 'pending',
+        amount,
+        currency: settings.pricing.currency.toUpperCase(),
+        metadata: {
+          threadId: dto.threadId,
+          listingId: thread.listingId,
+          priceAtPurchase: amount,
+          creditsApplied: mix.creditsApplied,
+          amountChargedCard: mix.amountDue,
+          paymentMix: mix.paymentMix,
+          creditsDebited: false,
+          consumed: false,
+          durationHours: PRIORITY_MESSAGE_DURATION_HOURS,
+        },
+      },
+    });
+
+    if (mix.amountDue <= 0) {
+      const result = await this.completeCreditsOnlyPurchase({
+        purchaseId: purchase.id,
+        sellerId: buyerId,
+        creditsApplied: mix.creditsApplied,
+        fulfill: (id) => this.fulfillPriorityMessage(id),
+      });
+      return { ...result, threadId: dto.threadId };
+    }
+
+    const { providerPaymentId, clientSecret } = await this.createStripeIntent(
+      mix.amountDue,
+      settings.pricing.currency,
+      {
+        type: 'priority_message',
+        userId: buyerId,
+        platformPurchaseId: purchase.id,
+        threadId: dto.threadId,
+        creditsApplied: String(mix.creditsApplied),
+      },
+      'priority_message',
+    );
+
+    const updated = await this.prisma.platformPurchase.update({
+      where: { id: purchase.id },
+      data: { providerPaymentId, clientSecret },
+    });
+
+    return {
+      purchase: mapPlatformPurchase(updated),
+      clientSecret,
+      creditsApplied: mix.creditsApplied,
+      amountDue: mix.amountDue,
+      threadId: dto.threadId,
+    };
+  }
+
+  async confirmPriorityMessage(
+    buyerId: string,
+    dto: ConfirmPriorityMessageInput,
+  ): Promise<PlatformPurchase> {
+    return this.confirmPurchase(buyerId, dto.purchaseId, (id) =>
+      this.fulfillPriorityMessage(id),
+    );
+  }
+
+  /**
+   * Marks payment complete. The chat send path consumes the purchase and
+   * applies the Priority tag (avoids duplicate messages from webhooks).
+   */
+  async fulfillPriorityMessage(purchaseId: string): Promise<boolean> {
+    const purchase = await this.prisma.platformPurchase.findUnique({
+      where: { id: purchaseId },
+    });
+    if (!purchase || purchase.type !== 'priority_message') return false;
+    if (purchase.status === 'succeeded' && purchase.fulfilledAt) return true;
+
+    const meta = (purchase.metadata ?? {}) as Record<string, unknown>;
+    if (typeof meta.threadId !== 'string') return false;
+
+    await this.prisma.platformPurchase.update({
+      where: { id: purchaseId },
+      data: {
+        status: 'succeeded',
+        fulfilledAt: new Date(),
+      },
+    });
+    return true;
+  }
+
   async getStoreSlotCatalog(sellerId: string) {
     return this.storeSlotCatalog.getCatalog(sellerId);
   }
@@ -954,6 +1106,16 @@ export class PlatformPurchaseService {
           throw error;
         }
         break;
+      case 'priority_message':
+        await this.debitCreditsForPurchaseIfNeeded(purchase.id);
+        try {
+          fulfilled = await this.fulfillPriorityMessage(purchase.id);
+          if (!fulfilled) await this.refundCreditsForPurchaseIfNeeded(purchase.id);
+        } catch (error) {
+          await this.refundCreditsForPurchaseIfNeeded(purchase.id);
+          throw error;
+        }
+        break;
       case 'store_slot_2':
       case 'store_slot_3':
       case 'store_bundle_3':
@@ -1021,19 +1183,7 @@ export class PlatformPurchaseService {
   async listAdmin(filters: {
     page: number;
     limit: number;
-    type?:
-      | 'listing_boost'
-      | 'featured_slot'
-      | 'fast_track_verification'
-      | 'store_slot_2'
-      | 'store_slot_3'
-      | 'store_bundle_3'
-      | 'buyer_statement'
-      | 'seller_growth_pack'
-      | 'ai_credit_2'
-      | 'ai_credit_5'
-      | 'ai_credit_10'
-      | 'featured_store';
+    type?: PlatformPurchase['type'];
     status?: 'pending' | 'succeeded' | 'failed' | 'refunded';
     userId?: string;
   }) {
@@ -1330,6 +1480,7 @@ export class PlatformPurchaseService {
       | 'featured_slot'
       | 'fast_track_verification'
       | 'early_cashback_unlock'
+      | 'priority_message'
       | 'store_slot_2'
       | 'store_slot_3'
       | 'store_bundle_3'

@@ -19,7 +19,8 @@ export type LedgerEntryType = 'credit' | 'debit';
 
 export type RefundStatus = 'pending' | 'approved' | 'rejected' | 'processed';
 
-export type DisputeStatus =
+/** Stripe / provider chargeback lifecycle — distinct from MarketplaceDisputeStatus. */
+export type PaymentDisputeStatus =
   | 'open'
   | 'under_review'
   | 'won'
@@ -140,7 +141,7 @@ export interface PaymentDispute {
   id: string;
   paymentId: string;
   providerDisputeId: string;
-  status: DisputeStatus;
+  status: PaymentDisputeStatus;
   reason?: string;
   evidence?: Record<string, unknown>;
   createdAt: string;

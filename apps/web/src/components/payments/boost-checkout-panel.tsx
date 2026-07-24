@@ -160,7 +160,7 @@ export function BoostCheckoutPanel({
   const useStripeElements = Boolean(stripePromise && !isDevClientSecret(clientSecret));
   const creditHint =
     intent.creditsApplied != null && intent.creditsApplied > 0
-      ? `Applying €${intent.creditsApplied.toFixed(2)} credit` +
+      ? `Applying €${intent.creditsApplied.toFixed(2)} SellNearby Credit` +
         (intent.amountDue != null ? ` · card due €${intent.amountDue.toFixed(2)}` : '')
       : null;
 

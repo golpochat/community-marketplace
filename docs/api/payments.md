@@ -43,8 +43,8 @@ X-Device-Fingerprint: <fingerprint>
 
 {
   "country": "US",
-  "returnUrl": "https://app.example/seller/earnings",
-  "refreshUrl": "https://app.example/seller/earnings"
+  "returnUrl": "https://app.example/account/earnings",
+  "refreshUrl": "https://app.example/account/earnings"
 }
 ```
 

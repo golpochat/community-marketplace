@@ -6,16 +6,21 @@ export const RBAC_ROLES = ['SUPER_ADMIN', 'ADMIN', 'MEMBER', 'SELLER', 'BUYER'] 
 export const USER_ROLES = RBAC_ROLES;
 export const USER_STATUSES = ['active', 'inactive', 'suspended'] as const;
 
+/** Keep in sync with Prisma `ListingStatus` and `@community-marketplace/types` ListingStatus. */
 export const LISTING_STATUSES = [
   'draft',
   'pending_review',
   'active',
+  'reserved',
   'paused',
   'expired',
   'sold',
   'ended',
   'removed',
   'rejected',
+  'flagged',
+  'under_investigation',
+  'suspended_seller',
 ] as const;
 export const LISTING_CONDITIONS = ['new', 'like_new', 'good', 'fair', 'poor'] as const;
 

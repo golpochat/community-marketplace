@@ -43,8 +43,8 @@ git pull origin main
 # then reindex categories from admin Search if needed
 ```
 
-1. [ ] Deploy `main` + migrations on VPS
-2. [ ] Run `haram-rollout-apply.js` against prod DB (or enable filters + flags via admin UI)
+1. [x] Deploy `main` + migrations on VPS
+2. [x] Run rollout against prod DB (`keywordFilters.enabled` + restricted categories)
 3. [ ] Reindex categories (admin Search)
 4. [ ] Smoke-test one hard-term listing create and one image upload with a banned filename
 

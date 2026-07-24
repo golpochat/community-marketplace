@@ -24,6 +24,14 @@ export class ChatInboxService {
     }>(cacheKey);
     if (cached) return cached;
 
+    const now = new Date();
+    await this.prisma.chatThread.updateMany({
+      where: {
+        priorityBoostUntil: { lt: now },
+      },
+      data: { priorityBoostUntil: null },
+    });
+
     const where = {
       OR: [{ buyerId: userId }, { sellerId: userId }],
       ...(query.includeArchived
@@ -42,7 +50,10 @@ export class ChatInboxService {
       this.prisma.chatThread.findMany({
         where,
         include: threadInclude,
-        orderBy: { lastMessageAt: 'desc' },
+        orderBy: [
+          { priorityBoostUntil: { sort: 'desc', nulls: 'last' } },
+          { lastMessageAt: { sort: 'desc', nulls: 'last' } },
+        ],
         skip: (query.page - 1) * query.limit,
         take: query.limit,
       }),
@@ -68,6 +79,7 @@ export class ChatInboxService {
           lastMsg ? mapChatMessage(lastMsg) : undefined,
           unreadCount,
           userId,
+          now,
         );
       }),
     );

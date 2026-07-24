@@ -92,7 +92,7 @@ export function AiCreditPackDialog({
           id="ai-credit-pack-dialog-title"
           className="text-lg font-semibold text-[hsl(var(--dashboard-main-fg))]"
         >
-          Top up AI credits
+          Top up SellNearby Credit
         </h2>
         <p className="mt-1 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
           Add SellNearby Credit for Marketing Hub overage (€0.05 per unit after your free
@@ -139,7 +139,7 @@ export function AiCreditPackDialog({
             <BoostCheckoutPanel
               intent={intent}
               confirmPurchase={monetizationService.confirmAiCreditPack}
-              confirmLabel="Pay for AI credits"
+              confirmLabel="Pay for SellNearby Credit"
               onSuccess={() => {
                 onSuccess();
                 onClose();

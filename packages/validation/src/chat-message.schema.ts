@@ -13,6 +13,8 @@ export const chatMessageSchema = z.object({
   content: z.string().min(1).max(4000),
   messageType: chatMessageTypeSchema,
   attachmentUrl: z.string().url().optional(),
+  isPriority: z.boolean().optional(),
+  priorityUntil: isoDateSchema.optional(),
   readBy: z.array(uuidSchema),
   editedAt: isoDateSchema.optional(),
   deletedAt: isoDateSchema.optional(),
@@ -26,6 +28,7 @@ export const chatThreadSchema = z.object({
   listingId: uuidSchema,
   lastMessageAt: isoDateSchema.optional(),
   lastMessagePreview: z.string().max(500).optional(),
+  priorityBoostUntil: isoDateSchema.optional(),
   isBlocked: z.boolean(),
   blockedBy: uuidSchema.optional(),
   archivedByBuyer: z.boolean(),
@@ -49,6 +52,8 @@ export const sendChatMessageSchema = z.object({
   content: z.string().min(1).max(4000),
   messageType: chatMessageTypeSchema.default('text'),
   attachmentUrl: z.string().url().optional(),
+  /** Succeeded priority_message platform purchase to consume for this send. */
+  platformPurchaseId: uuidSchema.optional(),
 });
 
 export const editChatMessageSchema = z.object({

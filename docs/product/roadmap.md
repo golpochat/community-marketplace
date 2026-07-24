@@ -1,11 +1,12 @@
 # Product Roadmap
 
-> **Status:** Living roadmap · **Last updated:** 2026-07-23  
-> **Canonical monetization detail:** [master-blueprint-v1.md](./master-blueprint-v1.md)  
+> **Status:** Living roadmap · **Last updated:** 2026-07-24  
+> **Canonical monetization detail:** [master-blueprint-v1.md](./master-blueprint-v1.md) (§4 · §12 bootstrap execution · Appendix D)  
 > **Launch readiness:** [launch-checklist.md](./launch-checklist.md)
 
 Timeline below reflects **what is shipped in code** vs **what remains planned**. Calendar quarters are indicative, not commitments.
 
+**Canonical growth stance:** **Bootstrap** — solo · **€30–€50/month** marketing · Year-1 revenue **€3k–€15k** · **ops cash BEP ~3–8 months** then reinvest ([§12.13](./master-blueprint-v1.md#1213-break-even--reinvest-rules)) · €95k ~**24–36 months**. Execute: [§12](./master-blueprint-v1.md#12-year-1-execution-plan).
 ## Shipped foundation (2026)
 
 - [x] Monorepo (pnpm) · NestJS API · Next.js `apps/web` (marketplace + `/admin` + `/super-admin`)
@@ -28,7 +29,8 @@ Timeline below reflects **what is shipped in code** vs **what remains planned**.
 | Area | Focus |
 |------|--------|
 | Ops / legal | Prod deploy checklist, Stripe live, SendGrid, lawyer-reviewed legal pack |
-| Monetization | Enable priority message when ready; buyer protection (legal); optional extra package merchandising |
+| GTM / liquidity | Bootstrap §12: solo, €30–50/mo, Dublin wedge, gradual GMV — [§12](./master-blueprint-v1.md#12-year-1-execution-plan) |
+| Monetization | Buyer protection (legal); optional extra package merchandising; priority message ✅ |
 | AI Hub | Video / forecast only after pilot demand |
 | Ads | Self-serve brand portal remains **Enterprise** (admin MVP already live) |
 | Account UX | Continue consolidating on `/account/*`; retire parallel buyer/seller trees when ready |
@@ -74,3 +76,8 @@ gantt
 | 2026-07 | Unified `/account` hub | MEMBER default role; buyer/seller namespaces legacy |
 | 2026-07-22 | Roadmap rewritten to match shipped code | Prior placeholder timeline was obsolete |
 | 2026-07-23 | Monetization status corrected | Buyer/seller SKUs beyond Phase 3 marked live where coded |
+| 2026-07-23 | Revenue sanity + competitive GTM in blueprint | Operating €95–120k vs stretch ~€165–175k; multi-home wedge vs DoneDeal/FB |
+| 2026-07-23 | §12 Year-1 execution plan added | Operating-first GMV phases, Month-6 gate, 14-day checklist |
+| 2026-07-23 | Marketing & CAC budget in blueprint | Organic €35–80k vs paid €120–250k; contribution after marketing |
+| 2026-07-24 | Bootstrap default locked | Solo + €30–50/mo; Year-1 €3–15k revenue; €95k ~24–36 mo |
+| 2026-07-24 | §12.13 BEP + reinvest | Ops cash BEP ~3–8 mo; pocket €0 after stable BEP; reinvest surplus |

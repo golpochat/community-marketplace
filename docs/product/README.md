@@ -4,7 +4,7 @@
 
 | Document | Description |
 |----------|-------------|
-| **[master-blueprint-v1.md](./master-blueprint-v1.md)** | **Canonical** — sections 0–10 (executive blueprint) + appendices A–L (full detail from all planning docs) |
+| **[master-blueprint-v1.md](./master-blueprint-v1.md)** | **Canonical** — sections 0–12 + appendices A–L; **bootstrap default** (§4, §12): solo + €30–50/mo marketing |
 
 ## Core product
 

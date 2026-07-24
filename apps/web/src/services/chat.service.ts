@@ -45,7 +45,13 @@ export const chatService = {
     return response;
   },
 
-  async sendMessage(threadId: string, content: string, messageType: 'text' | 'image' = 'text', attachmentUrl?: string) {
+  async sendMessage(
+    threadId: string,
+    content: string,
+    messageType: 'text' | 'image' = 'text',
+    attachmentUrl?: string,
+    platformPurchaseId?: string,
+  ) {
     const response = await apiClient<ChatMessage>(WEB_API_ROUTES.chat.messages, {
       method: 'POST',
       body: JSON.stringify({
@@ -53,6 +59,7 @@ export const chatService = {
         content,
         messageType,
         ...(attachmentUrl ? { attachmentUrl } : {}),
+        ...(platformPurchaseId ? { platformPurchaseId } : {}),
       }),
     });
     return response.data;

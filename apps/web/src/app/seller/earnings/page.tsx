@@ -29,11 +29,12 @@ const PLATFORM_PURCHASE_LABELS: Record<PlatformPurchase['type'], string> = {
   store_bundle_3: 'Store slot bundle',
   buyer_statement: 'Purchase statement',
   seller_growth_pack: 'Seller Growth Pack',
-  ai_credit_2: 'AI Credits (€2)',
-  ai_credit_5: 'AI Credits (€5)',
-  ai_credit_10: 'AI Credits (€10)',
+  ai_credit_2: 'SellNearby Credit pack (€2)',
+  ai_credit_5: 'SellNearby Credit pack (€5)',
+  ai_credit_10: 'SellNearby Credit pack (€10)',
   featured_store: 'Featured storefront',
   early_cashback_unlock: 'Early cashback unlock',
+  priority_message: 'Priority message',
 };
 
 function currentStatementDefaults() {

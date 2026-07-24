@@ -31,6 +31,7 @@ export const STATIC_SITEMAP_PATHS = [
 export const ROBOTS_DISALLOW_PATHS = [
   '/admin',
   '/super-admin',
+  '/account',
   '/seller',
   '/buyer',
   '/auth',

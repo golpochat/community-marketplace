@@ -143,7 +143,7 @@ export function SellerMarketingHubPage() {
                     size="sm"
                     onClick={() => setCreditPackOpen(true)}
                   >
-                    Top up credits
+                    Top up SellNearby Credit
                   </Button>
                   <Button
                     type="button"
