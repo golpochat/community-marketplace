@@ -229,7 +229,7 @@ All prices **EUR (€)**. Admin-configurable via `platform_settings.pricing` JSO
 
 **In (shipped):** Boost prices, Stripe payment, `boostedUntil`, ranking bump, badge, `PlatformPurchase`, 8% on verify approve.
 
-**Deferred after Phase 1 (status as of 2026-07-23):** buyer protection (5), priority message fulfillment, Starter/Pro/Premium package ledger (6), urgent badge, auto-refresh. *(Wallet spend, featured, fast-track, Growth Pack / AI packs / store slots have since shipped — see [§1.2](#12-revenue-streams).)*
+**Deferred after Phase 1 (status as of 2026-07-24):** buyer protection (5), Starter/Pro/Premium package ledger (6), urgent badge, auto-refresh. *(Wallet spend, featured, fast-track, Growth Pack / AI packs / store slots, and priority message have since shipped — see [§1.2](#12-revenue-streams).)*
 
 ---
 
@@ -1418,7 +1418,7 @@ On admin verification **approve**, auto-set `custom_platform_fee_percent = 8` un
 
 ### Phase 2 — Wallet spend (credit economy) ✅
 
-**Shipped:** Apply SellNearby Credit to **listing boosts**, **fast-track verification**, and **early cashback unlock** (€0.99; full or partial; card covers remainder).
+**Shipped:** Apply SellNearby Credit to **listing boosts**, **fast-track verification**, **early cashback unlock** (€0.99), and **priority message** (€0.49; full or partial; card covers remainder).
 
 **Timeline:** 2–3 weeks · **Status:** ✅ Live · **Depends on:** Phase 1 boosts
 
