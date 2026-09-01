@@ -8,6 +8,7 @@ Step-by-step procedures for deployments and incidents.
 |---------|-------------|
 | **[Pilot kickoff](./pilot-kickoff.md)** | Closed pilot: deploy, Stripe, email, invite users |
 | **[Pilot VPS day-by-day](./pilot-vps-day-by-day.md)** | Granular checklist: R2, email, Stripe, deploy |
+| **[Pilot testing](./pilot-testing.md)** | Full QA matrix: what to test, expect, options, sign-off |
 | **[OVH VPS deploy](./ovh-vps-deploy.md)** | Docker deploy on OVH for `sellnearby.ie` |
 | **[Pilot feedback](./pilot-feedback.md)** | Google Form setup, invite copy, check-in scripts |
 

@@ -807,6 +807,7 @@ Former capital bands (€35k–€80k marketing) remain **optional** if you late
 - [ ] Aim for **first card sale** (even €20)  
 - [ ] Book a recurring weekly GTM block (e.g. 3× 2 hours)  
 - [ ] Write down your **ops burn** (VPS + tools + ≤ €50) — BEP target in [§12.13](#1213-break-even--reinvest-rules)  
+- [ ] Start [§12.14](#1214-first-customer-onboarding-free--cheapest): DM 5 sellers; get 1–2 listings live  
 
 ### 12.12 Marketing & CAC budget (bootstrap)
 
@@ -921,6 +922,73 @@ AFTER stable ops BEP (3 consecutive months fee ≥ ops burn):
 | Pocket top-up this month | €0 after stable BEP |
 
 **Canonical references:** [§4.1](#41-planning-stance) · [§4.3](#43-marketplace-marketing-expenditure-required) · [§12.12](#1212-marketing--cac-budget).
+
+### 12.14 First customer onboarding (free / cheapest)
+
+> **Rule:** Onboard **sellers before buyers**. Empty inventory + “we launched” posts wastes time. Concierge supply + **listing URLs** for demand is the efficient bootstrap path. Cost: **€0** (optional rare €10–20 from the €30–50/mo cap).
+
+#### Who is a “customer” at the start?
+
+| Side | Priority | Why |
+|------|----------|-----|
+| **Sellers (supply)** | **First** | No listings → nowhere to send buyers |
+| **Buyers (demand)** | Second | Arrive via a **specific live listing**, not an empty homepage |
+
+#### Seller onboarding (you as concierge)
+
+| Step | Action |
+|------|--------|
+| 1 | Find active Dublin (or wedge) sellers on DoneDeal / Facebook Marketplace in your niche |
+| 2 | Personal DM (not a blast) — offer free setup help this week |
+| 3 | Walk them through: register → storefront name → 1–3 listings → Stripe Connect |
+| 4 | Approve listing fast; fix photos/price if needed |
+| 5 | Ask them to **add the SellNearby link** on their DoneDeal/FB ad (multi-home) |
+
+**DM script:**
+
+> Hi — I’m building SellNearby.ie (card checkout + verified sellers, family-safe). Free to list. If you want, I’ll help you put 1–2 items up this week for Dublin buyers. No fees to list.
+
+**Pace:** **3–5 serious sellers/week** — not 50 cold messages.  
+**Promo (optional):** waive first boost for sellers who complete a card sale — **max 5–10 total** ([§12.12](#1212-marketing--cac-budget)).
+
+#### Buyer onboarding (self-serve via listing)
+
+| Do | Don’t |
+|----|--------|
+| Share a **listing URL** in WhatsApp / community groups | “Check out our new marketplace!” with no stock |
+| Copy: card pay + verified seller (when true) | Generic brand posts only |
+| Ask the **seller** to share their link too | You alone carrying all demand |
+
+Buyer path: open listing → chat or **Buy now** → card pay. Keep product onboarding thin — one clear CTA, no tutorial walls. Optional founder follow-up after first sale: “How did it go?”
+
+#### Free channels (ranked)
+
+| Rank | Channel | How |
+|------|---------|-----|
+| 1 | Warm network | Friends/community who sell or buy locally |
+| 2 | Personal DMs to active sellers | DoneDeal/FB + setup help |
+| 3 | Community groups | 2–3×/week — **listing links only** |
+| 4 | Seller multi-home | SellNearby link on their other ads |
+| 5 | In-person | Society / centre / stall — QR to a listing or “list with me today” |
+| 6 | SEO | Later — only when ≥20 live items in that niche |
+
+**Skip for now:** always-on Meta/Google, influencers, paid sponsorships, flyers at scale.
+
+#### Weekly rhythm (solo)
+
+| Block | Action |
+|-------|--------|
+| 2–3× | Message ~5 sellers; aim 1–2 newly live |
+| 1× | Unblock Connect / photos for stuck sellers |
+| 1× | Post 2–3 **live** listing links in groups |
+| Fri | Log: new sellers, live listings, card sales (+ [§12.13](#1213-break-even--reinvest-rules) fee vs burn) |
+
+#### Efficiency rule
+
+**1 hour helping a seller list + Connect > 10 hours of “we launched” posts.**  
+**1 shared listing that sells > 100 empty homepage visits.**
+
+See also: [§12.5](#125-phase-1--first-loop-months-1-3) · [§12.8](#128-channel-playbook-050mo) · [§12.11](#1211-next-14-days-checklist).
 
 ---
 
@@ -1770,6 +1838,7 @@ See [monetization-revenue-model.md](#appendix-d--revenue-projection-model-detail
 | 2026-07-23 | §4.3 / §12.12 marketing & CAC budget | Organic €35–80k vs paid €120–250k; contribution after cashback + marketing |
 | 2026-07-24 | Bootstrap default (solo + €30–50/mo) | Year-1 revenue €3–15k; €95k deferred ~24–36 mo; capital bands optional |
 | 2026-07-24 | §12.13 ops cash BEP + reinvest rules | Stop pocket ASAP (~3–8 mo); grow from surplus after stable BEP |
+| 2026-07-24 | §12.14 first customer onboarding | Sellers-first concierge; listing URLs; free channel rank |
 
 ---
 
@@ -4792,4 +4861,4 @@ This Master Blueprint defines **monetization, pricing, rollout, revenue model, c
 
 **Revenue stance (canonical):** **Bootstrap** — solo · **€30–€50/mo** marketing · Year-1 revenue **€3k–€15k** · **ops cash BEP ~3–8 months** then reinvest profit ([§12.13](#1213-break-even--reinvest-rules)) · €95k deferred **~24–36 months** ([§4](#4-revenue-projection-12-months), [§12](#12-year-1-execution-plan)). Positioning: [§11](#11-competitive-positioning--year-1-gtm).
 
-**Next step:** Run [§12.11](#1211-next-14-days-checklist) — Phase 0, wedge, first sales — and track fee vs ops burn per [§12.13](#1213-break-even--reinvest-rules). Live monetization: [§1.2](#12-revenue-streams), [monetization.md](./monetization.md).
+**Next step:** Run [§12.11](#1211-next-14-days-checklist) + [§12.14](#1214-first-customer-onboarding-free--cheapest) (sellers first, listing links) — track fee vs ops burn per [§12.13](#1213-break-even--reinvest-rules). Live monetization: [§1.2](#12-revenue-streams), [monetization.md](./monetization.md).

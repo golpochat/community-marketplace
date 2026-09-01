@@ -508,6 +508,8 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 
 Run on **staging**, then **production** after each deploy. See also [troubleshooting](../troubleshooting.md).
 
+> **Full pilot QA script** (steps, expectations, env differences, refunds, haram, sign-off): [pilot-testing.md](../runbooks/pilot-testing.md)
+
 ### Authentication & users
 
 - [ ] Register → activation email → activate → login

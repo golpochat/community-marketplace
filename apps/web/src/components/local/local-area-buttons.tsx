@@ -1,10 +1,14 @@
 'use client';
 
+import { useRef, type PointerEvent as ReactPointerEvent } from 'react';
+
 import type { NearbyArea } from '@community-marketplace/types';
 import { cn } from '@community-marketplace/ui';
 import { DEFAULT_NEARBY_RADIUS_KM } from '@community-marketplace/utils';
 
 import type { LocalFilterMode } from '@/hooks/use-user-location';
+
+const DRAG_THRESHOLD_PX = 6;
 
 interface LocalAreaButtonsProps {
   areas: NearbyArea[];
@@ -27,6 +31,14 @@ export function LocalAreaButtons({
   onFilterChange,
   className,
 }: LocalAreaButtonsProps) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    scrollLeft: number;
+    moved: boolean;
+  } | null>(null);
+
   const chipClass = (active: boolean) =>
     cn(
       'shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors',
@@ -34,19 +46,78 @@ export function LocalAreaButtons({
       loading && 'opacity-60',
     );
 
+  const handleFilterClick = (filter: LocalFilterMode) => {
+    if (dragRef.current?.moved) return;
+    onFilterChange(filter);
+  };
+
+  const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      scrollLeft: scroller.scrollLeft,
+      moved: false,
+    };
+    scroller.setPointerCapture(event.pointerId);
+  };
+
+  const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const scroller = scrollerRef.current;
+    if (!drag || !scroller || drag.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - drag.startX;
+    if (!drag.moved && Math.abs(deltaX) < DRAG_THRESHOLD_PX) return;
+
+    drag.moved = true;
+    scroller.scrollLeft = drag.scrollLeft - deltaX;
+    scroller.dataset.dragging = 'true';
+  };
+
+  const endDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const scroller = scrollerRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+
+    if (scroller?.hasPointerCapture(event.pointerId)) {
+      scroller.releasePointerCapture(event.pointerId);
+    }
+    delete scroller?.dataset.dragging;
+
+    // Keep moved=true briefly so the chip click that follows a drag is ignored.
+    if (drag.moved) {
+      window.setTimeout(() => {
+        if (dragRef.current === drag) dragRef.current = null;
+      }, 0);
+      return;
+    }
+
+    dragRef.current = null;
+  };
+
   return (
     <div
+      ref={scrollerRef}
       className={cn(
-        'flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        'flex cursor-grab gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+        'select-none touch-pan-x data-[dragging=true]:cursor-grabbing data-[dragging=true]:[&_button]:pointer-events-none',
         className,
       )}
       role="toolbar"
       aria-label="Local area filters"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
     >
       <button
         type="button"
         disabled={loading}
-        onClick={() => onFilterChange('all')}
+        onClick={() => handleFilterClick('all')}
         className={chipClass(activeFilter === 'all')}
       >
         All nearby (within {radiusKm} km)
@@ -55,7 +126,7 @@ export function LocalAreaButtons({
       <button
         type="button"
         disabled={loading}
-        onClick={() => onFilterChange('free')}
+        onClick={() => handleFilterClick('free')}
         className={chipClass(activeFilter === 'free')}
       >
         Free-priced items
@@ -66,7 +137,7 @@ export function LocalAreaButtons({
           key={area.slug}
           type="button"
           disabled={loading}
-          onClick={() => onFilterChange({ area: area.name })}
+          onClick={() => handleFilterClick({ area: area.name })}
           className={chipClass(isAreaActive(activeFilter, area.name))}
         >
           {area.name}

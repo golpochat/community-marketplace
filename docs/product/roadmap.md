@@ -29,7 +29,7 @@ Timeline below reflects **what is shipped in code** vs **what remains planned**.
 | Area | Focus |
 |------|--------|
 | Ops / legal | Prod deploy checklist, Stripe live, SendGrid, lawyer-reviewed legal pack |
-| GTM / liquidity | Bootstrap §12: solo, €30–50/mo, Dublin wedge, gradual GMV — [§12](./master-blueprint-v1.md#12-year-1-execution-plan) |
+| GTM / liquidity | Bootstrap §12: solo, €30–50/mo, sellers-first onboarding ([§12.14](./master-blueprint-v1.md#1214-first-customer-onboarding-free--cheapest)), ops BEP ([§12.13](./master-blueprint-v1.md#1213-break-even--reinvest-rules)) |
 | Monetization | Buyer protection (legal); optional extra package merchandising; priority message ✅ |
 | AI Hub | Video / forecast only after pilot demand |
 | Ads | Self-serve brand portal remains **Enterprise** (admin MVP already live) |
@@ -81,3 +81,4 @@ gantt
 | 2026-07-23 | Marketing & CAC budget in blueprint | Organic €35–80k vs paid €120–250k; contribution after marketing |
 | 2026-07-24 | Bootstrap default locked | Solo + €30–50/mo; Year-1 €3–15k revenue; €95k ~24–36 mo |
 | 2026-07-24 | §12.13 BEP + reinvest | Ops cash BEP ~3–8 mo; pocket €0 after stable BEP; reinvest surplus |
+| 2026-07-24 | §12.14 first onboarding | Sellers-first concierge + listing URLs; free channels |
