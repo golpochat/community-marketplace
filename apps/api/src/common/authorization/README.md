@@ -6,7 +6,7 @@ Reusable NestJS authorization layer. Designed for extraction into a dedicated au
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  Controllers — @RequireRole / @RequirePermissions     │
+│  Controllers — @Public / @Authenticated / @RequireRole / @RequirePermissions │
 └──────────────────────────┬──────────────────────────────┘
                            │
 ┌──────────────────────────▼──────────────────────────────┐
@@ -33,7 +33,7 @@ Reusable NestJS authorization layer. Designed for extraction into a dedicated au
 
 ```typescript
 import { PERMISSIONS } from '@community-marketplace/types';
-import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
+import { Authenticated, RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 
 @RequireRole('ADMIN', 'SUPER_ADMIN')
 @Controller('admin')
@@ -41,6 +41,13 @@ export class AdminController {
   @RequirePermissions(PERMISSIONS.VIEW_USERS)
   @Get('users')
   listUsers() { /* ... */ }
+}
+
+@Authenticated()
+@Controller('users')
+export class UsersController {
+  @Get('me')
+  getMe() { /* any signed-in user */ }
 }
 ```
 
@@ -59,6 +66,10 @@ async doAction(user: AuthenticatedUser) {
 ## Per-user permission overrides
 
 Two `ADMIN` users can differ: `user_permissions` with `GRANT`/`DENY` overrides are merged in `computeEffectivePermissions()` (deny wins over role grants).
+
+## Fail-closed policy
+
+Non-`@Public()` handlers must declare `@Authenticated()`, `@RequireRole`, `@RequirePermissions`, or `@RequireAnyPermission`. Missing metadata is a 403 — not an implicit allow.
 
 ## Microservice extraction
 

@@ -53,7 +53,19 @@ jobs:
         run: pnpm --filter @community-marketplace/api exec prisma migrate deploy
 
       - name: Integration tests
-        run: pnpm --filter @community-marketplace/api test
+        run: pnpm --filter @community-marketplace/api test:coverage
+
+      - name: Web tests
+        run: pnpm --filter @community-marketplace/web test
+
+      - name: Filesystem vulnerability scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+          ignore-unfixed: true
 
   build:
     runs-on: ubuntu-latest
@@ -92,7 +104,14 @@ jobs:
       - name: Build packages & apps
         run: |
           pnpm --filter "./packages/*" build
-          pnpm --filter "./apps/*" build
+          pnpm --filter @community-marketplace/web build
+          pnpm --filter @community-marketplace/api build
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @community-marketplace/web exec playwright install --with-deps chromium
+
+      - name: Browser smoke
+        run: pnpm --filter @community-marketplace/web test:e2e
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

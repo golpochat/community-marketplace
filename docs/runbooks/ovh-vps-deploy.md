@@ -65,6 +65,7 @@ nano .env.prod
 | `JWT_SECRET` | `openssl rand -hex 32` |
 | `MEILI_MASTER_KEY` | `openssl rand -hex 32` |
 | `GRAFANA_PASSWORD` | strong password (optional stack) |
+| `METRICS_SCRAPE_TOKEN` | `openssl rand -hex 32` (same value in `infra/observability/metrics.token` for Prometheus) |
 
 Leave Stripe/SendGrid/R2 empty for first boot — add before real users.
 

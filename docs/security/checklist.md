@@ -31,6 +31,7 @@ Use before opening a PR that touches auth, payments, admin, or user data.
 - [ ] No secrets committed (`.env` gitignored)
 - [ ] New env vars in `.env.example` + `packages/config`
 - [ ] CORS origins not widened to `*` in production
+- [ ] `/api/metrics` is not reachable without `METRICS_SCRAPE_TOKEN`
 
 ## Dependencies
 

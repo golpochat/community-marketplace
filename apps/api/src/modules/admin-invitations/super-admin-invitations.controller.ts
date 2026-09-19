@@ -1,12 +1,12 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
+import { createAdminInvitationSchema } from '@community-marketplace/validation';
 
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { AdminInvitationsService } from './admin-invitations.service';
-import { CreateAdminInvitationDto } from './dto/admin-invitations.dto';
 
 @RequireRole('SUPER_ADMIN')
 @Controller('super-admin/invitations')
@@ -27,8 +27,8 @@ export class SuperAdminInvitationsController {
 
   @RequirePermissions(PERMISSIONS.MANAGE_ADMINS)
   @Post()
-  createInvitation(@CurrentUser() actor: AuthenticatedUser, @Body() dto: CreateAdminInvitationDto) {
-    return this.invitations.createInvitation(actor, dto);
+  createInvitation(@CurrentUser() actor: AuthenticatedUser, @Body() body: unknown) {
+    return this.invitations.createInvitation(actor, createAdminInvitationSchema.parse(body));
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_ADMINS)

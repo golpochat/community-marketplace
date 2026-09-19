@@ -1,12 +1,10 @@
 import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 
-import { PERMISSIONS } from '@community-marketplace/types';
-import { updateProfileSchema } from '@community-marketplace/validation';
+import { legacyCreateReportSchema, updateProfileSchema } from '@community-marketplace/validation';
 
-import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
+import { RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
-import { CreateReportDto } from '../moderation/dto/moderation.dto';
 import { ModerationService } from '../moderation/moderation.service';
 import { UsersService } from '../users/users.service';
 
@@ -30,7 +28,7 @@ export class BuyerProfileController {
   }
 
   @Post('reports')
-  createReport(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateReportDto) {
-    return this.moderationService.createReport(user.id, dto);
+  createReport(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.moderationService.createReport(user.id, legacyCreateReportSchema.parse(body));
   }
 }

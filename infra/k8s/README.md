@@ -6,24 +6,17 @@ Deployment and operations assets for Community Marketplace.
 
 ```
 infra/
-├── docker/
-│   ├── Dockerfile.api
-│   ├── Dockerfile.web
-│   ├── Dockerfile.admin
-│   ├── Dockerfile.meilisearch
-│   └── docker-compose.yml
-├── traefik/
-│   ├── traefik.yml
-│   └── dynamic/routes.yml
-├── scripts/
-│   ├── bootstrap.sh
-│   ├── deploy.sh
-│   ├── backup.sh
-│   └── restore.sh
+├── docker/             # Compose files + Dockerfiles (api, web, worker, redis, meilisearch)
+├── observability/      # Prometheus, Grafana, Loki, OTel Collector
+├── traefik/            # Reverse proxy / TLS
+├── scripts/            # Deploy, migrate, backup, restore
 └── k8s/
-    ├── base/           # Kustomize base manifests + HPA
+    ├── base/           # Kustomize base (ExternalSecrets, digest-unpinned app images)
+    ├── source-secrets/ # RBAC for cm-source-secrets (apply once per cluster)
+    ├── scripts/        # pin-and-apply.sh
     └── overlays/
         ├── dev/
+        ├── staging/
         └── prod/
 ```
 
@@ -31,11 +24,12 @@ infra/
 
 ```bash
 # Local stack
-./infra/scripts/deploy.sh dev
+docker compose -f infra/docker/docker-compose.dev.yml up -d postgres redis meilisearch
 
-# Backup
-./infra/scripts/backup.sh
-
-# Kubernetes (dev overlay)
-kubectl apply -k infra/k8s/overlays/dev
+# Kubernetes — pin digests after docker push (app images + redis/postgres/meilisearch)
+kubectl apply -k infra/k8s/source-secrets
+REGISTRY=ghcr.io/<org>/community-marketplace IMAGE_TAG=dev-<sha> \
+  bash infra/k8s/scripts/pin-and-apply.sh infra/k8s/overlays/dev
 ```
+
+See [`docs/infrastructure/README.md`](../../docs/infrastructure/README.md) and [`docs/runbooks/deploy.md`](../../docs/runbooks/deploy.md).

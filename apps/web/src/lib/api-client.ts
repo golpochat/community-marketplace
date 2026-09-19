@@ -7,6 +7,32 @@ import { unwrapApiResponse } from './normalize-api-response';
 import { isDashboardPath } from './route-guards';
 import { refreshClientSession, resolveClientAccessToken } from './web-session';
 
+let csrfToken: string | null = null;
+
+function isMutatingMethod(method: string | undefined): boolean {
+  const verb = (method ?? 'GET').toUpperCase();
+  return verb !== 'GET' && verb !== 'HEAD' && verb !== 'OPTIONS';
+}
+
+export async function ensureCsrfToken(): Promise<string> {
+  if (csrfToken) return csrfToken;
+  const response = await fetch(`${API_BASE_URL}/auth/csrf`, { credentials: 'include' });
+  if (!response.ok) {
+    throw new ApiClientError('Unable to issue CSRF token', response.status, 'CSRF_ISSUE_FAILED');
+  }
+  const json = (await response.json()) as ApiResponse<{ token: string }>;
+  const token = unwrapApiResponse(json).data?.token;
+  if (!token) {
+    throw new ApiClientError('CSRF token missing from response', 500, 'CSRF_ISSUE_FAILED');
+  }
+  csrfToken = token;
+  return token;
+}
+
+export function clearCsrfToken(): void {
+  csrfToken = null;
+}
+
 function redirectToLoginAfterSessionLoss(): void {
   if (typeof window === 'undefined') return;
   if (!isDashboardPath(window.location.pathname)) return;
@@ -58,6 +84,11 @@ export async function apiClient<T>(
   }
 
   let token = resolveClientAccessToken();
+  const method = (init.method ?? 'GET').toString();
+  const csrfHeader: Record<string, string> = {};
+  if (typeof window !== 'undefined' && isMutatingMethod(method)) {
+    csrfHeader['x-csrf-token'] = await ensureCsrfToken();
+  }
 
   const doFetch = (bearer: string | null) =>
     fetch(url.toString(), {
@@ -67,6 +98,7 @@ export async function apiClient<T>(
         'Content-Type': 'application/json',
         'X-Device-Fingerprint': getDeviceFingerprint(),
         ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+        ...csrfHeader,
         ...init.headers,
       },
     });
@@ -83,6 +115,14 @@ export async function apiClient<T>(
       );
     }
     throw err;
+  }
+
+  if (response.status === 403) {
+    clearCsrfToken();
+    if (typeof window !== 'undefined' && isMutatingMethod(method)) {
+      csrfHeader['x-csrf-token'] = await ensureCsrfToken();
+      response = await doFetch(token);
+    }
   }
 
   if (response.status === 401) {

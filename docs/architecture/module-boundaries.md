@@ -77,5 +77,5 @@ flowchart LR
 
 - [ ] Extract `search` indexing to async worker (`jobs` module)
 - [ ] Add `media` module for image upload / CDN
-- [ ] Introduce API gateway rate limiting at Traefik layer
-- [ ] Event-driven integration via message broker (replace in-process event bus)
+- [x] Introduce API gateway rate limiting at Traefik layer (plus Nest throttler)
+- [x] Durable domain events via BullMQ `domain-events` (chat fan-out stays sync)

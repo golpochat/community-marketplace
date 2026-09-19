@@ -54,7 +54,8 @@ community-marketplace/
 │   ├── types/            # Canonical TypeScript interfaces (RBAC, auth, domain)
 │   ├── validation/       # Shared Zod schemas
 │   ├── utils/            # Date, string, currency helpers
-│   └── ui/               # Shared React component library
+│   ├── ui/               # Shared React component library
+│   └── ui-dashboard/     # Role dashboard chrome (sidebars, themes)
 ├── docs/
 │   ├── README.md           # Master documentation index
 │   ├── architecture/       # System design, diagrams
@@ -69,14 +70,15 @@ community-marketplace/
 │   └── db/                 # Schema, ERD, migrations
 ├── infra/
 │   ├── docker/           # Docker Compose + Dockerfiles
-│   ├── k8s/              # Kubernetes base + dev/prod overlays
+│   ├── k8s/              # Kubernetes base + dev/staging/prod overlays
 │   ├── traefik/          # Reverse proxy / TLS
+│   ├── observability/    # Prometheus, Grafana, Loki, OTel Collector
 │   └── scripts/          # Deploy, migrate, seed, backup
 ├── package.json
 └── pnpm-workspace.yaml
 ```
 
-**Package build order:** `config → types → validation → utils → ui → apps`
+**Package build order:** `config → types → validation → utils → ui → ui-dashboard → apps`
 
 ---
 
@@ -88,26 +90,29 @@ community-marketplace/
 | **Frontend** | Next.js 15, React 19, Tailwind CSS, Zustand |
 | **Backend** | NestJS 10, Prisma ORM, Socket.IO |
 | **Database** | PostgreSQL 16 |
-| **Cache / queues** | Redis 7 (infra provisioned; BullMQ integration planned) |
+| **Cache / queues** | Redis 7 + BullMQ (`BULLMQ_MODE` producer / worker / both) |
 | **Search** | Meilisearch |
-| **Object storage** | Cloudflare R2 (planned for listing images) |
+| **Object storage** | Cloudflare R2 (avatars, listing images, verification docs; local `.data/uploads` fallback) |
 | **Payments** | Stripe Connect |
+| **Email** | Brevo (default) + SendGrid / SES adapters |
 | **Push** | Firebase Cloud Messaging (FCM) |
-| **Validation** | Zod (shared) + class-validator (API DTOs) |
-| **Infrastructure** | Docker Compose, Kubernetes, Traefik |
+| **Validation** | Zod (`packages/validation`) |
+| **Observability** | Pino, Prometheus `/api/metrics` (scrape token), Grafana, Loki, OpenTelemetry |
+| **Infrastructure** | Docker Compose, Kubernetes + External Secrets, Traefik |
 
 ---
 
 ## RBAC Model
 
-Four hierarchical roles with granular permissions:
+Marketplace members share one account; operators use admin personas.
 
 | Role | Scope | Default dashboard |
 |------|-------|-------------------|
-| `SUPER_ADMIN` | Full platform governance | `/super-admin/dashboard` (admin app) |
-| `ADMIN` | Operations, moderation, scoped RBAC delegation | `/admin/dashboard` (admin app) |
-| `SELLER` | Listings, sales, seller profile | `/seller/dashboard` (web app) |
-| `BUYER` | Purchases, reviews, buyer profile | `/buyer/dashboard` (web app) |
+| `SUPER_ADMIN` | Full platform governance | `/super-admin` |
+| `ADMIN` | Operations, moderation, scoped RBAC delegation | `/admin` |
+| `MEMBER` | Unified marketplace account (browse, buy; sell after onboarding) | `/account` |
+| `SELLER` | Legacy seller role (same `/account` chrome as `MEMBER`) | `/account` |
+| `BUYER` | Legacy buyer role (same `/account` chrome as `MEMBER`) | `/account` |
 
 **Permission model:**
 
@@ -171,7 +176,7 @@ pnpm install
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
 
-docker compose -f infra/docker/docker-compose.yml up -d
+docker compose -f infra/docker/docker-compose.dev.yml up -d postgres redis meilisearch
 
 pnpm --filter @community-marketplace/api prisma:generate
 pnpm --filter @community-marketplace/api prisma:migrate
@@ -230,6 +235,7 @@ pnpm dev
 | `JWT_SECRET` | JWT signing secret (≥ 16 chars) | Strong random value in prod |
 | `CORS_ORIGIN` | Allowed origins (comma-separated) | `http://localhost:3000` |
 | `WEB_APP_URL` | Activation email base URL | `http://localhost:3000` |
+| `REDIS_URL` | Redis for BullMQ + cache | `redis://localhost:6380` |
 | `STRIPE_SECRET_KEY` | Stripe API key | |
 | `OPENAI_API_KEY` | AI Marketing Hub text (primary) | Optional unless hub enabled |
 | `ANTHROPIC_API_KEY` | AI Marketing Hub text fallback | Optional; used if OpenAI fails or unset |
@@ -237,8 +243,12 @@ pnpm dev
 | `AI_MARKETING_ENABLED` | Hard kill switch for AI Marketing Hub (`false` disables) | Omit or `true` to allow |
 | `MEILISEARCH_HOST` | Search server | `http://localhost:7700` |
 | `MEILISEARCH_API_KEY` | Search API key | |
+| `R2_ACCOUNT_ID` | Cloudflare R2 account | Optional locally |
+| `R2_BUCKET` / `R2_PUBLIC_URL` | Object storage bucket + public base | See `.env.example` |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry collector | Optional |
+| `METRICS_SCRAPE_TOKEN` | Bearer token for `GET /api/metrics` (≥ 16 chars) | Required to scrape metrics |
 | `FCM_PROJECT_ID` | Firebase project | |
-| `RBAC_SEED_*` | Dev super-admin bootstrap | See `.env.example` |
+| `RBAC_SEED_*` | Dev bootstrap users | See `.env.example` |
 
 ### Web (`apps/web/.env`)
 
@@ -259,23 +269,24 @@ pnpm dev
 pnpm build
 docker build -f infra/docker/Dockerfile.api   -t cm-api .
 docker build -f infra/docker/Dockerfile.web   -t cm-web .
-docker build -f infra/docker/Dockerfile.admin -t cm-admin .
 docker compose -f infra/docker/docker-compose.yml up -d
 ```
 
 ### Kubernetes
 
-Manifests under `infra/k8s/` with `dev` and `prod` overlays. See [`infra/k8s/README.md`](infra/k8s/README.md).
+Manifests under `infra/k8s/` with `dev`, `staging`, and `prod` overlays. CI pins image digests via `infra/k8s/scripts/pin-and-apply.sh`. Secrets come from External Secrets (`cm-source-secrets`), not git. See [`infra/k8s/README.md`](infra/k8s/README.md) and [`docs/runbooks/deploy.md`](docs/runbooks/deploy.md).
 
 ### Production checklist
 
-- [ ] Set strong `JWT_SECRET`
+- [ ] Set strong `JWT_SECRET` and `METRICS_SCRAPE_TOKEN`
 - [ ] Enable `secure` cookies (`NODE_ENV=production`)
 - [ ] Wire SMS/email providers for OTP and activation
+- [ ] Configure R2 (or accept local upload fallback)
 - [ ] Run `prisma migrate deploy`
 - [ ] Seed RBAC (`pnpm seed:rbac`) or provision roles via migration
 - [ ] Configure Traefik TLS termination
 - [ ] Set up Meilisearch, Redis, PostgreSQL backups
+- [ ] Point Prometheus at `/api/metrics` with the scrape token
 
 ---
 
@@ -304,8 +315,6 @@ Manifests under `infra/k8s/` with `dev` and `prod` overlays. See [`infra/k8s/REA
 | Area | Planned work |
 |------|--------------|
 | **AI Marketing Hub (later)** | Template video / forecast, Zeely/Canva links |
-| **Redis** | BullMQ job queues, optional permission cache |
-| **Observability** | OpenAPI generation, structured logging, metrics |
 | **Auth** | Passkey/WebAuthn, social login, SMS provider integration |
 
 See [`docs/product/roadmap.md`](docs/product/roadmap.md) for detailed product planning.

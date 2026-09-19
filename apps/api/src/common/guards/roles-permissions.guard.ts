@@ -12,6 +12,7 @@ import type { PermissionCode, RbacRole, UserEffectivePermissions } from '@commun
 import { AuthorizationService } from '../authorization/authorization.service';
 import { hasAllPermissions, hasAnyPermission, hasAnyRole } from '../authorization/domain/effective-permissions';
 import {
+  IS_AUTHENTICATED_ONLY_KEY,
   REQUIRED_ANY_PERMISSIONS_KEY,
   REQUIRED_PERMISSIONS_KEY,
   REQUIRED_ROLES_KEY,
@@ -30,7 +31,8 @@ interface AuthorizedRequest {
  * 2. Applying per-user overrides (`user_permissions` GRANT / DENY)
  * 3. Caching the result on the request and `request.user.permissions`
  *
- * Enforces `@RequireRole`, `@RequirePermissions`, and `@RequireAnyPermission` metadata.
+ * Enforces `@RequireRole`, `@RequirePermissions`, `@RequireAnyPermission`,
+ * and `@Authenticated`. Non-public handlers without any of those fail closed.
  */
 @Injectable()
 export class RolesPermissionsGuard implements CanActivate {
@@ -64,15 +66,24 @@ export class RolesPermissionsGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
+    const isAuthenticatedOnly = this.reflector.getAllAndOverride<boolean>(
+      IS_AUTHENTICATED_ONLY_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
     const hasRbacRequirements =
       Boolean(requiredRoles?.length) ||
       Boolean(requiredPermissions?.length) ||
       Boolean(requiredAnyPermissions?.length);
 
+    if (!hasRbacRequirements && !isAuthenticatedOnly) {
+      throw new ForbiddenException('Route is missing authorization metadata');
+    }
+
     const request = context.switchToHttp().getRequest<AuthorizedRequest>();
     const user = request.user;
 
-    if (hasRbacRequirements && !user) {
+    if (!user) {
       throw new UnauthorizedException('Authentication required');
     }
 

@@ -54,7 +54,17 @@ flowchart TB
 
 **Compose:** `docker-compose.dev.yml` (local) · `docker-compose.prod.yml` (pilot/prod) — **no admin service**
 
-**Health:** `GET /api/health/live` · `GET /api/health/ready` · `GET /api/metrics`
+**Health:** `GET /api/health/live` · `GET /api/health/ready` · `GET /api/metrics` (scrape token)
+
+## Kubernetes
+
+Optional / future scaffolding:
+
+```
+infra/k8s/base/ + overlays/dev | staging | prod
+```
+
+App images are `*:unpinned` in git. CI runs `infra/k8s/scripts/pin-and-apply.sh` so apply uses registry digests. Secrets come from External Secrets (`cm-source-secrets`), not `CHANGE_ME` manifests. **Pilot production uses Docker Compose on OVH** — see [ovh-vps-deploy.md](../runbooks/ovh-vps-deploy.md).
 
 ## Feature flags
 
@@ -65,16 +75,6 @@ flowchart TB
 | `displayAdsEnabled` / `boostsEnabled` / `featuredEnabled` / `aiMarketingEnabled` | `platform_settings` publish toggles |
 | `AI_MARKETING_ENABLED` | AI Marketing Hub |
 | `OTP_PILOT_MODE` / `NEXT_PUBLIC_OTP_PILOT_MODE` | Log OTP / show pilot banner |
-
-## Kubernetes
-
-Optional / future scaffolding:
-
-```
-infra/k8s/base/ + overlays/dev | staging | prod
-```
-
-Includes leftover admin deployment manifests. **Pilot production uses Docker Compose on OVH** — see [ovh-vps-deploy.md](../runbooks/ovh-vps-deploy.md).
 
 ## CI/CD
 
@@ -94,7 +94,7 @@ See sections in this doc's extended reference — full detail preserved from Fea
 - **Monitoring:** Prometheus + Grafana + alerts (`infra/observability/`)
 - **Queues:** BullMQ with `BULLMQ_MODE` producer/worker split
 - **R2:** `user-avatars/`, `listing-images/`, `verification-documents/`, `system-assets/`
-- **Backups:** `infra/scripts/backup.sh`, `restore.sh`, `migrate.sh`, `deploy.sh`
+- **Backups:** nightly `pg_dump` CronJob, `pg_basebackup` + WAL archive for PITR (`restore-backup.md`), `infra/scripts/backup.sh`
 
 ## Operational runbooks
 

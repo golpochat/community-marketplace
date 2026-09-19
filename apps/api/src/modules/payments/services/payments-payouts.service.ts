@@ -6,7 +6,7 @@ import {
 
 import type { Payout, SellerEarningsSummary } from '@community-marketplace/types';
 import { DEFAULT_CURRENCY } from '@community-marketplace/config';
-import type { ManualPayoutInput } from '../dto/payments.dto';
+import type { ManualPayoutInput } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../../database/prisma.service';
 import { mapPayout } from '../mappers/payment.mapper';

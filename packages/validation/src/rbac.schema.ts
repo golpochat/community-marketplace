@@ -134,7 +134,18 @@ export const createRoleSchema = z.object({
     .regex(/^[A-Z][A-Z0-9_]*$/, 'Use uppercase letters, numbers, and underscores')
     .optional(),
   description: z.string().max(500).optional(),
-  template: z.enum(['blank', 'BUYER', 'SELLER', 'ADMIN']).default('blank'),
+  template: z
+    .enum([
+      'blank',
+      'MEMBER',
+      'BUYER',
+      'SELLER',
+      'ADMIN',
+      'ACCOUNTS_ADMIN',
+      'MODERATION_ADMIN',
+      'FINANCIAL_ADMIN',
+    ])
+    .default('blank'),
 });
 
 /** @deprecated System-only — use createRoleSchema for custom roles */

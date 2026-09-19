@@ -381,3 +381,16 @@ export type ListingAdminFiltersInput = z.infer<
   typeof listingAdminFiltersSchema
 >;
 export type UpdateCategoryFlagsInput = z.infer<typeof updateCategoryFlagsSchema>;
+
+export const createListingReviewSchema = z.object({
+  listingId: uuidSchema,
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().trim().max(2000).optional(),
+});
+
+export const createBuyerReviewSchema = createListingReviewSchema.extend({
+  buyerId: uuidSchema,
+});
+
+export type CreateListingReviewInput = z.infer<typeof createListingReviewSchema>;
+export type CreateBuyerReviewInput = z.infer<typeof createBuyerReviewSchema>;

@@ -1,11 +1,15 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
+import {
+  banUserSchema,
+  suspendUserSchema,
+  updateMarketplaceUserStatusSchema,
+} from '@community-marketplace/validation';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
-import { BanUserDto, SuspendUserDto, UpdateMarketplaceUserStatusDto } from './dto/users.dto';
 import { UsersService } from './users.service';
 
 @RequireRole('ADMIN', 'SUPER_ADMIN')
@@ -43,8 +47,8 @@ export class AdminUsersController {
 
   @RequirePermissions(PERMISSIONS.SUSPEND_USER)
   @Post('suspend')
-  suspendUser(@CurrentUser() actor: AuthenticatedUser, @Body() dto: SuspendUserDto) {
-    return this.usersService.suspendUser(actor.id, actor.role, dto);
+  suspendUser(@CurrentUser() actor: AuthenticatedUser, @Body() body: unknown) {
+    return this.usersService.suspendUser(actor.id, actor.role, suspendUserSchema.parse(body));
   }
 
   @RequirePermissions(PERMISSIONS.SUSPEND_USER)
@@ -58,15 +62,20 @@ export class AdminUsersController {
   updateUserStatus(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('id') id: string,
-    @Body() dto: UpdateMarketplaceUserStatusDto,
+    @Body() body: unknown,
   ) {
-    return this.usersService.updateMarketplaceUserStatus(actor.id, actor.role, id, dto);
+    return this.usersService.updateMarketplaceUserStatus(
+      actor.id,
+      actor.role,
+      id,
+      updateMarketplaceUserStatusSchema.parse(body),
+    );
   }
 
   @RequirePermissions(PERMISSIONS.BAN_USER)
   @Post('ban')
-  banUser(@CurrentUser() actor: AuthenticatedUser, @Body() dto: BanUserDto) {
-    return this.usersService.banUser(actor.id, actor.role, dto);
+  banUser(@CurrentUser() actor: AuthenticatedUser, @Body() body: unknown) {
+    return this.usersService.banUser(actor.id, actor.role, banUserSchema.parse(body));
   }
 
   @RequirePermissions(PERMISSIONS.BAN_USER)

@@ -2,23 +2,29 @@ import {
   BadRequestException,
   Controller,
   Headers,
-  Logger,
   Post,
   Req,
 } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
 import Stripe from 'stripe';
+import { SkipThrottle } from '@nestjs/throttler';
 
 import { Public } from '../../common/decorators/public.decorator';
+import { SkipCsrf } from '../../common/decorators/skip-csrf.decorator';
+import { LoggerLib } from '../../libs/logger.lib';
 import { PaymentsWebhooksService } from './services/payments-webhooks.service';
 
+@SkipThrottle({ default: true })
+@SkipCsrf()
 @Controller('payments/webhooks')
 export class PaymentsWebhooksController {
-  private readonly logger = new Logger(PaymentsWebhooksController.name);
   private readonly stripe: Stripe | null;
 
-  constructor(private readonly webhooks: PaymentsWebhooksService) {
+  constructor(
+    private readonly webhooks: PaymentsWebhooksService,
+    private readonly logger: LoggerLib,
+  ) {
     const apiKey = process.env.STRIPE_SECRET_KEY;
     this.stripe = apiKey ? new Stripe(apiKey) : null;
   }
@@ -47,7 +53,12 @@ export class PaymentsWebhooksController {
       try {
         event = this.stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
       } catch (error) {
-        this.logger.error('Stripe webhook signature verification failed', error);
+        const trace = error instanceof Error ? error.stack : String(error);
+        this.logger.error(
+          'PaymentsWebhooksController',
+          'Stripe webhook signature verification failed',
+          trace,
+        );
         throw new BadRequestException('Invalid Stripe webhook signature');
       }
     } else if (isProduction) {
@@ -60,7 +71,12 @@ export class PaymentsWebhooksController {
       const result = await this.webhooks.handleEvent(event);
       return result;
     } catch (error) {
-      this.logger.error(`Stripe webhook handler failed for ${event.type} (${event.id})`, error);
+      const trace = error instanceof Error ? error.stack : String(error);
+      this.logger.error(
+        'PaymentsWebhooksController',
+        `Stripe webhook handler failed for ${event.type} (${event.id})`,
+        trace,
+      );
       throw error;
     }
   }

@@ -19,7 +19,7 @@ pnpm dev:api
 pnpm --filter @community-marketplace/api start:worker
 ```
 
-Requires `REDIS_URL=redis://localhost:6379`.
+Requires `REDIS_URL=redis://localhost:6379`. Production refuses to start if Redis is missing or unreachable (no inline/in-memory fallback).
 
 ## Monitor
 

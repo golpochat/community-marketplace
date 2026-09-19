@@ -21,9 +21,15 @@ curl http://localhost:4000/api/health/ready
 **Manual (K8s):**
 
 ```bash
-kubectl apply -k infra/k8s/overlays/dev
+kubectl apply -k infra/k8s/source-secrets
+REGISTRY=ghcr.io/<org>/community-marketplace IMAGE_TAG=dev-<sha> \
+  bash infra/k8s/scripts/pin-and-apply.sh infra/k8s/overlays/dev
 kubectl rollout status deployment/dev-api -n community-marketplace
 ```
+
+`pin-and-apply.sh` pins app images plus `redis:7-alpine`, `postgres:16-alpine`, and `getmeili/meilisearch:v1.12` by digest.
+
+Source secrets (`api`, `postgres`, `meilisearch`) live in `cm-source-secrets`, not git. Install External Secrets Operator before the first apply. `pin-and-apply.sh` also pins `redis`, `postgres`, and `meilisearch` by digest.
 
 ## Staging
 

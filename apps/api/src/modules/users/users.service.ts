@@ -1,12 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import type { RbacRole, User, UserEffectivePermissions } from '@community-marketplace/types';
-import { paginationSchema } from '@community-marketplace/validation';
 
 import { AuthorizationService } from '../../common/authorization/authorization.service';
-import { PrismaService } from '../../database/prisma.service';
+import { UserRepository } from '../../database/repositories/user.repository';
 import { ApiUtilsService } from '../../utils/api-utils.service';
-import { mapUser, userProfileInclude } from './mappers/user.mapper';
+import { mapUser } from './mappers/user.mapper';
 import { R2StorageService } from './services/r2-storage.service';
 import { UserAuditService } from './services/user-audit.service';
 import { UsersAdminService } from './services/users-admin.service';
@@ -17,7 +16,7 @@ import { UsersSettingsService } from './services/users-settings.service';
 @Injectable()
 export class UsersService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly users: UserRepository,
     private readonly apiUtils: ApiUtilsService,
     private readonly profileService: UsersProfileService,
     private readonly phoneService: UsersPhoneService,
@@ -28,16 +27,8 @@ export class UsersService {
     private readonly authorization: AuthorizationService,
   ) {}
 
-  findAll(page = 1, limit = 20) {
-    const { page: p, limit: l } = paginationSchema.parse({ page, limit });
-    return this.adminService.listUsers({ page: p, limit: l }, 'SUPER_ADMIN');
-  }
-
   async findById(id: string): Promise<User | null> {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-      include: { primaryRole: true },
-    });
+    const user = await this.users.findByIdWithRole(id);
     return user ? mapUser(user) : null;
   }
 
@@ -155,10 +146,7 @@ export class UsersService {
   }
 
   async findUserOrThrow(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: userProfileInclude,
-    });
+    const user = await this.users.findByIdWithProfile(userId);
     if (!user) throw new NotFoundException('User not found');
     return user;
   }

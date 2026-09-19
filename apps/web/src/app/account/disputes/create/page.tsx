@@ -1,3 +1,3 @@
 'use client';
 
-export { default } from '../../../buyer/disputes/create/page';
+export { default } from '@/views/dispute-create-page';

@@ -5,11 +5,13 @@ import type {
   DispatchNotificationInput,
   Notification,
   NotificationPreferences,
+  NotificationType,
 } from '@community-marketplace/types';
 import type {
   NotificationPreferencesUpdateInput,
   NotificationProviderInput,
   NotificationTemplateInput,
+  SendAdminNotificationInput,
   TemplatePreviewInput,
 } from '@community-marketplace/validation';
 
@@ -19,7 +21,6 @@ import { NotificationPreferencesService } from './services/notification-preferen
 import { NotificationProvidersService } from './services/notification-providers.service';
 import { NotificationTemplatesService } from './services/notification-templates.service';
 import { NotificationsCrudService } from './services/notifications-crud.service';
-import type { SendNotificationDto } from './dto/notifications.dto';
 
 @Injectable()
 export class NotificationsService {
@@ -32,10 +33,10 @@ export class NotificationsService {
     private readonly delivery: NotificationDeliveryService,
   ) {}
 
-  async send(dto: SendNotificationDto): Promise<Notification> {
+  async send(dto: SendAdminNotificationInput): Promise<Notification> {
     const result = await this.dispatcher.dispatch({
       userId: dto.userId,
-      type: dto.type,
+      type: dto.type as NotificationType,
       templateKey: 'admin_broadcast',
       variables: { title: dto.title, message: dto.body },
       actionUrl: dto.actionUrl,
@@ -47,7 +48,7 @@ export class NotificationsService {
 
     return this.crud.createRecord({
       userId: dto.userId,
-      type: dto.type,
+      type: dto.type as NotificationType,
       title: dto.title,
       message: dto.body,
       channel: 'in_app',

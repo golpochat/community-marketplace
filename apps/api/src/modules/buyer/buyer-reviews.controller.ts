@@ -1,12 +1,12 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
+import { createListingReviewSchema } from '@community-marketplace/validation';
 
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { BuyerReviewsService } from './buyer-reviews.service';
-import { CreateReviewDto } from './dto/buyer.dto';
 
 @RequireRole('BUYER')
 @Controller('buyer/reviews')
@@ -15,8 +15,8 @@ export class BuyerReviewsController {
 
   @RequirePermissions(PERMISSIONS.LEAVE_REVIEW)
   @Post()
-  create(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateReviewDto) {
-    return this.reviewsService.create(user.id, dto);
+  create(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.reviewsService.create(user.id, createListingReviewSchema.parse(body));
   }
 
   @RequirePermissions(PERMISSIONS.VIEW_REVIEWS)

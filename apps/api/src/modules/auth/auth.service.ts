@@ -29,44 +29,13 @@ import {
   refreshTokenSchema,
   resendActivationSchema,
   resetPasswordSchema,
+  sendOtpSchema,
 } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../database/prisma.service';
 import { hashPassword, verifyPassword } from '../../database/seeds/password-hash';
 
 import { EventBusService } from '../../events/event-bus.service';
-
-import type {
-
-  ActivateEmailDto,
-
-  ActivationPreviewDto,
-
-  ChangePasswordDto,
-
-  CompleteRegistrationDto,
-
-  ForgotPasswordDto,
-
-  LoginDto,
-
-  LogoutDto,
-
-  PasswordResetPreviewDto,
-
-  RefreshTokenDto,
-
-  RegisterDto,
-
-  ResendActivationDto,
-
-  ResetPasswordDto,
-
-  SendOtpDto,
-
-  VerifyOtpDto,
-
-} from './dto/auth.dto';
 
 import { AuthAuditService } from './services/auth-audit.service';
 
@@ -134,25 +103,25 @@ export class AuthService {
 
 
 
-  async register(_dto: RegisterDto) {
+  async register(_dto: unknown) {
     throw new BadRequestException(
       'Password self-registration is disabled. Use the phone OTP registration flow: POST /auth/otp/send, /auth/otp/verify, then /auth/register/complete.',
     );
   }
 
-  async login(dto: LoginDto, context: SessionContext): Promise<LoginResponse> {
+  async login(dto: unknown, context: SessionContext): Promise<LoginResponse> {
 
-    loginSchema.parse(dto);
+    const parsed = loginSchema.parse(dto);
 
 
 
-    await this.securityService.assertLoginAllowed(dto.email, context.ipAddress);
+    await this.securityService.assertLoginAllowed(parsed.email, context.ipAddress);
 
 
 
     const dbUser = await this.prisma.user.findUnique({
 
-      where: { email: dto.email },
+      where: { email: parsed.email },
 
       include: { primaryRole: true },
 
@@ -160,9 +129,9 @@ export class AuthService {
 
 
 
-    if (!dbUser?.passwordHash || !verifyPassword(dto.password, dbUser.passwordHash)) {
+    if (!dbUser?.passwordHash || !verifyPassword(parsed.password, dbUser.passwordHash)) {
 
-      await this.auditService.record('login', false, { ...context, email: dto.email }, 'Invalid credentials');
+      await this.auditService.record('login', false, { ...context, email: parsed.email }, 'Invalid credentials');
 
       throw new UnauthorizedException('Invalid email or password');
 
@@ -172,7 +141,7 @@ export class AuthService {
 
     if (!dbUser.emailVerifiedAt) {
 
-      await this.auditService.record('login', false, { ...context, email: dto.email, userId: dbUser.id }, 'Email not activated');
+      await this.auditService.record('login', false, { ...context, email: parsed.email, userId: dbUser.id }, 'Email not activated');
 
       throw new ForbiddenException('Email not activated. Check your inbox or request a new link.');
 
@@ -184,7 +153,7 @@ export class AuthService {
       assertUserCanAuthenticate(dbUser.status);
     } catch (error) {
       const reason = dbUser.status === 'inactive' ? 'Account deactivated' : 'Account suspended';
-      await this.auditService.record('login', false, { ...context, email: dto.email, userId: dbUser.id }, reason);
+      await this.auditService.record('login', false, { ...context, email: parsed.email, userId: dbUser.id }, reason);
       throw error;
     }
 
@@ -194,7 +163,7 @@ export class AuthService {
 
     const response = await this.establishSession(user, context);
 
-    await this.auditService.record('login', true, { ...context, email: dto.email, userId: user.id });
+    await this.auditService.record('login', true, { ...context, email: parsed.email, userId: user.id });
 
     return response;
 
@@ -202,21 +171,23 @@ export class AuthService {
 
 
 
-  async sendOtp(dto: SendOtpDto, context: SessionContext) {
+  async sendOtp(dto: unknown, context: SessionContext) {
 
-    if (dto.channel === 'phone' && dto.purpose === 'register' && dto.phone) {
+    const parsed = sendOtpSchema.parse(dto);
 
-      await this.assertPhoneAvailableForRegistration(dto.phone);
+    if (parsed.channel === 'phone' && parsed.purpose === 'register' && parsed.phone) {
+
+      await this.assertPhoneAvailableForRegistration(parsed.phone);
 
     }
 
-    return this.otpService.sendOtp(dto, context);
+    return this.otpService.sendOtp(parsed, context);
 
   }
 
 
 
-  async verifyOtp(dto: VerifyOtpDto, context: SessionContext) {
+  async verifyOtp(dto: unknown, context: SessionContext) {
 
     const verified = await this.otpService.verifyOtp(dto, context);
 
@@ -302,7 +273,7 @@ export class AuthService {
 
 
 
-  async completeRegistration(dto: CompleteRegistrationDto, context: SessionContext) {
+  async completeRegistration(dto: unknown, context: SessionContext) {
 
     const parsed = completeRegistrationSchema.parse(dto);
 
@@ -412,17 +383,17 @@ export class AuthService {
 
 
 
-  async activationPreview(dto: ActivationPreviewDto) {
+  async activationPreview(dto: unknown) {
 
-    activationPreviewSchema.parse(dto);
+    const parsed = activationPreviewSchema.parse(dto);
 
-    return this.emailActivationService.previewActivation(dto.token);
+    return this.emailActivationService.previewActivation(parsed.token);
 
   }
 
 
 
-  async activateEmail(dto: ActivateEmailDto, context: SessionContext) {
+  async activateEmail(dto: unknown, context: SessionContext) {
 
     const parsed = activateEmailSchema.parse(dto);
 
@@ -488,7 +459,7 @@ export class AuthService {
 
 
 
-  async resendActivation(dto: ResendActivationDto) {
+  async resendActivation(dto: unknown) {
 
     const parsed = resendActivationSchema.parse(dto);
     const result = await this.emailActivationService.resend(parsed.email);
@@ -529,7 +500,7 @@ export class AuthService {
 
 
 
-  async forgotPassword(dto: ForgotPasswordDto, context: SessionContext) {
+  async forgotPassword(dto: unknown, context: SessionContext) {
     const parsed = forgotPasswordSchema.parse(dto);
     const genericMessage =
       'If an account exists for this email, we sent a password reset link. Check your inbox and spam folder.';
@@ -591,14 +562,14 @@ export class AuthService {
 
 
 
-  async passwordResetPreview(dto: PasswordResetPreviewDto) {
-    passwordResetPreviewSchema.parse(dto);
-    return this.passwordResetService.previewReset(dto.token);
+  async passwordResetPreview(dto: unknown) {
+    const parsed = passwordResetPreviewSchema.parse(dto);
+    return this.passwordResetService.previewReset(parsed.token);
   }
 
 
 
-  async resetPassword(dto: ResetPasswordDto, context: SessionContext) {
+  async resetPassword(dto: unknown, context: SessionContext) {
     const parsed = resetPasswordSchema.parse(dto);
     const result = await this.passwordResetService.resetPassword(parsed.token, parsed.password);
 
@@ -622,7 +593,7 @@ export class AuthService {
 
 
 
-  async changePassword(userId: string, dto: ChangePasswordDto, context: SessionContext) {
+  async changePassword(userId: string, dto: unknown, context: SessionContext) {
     const parsed = changePasswordSchema.parse(dto);
 
     const dbUser = await this.prisma.user.findUnique({
@@ -674,9 +645,11 @@ export class AuthService {
 
 
 
-  async refreshToken(dto: RefreshTokenDto, context: SessionContext, cookieRefreshToken?: string) {
+  async refreshToken(dto: unknown, context: SessionContext, cookieRefreshToken?: string) {
 
-    const refreshToken = dto.refreshToken ?? cookieRefreshToken;
+    const body = dto && typeof dto === 'object' && !Array.isArray(dto) ? (dto as Record<string, unknown>) : {};
+    const refreshToken =
+      (typeof body.refreshToken === 'string' ? body.refreshToken : undefined) ?? cookieRefreshToken;
 
     if (!refreshToken) {
 
@@ -751,19 +724,19 @@ export class AuthService {
 
 
 
-  async logout(user: { id: string }, dto: LogoutDto, context: SessionContext) {
+  async logout(user: { id: string }, dto: unknown, context: SessionContext) {
 
-    logoutSchema.parse(dto);
+    const parsed = logoutSchema.parse(dto);
 
 
 
-    if (dto.sessionId) {
+    if (parsed.sessionId) {
 
-      await this.sessionService.revokeSession(dto.sessionId);
+      await this.sessionService.revokeSession(parsed.sessionId);
 
-    } else if (dto.refreshToken) {
+    } else if (parsed.refreshToken) {
 
-      await this.sessionService.revokeByRefreshToken(dto.refreshToken);
+      await this.sessionService.revokeByRefreshToken(parsed.refreshToken);
 
     } else {
 

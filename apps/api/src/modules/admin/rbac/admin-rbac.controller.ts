@@ -10,6 +10,16 @@ import {
 } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
+import {
+  addRolePermissionSchema,
+  assignPermissionOverrideSchema,
+  assignRoleSchema,
+  createRoleSchema,
+  listPermissionsQuerySchema,
+  removeUserRoleSchema,
+  syncRolePermissionsByIdSchema,
+  updateRoleSchema,
+} from '@community-marketplace/validation';
 
 import {
   RequireAnyPermission,
@@ -17,15 +27,6 @@ import {
 } from '../../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../../common/decorators/current-user.decorator';
-import {
-  AddRolePermissionDto,
-  AssignPermissionOverrideDto,
-  AssignUserRoleDto,
-  CreateCustomRoleDto,
-  RemoveUserRoleDto,
-  SyncRolePermissionsDto,
-  UpdateCustomRoleDto,
-} from './dto/rbac-management.dto';
 import { RbacManagementService } from './rbac-management.service';
 
 const RBAC_CATALOG_PERMISSIONS = [
@@ -66,8 +67,8 @@ export class AdminRbacController {
 
   @RequireAnyPermission(PERMISSIONS.MANAGE_ROLES)
   @Post('roles')
-  createRole(@CurrentUser() actor: AuthenticatedUser, @Body() dto: CreateCustomRoleDto) {
-    return this.rbacManagement.createRole(actor, dto);
+  createRole(@CurrentUser() actor: AuthenticatedUser, @Body() body: unknown) {
+    return this.rbacManagement.createRole(actor, createRoleSchema.parse(body));
   }
 
   @RequireAnyPermission(PERMISSIONS.MANAGE_ROLES)
@@ -75,9 +76,9 @@ export class AdminRbacController {
   updateRole(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('roleId') roleId: string,
-    @Body() dto: UpdateCustomRoleDto,
+    @Body() body: unknown,
   ) {
-    return this.rbacManagement.updateRole(actor, roleId, dto);
+    return this.rbacManagement.updateRole(actor, roleId, updateRoleSchema.parse(body));
   }
 
   @RequireAnyPermission(PERMISSIONS.MANAGE_ROLES)
@@ -95,7 +96,8 @@ export class AdminRbacController {
   @RequireAnyPermission(...RBAC_CATALOG_PERMISSIONS)
   @Get('permissions')
   listPermissions(@CurrentUser() actor: AuthenticatedUser, @Query('scope') scope?: string) {
-    return this.rbacManagement.listPermissions(actor, scope);
+    const query = listPermissionsQuerySchema.parse({ scope });
+    return this.rbacManagement.listPermissions(actor, query.scope);
   }
 
   @RequireAnyPermission(...RBAC_CATALOG_PERMISSIONS)
@@ -106,8 +108,8 @@ export class AdminRbacController {
 
   @RequireAnyPermission(PERMISSIONS.ASSIGN_ROLE, PERMISSIONS.MANAGE_ADMINS)
   @Post('users/assign-role')
-  assignUserRole(@CurrentUser() actor: AuthenticatedUser, @Body() dto: AssignUserRoleDto) {
-    return this.rbacManagement.assignUserRole(actor, dto);
+  assignUserRole(@CurrentUser() actor: AuthenticatedUser, @Body() body: unknown) {
+    return this.rbacManagement.assignUserRole(actor, assignRoleSchema.parse(body));
   }
 
   @RequireAnyPermission(PERMISSIONS.ASSIGN_ROLE, PERMISSIONS.MANAGE_ADMINS)
@@ -115,8 +117,9 @@ export class AdminRbacController {
   removeUserRole(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('userId') userId: string,
-    @Body() dto: RemoveUserRoleDto,
+    @Body() body: unknown,
   ) {
+    const dto = removeUserRoleSchema.parse(body ?? {});
     return this.rbacManagement.removeUserRole(actor, userId, dto.fallbackRoleId);
   }
 
@@ -125,8 +128,9 @@ export class AdminRbacController {
   addRolePermission(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('roleId') roleId: string,
-    @Body() dto: AddRolePermissionDto,
+    @Body() body: unknown,
   ) {
+    const dto = addRolePermissionSchema.parse(body);
     return this.rbacManagement.addRolePermission(actor, roleId, dto.permissionId);
   }
 
@@ -145,18 +149,18 @@ export class AdminRbacController {
   syncRolePermissions(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('roleId') roleId: string,
-    @Body() dto: SyncRolePermissionsDto,
+    @Body() body: unknown,
   ) {
-    return this.rbacManagement.syncRolePermissions(actor, roleId, dto);
+    return this.rbacManagement.syncRolePermissions(actor, roleId, syncRolePermissionsByIdSchema.parse(body));
   }
 
   @RequireAnyPermission(PERMISSIONS.ASSIGN_PERMISSION_OVERRIDE)
   @Post('users/permission-overrides')
   assignPermissionOverride(
     @CurrentUser() actor: AuthenticatedUser,
-    @Body() dto: AssignPermissionOverrideDto,
+    @Body() body: unknown,
   ) {
-    return this.rbacManagement.assignPermissionOverride(actor, dto);
+    return this.rbacManagement.assignPermissionOverride(actor, assignPermissionOverrideSchema.parse(body));
   }
 
   @RequireAnyPermission(PERMISSIONS.ASSIGN_PERMISSION_OVERRIDE)

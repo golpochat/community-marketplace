@@ -2,20 +2,21 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Req } fr
 import type { Request } from 'express';
 
 import { PERMISSIONS } from '@community-marketplace/types';
+import {
+  addRolePermissionSchema,
+  assignPermissionOverrideSchema,
+  assignRoleSchema,
+  createAdminSchema,
+  removeUserRoleSchema,
+  superAdminActionSchema,
+  syncRolePermissionsByIdSchema,
+} from '@community-marketplace/validation';
 
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
-import {
-  AddRolePermissionDto,
-  AssignPermissionOverrideDto,
-  AssignUserRoleDto,
-  RemoveUserRoleDto,
-  SyncRolePermissionsDto,
-} from '../admin/rbac/dto/rbac-management.dto';
 import { RbacManagementService } from '../admin/rbac/rbac-management.service';
 import { computeDeviceFingerprint } from '../auth/utils/device-fingerprint';
-import { CreateAdminDto, SuperAdminActionDto } from './dto/super-admin.dto';
 import { SuperAdminService } from './super-admin.service';
 
 @RequireRole('SUPER_ADMIN')
@@ -55,8 +56,9 @@ export class SuperAdminController {
   addRolePermission(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('roleId') roleId: string,
-    @Body() dto: AddRolePermissionDto,
+    @Body() body: unknown,
   ) {
+    const dto = addRolePermissionSchema.parse(body);
     return this.rbacManagement.addRolePermission(actor, roleId, dto.permissionId);
   }
 
@@ -75,15 +77,15 @@ export class SuperAdminController {
   syncRolePermissions(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('roleId') roleId: string,
-    @Body() dto: SyncRolePermissionsDto,
+    @Body() body: unknown,
   ) {
-    return this.rbacManagement.syncRolePermissions(actor, roleId, dto);
+    return this.rbacManagement.syncRolePermissions(actor, roleId, syncRolePermissionsByIdSchema.parse(body));
   }
 
   @RequirePermissions(PERMISSIONS.ASSIGN_ROLE)
   @Post('users/assign-role')
-  assignUserRole(@CurrentUser() actor: AuthenticatedUser, @Body() dto: AssignUserRoleDto) {
-    return this.rbacManagement.assignUserRole(actor, dto);
+  assignUserRole(@CurrentUser() actor: AuthenticatedUser, @Body() body: unknown) {
+    return this.rbacManagement.assignUserRole(actor, assignRoleSchema.parse(body));
   }
 
   @RequirePermissions(PERMISSIONS.ASSIGN_ROLE)
@@ -91,8 +93,9 @@ export class SuperAdminController {
   removeUserRole(
     @CurrentUser() actor: AuthenticatedUser,
     @Param('userId') userId: string,
-    @Body() dto: RemoveUserRoleDto,
+    @Body() body: unknown,
   ) {
+    const dto = removeUserRoleSchema.parse(body ?? {});
     return this.rbacManagement.removeUserRole(actor, userId, dto.fallbackRoleId);
   }
 
@@ -100,9 +103,9 @@ export class SuperAdminController {
   @Post('users/permission-overrides')
   assignPermissionOverride(
     @CurrentUser() actor: AuthenticatedUser,
-    @Body() dto: AssignPermissionOverrideDto,
+    @Body() body: unknown,
   ) {
-    return this.rbacManagement.assignPermissionOverride(actor, dto);
+    return this.rbacManagement.assignPermissionOverride(actor, assignPermissionOverrideSchema.parse(body));
   }
 
   @RequirePermissions(PERMISSIONS.ASSIGN_PERMISSION_OVERRIDE)
@@ -177,7 +180,8 @@ export class SuperAdminController {
 
   @RequirePermissions(PERMISSIONS.MANAGE_ADMINS)
   @Post('admins')
-  createAdmin(@Body() dto: CreateAdminDto) {
+  createAdmin(@Body() body: unknown) {
+    const dto = createAdminSchema.parse(body);
     return this.superAdminService.createAdmin(dto.email);
   }
 
@@ -192,8 +196,8 @@ export class SuperAdminController {
 
   @RequirePermissions(PERMISSIONS.EXECUTE_ADMIN_ACTION)
   @Post('actions')
-  executeAction(@CurrentUser() user: AuthenticatedUser, @Body() dto: SuperAdminActionDto) {
-    return this.superAdminService.executeAction(user.id, dto);
+  executeAction(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.superAdminService.executeAction(user.id, superAdminActionSchema.parse(body));
   }
 
   private sessionContext(req: Request) {

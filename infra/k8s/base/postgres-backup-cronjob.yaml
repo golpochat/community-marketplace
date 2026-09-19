@@ -1,0 +1,152 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backups
+  namespace: community-marketplace
+  labels:
+    app: postgres-backup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-wal-archive
+  namespace: community-marketplace
+  labels:
+    app: postgres
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-basebackups
+  namespace: community-marketplace
+  labels:
+    app: postgres-basebackup
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 40Gi
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: community-marketplace
+  labels:
+    app: postgres-backup
+spec:
+  schedule: "0 2 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: postgres-backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: postgres:16-alpine
+              env:
+                - name: PGHOST
+                  value: postgres
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secrets
+                      key: POSTGRES_USER
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secrets
+                      key: POSTGRES_PASSWORD
+                - name: PGDATABASE
+                  value: community_marketplace
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -euo pipefail
+                  FILE="/backups/postgres-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
+                  pg_dump | gzip > "$FILE"
+                  ls -lh /backups
+                  find /backups -name 'postgres-*.sql.gz' -mtime +14 -delete
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+          volumes:
+            - name: backups
+              persistentVolumeClaim:
+                claimName: postgres-backups
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-basebackup
+  namespace: community-marketplace
+  labels:
+    app: postgres-basebackup
+spec:
+  schedule: "0 1 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: postgres-basebackup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: basebackup
+              image: postgres:16-alpine
+              env:
+                - name: PGHOST
+                  value: postgres
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secrets
+                      key: POSTGRES_USER
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secrets
+                      key: POSTGRES_PASSWORD
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -euo pipefail
+                  STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+                  DEST="/basebackups/base-$STAMP"
+                  mkdir -p "$DEST"
+                  pg_basebackup -D "$DEST" -Ft -z -X none --checkpoint=fast
+                  find /basebackups -maxdepth 1 -type d -name 'base-*' -mtime +7 -exec rm -rf {} +
+              volumeMounts:
+                - name: basebackups
+                  mountPath: /basebackups
+          volumes:
+            - name: basebackups
+              persistentVolumeClaim:
+                claimName: postgres-basebackups

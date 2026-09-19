@@ -6,6 +6,7 @@ import { AuthorizationService } from './authorization/authorization.service';
 import { PERMISSION_RESOLVER } from './authorization/ports/permission-resolver.port';
 import { PrismaPermissionResolverService } from './authorization/services/prisma-permission-resolver.service';
 import { AuthGuard } from './guards/auth.guard';
+import { CsrfGuard } from './guards/csrf.guard';
 import { RolesPermissionsGuard } from './guards/roles-permissions.guard';
 
 @Global()
@@ -19,12 +20,14 @@ import { RolesPermissionsGuard } from './guards/roles-permissions.guard';
       useExisting: PrismaPermissionResolverService,
     },
     AuthGuard,
+    CsrfGuard,
     RolesPermissionsGuard,
   ],
   exports: [
     AuthorizationService,
     PERMISSION_RESOLVER,
     AuthGuard,
+    CsrfGuard,
     RolesPermissionsGuard,
   ],
 })

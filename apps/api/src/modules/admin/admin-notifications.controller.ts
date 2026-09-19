@@ -6,13 +6,13 @@ import {
   notificationListQuerySchema,
   notificationProviderSchema,
   notificationTemplateSchema,
+  sendAdminNotificationSchema,
   templatePreviewSchema,
 } from '@community-marketplace/validation';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
-import { SendNotificationDto } from '../notifications/dto/notifications.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 
 @RequireRole('ADMIN', 'SUPER_ADMIN')
@@ -52,8 +52,8 @@ export class AdminNotificationsController {
 
   @RequirePermissions(PERMISSIONS.SEND_NOTIFICATION)
   @Post('send')
-  send(@Body() dto: SendNotificationDto) {
-    return this.notificationsService.send(dto);
+  send(@Body() body: unknown) {
+    return this.notificationsService.send(sendAdminNotificationSchema.parse(body));
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_NOTIFICATIONS)

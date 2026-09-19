@@ -24,7 +24,9 @@ import {
 import {
   updateStaffRoleSchema,
   updateStaffStatusSchema,
+  type AdminActionInput,
   type PlatformGovernanceUpdateInput,
+  type SuperAdminActionInput,
 } from '@community-marketplace/validation';
 
 import {
@@ -40,8 +42,6 @@ import { AdminService } from '../admin/admin.service';
 import { UsersService } from '../users/users.service';
 import { mapUserProfile, userProfileInclude } from '../users/mappers/user.mapper';
 import { UserAuditService } from '../users/services/user-audit.service';
-import type { AdminActionDto } from '../admin/dto/admin.dto';
-import type { SuperAdminActionDto } from './dto/super-admin.dto';
 
 const OPEN_DISPUTE_STATUSES = ['open', 'awaiting_evidence', 'under_review'] as const;
 
@@ -600,9 +600,9 @@ export class SuperAdminService {
     return this.listPrivilegedAuditTrail(1, 20);
   }
 
-  executeAction(superAdminId: string, dto: SuperAdminActionDto) {
-    const actionDto: AdminActionDto = {
-      action: dto.action as AdminActionDto['action'],
+  executeAction(superAdminId: string, dto: SuperAdminActionInput) {
+    const actionDto: AdminActionInput = {
+      action: dto.action as AdminActionInput['action'],
       targetType: dto.targetType,
       targetId: dto.targetId,
       metadata: dto.metadata,

@@ -6,18 +6,30 @@ namespace: community-marketplace
 resources:
   - namespace.yaml
   - configmap.yaml
-  - secrets.yaml
+  - secret-store.yaml
+  - external-secrets.yaml
   - postgres-statefulset.yaml
   - redis-deployment.yaml
   - api-deployment.yaml
   - worker-deployment.yaml
   - web-deployment.yaml
-  - admin-deployment.yaml
   - meilisearch-deployment.yaml
   - ingress.yaml
   - hpa.yaml
   - pdb.yaml
   - network-policy.yaml
+  - postgres-backup-cronjob.yaml
+
+configurations:
+  - eso-nameref.yaml
+
+images:
+  - name: community-marketplace/api
+    newTag: unpinned
+  - name: community-marketplace/worker
+    newTag: unpinned
+  - name: community-marketplace/web
+    newTag: unpinned
 
 commonLabels:
   app.kubernetes.io/managed-by: kustomize

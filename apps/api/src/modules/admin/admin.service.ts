@@ -6,7 +6,7 @@ import type {
   PlatformGovernanceStatus,
   RbacRole,
 } from "@community-marketplace/types";
-import type { PlatformGovernanceUpdateInput } from "@community-marketplace/validation";
+import type { PlatformGovernanceUpdateInput, AdminActionInput } from "@community-marketplace/validation";
 
 import { PrismaService } from "../../database/prisma.service";
 import { EventBusService } from "../../events/event-bus.service";
@@ -16,7 +16,6 @@ import { ModerationService } from "../moderation/moderation.service";
 import { PlatformGovernanceService } from "../platform/platform-governance.service";
 import { UsersService } from "../users/users.service";
 import { AdminAuditEntity } from "./entities/admin-audit.entity";
-import type { AdminActionDto, SuspendUserDto } from "./dto/admin.dto";
 
 @Injectable()
 export class AdminService {
@@ -235,12 +234,12 @@ export class AdminService {
   suspendUser(
     adminId: string,
     adminRole: "ADMIN" | "SUPER_ADMIN",
-    dto: SuspendUserDto,
+    dto: unknown,
   ) {
     return this.usersService.suspendUser(adminId, adminRole, dto);
   }
 
-  executeAction(adminId: string, dto: AdminActionDto) {
+  executeAction(adminId: string, dto: AdminActionInput) {
     this.logAction(
       adminId,
       dto.action,

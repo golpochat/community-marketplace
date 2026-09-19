@@ -13,5 +13,20 @@ export default defineConfig({
         singleThread: true,
       },
     },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary'],
+      include: [
+        'src/common/guards/**/*.ts',
+        'src/common/csrf/**/*.ts',
+        'src/events/event-bus.service.ts',
+        'src/modules/metrics/metrics-scrape.guard.ts',
+      ],
+      thresholds: {
+        lines: 50,
+        functions: 50,
+        statements: 50,
+      },
+    },
   },
 });

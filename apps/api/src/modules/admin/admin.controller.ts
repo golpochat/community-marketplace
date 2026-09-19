@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
+import { adminActionSchema, suspendUserSchema } from '@community-marketplace/validation';
 
 import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
-import { AdminActionDto, SuspendUserDto } from './dto/admin.dto';
 import { AdminService } from './admin.service';
 
 @RequireRole('ADMIN', 'SUPER_ADMIN')
@@ -53,14 +53,18 @@ export class AdminController {
 
   @RequirePermissions(PERMISSIONS.SUSPEND_USER)
   @Post('users/suspend')
-  suspendUser(@CurrentUser() user: AuthenticatedUser, @Body() dto: SuspendUserDto) {
-    return this.adminService.suspendUser(user.id, user.role as 'ADMIN' | 'SUPER_ADMIN', dto);
+  suspendUser(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.adminService.suspendUser(
+      user.id,
+      user.role as 'ADMIN' | 'SUPER_ADMIN',
+      suspendUserSchema.parse(body),
+    );
   }
 
   @RequirePermissions(PERMISSIONS.EXECUTE_ADMIN_ACTION)
   @Post('actions')
-  executeAction(@CurrentUser() user: AuthenticatedUser, @Body() dto: AdminActionDto) {
-    return this.adminService.executeAction(user?.id ?? 'admin-1', dto);
+  executeAction(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.adminService.executeAction(user?.id ?? 'admin-1', adminActionSchema.parse(body));
   }
 
   @RequirePermissions(PERMISSIONS.VIEW_AUDIT_LOG)

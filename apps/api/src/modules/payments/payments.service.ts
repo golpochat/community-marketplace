@@ -18,11 +18,12 @@ import type {
   CreateCheckoutSessionInput,
   CreatePaymentIntentInput,
   DisputeEvidenceInput,
+  ManualPayoutInput,
+  PaymentAdminFiltersInput,
   RequestRefundInput,
   SettleOrderInput,
 } from '@community-marketplace/validation';
 
-import type { ManualPayoutInput, PaymentAdminFiltersInput } from './dto/payments.dto';
 import { PaymentsCheckoutService } from './services/payments-checkout.service';
 import { PaymentsCrudService } from './services/payments-crud.service';
 import { PaymentsDisputesService } from './services/payments-disputes.service';

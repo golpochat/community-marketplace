@@ -1,15 +1,15 @@
 import { Body, Controller, Get, Patch, Post } from '@nestjs/common';
 
+import { markNotificationReadSchema, registerDeviceSchema } from '@community-marketplace/validation';
+
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
-import {
-  MarkNotificationReadDto,
-  RegisterDeviceDto,
-} from './dto/notifications.dto';
+import { Authenticated } from '../../common/decorators/rbac.decorator';
 import { NotificationsService } from './notifications.service';
 import { DeviceTokenService } from './services/device-token.service';
 
 /** Legacy inbox routes — prefer role-scoped /buyer|seller/notifications */
+@Authenticated()
 @Controller('notifications')
 export class NotificationsController {
   constructor(
@@ -23,12 +23,13 @@ export class NotificationsController {
   }
 
   @Post('devices')
-  registerDevice(@CurrentUser() user: AuthenticatedUser, @Body() dto: RegisterDeviceDto) {
-    return this.deviceTokenService.register(user.id, dto);
+  registerDevice(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.deviceTokenService.register(user.id, registerDeviceSchema.parse(body));
   }
 
   @Patch('read')
-  markRead(@CurrentUser() user: AuthenticatedUser, @Body() dto: MarkNotificationReadDto) {
+  markRead(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    const dto = markNotificationReadSchema.parse(body);
     return this.notificationsService.markRead(user.id, dto.notificationId);
   }
 }

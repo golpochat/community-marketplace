@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
 
 import { PERMISSIONS } from '@community-marketplace/types';
 import {
@@ -12,10 +12,14 @@ import {
 import { AuthorizationService } from '../../common/authorization/authorization.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
-import { Public } from '../../common/decorators/public.decorator';
-import { RequirePermissions, RequireRole } from '../../common/decorators/rbac.decorator';
+import {
+  Authenticated,
+  RequirePermissions,
+  RequireRole,
+} from '../../common/decorators/rbac.decorator';
 import { UsersService } from './users.service';
 
+@Authenticated()
 @Controller('users')
 export class UsersController {
   constructor(
@@ -108,20 +112,5 @@ export class UsersController {
       role: target.primaryRole.code as AuthenticatedUser['role'],
       primaryRoleId: target.primaryRoleId,
     });
-  }
-
-  @Public()
-  @Get()
-  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
-    return this.usersService.findAll(
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 20,
-    );
-  }
-
-  @Public()
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.usersService.findById(id);
   }
 }

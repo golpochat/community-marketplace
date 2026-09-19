@@ -42,19 +42,20 @@ jobs:
           docker build -f infra/docker/Dockerfile.api -t ${{ env.REGISTRY }}/api:$TAG .
           docker build -f infra/docker/Dockerfile.worker -t ${{ env.REGISTRY }}/worker:$TAG .
           docker build -f infra/docker/Dockerfile.web -t ${{ env.REGISTRY }}/web:$TAG .
-          docker build -f infra/docker/Dockerfile.admin -t ${{ env.REGISTRY }}/admin:$TAG .
           docker push ${{ env.REGISTRY }}/api:$TAG
           docker push ${{ env.REGISTRY }}/worker:$TAG
           docker push ${{ env.REGISTRY }}/web:$TAG
-          docker push ${{ env.REGISTRY }}/admin:$TAG
 
       - name: Deploy to Kubernetes
         env:
           KUBECONFIG_DATA: ${{ secrets.PROD_KUBECONFIG }}
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_TAG: prod-${{ github.sha }}
         run: |
           echo "$KUBECONFIG_DATA" | base64 -d > kubeconfig
           export KUBECONFIG=kubeconfig
-          kubectl apply -k ${{ env.K8S_OVERLAY }}
+          kubectl apply -k infra/k8s/source-secrets
+          bash infra/k8s/scripts/pin-and-apply.sh ${{ env.K8S_OVERLAY }}
           kubectl rollout status deployment/prod-api -n community-marketplace --timeout=600s
 
       - name: Notify Slack

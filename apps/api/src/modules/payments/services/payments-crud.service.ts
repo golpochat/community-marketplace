@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import type { Payment } from '@community-marketplace/types';
-import type { PaymentAdminFiltersInput } from '../dto/payments.dto';
+import type { PaymentAdminFiltersInput } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../../database/prisma.service';
 import { mapPayment, paymentInclude } from '../mappers/payment.mapper';

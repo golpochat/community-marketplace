@@ -2,29 +2,39 @@
 
 > **Category:** Architecture
 
-Async and decoupled flows use an in-process **event bus** (`EventBusService`) and **BullMQ** job queue for durable background work.
+Domain side effects go through `EventBusService`. Chat fan-out stays in-process; everything else is a durable BullMQ job on the `domain-events` queue. Scheduled work uses the separate `community-marketplace` job queue.
 
-## Event bus (synchronous dispatch)
+## Event bus
 
 ```mermaid
 flowchart LR
-  PAY[payments] -->|payment.completed| EVT[EventBus]
-  EVT --> NOTIF_L[notification-events.listener]
-  EVT --> CHAT_L[chat listeners]
-  LISTINGS[listings] -->|listing.published| EVT
-  EVT --> SEARCH[search indexing hook]
+  PAY[payments] -->|payment.succeeded| EVT[EventBus]
+  EVT -->|sync| CHAT_RT[chat-realtime]
+  EVT -->|domain-events queue| REDIS[Redis]
+  REDIS --> WORKER[API domain-events worker]
+  WORKER --> NOTIF[notification listeners]
+  WORKER --> SEARCH[search index listeners]
+  LISTINGS[listings] -->|listing.created| EVT
 ```
 
-**Characteristics**
+**Delivery**
 
-- In-process, same Node event loop
-- Listeners in `*/listeners/*.ts`
-- Failures logged; no automatic retry (use jobs for retryable work)
+| Kind | When | Retry |
+|------|------|--------|
+| `sync` | Same process, immediately (Socket.IO / chat presence) | None — caller already succeeded |
+| `durable` (default) | Enqueued to Redis `domain-events`; consumed by API (`BULLMQ_MODE=producer` or `both`) | 3 attempts, exponential backoff |
+
+`BULLMQ_MODE=worker` (job worker) **enqueues** domain events but does not consume them, so listeners that live on the API are not skipped.
+
+Without Redis, durable handlers run inline in development and test. Production refuses to boot if `REDIS_URL` is missing or Redis is unreachable.
+
+Listeners live in `*/listeners/*.ts` and subscribe with `eventBus.subscribe(type, handler)`. Chat realtime passes `{ delivery: 'sync' }`.
 
 ## BullMQ jobs (async, durable)
 
 | Job name | Producer | Handler |
 |----------|----------|---------|
+| `domain.event` | `EventBusService.publish` | Durable EventBus subscribers |
 | `search.reindex` | Search admin API | `SearchIndexingService` |
 | `search.nightly_sync` | Cron / scheduler | `SearchIndexingService` |
 | `moderation.lift_suspension` | Moderation actions | `ModerationSuspensionJob` |
@@ -36,10 +46,12 @@ sequenceDiagram
   participant Redis
   participant Worker
 
-  API->>Redis: queue.add(job)
-  Worker->>Redis: poll job
-  Worker->>Worker: execute handler
-  Worker->>Redis: ack / retry
+  API->>API: sync chat listeners
+  API->>Redis: domain-events.add(event)
+  API->>Redis: community-marketplace.add(job)
+  Worker->>Redis: poll cron/jobs
+  API->>Redis: poll domain-events
+  API->>API: durable listeners
 ```
 
 **Modes:** `BULLMQ_MODE=producer` (API) · `worker` (dedicated process) · `both` (local dev)
@@ -53,7 +65,7 @@ sequenceDiagram
 
 ## Search indexing pipeline
 
-1. Listing created/updated → event or direct enqueue
+1. Listing created/updated → durable event
 2. `search.reindex` job builds Meilisearch document
 3. Fallback to DB search if Meilisearch unavailable
 

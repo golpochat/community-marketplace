@@ -4,7 +4,7 @@
 
 ## Overview
 
-Enterprise notification system with **email**, **push (FCM)**, and **in-app** channels. Templates are stored in the database, cached in Redis, and rendered with `{{variable}}` placeholders. Delivery is event-driven via the internal event bus with retries, rate limiting, and provider failover.
+Enterprise notification system with **email**, **push (FCM)**, and **in-app** channels. Templates are stored in the database, cached in Redis, and rendered with `{{variable}}` placeholders. Delivery is event-driven via the durable `domain-events` queue (chat fan-out stays in-process) with retries, rate limiting, and provider failover.
 
 ### Data model
 

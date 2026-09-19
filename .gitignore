@@ -35,6 +35,10 @@ Thumbs.db
 # Test & coverage
 coverage/
 .nyc_output/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
 
 # Local dev uploads (no R2)
 apps/api/.data/
@@ -44,3 +48,7 @@ apps/api/generated/
 
 # Docker
 infra/docker/volumes/
+infra/observability/metrics.token
+
+# Scratch / leftover deploy copies
+tmp-deploy-test/

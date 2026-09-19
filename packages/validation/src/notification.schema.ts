@@ -106,6 +106,23 @@ export const notificationListQuerySchema = paginationSchema.extend({
   unreadOnly: z.coerce.boolean().optional(),
 });
 
+export const registerDeviceSchema = z.object({
+  token: z.string().min(10),
+  platform: z.enum(['ios', 'android', 'web']),
+});
+
+export const markNotificationReadSchema = z.object({
+  notificationId: z.string().min(1),
+});
+
+export const sendAdminNotificationSchema = z.object({
+  userId: uuidSchema,
+  type: z.string().min(1),
+  title: z.string().min(1).max(200),
+  body: z.string().min(1).max(2000),
+  actionUrl: z.string().url().optional(),
+});
+
 export type NotificationInput = z.infer<typeof notificationSchema>;
 export type CreateNotificationInput = z.infer<typeof createNotificationSchema>;
 export type NotificationTemplateInput = z.infer<typeof notificationTemplateSchema>;
@@ -113,3 +130,6 @@ export type NotificationProviderInput = z.infer<typeof notificationProviderSchem
 export type NotificationPreferencesUpdateInput = z.infer<typeof notificationPreferencesUpdateSchema>;
 export type BroadcastNotificationInput = z.infer<typeof broadcastNotificationSchema>;
 export type TemplatePreviewInput = z.infer<typeof templatePreviewSchema>;
+export type RegisterDeviceInput = z.infer<typeof registerDeviceSchema>;
+export type MarkNotificationReadInput = z.infer<typeof markNotificationReadSchema>;
+export type SendAdminNotificationInput = z.infer<typeof sendAdminNotificationSchema>;

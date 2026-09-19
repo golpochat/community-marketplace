@@ -3,6 +3,6 @@ module.exports = {
   extends: 'next/core-web-vitals',
   plugins: ['design-system'],
   rules: {
-    'design-system/no-raw-palette-classes': 'warn',
+    'design-system/no-raw-palette-classes': 'error',
   },
 };

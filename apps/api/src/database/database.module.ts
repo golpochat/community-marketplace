@@ -2,6 +2,8 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { PrismaService } from './prisma.service';
+import { StripeEventRepository } from './repositories/stripe-event.repository';
+import { UserRepository } from './repositories/user.repository';
 
 export const DATABASE_CONNECTION = 'DATABASE_CONNECTION';
 
@@ -9,6 +11,8 @@ export const DATABASE_CONNECTION = 'DATABASE_CONNECTION';
 @Module({
   providers: [
     PrismaService,
+    UserRepository,
+    StripeEventRepository,
     {
       provide: DATABASE_CONNECTION,
       inject: [ConfigService],
@@ -18,6 +22,6 @@ export const DATABASE_CONNECTION = 'DATABASE_CONNECTION';
       }),
     },
   ],
-  exports: [DATABASE_CONNECTION, PrismaService],
+  exports: [DATABASE_CONNECTION, PrismaService, UserRepository, StripeEventRepository],
 })
 export class DatabaseModule {}

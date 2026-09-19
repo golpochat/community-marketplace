@@ -115,3 +115,5 @@ export type ConnectOnboardInput = z.infer<typeof connectOnboardSchema>;
 export type RequestRefundInput = z.infer<typeof requestRefundSchema>;
 export type ApproveRefundInput = z.infer<typeof approveRefundSchema>;
 export type DisputeEvidenceInput = z.infer<typeof disputeEvidenceSchema>;
+export type PaymentAdminFiltersInput = z.infer<typeof paymentAdminFiltersSchema>;
+export type ManualPayoutInput = z.infer<typeof manualPayoutSchema>;

@@ -30,10 +30,3 @@ patches:
       - op: replace
         path: /data/NEXT_PUBLIC_API_URL
         value: https://api.staging.community.market/api
-  - target:
-      kind: ConfigMap
-      name: admin-config
-    patch: |
-      - op: replace
-        path: /data/NEXT_PUBLIC_API_URL
-        value: https://api.staging.community.market/api

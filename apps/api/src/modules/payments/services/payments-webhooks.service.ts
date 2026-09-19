@@ -1,7 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type Stripe from 'stripe';
 
+import { StripeEventRepository } from '../../../database/repositories/stripe-event.repository';
 import { EventBusService } from '../../../events/event-bus.service';
+import { LoggerLib } from '../../../libs/logger.lib';
 import { PrismaService } from '../../../database/prisma.service';
 import { PaymentsAuditService } from './payments-audit.service';
 import { PaymentCompletionService } from './payment-completion.service';
@@ -12,9 +14,9 @@ import { StripeConnectService } from './stripe-connect.service';
 
 @Injectable()
 export class PaymentsWebhooksService {
-  private readonly logger = new Logger(PaymentsWebhooksService.name);
-
   constructor(
+    private readonly stripeEvents: StripeEventRepository,
+    private readonly logger: LoggerLib,
     private readonly prisma: PrismaService,
     private readonly stripeConnect: StripeConnectService,
     private readonly completion: PaymentCompletionService,
@@ -26,55 +28,57 @@ export class PaymentsWebhooksService {
   ) {}
 
   async handleEvent(event: Stripe.Event) {
-    const claimed = await this.prisma.processedStripeEvent.createMany({
-      data: { stripeEventId: event.id, eventType: event.type },
-      skipDuplicates: true,
-    });
-    if (claimed.count === 0) {
+    const claimed = await this.stripeEvents.claim(event.id, event.type);
+    if (!claimed) {
       return { duplicate: true };
     }
 
-    switch (event.type) {
-      case 'checkout.session.completed':
-        await this.onCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
-        break;
-      case 'payment_intent.succeeded':
-        await this.onPaymentSucceeded(event.data.object as Stripe.PaymentIntent);
-        break;
-      case 'payment_intent.payment_failed':
-        await this.onPaymentFailed(event.data.object as Stripe.PaymentIntent);
-        break;
-      case 'charge.refunded':
-        await this.onChargeRefunded(event.data.object as Stripe.Charge);
-        break;
-      case 'refund.created':
-        await this.onRefundCreated(event.data.object as Stripe.Refund);
-        break;
-      case 'charge.dispute.created':
-        await this.onDisputeCreated(event.data.object as Stripe.Dispute);
-        break;
-      case 'payout.paid':
-        await this.onPayoutEvent(
-          event.data.object as Stripe.Payout,
-          'paid',
-          event.account ?? undefined,
-        );
-        break;
-      case 'payout.failed':
-        await this.onPayoutEvent(
-          event.data.object as Stripe.Payout,
-          'failed',
-          event.account ?? undefined,
-        );
-        break;
-      case 'account.updated':
-        await this.onAccountUpdated(event.data.object as Stripe.Account);
-        break;
-      default:
-        this.logger.debug(`Unhandled Stripe event: ${event.type}`);
-    }
+    try {
+      switch (event.type) {
+        case 'checkout.session.completed':
+          await this.onCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+          break;
+        case 'payment_intent.succeeded':
+          await this.onPaymentSucceeded(event.data.object as Stripe.PaymentIntent);
+          break;
+        case 'payment_intent.payment_failed':
+          await this.onPaymentFailed(event.data.object as Stripe.PaymentIntent);
+          break;
+        case 'charge.refunded':
+          await this.onChargeRefunded(event.data.object as Stripe.Charge);
+          break;
+        case 'refund.created':
+          await this.onRefundCreated(event.data.object as Stripe.Refund);
+          break;
+        case 'charge.dispute.created':
+          await this.onDisputeCreated(event.data.object as Stripe.Dispute);
+          break;
+        case 'payout.paid':
+          await this.onPayoutEvent(
+            event.data.object as Stripe.Payout,
+            'paid',
+            event.account ?? undefined,
+          );
+          break;
+        case 'payout.failed':
+          await this.onPayoutEvent(
+            event.data.object as Stripe.Payout,
+            'failed',
+            event.account ?? undefined,
+          );
+          break;
+        case 'account.updated':
+          await this.onAccountUpdated(event.data.object as Stripe.Account);
+          break;
+        default:
+          this.logger.debug('PaymentsWebhooksService', `Unhandled Stripe event: ${event.type}`);
+      }
 
-    return { duplicate: false };
+      return { duplicate: false };
+    } catch (error) {
+      await this.stripeEvents.release(event.id);
+      throw error;
+    }
   }
 
   private async onCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
@@ -96,7 +100,10 @@ export class PaymentsWebhooksService {
     }
 
     if (!payment) {
-      this.logger.warn(`checkout.session.completed with no matching payment: ${session.id}`);
+      this.logger.warn(
+        'PaymentsWebhooksService',
+        `checkout.session.completed with no matching payment: ${session.id}`,
+      );
       return;
     }
 
@@ -248,7 +255,10 @@ export class PaymentsWebhooksService {
         status,
       );
     } catch {
-      this.logger.warn(`Payout event for unknown account: ${stripeAccountId}`);
+      this.logger.warn(
+        'PaymentsWebhooksService',
+        `Payout event for unknown account: ${stripeAccountId}`,
+      );
     }
   }
 

@@ -1,6 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import path from 'node:path';
 import sharp from 'sharp';
+
+import { LoggerLib } from '../../../libs/logger.lib';
 
 import { DevUploadService } from '../../dev-upload/dev-upload.service';
 import { R2StorageService } from '../../users/services/r2-storage.service';
@@ -16,11 +18,10 @@ export interface ProcessedListingImage {
 
 @Injectable()
 export class ListingImageProcessorService {
-  private readonly logger = new Logger(ListingImageProcessorService.name);
-
   constructor(
     private readonly r2: R2StorageService,
     private readonly devUpload: DevUploadService,
+    private readonly logger: LoggerLib,
   ) {}
 
   async processListingImage(key: string): Promise<ProcessedListingImage> {
@@ -113,6 +114,7 @@ export class ListingImageProcessorService {
       .toBuffer();
 
     this.logger.debug(
+      'ListingImageProcessorService',
       `Processed image variants full=${full.length}B card=${card.length}B thumb=${thumb.length}B tiny=${tiny.length}B`,
     );
 

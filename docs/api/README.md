@@ -37,12 +37,12 @@ REST and WebSocket reference for `apps/api`. All successful responses use `{ "da
 | `GET /api/health/live` | Public | Liveness probe |
 | `GET /api/health/ready` | Public | DB + Redis + Meili readiness |
 | `GET /api/health/queues` | Public | BullMQ queue depth |
-| `GET /api/metrics` | Public | Prometheus metrics |
+| `GET /api/metrics` | Scrape token | Prometheus metrics (`METRICS_SCRAPE_TOKEN`) |
 
 ## Conventions
 
 - **Auth header:** `Authorization: Bearer <accessToken>`
-- **Validation:** `packages/validation` Zod schemas + NestJS `ValidationPipe`
+- **Validation:** `packages/validation` Zod schemas (`schema.parse`); `ZodError` maps to HTTP 400
 - **RBAC:** `@RequirePermissions()` + `RolesPermissionsGuard`
 - **Errors:** `{ statusCode, message, error? }`
 - **Frontend:** unified `apps/web` — marketplace `/account`, operators `/admin` · `/super-admin`

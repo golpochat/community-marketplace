@@ -5,6 +5,14 @@ import type { PermissionCode, RbacRole } from '@community-marketplace/types';
 export const REQUIRED_ROLES_KEY = 'rbac:requiredRoles';
 export const REQUIRED_PERMISSIONS_KEY = 'rbac:requiredPermissions';
 export const REQUIRED_ANY_PERMISSIONS_KEY = 'rbac:requiredAnyPermissions';
+export const IS_AUTHENTICATED_ONLY_KEY = 'rbac:authenticatedOnly';
+
+/**
+ * Allow any authenticated user with no extra role/permission check.
+ * Required on self-service routes so RolesPermissionsGuard can fail closed
+ * when a handler is missing authorization metadata.
+ */
+export const Authenticated = () => SetMetadata(IS_AUTHENTICATED_ONLY_KEY, true);
 
 /** Require one of the listed roles (OR). User must be authenticated. */
 export const RequireRole = (...roles: RbacRole[]) => SetMetadata(REQUIRED_ROLES_KEY, roles);

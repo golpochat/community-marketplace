@@ -16,9 +16,26 @@ spec:
       labels:
         app: postgres
     spec:
+      initContainers:
+        - name: wal-archive-perms
+          image: postgres:16-alpine
+          command: ["sh", "-c", "mkdir -p /wal-archive && chown 70:70 /wal-archive"]
+          volumeMounts:
+            - name: postgres-wal-archive
+              mountPath: /wal-archive
       containers:
         - name: postgres
           image: postgres:16-alpine
+          args:
+            - postgres
+            - -c
+            - wal_level=replica
+            - -c
+            - archive_mode=on
+            - -c
+            - archive_command=test ! -f /wal-archive/%f && cp %p /wal-archive/%f
+            - -c
+            - archive_timeout=300
           ports:
             - containerPort: 5432
           env:
@@ -37,6 +54,8 @@ spec:
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
+            - name: postgres-wal-archive
+              mountPath: /wal-archive
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "cm"]
@@ -54,6 +73,30 @@ spec:
             limits:
               cpu: "1"
               memory: 1Gi
+        - name: wal-prune
+          image: postgres:16-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              while true; do
+                find /wal-archive -type f -mtime +14 -delete || true
+                sleep 86400
+              done
+          volumeMounts:
+            - name: postgres-wal-archive
+              mountPath: /wal-archive
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 50m
+              memory: 64Mi
+      volumes:
+        - name: postgres-wal-archive
+          persistentVolumeClaim:
+            claimName: postgres-wal-archive
   volumeClaimTemplates:
     - metadata:
         name: postgres-data

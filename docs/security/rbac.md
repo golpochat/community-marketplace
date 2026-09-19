@@ -12,6 +12,8 @@
 
 `MEMBER` can satisfy `@RequireRole('BUYER'|'SELLER')` via capability mapping in the API.
 
+Non-public routes must declare `@Authenticated()`, `@RequireRole`, or permission metadata. Missing metadata is denied (fail closed).
+
 ## Permission enforcement
 
 ```mermaid

@@ -5,12 +5,14 @@
 | Control | Implementation |
 |---------|----------------|
 | **CORS** | `CORS_ORIGIN` env; credentials enabled for cookie auth |
-| **Rate limiting** | Traefik middleware + Redis (OTP, notifications) |
-| **IP blocking** | Traefik `ipAllowList` for admin/search internal routes |
-| **Input validation** | `ValidationPipe` + Zod in `packages/validation` |
+| **Rate limiting** | Traefik middleware + Nest `ThrottlerGuard` (100/min) + Redis (OTP, notifications) |
+| **IP blocking** | Traefik `ipAllowList` for admin/search internal routes and `/api/metrics` |
+| **HTTP headers** | Helmet on the API + Traefik `secure-headers` |
+| **Metrics** | `GET /api/metrics` requires `METRICS_SCRAPE_TOKEN`; public hostname is internal-only |
+| **Input validation** | Zod schemas in `packages/validation` (`schema.parse` + `GlobalExceptionFilter`) |
 | **SQL injection** | Prisma parameterized queries only |
 | **XSS** | CSP headers (Traefik) + React escaping |
-| **CSRF** | Admin `CSRF_SECRET` (extend with double-submit token) |
+| **CSRF** | Double-submit cookie `cm_csrf` + `x-csrf-token` header (`GET /api/auth/csrf`). Stripe webhooks skip CSRF. |
 | **Auth** | Global `AuthGuard` + `@Public()` opt-out |
 | **RBAC** | `RolesPermissionsGuard` + `@RequirePermissions()` |
 

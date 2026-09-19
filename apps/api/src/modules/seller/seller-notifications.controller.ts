@@ -1,11 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 
-import { notificationListQuerySchema, notificationPreferencesUpdateSchema } from '@community-marketplace/validation';
+import { notificationListQuerySchema, notificationPreferencesUpdateSchema, markNotificationReadSchema, registerDeviceSchema } from '@community-marketplace/validation';
 
 import { RequireRole } from '../../common/decorators/rbac.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
-import { RegisterDeviceDto } from '../notifications/dto/notifications.dto';
 import { NotificationsService } from '../notifications/notifications.service';
 import { DeviceTokenService } from '../notifications/services/device-token.service';
 
@@ -44,13 +43,14 @@ export class SellerNotificationsController {
   }
 
   @Post('devices')
-  registerDevice(@CurrentUser() user: AuthenticatedUser, @Body() dto: RegisterDeviceDto) {
-    return this.deviceTokens.register(user.id, dto);
+  registerDevice(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    return this.deviceTokens.register(user.id, registerDeviceSchema.parse(body));
   }
 
   @Patch('read')
-  markRead(@CurrentUser() user: AuthenticatedUser, @Body() body: { notificationId: string }) {
-    return this.notifications.markRead(user.id, body.notificationId);
+  markRead(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    const dto = markNotificationReadSchema.parse(body);
+    return this.notifications.markRead(user.id, dto.notificationId);
   }
 
   @Patch('read-all')

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
-import type { RegisterDeviceDto } from '../dto/notifications.dto';
+import type { RegisterDeviceInput } from '@community-marketplace/validation';
 import { PrismaService } from '../../../database/prisma.service';
 
 @Injectable()
 export class DeviceTokenService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async register(userId: string, dto: RegisterDeviceDto) {
+  async register(userId: string, dto: RegisterDeviceInput) {
     const row = await this.prisma.deviceToken.upsert({
       where: { userId_token: { userId, token: dto.token } },
       create: {

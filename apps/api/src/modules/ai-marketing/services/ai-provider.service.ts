@@ -1,6 +1,5 @@
 import {
   Injectable,
-  Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
 
@@ -11,6 +10,7 @@ import {
 } from '@community-marketplace/utils';
 
 import type { AiListingContext } from './ai-context-assembler.service';
+import { LoggerLib } from '../../../libs/logger.lib';
 
 const TASK_LABELS: Record<AiMarketingTask, string> = {
   seo_title: 'SEO title',
@@ -73,7 +73,7 @@ export function resolveLiveTextProviders(
 
 @Injectable()
 export class AiProviderService {
-  private readonly logger = new Logger(AiProviderService.name);
+  constructor(private readonly logger: LoggerLib) {}
 
   /** Preferred / primary provider for readiness display (not necessarily last used). */
   get providerName(): AiTextProviderId {
@@ -151,6 +151,7 @@ export class AiProviderService {
         const usedFallback = index > 0;
         if (usedFallback) {
           this.logger.warn(
+            'AiProviderService',
             `Primary text provider failed; used fallback ${candidate.id}/${candidate.model}`,
           );
         }
@@ -165,6 +166,7 @@ export class AiProviderService {
           error instanceof Error ? error.message : 'Unknown provider error';
         errors.push(`${candidate.id}: ${message}`);
         this.logger.warn(
+          'AiProviderService',
           `Text provider ${candidate.id} failed (${message})${
             index < live.length - 1 ? '; trying fallback' : ''
           }`,
@@ -172,7 +174,7 @@ export class AiProviderService {
       }
     }
 
-    this.logger.error(`All text providers failed: ${errors.join('; ')}`);
+    this.logger.error('AiProviderService', `All text providers failed: ${errors.join('; ')}`);
     throw new ServiceUnavailableException(
       'AI provider failed. Please try again shortly.',
     );

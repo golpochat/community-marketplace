@@ -36,7 +36,7 @@ x-api-env: &api-env
   ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
   ANTHROPIC_CHAT_MODEL: ${ANTHROPIC_CHAT_MODEL:-claude-haiku-4-5}
   AI_MARKETING_ENABLED: ${AI_MARKETING_ENABLED:-true}
-  REMOVE_BG_API_KEY: ${REMOVE_BG_API_KEY:-}
+  METRICS_SCRAPE_TOKEN: ${METRICS_SCRAPE_TOKEN:-}
 
 services:
   traefik:
@@ -65,8 +65,19 @@ services:
       POSTGRES_USER: cm
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: community_marketplace
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_command=test ! -f /wal-archive/%f && cp %p /wal-archive/%f
+      - -c
+      - archive_timeout=300
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - postgres_wal_archive:/wal-archive
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U cm"]
       interval: 10s
@@ -132,6 +143,13 @@ services:
       - traefik.http.routers.api.tls.certresolver=letsencrypt
       - traefik.http.routers.api.service=api
       - traefik.http.routers.api.middlewares=api-chain@file
+      - traefik.http.routers.api-metrics.rule=Host(`api.${DOMAIN}`) && PathPrefix(`/api/metrics`)
+      - traefik.http.routers.api-metrics.entrypoints=websecure
+      - traefik.http.routers.api-metrics.tls=true
+      - traefik.http.routers.api-metrics.tls.certresolver=letsencrypt
+      - traefik.http.routers.api-metrics.priority=100
+      - traefik.http.routers.api-metrics.service=api
+      - traefik.http.routers.api-metrics.middlewares=internal-only@file
       - traefik.http.services.api.loadbalancer.server.port=4000
     deploy:
       resources:
@@ -192,6 +210,7 @@ services:
     volumes:
       - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ../observability/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ${METRICS_TOKEN_FILE:-../observability/metrics.token}:/etc/prometheus/metrics_token:ro
     ports:
       - "9090:9090"
     networks:
@@ -233,6 +252,7 @@ services:
 
 volumes:
   postgres_data:
+  postgres_wal_archive:
   redis_data:
   meili_data:
   traefik_acme:

@@ -1,1 +1,3 @@
-export { default } from '../../buyer/purchases/page';
+'use client';
+
+export { default } from '@/views/purchases-page';

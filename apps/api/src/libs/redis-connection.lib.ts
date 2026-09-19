@@ -1,5 +1,26 @@
 import Redis from 'ioredis';
 
+export function isProductionRuntime(): boolean {
+  return process.env.NODE_ENV === 'production';
+}
+
+export function assertRedisConfiguredForProduction(
+  context: string,
+  redisUrl: string | undefined,
+): void {
+  if (!isProductionRuntime()) return;
+  if (!redisUrl) {
+    throw new Error(`${context}: REDIS_URL is required in production`);
+  }
+}
+
+export function assertRedisReachableForProduction(context: string, available: boolean): void {
+  if (!isProductionRuntime()) return;
+  if (!available) {
+    throw new Error(`${context}: Redis is unreachable in production — refusing in-process fallback`);
+  }
+}
+
 export async function probeRedisUrl(redisUrl: string): Promise<boolean> {
   const client = new Redis(redisUrl, {
     lazyConnect: true,

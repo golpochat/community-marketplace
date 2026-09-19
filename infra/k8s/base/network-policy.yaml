@@ -24,7 +24,6 @@ spec:
         - podSelector:
             matchLabels:
               app: ingress-traefik
-        - namespaceSelector: {}
       ports:
         - protocol: TCP
           port: 4000
@@ -48,6 +47,12 @@ spec:
         - podSelector:
             matchLabels:
               app: worker
+        - podSelector:
+            matchLabels:
+              app: postgres-backup
+        - podSelector:
+            matchLabels:
+              app: postgres-basebackup
       ports:
         - protocol: TCP
           port: 5432

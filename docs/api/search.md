@@ -86,7 +86,7 @@ Falls back to keyword-only search when embeddings unavailable.
 
 ## Indexing pipelines
 
-### Real-time (event bus)
+### Durable (domain-events queue)
 
 | Event | Action |
 |-------|--------|

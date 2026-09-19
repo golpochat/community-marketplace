@@ -9,7 +9,7 @@ flowchart LR
   Client[apps/web] --> Traefik[Traefik]
   Traefik --> API[NestJS API]
   API --> Guard[Auth + RBAC Guards]
-  Guard --> Pipe[ValidationPipe + Zod]
+  Guard --> Pipe[Zod schemas]
   Pipe --> Service[Domain Service]
   Service --> Prisma[(PostgreSQL)]
   Service --> Redis[(Redis Cache)]

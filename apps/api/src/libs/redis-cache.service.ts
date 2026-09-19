@@ -2,7 +2,11 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import type Redis from 'ioredis';
 
 import { LoggerLib } from '../libs/logger.lib';
-import { createRedisClient } from './redis-connection.lib';
+import {
+  assertRedisConfiguredForProduction,
+  assertRedisReachableForProduction,
+  createRedisClient,
+} from './redis-connection.lib';
 
 @Injectable()
 export class RedisCacheService implements OnModuleInit, OnModuleDestroy {
@@ -14,12 +18,14 @@ export class RedisCacheService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     const redisUrl = process.env.REDIS_URL;
+    assertRedisConfiguredForProduction('RedisCacheService', redisUrl);
     if (!redisUrl) {
       this.logger.log('RedisCacheService', 'REDIS_URL not set — using in-memory cache');
       return;
     }
 
     const client = await createRedisClient(redisUrl);
+    assertRedisReachableForProduction('RedisCacheService', Boolean(client));
     if (!client) {
       this.logger.log(
         'RedisCacheService',

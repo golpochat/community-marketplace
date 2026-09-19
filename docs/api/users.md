@@ -10,10 +10,12 @@ Enterprise user management: profiles, seller verification, settings, RBAC permis
 
 | Area | Base path | Access |
 |------|-----------|--------|
-| Current user | `/users/me` | Authenticated |
+| Current user | `/users/me` | Authenticated (`@Authenticated`) |
 | Buyer profile | `/buyer/profile` | `BUYER` |
 | Seller profile + verification | `/seller/profile` | `SELLER` |
 | Admin user management | `/admin/users` | `ADMIN` / `SUPER_ADMIN` + permissions |
+
+User listing and user-by-id reads live only under `/admin/users`. There is no public `GET /users` or `GET /users/:id`.
 
 All responses are wrapped as `{ "data": ... }`.
 

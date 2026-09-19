@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { LoggerLib } from '../../../libs/logger.lib';
 import { DeviceTokenEntity } from '../entities/device-token.entity';
-import type { RegisterDeviceDto } from '../dto/notifications.dto';
+import type { RegisterDeviceInput } from '@community-marketplace/validation';
 
 export interface FcmPushPayload {
   title: string;
@@ -30,7 +30,7 @@ export class FcmService {
 export class DeviceTokenService {
   private readonly tokens = new Map<string, DeviceTokenEntity[]>();
 
-  register(userId: string, dto: RegisterDeviceDto): DeviceTokenEntity {
+  register(userId: string, dto: RegisterDeviceInput): DeviceTokenEntity {
     const device = new DeviceTokenEntity();
     device.id = `device-${Date.now()}`;
     device.userId = userId;

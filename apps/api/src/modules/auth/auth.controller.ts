@@ -1,26 +1,13 @@
-import { Body, Controller, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
+import { CSRF_COOKIE_NAME, createCsrfToken } from '../../common/csrf/csrf.util';
 import { Public } from '../../common/decorators/public.decorator';
+import { SkipCsrf } from '../../common/decorators/skip-csrf.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
+import { Authenticated } from '../../common/decorators/rbac.decorator';
 import { AuthService } from './auth.service';
-import {
-  ActivateEmailDto,
-  ActivationPreviewDto,
-  ChangePasswordDto,
-  CompleteRegistrationDto,
-  ForgotPasswordDto,
-  LoginDto,
-  LogoutDto,
-  PasswordResetPreviewDto,
-  RefreshTokenDto,
-  RegisterDto,
-  ResendActivationDto,
-  ResetPasswordDto,
-  SendOtpDto,
-  VerifyOtpDto,
-} from './dto/auth.dto';
 import {
   clearRefreshTokenCookie,
   REFRESH_TOKEN_COOKIE,
@@ -33,35 +20,51 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Public()
+  @SkipCsrf()
+  @Get('csrf')
+  issueCsrf(@Res({ passthrough: true }) res: Response) {
+    const { token, cookieValue } = createCsrfToken();
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie(CSRF_COOKIE_NAME, cookieValue, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    return { token };
+  }
+
+  @Public()
   @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  register(@Body() body: unknown) {
+    return this.authService.register(body);
   }
 
   @Public()
   @Post('register/complete')
-  completeRegistration(@Body() dto: CompleteRegistrationDto, @Req() req: Request) {
-    return this.authService.completeRegistration(dto, this.sessionContext(req));
+  completeRegistration(@Body() body: unknown, @Req() req: Request) {
+    return this.authService.completeRegistration(body, this.sessionContext(req));
   }
 
   @Public()
   @Post('login')
-  async login(@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.login(dto, this.sessionContext(req));
+  async login(@Body() body: unknown, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.login(body, this.sessionContext(req));
     setRefreshTokenCookie(res, result.refreshToken);
     return result;
   }
 
   @Public()
   @Post('otp/send')
-  sendOtp(@Body() dto: SendOtpDto, @Req() req: Request) {
-    return this.authService.sendOtp(dto, this.sessionContext(req));
+  sendOtp(@Body() body: unknown, @Req() req: Request) {
+    return this.authService.sendOtp(body, this.sessionContext(req));
   }
 
   @Public()
   @Post('otp/verify')
-  async verifyOtp(@Body() dto: VerifyOtpDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.verifyOtp(dto, this.sessionContext(req));
+  async verifyOtp(@Body() body: unknown, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.verifyOtp(body, this.sessionContext(req));
     if ('refreshToken' in result) {
       setRefreshTokenCookie(res, result.refreshToken);
     }
@@ -70,14 +73,14 @@ export class AuthController {
 
   @Public()
   @Post('activate/preview')
-  activationPreview(@Body() dto: ActivationPreviewDto) {
-    return this.authService.activationPreview(dto);
+  activationPreview(@Body() body: unknown) {
+    return this.authService.activationPreview(body);
   }
 
   @Public()
   @Post('activate')
-  async activateEmail(@Body() dto: ActivateEmailDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.activateEmail(dto, this.sessionContext(req));
+  async activateEmail(@Body() body: unknown, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.activateEmail(body, this.sessionContext(req));
     if (result.login) {
       setRefreshTokenCookie(res, result.login.refreshToken);
     }
@@ -86,66 +89,72 @@ export class AuthController {
 
   @Public()
   @Post('activate/resend')
-  resendActivation(@Body() dto: ResendActivationDto) {
-    return this.authService.resendActivation(dto);
+  resendActivation(@Body() body: unknown) {
+    return this.authService.resendActivation(body);
   }
 
   @Public()
   @Post('password/forgot')
-  forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
-    return this.authService.forgotPassword(dto, this.sessionContext(req));
+  forgotPassword(@Body() body: unknown, @Req() req: Request) {
+    return this.authService.forgotPassword(body, this.sessionContext(req));
   }
 
   @Public()
   @Post('password/reset/preview')
-  passwordResetPreview(@Body() dto: PasswordResetPreviewDto) {
-    return this.authService.passwordResetPreview(dto);
+  passwordResetPreview(@Body() body: unknown) {
+    return this.authService.passwordResetPreview(body);
   }
 
   @Public()
   @Post('password/reset')
   async resetPassword(
-    @Body() dto: ResetPasswordDto,
+    @Body() body: unknown,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.resetPassword(dto, this.sessionContext(req));
+    const result = await this.authService.resetPassword(body, this.sessionContext(req));
     setRefreshTokenCookie(res, result.login.refreshToken);
     return result;
   }
 
+  @Authenticated()
   @Post('password/change')
   async changePassword(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: ChangePasswordDto,
+    @Body() body: unknown,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const result = await this.authService.changePassword(user.id, dto, this.sessionContext(req));
+    const result = await this.authService.changePassword(user.id, body, this.sessionContext(req));
     setRefreshTokenCookie(res, result.login.refreshToken);
     return result;
   }
 
   @Public()
   @Post('refresh')
-  async refreshToken(@Body() dto: RefreshTokenDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  async refreshToken(@Body() body: unknown, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const cookieToken = req.cookies?.[REFRESH_TOKEN_COOKIE] as string | undefined;
-    const result = await this.authService.refreshToken(dto, this.sessionContext(req), cookieToken);
+    const result = await this.authService.refreshToken(body, this.sessionContext(req), cookieToken);
     setRefreshTokenCookie(res, result.refreshToken);
     return result;
   }
 
+  @Authenticated()
   @Post('logout')
   async logout(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: LogoutDto,
+    @Body() body: unknown,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     const cookieToken = req.cookies?.[REFRESH_TOKEN_COOKIE] as string | undefined;
+    const payload =
+      body && typeof body === 'object' && !Array.isArray(body)
+        ? (body as Record<string, unknown>)
+        : {};
     const result = await this.authService.logout(
       user,
-      { ...dto, refreshToken: dto.refreshToken ?? cookieToken },
+      { ...payload, refreshToken: payload.refreshToken ?? cookieToken },
       this.sessionContext(req),
     );
     clearRefreshTokenCookie(res);
@@ -167,4 +176,3 @@ export class AuthController {
     };
   }
 }
-

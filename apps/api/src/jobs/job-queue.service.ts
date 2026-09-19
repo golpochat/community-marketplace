@@ -3,7 +3,11 @@ import { Queue, Worker, type Job as BullJob } from 'bullmq';
 import { Gauge } from 'prom-client';
 
 import { LoggerLib } from '../libs/logger.lib';
-import { probeRedisUrl } from '../libs/redis-connection.lib';
+import {
+  assertRedisConfiguredForProduction,
+  assertRedisReachableForProduction,
+  probeRedisUrl,
+} from '../libs/redis-connection.lib';
 import { metricsRegistry } from '../modules/metrics/metrics.registry';
 
 export interface QueueJob {
@@ -33,12 +37,14 @@ export class JobQueueService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     const redisUrl = process.env.REDIS_URL;
+    assertRedisConfiguredForProduction('JobQueueService', redisUrl);
     if (!redisUrl) {
       this.logger.log('JobQueueService', 'REDIS_URL not set — jobs run inline');
       return;
     }
 
     const redisAvailable = await probeRedisUrl(redisUrl);
+    assertRedisReachableForProduction('JobQueueService', redisAvailable);
     if (!redisAvailable) {
       this.logger.log(
         'JobQueueService',

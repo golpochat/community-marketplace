@@ -21,6 +21,13 @@ import {
   type UserEffectivePermissions,
 } from '@community-marketplace/types';
 import { toIsoString } from '@community-marketplace/utils';
+import type {
+  AssignPermissionOverrideInput,
+  AssignRoleInput,
+  CreateRoleInput,
+  SyncRolePermissionsByIdInput,
+  UpdateRoleInput,
+} from '@community-marketplace/validation';
 
 import { DEV_ROLE_IDS, devRoleIdForCode } from '../../../common/constants/dev-role-ids';
 import {
@@ -34,13 +41,6 @@ import { PrismaService } from '../../../database/prisma.service';
 import { PERMISSION_SEED, PERSONA_ROLE_PERMISSION_SEED, ROLE_PERMISSION_SEED, ROLE_SEED } from '../../../database/rbac-seed.data';
 import { UsersService } from '../../users/users.service';
 import { RbacScopePolicy } from './rbac-scope.policy';
-import type {
-  AssignPermissionOverrideDto,
-  AssignUserRoleDto,
-  CreateCustomRoleDto,
-  SyncRolePermissionsDto,
-  UpdateCustomRoleDto,
-} from './dto/rbac-management.dto';
 
 interface StoredRole {
   id: string;
@@ -96,7 +96,7 @@ export class RbacManagementService {
     }));
   }
 
-  async createRole(actor: AuthenticatedUser, dto: CreateCustomRoleDto) {
+  async createRole(actor: AuthenticatedUser, dto: CreateRoleInput) {
     if (!this.scopePolicy.isSuperAdmin(actor)) {
       throw new ForbiddenException('Only SUPER_ADMIN can create custom roles');
     }
@@ -169,7 +169,7 @@ export class RbacManagementService {
     };
   }
 
-  async updateRole(actor: AuthenticatedUser, roleId: string, dto: UpdateCustomRoleDto) {
+  async updateRole(actor: AuthenticatedUser, roleId: string, dto: UpdateRoleInput) {
     const role = await this.getRoleById(roleId);
     if (role.isSystem) {
       throw new ForbiddenException('System roles cannot be renamed');
@@ -314,7 +314,7 @@ export class RbacManagementService {
     };
   }
 
-  async assignUserRole(actor: AuthenticatedUser, dto: AssignUserRoleDto) {
+  async assignUserRole(actor: AuthenticatedUser, dto: AssignRoleInput) {
     const role = await this.getRoleById(dto.roleId);
     assertSuperAdminRoleNotAssignable(role.code);
     assertBootstrapSuperAdminImmutable(dto.userId);
@@ -386,7 +386,7 @@ export class RbacManagementService {
     };
   }
 
-  async syncRolePermissions(actor: AuthenticatedUser, roleId: string, dto: SyncRolePermissionsDto) {
+  async syncRolePermissions(actor: AuthenticatedUser, roleId: string, dto: SyncRolePermissionsByIdInput) {
     const role = await this.getRoleById(roleId);
     const permissions = await Promise.all(dto.permissionIds.map((id) => this.getPermissionById(id)));
     const codes = permissions.map((p) => p.code);
@@ -403,7 +403,7 @@ export class RbacManagementService {
     };
   }
 
-  async assignPermissionOverride(actor: AuthenticatedUser, dto: AssignPermissionOverrideDto) {
+  async assignPermissionOverride(actor: AuthenticatedUser, dto: AssignPermissionOverrideInput) {
     const permission = await this.getPermissionById(dto.permissionId);
     await this.scopePolicy.assertCanManagePermission(actor, permission.code);
 

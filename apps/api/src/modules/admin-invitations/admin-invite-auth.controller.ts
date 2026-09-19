@@ -1,14 +1,15 @@
 import { Body, Controller, Post, Req, Res } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
-import { Public } from '../../common/decorators/public.decorator';
-import { AdminInvitationsService } from './admin-invitations.service';
 import {
-  AcceptAdminInvitationDto,
-  AdminInvitationTokenDto,
-} from './dto/admin-invitations.dto';
+  acceptAdminInvitationSchema,
+  adminInvitationTokenSchema,
+} from '@community-marketplace/validation';
+
+import { Public } from '../../common/decorators/public.decorator';
 import { setRefreshTokenCookie } from '../auth/utils/auth-cookies';
 import { computeDeviceFingerprint } from '../auth/utils/device-fingerprint';
+import { AdminInvitationsService } from './admin-invitations.service';
 
 @Controller('auth/admin-invite')
 export class AdminInviteAuthController {
@@ -16,17 +17,19 @@ export class AdminInviteAuthController {
 
   @Public()
   @Post('preview')
-  preview(@Body() dto: AdminInvitationTokenDto) {
+  preview(@Body() body: unknown) {
+    const dto = adminInvitationTokenSchema.parse(body);
     return this.invitations.previewInvitation(dto.token);
   }
 
   @Public()
   @Post('accept')
   async accept(
-    @Body() dto: AcceptAdminInvitationDto,
+    @Body() body: unknown,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
+    const dto = acceptAdminInvitationSchema.parse(body);
     const clientFingerprint = req.headers['x-device-fingerprint'];
     const fingerprintHeader = typeof clientFingerprint === 'string' ? clientFingerprint : undefined;
     const result = await this.invitations.acceptInvitation(dto.token, dto.password, {

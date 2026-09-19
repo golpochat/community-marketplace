@@ -1,3 +1,3 @@
 'use client';
 
-export { default } from '../../buyer/wallet/page';
+export { default } from '@/views/wallet-page';

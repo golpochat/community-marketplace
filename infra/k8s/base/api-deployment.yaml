@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: community-marketplace/api:latest  # TODO: pin image digest
+          image: community-marketplace/api:unpinned
           ports:
             - containerPort: 4000
           env:

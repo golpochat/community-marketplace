@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { CommonModule } from './common/common.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 import { AuthGuard } from './common/guards/auth.guard';
+import { CsrfGuard } from './common/guards/csrf.guard';
 import { MaintenanceGuard } from './common/guards/maintenance.guard';
 import { RolesPermissionsGuard } from './common/guards/roles-permissions.guard';
 import { SessionActivityInterceptor } from './common/interceptors/session-activity.interceptor';
@@ -43,6 +45,9 @@ import { UtilsModule } from './utils/utils.module';
   imports: [
     CommonModule,
     AppConfigModule,
+    ThrottlerModule.forRoot({
+      throttlers: [{ name: 'default', ttl: 60_000, limit: 100 }],
+    }),
     EmailModule,
     DatabaseModule,
     LibsModule,
@@ -75,6 +80,8 @@ import { UtilsModule } from './utils/utils.module';
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: CsrfGuard },
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_GUARD, useClass: MaintenanceGuard },
     { provide: APP_GUARD, useClass: RolesPermissionsGuard },

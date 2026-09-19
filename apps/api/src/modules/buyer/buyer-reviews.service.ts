@@ -1,9 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 
 import type { PendingReviewItem } from '@community-marketplace/types';
+import type { CreateListingReviewInput } from '@community-marketplace/validation';
 
 import { PrismaService } from '../../database/prisma.service';
-import { CreateReviewDto } from './dto/buyer.dto';
 
 export interface ReviewRecord {
   id: string;
@@ -19,7 +19,7 @@ export interface ReviewRecord {
 export class BuyerReviewsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: string, dto: CreateReviewDto): Promise<ReviewRecord> {
+  async create(userId: string, dto: CreateListingReviewInput): Promise<ReviewRecord> {
     const listing = await this.prisma.listing.findUnique({
       where: { id: dto.listingId },
       select: { id: true, sellerId: true },

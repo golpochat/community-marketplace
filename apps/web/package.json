@@ -12,6 +12,8 @@
     "clean": "rimraf .next out tsconfig.tsbuildinfo && node scripts/clean-pwa-sw.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
     "brand:export": "node ../../scripts/brand/export-sellnearby.mjs && node scripts/generate-og-home.mjs"
   },
   "dependencies": {
@@ -34,6 +36,7 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
@@ -45,6 +48,7 @@
     "rimraf": "^6.0.1",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.7"
   }
 }

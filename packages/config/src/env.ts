@@ -59,6 +59,16 @@ export const apiEnvSchema = baseEnvSchema.extend({
     .default('true')
     .transform((value) => value === 'true'),
   REMOVE_BG_API_KEY: z.string().optional(),
+  METRICS_SCRAPE_TOKEN: z.string().min(16).optional(),
+  CSRF_SECRET: z.string().min(16).optional(),
+}).superRefine((value, ctx) => {
+  if (value.NODE_ENV === 'production' && !value.REDIS_URL) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['REDIS_URL'],
+      message: 'REDIS_URL is required in production',
+    });
+  }
 });
 
 export const webEnvSchema = z.object({
