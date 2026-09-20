@@ -170,6 +170,64 @@ export class PaymentsRefundsService {
     return mapRefund(updatedRefund);
   }
 
+  /**
+   * Refund a succeeded listing payment as part of favouring the buyer.
+   * Idempotent if already refunded. Does not issue a second Stripe refund on chargeback.
+   */
+  async refundForDisputeResolution(
+    adminId: string,
+    paymentId: string,
+    reason: string,
+  ): Promise<{ status: 'processed' | 'already_refunded' | 'skipped_chargeback' }> {
+    const payment = await this.prisma.payment.findUnique({ where: { id: paymentId } });
+    if (!payment) throw new NotFoundException('Payment not found');
+
+    if (payment.status === 'refunded') {
+      return { status: 'already_refunded' };
+    }
+    if (payment.status === 'disputed') {
+      return { status: 'skipped_chargeback' };
+    }
+    if (payment.status !== 'succeeded') {
+      throw new BadRequestException(
+        `Cannot refund a payment in status ${payment.status}`,
+      );
+    }
+
+    const existing = await this.prisma.paymentRefund.findFirst({
+      where: {
+        paymentId: payment.id,
+        status: { in: ['pending', 'approved', 'processed'] },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (existing?.status === 'processed' || existing?.status === 'approved') {
+      return { status: 'already_refunded' };
+    }
+
+    let refundId = existing?.id;
+    if (!refundId) {
+      const created = await this.prisma.paymentRefund.create({
+        data: {
+          paymentId: payment.id,
+          requestedById: adminId,
+          amount: payment.amount,
+          reason,
+          status: 'pending',
+        },
+      });
+      refundId = created.id;
+    }
+
+    await this.approveRefund(adminId, {
+      refundId,
+      approve: true,
+      reason,
+    });
+    return { status: 'processed' };
+  }
+
   async listPending(page = 1, limit = 20) {
     const skip = (page - 1) * limit;
     const where = { status: 'pending' as const };

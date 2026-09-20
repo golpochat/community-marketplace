@@ -166,6 +166,16 @@ PATCH /api/users/me/settings
 POST /api/users/me/settings/delete-request
 ```
 
+Deactivates the account, ends open listings, anonymises profile fields, and revokes sessions. Payment records are retained where Irish law requires. Operator accounts cannot self-delete.
+
+### Export account data (GDPR portability)
+
+```http
+GET /api/users/me/data-export
+```
+
+Downloads a JSON file of account, listing, payment, chat-thread, store, and review records. Does not include password hashes or card numbers.
+
 Only the account owner may modify settings.
 
 ---
@@ -232,6 +242,7 @@ Events recorded in `user_audit_logs`:
 | `user_banned` / `user_unbanned` | Ban lifecycle |
 | `settings_updated` | Settings PATCH |
 | `deletion_requested` | Account deletion request |
+| `data_exported` | GDPR data export download |
 | `avatar_uploaded` | Avatar confirm |
 
 ```http

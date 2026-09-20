@@ -1,3 +1,16 @@
+/** Rolling mark-sold mix from listing audit `closeChannel` (no schema column). */
+export interface SaleCloseChannelKpi {
+  windowDays: number;
+  soldCount: number;
+  cardCount: number;
+  cardListedGmv: number;
+  leakedCount: number;
+  leakedListedGmv: number;
+  unknownCount: number;
+  /** leaked / (card + leaked); 0 when none are classified */
+  leakRate: number;
+}
+
 export interface AdminDashboardStats {
   totalUsers: number;
   totalSellers: number;
@@ -10,6 +23,7 @@ export interface AdminDashboardStats {
   pendingReports: number;
   activeBans: number;
   revenue: number;
+  saleCloseKpi: SaleCloseChannelKpi;
   platformHealth: {
     database: "healthy" | "degraded" | "down";
     search: "healthy" | "degraded" | "down";

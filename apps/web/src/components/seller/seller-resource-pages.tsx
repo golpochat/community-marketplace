@@ -18,6 +18,7 @@ import {
   formatLocationLabel,
   formatUpdatedAgo,
   resolveListingListedAt,
+  type ListingSaleCloseChannel,
 } from "@community-marketplace/utils";
 import {
   IRISH_MOBILE_VALIDATION_MESSAGE,
@@ -51,6 +52,7 @@ import {
 import { ListingPackageDialog } from "@/components/seller/listing-package-dialog";
 import { ListingBoostDialog } from "@/components/seller/listing-boost-dialog";
 import { ListingFeaturedDialog } from "@/components/seller/listing-featured-dialog";
+import { MarkSoldDialog } from "@/components/seller/mark-sold-dialog";
 import {
   ListingShareSuccessPanel,
   type ListingShareSuccessContext,
@@ -98,6 +100,7 @@ import {
 } from "@/services/pricing.service";
 import { titleAmendService } from "@/services/title-amend.service";
 import { sellerService } from "@/services/marketplace.service";
+import { monetizationService } from "@/services/monetization.service";
 import { sellerVerificationService } from "@/services/seller-verification.service";
 import { aiMarketingService } from "@/services/ai-marketing.service";
 import { ApiClientError } from "@/lib/api-client";
@@ -263,6 +266,9 @@ export function SellerListingsPage() {
   } | null>(null);
   const [boostDialogListingId, setBoostDialogListingId] = useState<string | null>(null);
   const [featuredDialogListingId, setFeaturedDialogListingId] = useState<string | null>(null);
+  const [soldListingId, setSoldListingId] = useState<string | null>(null);
+  const [boostsEnabled, setBoostsEnabled] = useState(true);
+  const [featuredEnabled, setFeaturedEnabled] = useState(true);
 
   const renewPackageOptions = LISTING_PACKAGE_OPTIONS.filter(
     (option) => option.value === "FREE",
@@ -278,6 +284,15 @@ export function SellerListingsPage() {
         statusFilter || undefined,
       );
       setListings(result.data);
+      const sampleId = result.data[0]?.id;
+      if (sampleId) {
+        const [boostCatalog, featuredCatalog] = await Promise.all([
+          monetizationService.getBoostCatalog(sampleId).catch(() => null),
+          monetizationService.getFeaturedCatalog(sampleId).catch(() => null),
+        ]);
+        if (boostCatalog) setBoostsEnabled(boostCatalog.boostsEnabled);
+        if (featuredCatalog) setFeaturedEnabled(featuredCatalog.featuredEnabled);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load listings");
     } finally {
@@ -319,8 +334,9 @@ export function SellerListingsPage() {
           await sellerService.resumeListing(listingId);
           break;
         case "sold":
-          await sellerService.markListingSold(listingId);
-          break;
+          setActionId(null);
+          setSoldListingId(listingId);
+          return;
         case "end":
           await sellerService.endListing(listingId);
           break;
@@ -361,6 +377,22 @@ export function SellerListingsPage() {
     }
   }
 
+  async function handleSoldConfirm(closeChannel: ListingSaleCloseChannel) {
+    if (!soldListingId) return;
+    const listingId = soldListingId;
+    setActionId(listingId);
+    setError(null);
+    try {
+      await sellerService.markListingSold(listingId, closeChannel);
+      setSoldListingId(null);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to mark listing as sold");
+    } finally {
+      setActionId(null);
+    }
+  }
+
   async function handlePackageConfirm(
     packageType: typeof DEFAULT_RENEW_PACKAGE,
   ) {
@@ -390,7 +422,10 @@ export function SellerListingsPage() {
       emptyTitle="No listings yet"
       emptyDescription="Create your first listing to start selling."
     >
-      <SellerConnectBanner className="mb-4" />
+      <SellerConnectBanner
+        className="mb-4"
+        listingPriceEur={listings.reduce((max, listing) => Math.max(max, listing.price ?? 0), 0)}
+      />
       <SellerPendingReservesPanel onChanged={() => void load()} />
       <Card>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -538,6 +573,8 @@ export function SellerListingsPage() {
                       duplicateBlocked={duplicateBlocked}
                       duplicateBlockedReason={listingGateMessage}
                       sellerVerified={isSellerVerified(sellerVerificationStatus?.sellerStatus)}
+                      boostsEnabled={boostsEnabled}
+                      featuredEnabled={featuredEnabled}
                     />
                   </td>
                 </tr>
@@ -573,6 +610,14 @@ export function SellerListingsPage() {
           onSuccess={() => void load()}
         />
       )}
+      <MarkSoldDialog
+        open={soldListingId != null}
+        confirming={Boolean(soldListingId && actionId === soldListingId)}
+        onClose={() => {
+          if (!actionId) setSoldListingId(null);
+        }}
+        onConfirm={(closeChannel) => void handleSoldConfirm(closeChannel)}
+      />
       <SellerVerificationModal
         open={showGateModal}
         onClose={() => setShowGateModal(false)}
@@ -1193,7 +1238,6 @@ export function SellerCreateListingPage() {
           : "Add a new item to your store. Listings must follow our prohibited items policy."
       }
     >
-      <SellerConnectBanner className="mb-4" />
       <SellerVerificationBanner className="mb-4" />
       {verificationBlocked ? (
         <Card className="space-y-3 p-5">
@@ -1345,6 +1389,7 @@ export function SellerEditListingPage({
   const [reorderingImages, setReorderingImages] = useState(false);
   const [showDuplicatedBanner, setShowDuplicatedBanner] = useState(duplicatedHint);
   const [boostDialogOpen, setBoostDialogOpen] = useState(false);
+  const [boostsEnabled, setBoostsEnabled] = useState(true);
 
   useEffect(() => {
     if (!duplicatedHint) return;
@@ -1367,6 +1412,10 @@ export function SellerEditListingPage({
           return;
         }
         setListingStatus(listing.status);
+        void monetizationService
+          .getBoostCatalog(listingId)
+          .then((catalog) => setBoostsEnabled(catalog.boostsEnabled))
+          .catch(() => undefined);
         setModerationNotes(listing.moderationNotes);
         setExistingImages(listing.images ?? []);
         setDeliverySelections(listing.deliveryOptions ?? []);
@@ -1711,7 +1760,7 @@ export function SellerEditListingPage({
               void handleReorderExistingImages(images)
             }
             onListingImagesChange={setExistingImages}
-            onBoostListing={() => setBoostDialogOpen(true)}
+            onBoostListing={boostsEnabled ? () => setBoostDialogOpen(true) : undefined}
             removingExistingImageId={removingImageId}
             reorderingImages={reorderingImages}
           />

@@ -6,6 +6,7 @@ import { BarChart } from '@community-marketplace/ui';
 import { DashboardCard } from '@community-marketplace/ui-dashboard';
 
 import { StatCard } from './stat-card';
+import { SaleCloseKpiSection } from './sale-close-kpi-section';
 
 interface AdminDashboardOverviewProps {
   stats: AdminDashboardStats;
@@ -38,6 +39,8 @@ export function AdminDashboardOverview({ stats }: AdminDashboardOverviewProps) {
           <StatCard label="Active Bans" value={String(stats.activeBans)} />
         </div>
       </section>
+
+      <SaleCloseKpiSection kpi={stats.saleCloseKpi} />
 
       <section>
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[hsl(var(--dashboard-sidebar-muted))]">

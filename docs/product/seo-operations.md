@@ -27,7 +27,7 @@ Priority legend: **P1** = ship now (page exists) · **P2** = strengthen copy / i
 | P1       | buy and sell locally ireland  | `/`                     | Default meta description + hero                                  |
 | P1       | community marketplace ireland | `/`                     | Hero badge + JSON-LD Organization                                |
 | P2       | local marketplace ireland     | `/listings`             | Browse title/description in `browse-metadata.ts`                 |
-| P2       | sell online ireland no fees   | `/`, `/about`           | Emphasise “no commission” on homepage + about                    |
+| P2       | sell online ireland no listing fee | `/`, `/about`           | Emphasise free listing + optional card checkout (seller service fee on card only) |
 | P2       | free marketplace ireland      | `/`                     | Mention in about/help — avoid thin dedicated page                |
 | P3       | classifieds ireland           | `/listings`             | Needs listing volume + backlinks; no keyword-stuff page          |
 | P4       | donedeal alternative          | _Future guide_          | One honest comparison guide when ready — not a spam landing page |
@@ -87,7 +87,7 @@ Priority legend: **P1** = ship now (page exists) · **P2** = strengthen copy / i
 
 | Page type | Title pattern                                  | Description must include                 | Primary JSON-LD         |
 | --------- | ---------------------------------------------- | ---------------------------------------- | ----------------------- |
-| Homepage  | `SellNearby — Buy and sell locally in Ireland` | community, local, Ireland, no commission | Organization, WebSite   |
+| Homepage  | `SellNearby — Buy and sell locally in Ireland` | community, local, Ireland, free to list | Organization, WebSite   |
 | Browse    | `Browse listings` or `{Category} for sale`     | Ireland, local sellers, trust            | —                       |
 | Category  | `{Category} for sale`                          | category + Ireland + local               | —                       |
 | City      | `{City} listings` (via location page)          | second-hand, county, meet-up safety      | —                       |
@@ -141,7 +141,7 @@ Use this every month after pilot launch. Tick in order; skip items already green
 - [ ] Re-read [seo-audit.md](./seo-audit.md) Part 8 (“What NOT to do”) — no bought links, no thin pages
 - [ ] Audit duplicate titles/descriptions in GSC
 - [ ] Review competitor SERPs for 5 P2 keywords — note content gaps for guides only
-- [ ] Consider one **honest comparison** guide (e.g. community marketplace vs commission) if P4 query matters
+- [ ] Consider one **honest comparison** guide (e.g. community marketplace vs insertion-fee classifieds) if P4 query matters
 
 ---
 

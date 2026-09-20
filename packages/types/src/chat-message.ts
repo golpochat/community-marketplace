@@ -54,6 +54,7 @@ export interface ChatParticipantPreview {
 
 export interface ChatListingPreview {
   id: string;
+  sellerId: string;
   title: string;
   price: number;
   currency: string;

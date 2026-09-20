@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 
 import type {
   CommunicationPreferences,
@@ -129,6 +130,8 @@ export function UserSettingsForm({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -201,6 +204,44 @@ export function UserSettingsForm({
       setError(err instanceof Error ? err.message : 'Failed to save settings');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleExport() {
+    setExporting(true);
+    setError(null);
+    try {
+      await userService.downloadDataExport();
+      feedback.success('Download started', 'Your data export is downloading.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to export data');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleDeleteRequest() {
+    if (
+      !window.confirm(
+        'This deactivates your account, ends open listings, and removes profile details. Payment records are kept where Irish law requires. Continue?',
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    setError(null);
+    try {
+      const result = await userService.requestAccountDeactivation();
+      setSettings((current) =>
+        current
+          ? { ...current, deletionRequestedAt: result.deletionRequestedAt ?? current.deletionRequestedAt }
+          : current,
+      );
+      feedback.success('Account deletion requested', result.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to request deletion');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -335,6 +376,46 @@ export function UserSettingsForm({
               </div>
             </SettingsSection>
           </div>
+
+          <SettingsSection title="Your data" className="mt-4">
+            <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+              Download a copy of your account, listings, and payment records, or request erasure.
+              See the{' '}
+              <Link href="/privacy" className="font-medium text-[hsl(var(--dashboard-accent))] hover:underline">
+                privacy policy
+              </Link>
+              .
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={exporting}
+                onClick={() => void handleExport()}
+              >
+                {exporting ? 'Preparing…' : 'Download my data'}
+              </Button>
+              {!isStaff ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={deleting || Boolean(settings.deletionRequestedAt)}
+                  onClick={() => void handleDeleteRequest()}
+                >
+                  {settings.deletionRequestedAt
+                    ? 'Deletion already requested'
+                    : deleting
+                      ? 'Requesting…'
+                      : 'Delete my account'}
+                </Button>
+              ) : null}
+            </div>
+            {settings.deletionRequestedAt ? (
+              <p className="mt-2 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                Deletion requested {formatListedAgo(settings.deletionRequestedAt)}.
+              </p>
+            ) : null}
+          </SettingsSection>
 
           <div className="mt-6 flex flex-col-reverse gap-3 border-t border-[hsl(var(--dashboard-sidebar-border))] pt-6 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">

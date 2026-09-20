@@ -99,6 +99,12 @@ export interface DisputeTimelineEvent {
   metadata?: Record<string, unknown>;
 }
 
+export type DisputeCardRefundOnResolve =
+  | 'processed'
+  | 'already_refunded'
+  | 'skipped_chargeback'
+  | 'not_applicable';
+
 export interface MarketplaceDispute {
   id: string;
   buyerId: string;
@@ -119,6 +125,8 @@ export interface MarketplaceDispute {
   evidence?: DisputeEvidence[];
   messages?: DisputeMessage[];
   timeline?: DisputeTimelineEvent[];
+  /** Set on resolve in the buyer’s favour: what happened to the card payment. */
+  cardRefundOnResolve?: DisputeCardRefundOnResolve;
 }
 
 export interface DisputeUploadUrlResponse {

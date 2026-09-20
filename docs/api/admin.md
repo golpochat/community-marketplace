@@ -108,7 +108,10 @@ See [moderation.md](./moderation.md) for schemas. Marketplace disputes ≠ Strip
 | Method | Path | Permission |
 |--------|------|------------|
 | `GET` | `/` · `/:id` | `view_disputes` |
-| `POST` | `/:id/request-evidence` · `/:id/under-review` · `/:id/resolve` | `resolve_disputes` |
+| `POST` | `/:id/request-evidence` · `/:id/under-review` | `resolve_disputes` |
+| `POST` | `/:id/resolve` | `resolve_disputes` |
+
+Favouring the buyer requires `confirmCardRefund: true` and refunds the succeeded card payment (idempotent). A Stripe chargeback is not refunded a second time.
 
 ---
 

@@ -15,6 +15,8 @@ import {
   LISTING_RESERVE_WINDOW_HOURS,
 } from "@community-marketplace/types";
 import { ListingFormSteps } from '@/components/seller/listing-form-steps';
+import { SellerConnectBanner } from '@/components/seller/seller-connect-banner';
+import { SellerFeeNotice } from '@/components/seller/seller-fee-notice';
 import { Button, Input, Label, Select, cn } from '@community-marketplace/ui';
 import {
   computeListingPricing,
@@ -975,6 +977,11 @@ export function VehicleListingForm({
               disabled={disabled}
             />
             <FieldError message={fieldErrors.salePrice} />
+            <SellerFeeNotice />
+            <SellerConnectBanner
+              className="mt-3"
+              listingPriceEur={Number(data.salePrice) || 0}
+            />
           </div>
           <div>
             <Label htmlFor="originalPrice">Original price / discount (optional)</Label>

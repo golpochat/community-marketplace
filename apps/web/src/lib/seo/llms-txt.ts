@@ -1,4 +1,5 @@
 import { APP_NAME } from '@community-marketplace/config';
+import { COMMERCE_PUBLIC_COPY } from '@community-marketplace/utils';
 
 import { GUIDE_ARTICLES, buildGuidePath } from '@/lib/seo/content/guides';
 import { IRISH_COUNTIES, buildLocalCountyPath } from '@/lib/seo/content/counties';
@@ -13,7 +14,7 @@ export function buildLlmsTxt(): string {
   const base = getAppUrl();
   const sections = [
     line(`# ${APP_NAME}`),
-    line('> Ireland\'s community marketplace — buy and sell locally with no commission.'),
+    line(`> ${COMMERCE_PUBLIC_COPY.llmsTagline}`),
     line('> Primary audience: Irish residents buying and selling second-hand goods locally.'),
     line(),
     line('## Core marketplace'),

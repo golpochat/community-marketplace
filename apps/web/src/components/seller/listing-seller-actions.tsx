@@ -13,8 +13,10 @@ interface ListingSellerActionsProps {
   /** When true, duplicate is disabled (unverified limit reached). */
   duplicateBlocked?: boolean;
   duplicateBlockedReason?: string;
-  /** When false, paid boost and feature actions are hidden. */
+  /** When false, paid boost actions are hidden. */
   sellerVerified?: boolean;
+  boostsEnabled?: boolean;
+  featuredEnabled?: boolean;
 }
 
 export type SellerListingAction =
@@ -40,6 +42,8 @@ export function ListingSellerActions({
   duplicateBlocked = false,
   duplicateBlockedReason,
   sellerVerified = true,
+  boostsEnabled = true,
+  featuredEnabled = true,
 }: ListingSellerActionsProps) {
   const busy = actionId === listing.id;
   const status = listing.status as ListingStatus;
@@ -107,23 +111,29 @@ export function ListingSellerActions({
       break;
     case 'active':
       actions.push(editButton);
-      if (sellerVerified) {
-        actions.push(
-          <IconActionButton
-            key="upgrade"
-            icon="check"
-            label="Boost listing"
-            disabled={busy}
-            onClick={() => onAction(listing.id, 'upgrade')}
-          />,
-          <IconActionButton
-            key="feature"
-            icon="medal"
-            label="Feature listing"
-            disabled={busy}
-            onClick={() => onAction(listing.id, 'feature')}
-          />,
-        );
+      if (sellerVerified && (boostsEnabled || featuredEnabled)) {
+        if (boostsEnabled) {
+          actions.push(
+            <IconActionButton
+              key="upgrade"
+              icon="check"
+              label="Boost listing"
+              disabled={busy}
+              onClick={() => onAction(listing.id, 'upgrade')}
+            />,
+          );
+        }
+        if (featuredEnabled) {
+          actions.push(
+            <IconActionButton
+              key="feature"
+              icon="medal"
+              label="Feature listing"
+              disabled={busy}
+              onClick={() => onAction(listing.id, 'feature')}
+            />,
+          );
+        }
       }
       actions.push(
         <IconActionButton

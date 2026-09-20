@@ -26,6 +26,7 @@ const USER_EVENT_LABELS: Record<string, string> = {
   user_unbanned: 'Ban lifted',
   settings_updated: 'Settings updated',
   deletion_requested: 'Account deletion requested',
+  data_exported: 'Account data exported',
   avatar_uploaded: 'Avatar uploaded',
   store_banner_uploaded: 'Store banner uploaded',
   phone_change_otp_sent: 'Phone change verification sent',

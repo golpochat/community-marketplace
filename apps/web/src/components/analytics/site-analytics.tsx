@@ -1,9 +1,31 @@
+'use client';
+
 import Script from 'next/script';
+import { useEffect, useState } from 'react';
+
+import {
+  COOKIE_CONSENT_EVENT,
+  analyticsConsentGranted,
+  readCookieConsent,
+} from '@/lib/cookie-consent';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
 const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN?.trim();
 
 export function SiteAnalytics() {
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    function sync() {
+      setAllowed(analyticsConsentGranted(readCookieConsent()));
+    }
+    sync();
+    window.addEventListener(COOKIE_CONSENT_EVENT, sync);
+    return () => window.removeEventListener(COOKIE_CONSENT_EVENT, sync);
+  }, []);
+
+  if (!allowed) return null;
+
   if (GA_ID) {
     return (
       <>

@@ -11,6 +11,8 @@ Step-by-step procedures for deployments and incidents.
 | **[Pilot testing](./pilot-testing.md)** | Full QA matrix: what to test, expect, options, sign-off |
 | **[OVH VPS deploy](./ovh-vps-deploy.md)** | Docker deploy on OVH for `sellnearby.ie` |
 | **[Pilot feedback](./pilot-feedback.md)** | Google Form setup, invite copy, check-in scripts |
+| **[Dispute & refund playbook](./dispute-refund-playbook.md)** | 48h card review, refunds, cash out of scope, bans |
+| **[Concierge GTM](./pilot-concierge-gtm.md)** | Dublin wedge: verify → Connect → first card sale |
 
 **Other:**
 

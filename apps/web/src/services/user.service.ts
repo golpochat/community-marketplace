@@ -8,6 +8,7 @@ import type {
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
+import { downloadAuthenticatedFile } from '@/lib/download-file';
 
 export const userService = {
   async getMyProfile(): Promise<UserProfile> {
@@ -119,5 +120,9 @@ export const userService = {
       { method: 'POST' },
     );
     return response.data;
+  },
+
+  async downloadDataExport(): Promise<void> {
+    await downloadAuthenticatedFile(WEB_API_ROUTES.users.meDataExport, 'sellnearby-data-export.json');
   },
 };

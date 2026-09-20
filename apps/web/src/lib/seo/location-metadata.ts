@@ -2,6 +2,7 @@ import type { ListingLocation } from '@/lib/seo/content/locations';
 import type { Metadata } from 'next';
 
 import { APP_NAME } from '@community-marketplace/config';
+import { buildLocationBrowseDescription } from '@community-marketplace/utils';
 
 import { buildListingLocationPath } from '@/lib/seo/content/locations';
 import { buildLocalCountyPath } from '@/lib/seo/content/counties';
@@ -11,7 +12,7 @@ import { DEFAULT_OG_IMAGE, DEFAULT_TWITTER } from '@/lib/seo/og-default';
 
 export function buildLocationBrowseMetadata(location: ListingLocation): Metadata {
   const title = `${location.name} listings — buy & sell locally`;
-  const description = `Browse second-hand items in ${location.name}, ${location.county}. Local sellers, no commission — furniture, electronics, and more on ${APP_NAME}.`;
+  const description = buildLocationBrowseDescription(location.name, location.county, APP_NAME);
   const path = buildListingLocationPath(location.slug);
 
   return {

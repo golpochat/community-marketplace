@@ -8,6 +8,7 @@ import { NotificationUnreadProvider } from '@/providers/notification-unread-prov
 import { ThemeProvider } from '@/providers/theme-provider';
 import { AuthIdleTimeout } from '@/components/auth/auth-idle-timeout';
 import { AuthSessionSync } from '@/components/auth/auth-session-sync';
+import { CookieBanner } from '@/components/legal/cookie-banner';
 
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
@@ -15,7 +16,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <ToastProvider>
         <AuthSessionSync />
         <AuthIdleTimeout />
-        <NotificationUnreadProvider>{children}</NotificationUnreadProvider>
+        <NotificationUnreadProvider>
+          {children}
+          <CookieBanner />
+        </NotificationUnreadProvider>
       </ToastProvider>
     </ThemeProvider>
   );

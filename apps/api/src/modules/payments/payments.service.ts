@@ -120,6 +120,14 @@ export class PaymentsService {
     return this.refunds.approveRefund(adminId, dto);
   }
 
+  refundForDisputeResolution(
+    adminId: string,
+    paymentId: string,
+    reason: string,
+  ): Promise<{ status: 'processed' | 'already_refunded' | 'skipped_chargeback' }> {
+    return this.refunds.refundForDisputeResolution(adminId, paymentId, reason);
+  }
+
   listPendingRefunds(page?: number, limit?: number) {
     return this.refunds.listPending(page, limit);
   }

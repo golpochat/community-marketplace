@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ListingFormSteps } from '@/components/seller/listing-form-steps';
+import { SellerFeeNotice } from '@/components/seller/seller-fee-notice';
+import { SellerConnectBanner } from '@/components/seller/seller-connect-banner';
 import { cn } from '@community-marketplace/ui';
 import {
   LISTING_DESCRIPTION_HARD_MAX,
@@ -867,6 +869,13 @@ export function ListingForm({
                 ? "Free-priced items appear with a €0 price. Collection-only pickup is recommended on the next step."
                 : "The price buyers will pay. Enter 0 to give the item away for free."}
             </p>
+            {!isFreeListing ? <SellerFeeNotice /> : null}
+            {!isFreeListing ? (
+              <SellerConnectBanner
+                className="mt-3"
+                listingPriceEur={Number(data.salePrice) || 0}
+              />
+            ) : null}
           </div>
           {!isFreeListing && (
             <div>

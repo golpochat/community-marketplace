@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import type { SellerPlatformFeeInfo } from '@community-marketplace/types';
+import { resolveSellerPlatformFee } from '@community-marketplace/utils';
 
 import { PrismaService } from '../../../database/prisma.service';
 import { roundMoney } from '../mappers/monetization.mapper';
@@ -14,22 +15,8 @@ export class PlatformFeeService {
   ) {}
 
   async getEffectiveFeePercent(sellerId: string): Promise<number> {
-    const [seller, platform] = await Promise.all([
-      this.prisma.user.findUnique({
-        where: { id: sellerId },
-        select: { customPlatformFeePercent: true },
-      }),
-      this.settings.get(),
-    ]);
-
-    if (seller?.customPlatformFeePercent != null) {
-      return Number(seller.customPlatformFeePercent);
-    }
-
-    return (
-      platform.defaultPlatformFeePercent ??
-      Number(process.env.PLATFORM_FEE_PERCENT ?? 10)
-    );
+    const info = await this.getSellerFeeInfo(sellerId);
+    return info.effectiveFeePercent;
   }
 
   async calculatePlatformFee(
@@ -52,22 +39,15 @@ export class PlatformFeeService {
 
     const defaultFeePercent = platform.defaultPlatformFeePercent;
     const verifiedSellerFeePercent = platform.verifiedSellerFeePercent;
-    const isCustomOverride = seller?.customPlatformFeePercent != null;
-    const effectiveFeePercent = isCustomOverride
-      ? Number(seller!.customPlatformFeePercent)
-      : defaultFeePercent;
-    const isVerifiedRate =
-      seller?.sellerStatus === 'verified' &&
-      isCustomOverride &&
-      effectiveFeePercent === verifiedSellerFeePercent;
-
-    return {
-      effectiveFeePercent,
-      isCustomOverride,
-      defaultFeePercent,
+    return resolveSellerPlatformFee({
+      sellerStatus: seller?.sellerStatus,
+      customPlatformFeePercent:
+        seller?.customPlatformFeePercent != null
+          ? Number(seller.customPlatformFeePercent)
+          : null,
+      defaultPlatformFeePercent: defaultFeePercent,
       verifiedSellerFeePercent,
-      isVerifiedRate,
-    };
+    });
   }
 
   async setSellerFeeOverride(
@@ -205,10 +185,15 @@ export class PlatformFeeService {
     });
 
     return rows.map((row) => {
-      const effectiveFeePercent =
-        row.customPlatformFeePercent != null
-          ? Number(row.customPlatformFeePercent)
-          : platform.defaultPlatformFeePercent;
+      const effectiveFeePercent = resolveSellerPlatformFee({
+        sellerStatus: row.sellerStatus,
+        customPlatformFeePercent:
+          row.customPlatformFeePercent != null
+            ? Number(row.customPlatformFeePercent)
+            : null,
+        defaultPlatformFeePercent: platform.defaultPlatformFeePercent,
+        verifiedSellerFeePercent: platform.verifiedSellerFeePercent,
+      }).effectiveFeePercent;
       const effectiveAiFreeUnitsMonthly =
         row.customAiMarketingFreeUnitsMonthly != null
           ? row.customAiMarketingFreeUnitsMonthly

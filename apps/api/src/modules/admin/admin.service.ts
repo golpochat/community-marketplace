@@ -7,6 +7,10 @@ import type {
   RbacRole,
 } from "@community-marketplace/types";
 import type { PlatformGovernanceUpdateInput, AdminActionInput } from "@community-marketplace/validation";
+import {
+  SALE_CLOSE_KPI_WINDOW_DAYS,
+  summarizeSaleCloseEvents,
+} from "@community-marketplace/utils";
 
 import { PrismaService } from "../../database/prisma.service";
 import { EventBusService } from "../../events/event-bus.service";
@@ -32,7 +36,7 @@ export class AdminService {
   ) {}
 
   async getStats(): Promise<AdminDashboardStats> {
-    const cacheKey = "admin:dashboard:stats";
+    const cacheKey = "admin:dashboard:stats:v2";
     const cached = await this.cache.get<AdminDashboardStats>(cacheKey);
     if (cached) return cached;
 
@@ -48,6 +52,7 @@ export class AdminService {
       reports,
       bans,
       revenueAgg,
+      soldCloseLogs,
     ] = await Promise.all([
       this.prisma.user.count(),
       this.prisma.user.count({
@@ -116,7 +121,39 @@ export class AdminService {
         where: { status: "succeeded" },
         _sum: { amount: true },
       }),
+      this.prisma.listingAuditLog.findMany({
+        where: {
+          eventType: "status_changed",
+          toStatus: "sold",
+          createdAt: {
+            gte: new Date(
+              Date.now() - SALE_CLOSE_KPI_WINDOW_DAYS * 24 * 60 * 60 * 1000,
+            ),
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          listingId: true,
+          metadata: true,
+          listing: { select: { price: true } },
+        },
+      }),
     ]);
+
+    const seenSoldListings = new Set<string>();
+    const saleCloseEvents: Array<{ closeChannel?: unknown; listedPrice: number }> = [];
+    for (const row of soldCloseLogs) {
+      if (seenSoldListings.has(row.listingId)) continue;
+      seenSoldListings.add(row.listingId);
+      const metadata =
+        row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
+          ? (row.metadata as Record<string, unknown>)
+          : {};
+      saleCloseEvents.push({
+        closeChannel: metadata.closeChannel,
+        listedPrice: Number(row.listing.price),
+      });
+    }
 
     const stats: AdminDashboardStats = {
       totalUsers,
@@ -130,6 +167,7 @@ export class AdminService {
       pendingReports: reports.meta.total,
       activeBans: Array.isArray(bans) ? bans.length : 0,
       revenue: revenueAgg._sum.amount?.toNumber() ?? 0,
+      saleCloseKpi: summarizeSaleCloseEvents(saleCloseEvents),
       platformHealth: {
         database: "healthy",
         search: process.env.MEILISEARCH_HOST ? "healthy" : "degraded",
@@ -150,7 +188,7 @@ export class AdminService {
     settings: PlatformGovernanceUpdateInput,
   ): Promise<PlatformGovernanceStatus> {
     await this.governance.update(settings);
-    await this.cache.del("admin:dashboard:stats");
+    await this.cache.del("admin:dashboard:stats:v2");
     return this.governance.getStatus();
   }
 

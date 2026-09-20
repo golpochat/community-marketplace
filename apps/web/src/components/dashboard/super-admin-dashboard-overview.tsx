@@ -20,6 +20,7 @@ import {
   formatActivityEventType,
   formatActivitySource,
 } from '@/lib/super-admin-activity';
+import { SaleCloseKpiSection } from '@/components/dashboard/sale-close-kpi-section';
 
 type HealthStatus = SuperAdminPlatformOverview['platformHealth']['database'];
 
@@ -437,6 +438,10 @@ export function SuperAdminDashboardOverview({ stats }: SuperAdminDashboardOvervi
           />
         </div>
       </OverviewCard>
+
+      <div className="col-span-full">
+        <SaleCloseKpiSection kpi={stats.saleCloseKpi} />
+      </div>
 
       <OverviewCard className="col-span-full xl:col-span-2" accent="governance">
         <SectionLabel icon={Shield}>Governance</SectionLabel>

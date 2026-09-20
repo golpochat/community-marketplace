@@ -30,6 +30,7 @@ import type {
   PaginatedResult,
   ApiResponse,
 } from '@community-marketplace/types';
+import { emptySaleCloseChannelKpi } from '@community-marketplace/utils';
 
 import type { UpdateStaffRoleInput, UpdateStaffStatusInput } from '@community-marketplace/validation';
 
@@ -50,6 +51,7 @@ const EMPTY_STATS: AdminDashboardStats = {
   pendingReports: 0,
   activeBans: 0,
   revenue: 0,
+  saleCloseKpi: emptySaleCloseChannelKpi(),
   platformHealth: { database: 'degraded', search: 'degraded', payments: 'degraded' },
   generatedAt: new Date().toISOString(),
 };
@@ -861,6 +863,7 @@ export const adminService = {
     input: {
       outcome: 'resolved_buyer_favored' | 'resolved_seller_favored' | 'closed';
       resolutionNotes: string;
+      confirmCardRefund?: boolean;
     },
   ): Promise<MarketplaceDispute> {
     const response = await apiClient<MarketplaceDispute>(

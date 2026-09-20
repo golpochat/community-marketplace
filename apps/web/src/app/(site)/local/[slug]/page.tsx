@@ -87,8 +87,8 @@ export default async function LocalCountyPage({ params }: LocalCountyPageProps) 
         <section className="mt-10 rounded-xl border border-border bg-card p-6 shadow-brand-sm">
           <h2 className="text-xl font-semibold text-foreground">Browse listings in {county.name}</h2>
           <p className="mt-2 text-muted-foreground">
-            Discover items from verified local sellers in {county.name}. No commission — list free,
-            sell to neighbours.
+            Discover items from verified local sellers in {county.name}. Listing is free; card
+            checkout is optional.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <Button asChild>

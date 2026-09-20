@@ -1,5 +1,6 @@
 import { ContentPageShell } from '@/components/public/content-page-shell';
 import { publicPageMetadata } from '@/lib/seo/canonical';
+import { COMMERCE_PUBLIC_COPY } from '@community-marketplace/utils';
 
 export const metadata = publicPageMetadata({
   title: 'Safety & Scam Protection',
@@ -29,6 +30,9 @@ export default function SafetyPage() {
         <li>Requests for gift cards, crypto, or overseas bank transfers.</li>
         <li>Pressure to decide immediately.</li>
       </ul>
+
+      <h2 className="mt-8 text-xl font-semibold text-foreground">Card checkout vs cash</h2>
+      <p className="mt-3">{COMMERCE_PUBLIC_COPY.disputeReview}</p>
 
       <h2 className="mt-8 text-xl font-semibold text-foreground">Report suspicious behaviour</h2>
       <p>

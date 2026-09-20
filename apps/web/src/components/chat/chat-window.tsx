@@ -6,16 +6,19 @@ import type {
   ChatMessage,
   ChatListingPreview,
   ChatParticipantPreview,
+  ListingStatus,
   PriorityMessageConfigResponse,
   PriorityMessageIntentResponse,
 } from '@community-marketplace/types';
 import { cn } from '@community-marketplace/ui';
 import { Button } from '@community-marketplace/ui';
+import { COMMERCE_PUBLIC_COPY } from '@community-marketplace/utils';
 
 import { ChatVerificationBadge } from '@/components/chat/chat-verification-badge';
 import { ListingPreviewInChat } from '@/components/chat/listing-preview-in-chat';
 import { MessageBubble } from '@/components/chat/message-bubble';
 import { TypingIndicator } from '@/components/chat/typing-indicator';
+import { BuyNowButton } from '@/components/listings/buy-now-button';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
 import { monetizationService } from '@/services/monetization.service';
 
@@ -226,6 +229,21 @@ export function ChatWindow({
           </div>
         )}
       </div>
+      {listing &&
+        listing.status === 'active' &&
+        listing.sellerId !== currentUserId &&
+        !isBlocked && (
+          <div className="border-b border-border px-4 py-3">
+            <p className="mb-2 text-xs text-muted-foreground">{COMMERCE_PUBLIC_COPY.chatPayHint}</p>
+            <BuyNowButton
+              listing={{
+                id: listing.id,
+                status: listing.status as ListingStatus,
+                sellerId: listing.sellerId,
+              }}
+            />
+          </div>
+        )}
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((msg) => (
           <div key={msg.id} className="group relative">

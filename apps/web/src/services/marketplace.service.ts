@@ -9,6 +9,7 @@ import type {
   SellerStoresOverview,
   UserProfile,
 } from '@community-marketplace/types';
+import type { ListingSaleCloseChannel } from '@community-marketplace/utils';
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
@@ -63,9 +64,10 @@ export const sellerService = {
     });
   },
 
-  markListingSold(id: string) {
+  markListingSold(id: string, closeChannel: ListingSaleCloseChannel) {
     return apiClient<Listing>(`${WEB_API_ROUTES.seller.listings}/${id}/sold`, {
       method: 'POST',
+      body: JSON.stringify({ closeChannel }),
     });
   },
 

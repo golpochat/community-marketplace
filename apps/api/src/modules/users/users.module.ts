@@ -7,6 +7,7 @@ import { R2StorageService } from './services/r2-storage.service';
 import { UserAuditService } from './services/user-audit.service';
 import { UsersAdminService } from './services/users-admin.service';
 import { UsersPhoneService } from './services/users-phone.service';
+import { UsersPrivacyService } from './services/users-privacy.service';
 import { UsersProfileService } from './services/users-profile.service';
 import { UsersSettingsService } from './services/users-settings.service';
 import { UsersController } from './users.controller';
@@ -19,6 +20,7 @@ import { UsersService } from './users.service';
     UsersService,
     UsersProfileService,
     UsersPhoneService,
+    UsersPrivacyService,
     UsersSettingsService,
     UsersAdminService,
     UserAuditService,

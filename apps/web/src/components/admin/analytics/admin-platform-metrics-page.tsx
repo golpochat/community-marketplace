@@ -10,6 +10,7 @@ import { formatCurrency } from '@community-marketplace/utils';
 
 import { DashboardPageShell } from '@/components/dashboard/async-resource';
 import { StatCard } from '@/components/dashboard/stat-card';
+import { SaleCloseKpiSection } from '@/components/dashboard/sale-close-kpi-section';
 import { adminService } from '@/services/admin.service';
 
 function healthLabel(status: SuperAdminPlatformOverview['platformHealth']['database']): string {
@@ -86,6 +87,8 @@ export function AdminPlatformMetricsPage() {
               <StatCard label="Active listings" value={String(stats.activeListings)} />
             </div>
           </section>
+
+          <SaleCloseKpiSection kpi={stats.saleCloseKpi} />
 
           <div className="grid gap-6 lg:grid-cols-2">
             <DashboardCard title="User & listing mix">

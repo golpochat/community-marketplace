@@ -226,9 +226,9 @@ function SellerEarningsContent() {
       {!loading && (
         <div className="space-y-6">
           {platformFee && (
-            <DashboardCard title="Platform fee">
+            <DashboardCard title="Seller service fee">
               <p className="text-sm text-[hsl(var(--dashboard-main-fg))]">
-                Your platform fee:{' '}
+                Your seller service fee:{' '}
                 <strong>{platformFee.effectiveFeePercent}%</strong>
                 {platformFee.isVerifiedRate
                   ? ' (verified seller rate)'
@@ -237,7 +237,9 @@ function SellerEarningsContent() {
                     : ' (default)'}
               </p>
               <p className="mt-2 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-                Cashback for buyers is funded by the platform, not deducted from your payout.
+                Charged only on card checkout. Cash or collection arranged in chat has no seller
+                service fee. Cashback for buyers is funded by the platform, not deducted from your
+                payout.
               </p>
             </DashboardCard>
           )}

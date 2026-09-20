@@ -25,4 +25,9 @@ describe('users listing authorization', () => {
     expect(usersService).not.toMatch(/listUsers\(\{ page: p, limit: l \}, 'SUPER_ADMIN'\)/);
     expect(usersService).not.toMatch(/\bfindAll\b/);
   });
+
+  it('exposes authenticated GDPR export and deletion routes', () => {
+    expect(usersController).toMatch(/me\/data-export/);
+    expect(usersController).toMatch(/me\/settings\/delete-request/);
+  });
 });

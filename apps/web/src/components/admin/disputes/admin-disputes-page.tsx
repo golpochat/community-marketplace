@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { MarketplaceDispute, MarketplaceDisputeStatus } from '@community-marketplace/types';
 import { DISPUTE_REASON_LABELS } from '@community-marketplace/types';
-import { formatCurrency, formatListedAgo } from '@community-marketplace/utils';
+import { formatCurrency, formatListedAgo, compactUuid } from '@community-marketplace/utils';
 import {
   Button,
   IconActionButton,
@@ -90,11 +90,11 @@ function isResolvedDispute(dispute: MarketplaceDispute): boolean {
 
 function formatPartyName(name: string | undefined, id: string): string {
   if (name?.trim()) return name.trim();
-  return `User ${id.slice(0, 8)}`;
+  return `User ${compactUuid(id)}`;
 }
 
 function listingLabel(dispute: MarketplaceDispute): string {
-  return dispute.listing?.title ?? `Listing ${dispute.listingId.slice(0, 8)}`;
+  return dispute.listing?.title ?? `Listing ${compactUuid(dispute.listingId)}`;
 }
 
 export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
@@ -105,6 +105,7 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
   const [acting, setActing] = useState(false);
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
+  const [resolveNotice, setResolveNotice] = useState<string | null>(null);
   const [resolveOutcome, setResolveOutcome] = useState<ResolveOutcome | null>(null);
   const [needsActionTotal, setNeedsActionTotal] = useState(0);
   const [awaitingEvidenceTotal, setAwaitingEvidenceTotal] = useState(0);
@@ -199,13 +200,22 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
     setResolutionNotes(notes);
     setActing(true);
     setActionError(null);
+    setResolveNotice(null);
     try {
       const updated = await adminService.resolveDispute(role, detail.id, {
         outcome: resolveOutcome,
         resolutionNotes: notes,
+        confirmCardRefund: resolveOutcome === 'resolved_buyer_favored' ? true : undefined,
       });
       setDetail(updated);
       setResolveOutcome(null);
+      if (updated.cardRefundOnResolve === 'processed') {
+        setResolveNotice('Card payment refunded via Stripe.');
+      } else if (updated.cardRefundOnResolve === 'already_refunded') {
+        setResolveNotice('Card payment was already refunded.');
+      } else if (updated.cardRefundOnResolve === 'skipped_chargeback') {
+        setResolveNotice('Stripe chargeback in progress — no second refund issued.');
+      }
       await reload();
       await refreshDisputeStats();
     } catch (err) {
@@ -235,6 +245,9 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
   const detailContent = detail ? (
     <div className="space-y-4">
       {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
+      {resolveNotice ? (
+        <p className="text-sm text-[hsl(var(--dashboard-main-fg))]">{resolveNotice}</p>
+      ) : null}
 
       <div className="space-y-1">
         <p className="font-medium text-[hsl(var(--dashboard-main-fg))]">{listingLabel(detail)}</p>
@@ -405,6 +418,8 @@ export function AdminDisputesPage({ role }: { role: AdminServiceRole }) {
         outcome={resolveOutcome}
         loading={acting}
         initialNotes={resolutionNotes}
+        listingPrice={detail?.listing?.price}
+        listingCurrency={detail?.listing?.currency}
         onClose={() => setResolveOutcome(null)}
         onConfirm={(notes) => void handleConfirmResolve(notes)}
       />

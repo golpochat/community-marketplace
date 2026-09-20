@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import type { UserSettings } from '@community-marketplace/types';
 import {
@@ -10,7 +10,6 @@ import {
   type UpdateUserSettingsInput,
 } from '@community-marketplace/validation';
 
-import { assertBootstrapSuperAdminImmutable } from '../../../common/constants/bootstrap-users';
 import { PrismaService } from '../../../database/prisma.service';
 import { UserAuditService } from './user-audit.service';
 
@@ -73,35 +72,6 @@ export class UsersSettingsService {
 
     await this.audit.record('settings_updated', userId, userId, { fields: Object.keys(parsed) });
     return this.toDto(updated);
-  }
-
-  async requestDeletion(userId: string) {
-    assertBootstrapSuperAdminImmutable(userId);
-
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { primaryRole: true },
-    });
-    if (!user) throw new NotFoundException('User not found');
-
-    const roleCode = user.primaryRole.code;
-    if (roleCode === 'SUPER_ADMIN' || roleCode === 'ADMIN') {
-      throw new ForbiddenException(
-        'Platform operator accounts cannot be self-deactivated. Contact a Super Admin to revoke admin access.',
-      );
-    }
-
-    await this.ensureSettings(userId);
-    const updated = await this.prisma.userSettings.update({
-      where: { userId },
-      data: { deletionRequestedAt: new Date() },
-    });
-
-    await this.audit.record('deletion_requested', userId, userId);
-    return {
-      deletionRequestedAt: updated.deletionRequestedAt?.toISOString(),
-      message: 'Account deletion request recorded. Support will process within 30 days.',
-    };
   }
 
   private async ensureSettings(userId: string) {

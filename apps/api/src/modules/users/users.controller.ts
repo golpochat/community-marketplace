@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Res } from '@nestjs/common';
+import type { Response } from 'express';
 
 import { PERMISSIONS } from '@community-marketplace/types';
 import {
@@ -86,6 +87,14 @@ export class UsersController {
   @Get('me/settings')
   getMySettings(@CurrentUser() user: AuthenticatedUser) {
     return this.usersService.getSettings(user.id);
+  }
+
+  @Get('me/data-export')
+  async exportMyData(@CurrentUser() user: AuthenticatedUser, @Res() res: Response) {
+    const file = await this.usersService.exportAccount(user.id);
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
+    res.send(file.body);
   }
 
   @Patch('me/settings')

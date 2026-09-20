@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client';
 
 import type {
   ChatInboxItem,
+  ChatListingPreview,
   ChatMessage,
   ChatThread,
 } from '@community-marketplace/types';
@@ -111,6 +112,20 @@ export function mapChatThread(row: {
   };
 }
 
+export function mapChatListingPreview(
+  listing: ThreadWithRelations['listing'],
+): ChatListingPreview {
+  return {
+    id: listing.id,
+    sellerId: listing.sellerId,
+    title: listing.title,
+    price: Number(listing.price),
+    currency: listing.currency,
+    imageUrl: chatListingImageUrl(listing.images[0]),
+    status: listing.status,
+  };
+}
+
 export function mapInboxItem(
   thread: ThreadWithRelations,
   lastMessage: ChatMessage | undefined,
@@ -128,14 +143,7 @@ export function mapInboxItem(
     lastMessage,
     unreadCount,
     hasPriority,
-    listing: {
-      id: thread.listing.id,
-      title: thread.listing.title,
-      price: Number(thread.listing.price),
-      currency: thread.listing.currency,
-      imageUrl: chatListingImageUrl(thread.listing.images[0]),
-      status: thread.listing.status,
-    },
+    listing: mapChatListingPreview(thread.listing),
     participant: {
       id: participant.id,
       displayName: participant.displayName ?? undefined,

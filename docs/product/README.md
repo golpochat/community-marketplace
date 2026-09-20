@@ -22,6 +22,7 @@
 | **[listing-reserve.md](./listing-reserve.md)** | **Listing reserve** — free hold for ID-verified members after seller approval; seller sets 4/12/24h; Phase 2 polish |
 | **[display-ads-admin-campaigns.md](./display-ads-admin-campaigns.md)** | **Brand display ads** — admin-run campaigns into homepage, browse sidebar, and search/browse inline |
 | **[haram-enforcement-roadmap.md](./haram-enforcement-roadmap.md)** | **Haram / prohibited enforcement** — Phase A config+matcher; B–F keyword/category/image |
+| **[revenue-stream-competitive-report.md](./revenue-stream-competitive-report.md)** | **Revenue streams** — live SellNearby P&L vs DoneDeal, Adverts.ie, Gumtree, Facebook Marketplace |
 
 ## Redirects
 

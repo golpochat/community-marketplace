@@ -187,8 +187,12 @@ export class SellerListingsController {
 
   @RequirePermissions(PERMISSIONS.EDIT_LISTING)
   @Post(':id/sold')
-  markSold(@CurrentUser() user: AuthenticatedUser, @Param('id') id: string) {
-    return this.listingsService.markSold(id, user.id, user.role);
+  markSold(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    return this.listingsService.markSold(id, user.id, user.role, body);
   }
 
   @RequirePermissions(PERMISSIONS.ARCHIVE_LISTING)

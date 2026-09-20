@@ -26,6 +26,7 @@ export type UserAuditEventType =
   | 'user_unbanned'
   | 'settings_updated'
   | 'deletion_requested'
+  | 'data_exported'
   | 'avatar_uploaded'
   | 'store_banner_uploaded'
   | 'phone_change_otp_sent'
@@ -118,6 +119,28 @@ export interface UserSettings {
   communicationPreferences: CommunicationPreferences;
   deletionRequestedAt?: string;
   updatedAt: string;
+}
+
+export interface AccountDataExport {
+  exportedAt: string;
+  account: {
+    id: string;
+    email: string;
+    displayName?: string;
+    role: string;
+    status: UserStatus;
+    createdAt: string;
+  };
+  profile?: Record<string, unknown>;
+  settings?: Record<string, unknown>;
+  listings: Array<Record<string, unknown>>;
+  payments: Array<Record<string, unknown>>;
+  chatThreads: Array<Record<string, unknown>>;
+  stores: Array<Record<string, unknown>>;
+  reviews: {
+    given: Array<Record<string, unknown>>;
+    received: Array<Record<string, unknown>>;
+  };
 }
 
 export interface UserBan {

@@ -10,6 +10,7 @@ import { R2StorageService } from './services/r2-storage.service';
 import { UserAuditService } from './services/user-audit.service';
 import { UsersAdminService } from './services/users-admin.service';
 import { UsersPhoneService } from './services/users-phone.service';
+import { UsersPrivacyService } from './services/users-privacy.service';
 import { UsersProfileService } from './services/users-profile.service';
 import { UsersSettingsService } from './services/users-settings.service';
 
@@ -21,6 +22,7 @@ export class UsersService {
     private readonly profileService: UsersProfileService,
     private readonly phoneService: UsersPhoneService,
     private readonly settingsService: UsersSettingsService,
+    private readonly privacyService: UsersPrivacyService,
     private readonly adminService: UsersAdminService,
     private readonly storageService: R2StorageService,
     private readonly auditService: UserAuditService,
@@ -52,8 +54,12 @@ export class UsersService {
     return this.settingsService.updateSettings(userId, dto as never);
   }
 
+  exportAccount(userId: string) {
+    return this.privacyService.exportAccount(userId);
+  }
+
   requestDeletion(userId: string) {
-    return this.settingsService.requestDeletion(userId);
+    return this.privacyService.requestDeletion(userId);
   }
 
   async createAvatarUploadUrl(userId: string, dto: unknown) {

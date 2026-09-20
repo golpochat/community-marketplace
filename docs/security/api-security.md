@@ -39,7 +39,7 @@ Configured in `infra/traefik/dynamic/middlewares.yml`:
 
 - PII minimized in logs (Pino structured, no passwords)
 - Verification docs in private R2 prefix with presigned access
-- GDPR: user deletion request flow in users settings
+- GDPR: `GET /users/me/data-export` and `POST /users/me/settings/delete-request` (deactivates and anonymises profile; payment records retained)
 
 ## Related
 

@@ -101,8 +101,8 @@ export class ListingsService {
     return this.crud.findBySeller(sellerId, filters);
   }
 
-  markSold(listingId: string, actorId: string, actorRole: RbacRole) {
-    return this.lifecycle.markSold(listingId, actorId, actorRole);
+  markSold(listingId: string, actorId: string, actorRole: RbacRole, input?: unknown) {
+    return this.lifecycle.markSold(listingId, actorId, actorRole, input);
   }
 
   markSoldFromPayment(listingId: string, buyerId?: string) {

@@ -2,13 +2,14 @@ import Link from 'next/link';
 
 import { Button } from '@community-marketplace/ui';
 import { APP_NAME, PLATFORM_COUNTRY_NAME } from '@community-marketplace/config';
+import { COMMERCE_PUBLIC_COPY } from '@community-marketplace/utils';
 
 import { FounderCallout } from '@/components/public/founder-story-section';
 import { publicPageMetadata } from '@/lib/seo/canonical';
 
 export const metadata = publicPageMetadata({
   title: 'About',
-  description: `Learn about ${APP_NAME} — Ireland's community marketplace for buying and selling locally without commission.`,
+  description: COMMERCE_PUBLIC_COPY.aboutMeta,
   path: '/about',
 });
 
@@ -18,7 +19,8 @@ export default function AboutPage() {
       <h1 className="text-3xl font-bold text-foreground">About {APP_NAME}</h1>
       <p className="mt-4 text-lg text-muted-foreground">
         {APP_NAME} is Ireland&apos;s trusted community marketplace — built so neighbours can buy and
-        sell safely without scams, long-distance hassle, or anonymous classifieds noise.
+        sell safely. Listing and messaging are free. Card checkout is optional and uses a seller
+        service fee so both sides get a receipt.
       </p>
 
       <div className="mt-8">

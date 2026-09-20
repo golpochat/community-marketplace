@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 
 import type { MarketplaceDisputeStatus } from '@community-marketplace/types';
 import { DISPUTE_STATUS_LABELS } from '@community-marketplace/types';
+import { formatCurrency } from '@community-marketplace/utils';
 import { Dialog } from '@community-marketplace/ui';
 
 type ResolveOutcome = Extract<
@@ -16,6 +17,8 @@ interface DisputeResolveDialogProps {
   outcome: ResolveOutcome | null;
   loading?: boolean;
   initialNotes?: string;
+  listingPrice?: number;
+  listingCurrency?: string;
   onConfirm: (notes: string) => void;
   onClose: () => void;
 }
@@ -25,6 +28,8 @@ export function DisputeResolveDialog({
   outcome,
   loading = false,
   initialNotes = '',
+  listingPrice,
+  listingCurrency,
   onConfirm,
   onClose,
 }: DisputeResolveDialogProps) {
@@ -37,7 +42,17 @@ export function DisputeResolveDialog({
   if (!outcome) return null;
 
   const trimmed = notes.trim();
-  const title = `Confirm: ${DISPUTE_STATUS_LABELS[outcome]}`;
+  const isBuyerFavored = outcome === 'resolved_buyer_favored';
+  const amountLabel =
+    listingPrice != null
+      ? formatCurrency(listingPrice, listingCurrency)
+      : 'the listed card amount';
+  const title = isBuyerFavored
+    ? 'Refund card and resolve for the buyer'
+    : `Confirm: ${DISPUTE_STATUS_LABELS[outcome]}`;
+  const description = isBuyerFavored
+    ? `This refunds ${amountLabel} through Stripe, then marks the dispute resolved for the buyer. If a Stripe chargeback is already open, we will not refund twice. Cash or collection has no card to refund.`
+    : 'Resolution notes are required and will be shared with both parties. This does not refund a card payment.';
 
   return (
     <Dialog
@@ -46,11 +61,12 @@ export function DisputeResolveDialog({
         if (!next) onClose();
       }}
       title={title}
-      description="Resolution notes are required and will be shared with both parties."
-      confirmLabel="Confirm resolution"
+      description={description}
+      confirmLabel={isBuyerFavored ? 'Refund card and resolve' : 'Confirm resolution'}
       confirmLoading={loading}
       confirmDisabled={trimmed.length < 1}
       closeOnConfirm={false}
+      variant={isBuyerFavored ? 'destructive' : 'default'}
       onConfirm={() => onConfirm(trimmed)}
     >
       <label className="block text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">

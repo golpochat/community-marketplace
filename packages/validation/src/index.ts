@@ -223,6 +223,9 @@ export {
   createBuyerReviewSchema,
   type CreateListingReviewInput,
   type CreateBuyerReviewInput,
+  listingSaleCloseChannelSchema,
+  markListingSoldSchema,
+  type MarkListingSoldInput,
 } from './listing.schema';
 
 export {

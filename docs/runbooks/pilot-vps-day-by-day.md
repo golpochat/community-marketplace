@@ -510,7 +510,8 @@ As **admin**, open each and confirm UI loads (empty OK):
 - [ ] Terms of service page live (`/terms`)
 - [ ] Privacy policy page live (`/privacy`)
 - [ ] Contact / support email monitored daily
-- [ ] Internal 1-page playbook: refunds, disputes, ban policy
+- [x] Internal playbook: refunds, disputes, ban policy ([dispute-refund-playbook.md](./dispute-refund-playbook.md))
+- [ ] Concierge seller loop after Stripe live ([pilot-concierge-gtm.md](./pilot-concierge-gtm.md))
 
 
 

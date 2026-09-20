@@ -394,3 +394,16 @@ export const createBuyerReviewSchema = createListingReviewSchema.extend({
 
 export type CreateListingReviewInput = z.infer<typeof createListingReviewSchema>;
 export type CreateBuyerReviewInput = z.infer<typeof createBuyerReviewSchema>;
+
+export const listingSaleCloseChannelSchema = z.enum([
+  'card_on_platform',
+  'cash_collection',
+  'off_platform',
+  'other',
+]);
+
+export const markListingSoldSchema = z.object({
+  closeChannel: listingSaleCloseChannelSchema,
+});
+
+export type MarkListingSoldInput = z.infer<typeof markListingSoldSchema>;

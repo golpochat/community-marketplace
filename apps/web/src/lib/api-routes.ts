@@ -163,6 +163,7 @@ export const WEB_API_ROUTES = {
     me: '/users/me',
     mePermissions: '/users/me/permissions',
     meSettings: '/users/me/settings',
+    meDataExport: '/users/me/data-export',
     meAvatarUploadUrl: '/users/me/avatar/upload-url',
     meAvatar: '/users/me/avatar',
     meStoreBannerUploadUrl: '/users/me/store-banner/upload-url',

@@ -89,6 +89,7 @@ export type {
   PrivacySettings,
   CommunicationPreferences,
   UserSettings,
+  AccountDataExport,
   UserBan,
   UserAuditLog,
   UserWithRole,
@@ -225,7 +226,9 @@ export type { NearbyArea, UserGeoLocation, ReverseGeocodeResult } from './locati
 export type {
   ListingStatusActorType,
   ListingStatusChangeLog,
+  ListingSaleCloseChannel,
 } from './listing-lifecycle';
+export { LISTING_SALE_CLOSE_CHANNELS } from './listing-lifecycle';
 export type {
   PriceChangeStatus,
   PriceUpdateStatus,
@@ -508,6 +511,7 @@ export type {
   KeywordMatchResult,
 } from './keyword-filters';
 export type {
+  SaleCloseChannelKpi,
   AdminDashboardStats,
   PlatformSettings,
   AdminMeResponse,
@@ -535,6 +539,7 @@ export type {
   DisputeTimelineEventType,
   DisputeTimelineEvent,
   MarketplaceDispute,
+  DisputeCardRefundOnResolve,
   DisputeUploadUrlResponse,
 } from './dispute';
 export {

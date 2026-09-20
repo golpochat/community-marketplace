@@ -18,6 +18,7 @@ import {
 import { PrismaService } from '../../../database/prisma.service';
 import { resolveAssetPublicUrl } from '../../../libs/asset-url.lib';
 import { NotificationDispatcherService } from '../../notifications/services/notification-dispatcher.service';
+import { PaymentsService } from '../../payments/payments.service';
 import { R2StorageService } from '../../users/services/r2-storage.service';
 import { mapDispute } from '../mappers/dispute.mapper';
 import { DisputeAccessService } from './dispute-access.service';
@@ -29,6 +30,7 @@ export class DisputesService {
     private readonly access: DisputeAccessService,
     private readonly storage: R2StorageService,
     private readonly notifications: NotificationDispatcherService,
+    private readonly payments: PaymentsService,
   ) {}
 
   async create(buyerId: string, input: unknown): Promise<MarketplaceDispute> {
@@ -325,7 +327,31 @@ export class DisputesService {
       throw new BadRequestException('Dispute is already resolved');
     }
 
+    let cardRefundOnResolve: MarketplaceDispute['cardRefundOnResolve'] = 'not_applicable';
+    if (parsed.outcome === 'resolved_buyer_favored') {
+      if (!dispute.paymentId) {
+        throw new BadRequestException(
+          'Cannot favour the buyer without a card payment to refund.',
+        );
+      }
+      const refund = await this.payments.refundForDisputeResolution(
+        adminId,
+        dispute.paymentId,
+        `Dispute ${disputeId}: ${parsed.resolutionNotes}`,
+      );
+      cardRefundOnResolve = refund.status;
+    }
+
     const now = new Date();
+    const refundNote =
+      cardRefundOnResolve === 'processed'
+        ? ' Card payment refunded via Stripe.'
+        : cardRefundOnResolve === 'already_refunded'
+          ? ' Card payment was already refunded.'
+          : cardRefundOnResolve === 'skipped_chargeback'
+            ? ' Stripe chargeback in progress — no second refund issued.'
+            : '';
+
     await this.prisma.$transaction(async (tx) => {
       await tx.marketplaceDispute.update({
         where: { id: disputeId },
@@ -341,7 +367,7 @@ export class DisputesService {
         data: {
           disputeId,
           senderId: adminId,
-          messageText: `Resolution: ${parsed.resolutionNotes}`,
+          messageText: `Resolution: ${parsed.resolutionNotes}${refundNote}`,
         },
       });
     });
@@ -373,7 +399,10 @@ export class DisputesService {
       }),
     ]);
 
-    return this.getAdminDetail(disputeId);
+    return {
+      ...(await this.getAdminDetail(disputeId)),
+      cardRefundOnResolve,
+    };
   }
 
   private listInclude() {

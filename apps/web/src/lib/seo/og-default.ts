@@ -1,12 +1,12 @@
 import { APP_NAME } from '@community-marketplace/config';
+import { COMMERCE_PUBLIC_COPY } from '@community-marketplace/utils';
 
 /** Pre-built 1200×630 JPEG — reliable for Facebook/WhatsApp scrapers. */
 export const DEFAULT_OG_IMAGE_PATH = '/og/sellnearby-home.jpg';
 
 export const DEFAULT_OG_TITLE = `${APP_NAME} — Buy and sell locally in Ireland`;
 
-export const DEFAULT_OG_DESCRIPTION =
-  "Ireland's trusted community marketplace. Discover local listings, message sellers safely, and keep trade in your neighbourhood — without platform commission fees.";
+export const DEFAULT_OG_DESCRIPTION = COMMERCE_PUBLIC_COPY.ogDescription;
 
 export const DEFAULT_OG_IMAGE = {
   url: DEFAULT_OG_IMAGE_PATH,

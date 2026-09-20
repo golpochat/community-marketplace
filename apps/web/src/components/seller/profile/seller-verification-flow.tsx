@@ -10,13 +10,14 @@ import type {
   SellerVerificationStatus,
 } from '@community-marketplace/types';
 import { SELLER_VERIFICATION_MESSAGES, VERIFICATION_ONBOARDING_COPY, computeFastTrackReviewDueAt, formatFastTrackSlaLabel } from '@community-marketplace/types';
-import { formatDateTime } from '@community-marketplace/utils';
+import { CONNECT_NUDGE_MIN_LISTING_PRICE_EUR, formatDateTime } from '@community-marketplace/utils';
 import { IRISH_MOBILE_VALIDATION_MESSAGE, normalizeIrishPhoneToE164 } from '@community-marketplace/validation';
 import { Button, Input, Label, useAppFeedback } from '@community-marketplace/ui';
 import { Card } from '@community-marketplace/ui-dashboard';
 
 import { IrishMobilePrefixTooltip } from '@/components/forms/irish-mobile-prefix-tooltip';
 import { VerificationProgressBar } from '@/components/seller/verification';
+import { SellerFeeNotice } from '@/components/seller/seller-fee-notice';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
 import { monetizationService } from '@/services/monetization.service';
 import { sellerVerificationService } from '@/services/seller-verification.service';
@@ -634,12 +635,19 @@ export function SellerVerificationFlow({ onSubmitted }: SellerVerificationFlowPr
           </ol>
 
           {status.sellerStatus === 'verified' && (
-            <p className="text-sm font-medium text-emerald-700">
-              {SELLER_VERIFICATION_MESSAGES.APPROVED}
-              {status.verificationCompletedAt
-                ? ` Verified on ${new Date(status.verificationCompletedAt).toLocaleDateString()}.`
-                : ''}
-            </p>
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-emerald-700">
+                {SELLER_VERIFICATION_MESSAGES.APPROVED}
+                {status.verificationCompletedAt
+                  ? ` Verified on ${new Date(status.verificationCompletedAt).toLocaleDateString()}.`
+                  : ''}
+              </p>
+              <SellerFeeNotice className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]" />
+              <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
+                Verification unlocks the verified seller service fee on card checkout. Set up Stripe
+                Connect on Earnings when you list items at €{CONNECT_NUDGE_MIN_LISTING_PRICE_EUR} or more.
+              </p>
+            </div>
           )}
 
           {status.sellerStatus === 'under_review' && (

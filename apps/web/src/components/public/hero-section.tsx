@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { COMMERCE_PUBLIC_COPY } from '@community-marketplace/utils';
 import { Button, cn } from '@community-marketplace/ui';
 import { BadgeCheck, MapPin, MessageSquare, Shield } from 'lucide-react';
 
@@ -11,7 +12,7 @@ import { getUserNavLinks } from '@/lib/user-nav-routes';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 
 const TRUST_BADGES = [
-  { icon: Shield, label: 'Buyer protection' },
+  { icon: Shield, label: COMMERCE_PUBLIC_COPY.heroBadgeCard },
   { icon: BadgeCheck, label: 'Verified sellers' },
   { icon: MessageSquare, label: 'Secure messaging' },
   { icon: MapPin, label: 'Hyper-local discovery' },
@@ -46,8 +47,7 @@ export function HeroSection() {
             <span className="text-primary">nearby</span> you trust
           </h1>
           <p className="text-body-lg mt-5 max-w-lg">
-            Discover local listings, message sellers safely, and keep trade in your neighbourhood —
-            without platform commission fees.
+            {COMMERCE_PUBLIC_COPY.heroBody}
           </p>
 
           <ul className="mt-8 flex flex-wrap gap-2.5">

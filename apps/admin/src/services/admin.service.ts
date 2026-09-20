@@ -5,6 +5,7 @@ import type {
   RbacRole,
   UserProfile,
 } from '@community-marketplace/types';
+import { emptySaleCloseChannelKpi } from '@community-marketplace/utils';
 
 import { adminApiClient } from '@/lib/api-client';
 import { ADMIN_API_ROUTES, moderationRoutes } from '@/lib/api-routes';
@@ -43,6 +44,7 @@ export const adminService = {
         pendingReports: 0,
         activeBans: 0,
         revenue: 0,
+        saleCloseKpi: emptySaleCloseChannelKpi(),
         platformHealth: { database: 'healthy', search: 'degraded', payments: 'degraded' },
         generatedAt: new Date().toISOString(),
       };

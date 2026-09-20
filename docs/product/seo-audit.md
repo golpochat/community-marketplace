@@ -54,7 +54,7 @@ This is genuinely good work for a marketplace at pilot stage:
 - Global title template: `%s | SellNearby.ie`
 - Root description: *"Buy and sell within your community in Ireland"*
 - PWA manifest with proper name, icons, theme colors
-- Ireland-focused copy on homepage (local, trusted, no commission)
+- Ireland-focused copy on homepage (local, trusted, free to list)
 
 **Justification:** Signals geographic relevance to Google for Irish local queries like "buy sell near me Ireland" or "local marketplace Dublin".
 
@@ -234,7 +234,7 @@ Direct competitors for local classifieds/marketplace search:
 
 | Competitor | SEO maturity | Your advantage | Their advantage |
 |------------|--------------|----------------|-----------------|
-| **DoneDeal.ie** | Very high — slug URLs, category pages, massive index, strong domain authority | No commission, community trust, modern UX | 20+ years of backlinks, millions of indexed pages |
+| **DoneDeal.ie** | Very high — slug URLs, category pages, massive index, strong domain authority | Free to list, community trust, modern UX | 20+ years of backlinks, millions of indexed pages |
 | **Adverts.ie** | High | Same as above | Brand recognition, DA |
 | **Facebook Marketplace** | Very high (facebook.com DA) | Independent, no FB dependency | Built-in audience |
 | **Gumtree.ie** | Medium-high | Local focus | Established brand |
@@ -243,7 +243,7 @@ Direct competitors for local classifieds/marketplace search:
 
 1. **Long-tail local queries** — "sell furniture Lucan", "buy bike near Swords", "local marketplace [town]"
 2. **Brand queries** — "SellNearby", "SellNearby.ie"
-3. **Niche/community angles** — "no commission marketplace Ireland", "verified local sellers"
+3. **Niche/community angles** — "free to list marketplace Ireland", "verified local sellers"
 4. **Seller-branded** — "[seller name] store SellNearby"
 
 ---

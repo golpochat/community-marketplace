@@ -6,6 +6,7 @@ import { BarChart } from '@community-marketplace/ui';
 import { DashboardCard } from '@community-marketplace/ui-dashboard';
 
 import { StatCard } from './stat-card';
+import { SaleCloseKpiSection } from './sale-close-kpi-section';
 
 interface DashboardOverviewProps {
   stats: AdminDashboardStats;
@@ -32,6 +33,7 @@ export function DashboardOverview({ stats }: DashboardOverviewProps) {
         <StatCard label="Active Listings" value={String(stats.activeListings)} />
         <StatCard label="Revenue" value={formatCurrency(stats.revenue)} />
       </div>
+      <SaleCloseKpiSection kpi={stats.saleCloseKpi} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Payments" value={String(stats.totalPayments)} />
         <StatCard label="Pending Verifications" value={String(stats.pendingVerifications)} />

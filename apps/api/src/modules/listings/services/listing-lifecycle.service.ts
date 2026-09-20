@@ -13,7 +13,8 @@ import type {
   ListingStatusChangeLog,
   RbacRole,
 } from '@community-marketplace/types';
-import { renewListingSchema } from '@community-marketplace/validation';
+import { markListingSoldSchema, renewListingSchema } from '@community-marketplace/validation';
+import { LISTING_SALE_CLOSE_CHANNEL_LABELS } from '@community-marketplace/utils';
 
 import { Prisma } from '@prisma/client';
 
@@ -211,7 +212,13 @@ export class ListingLifecycleService {
     );
   }
 
-  markSold(listingId: string, actorId: string, actorRole: RbacRole): Promise<Listing> {
+  markSold(
+    listingId: string,
+    actorId: string,
+    actorRole: RbacRole,
+    input: unknown,
+  ): Promise<Listing> {
+    const parsed = markListingSoldSchema.parse(input ?? {});
     return this.transition({
       listingId,
       actorId,
@@ -220,6 +227,8 @@ export class ListingLifecycleService {
       changedByType: actorRole === 'SELLER' ? 'SELLER' : 'ADMIN',
       setEndedAt: true,
       eventType: 'listing.sold',
+      eventPayload: { closeChannel: parsed.closeChannel },
+      reason: LISTING_SALE_CLOSE_CHANNEL_LABELS[parsed.closeChannel],
     }).then(async (listing) => {
       await this.reserves.cancelOpenForListing(listingId, 'cancelled_seller');
       return listing;
@@ -236,7 +245,7 @@ export class ListingLifecycleService {
       setEndedAt: true,
       skipOwnershipCheck: true,
       eventType: 'listing.sold',
-      eventPayload: { source: 'payment' },
+      eventPayload: { source: 'payment', closeChannel: 'card_on_platform' },
     }).then(async (listing) => {
       // Safety net if called without buyer conversion path.
       await this.reserves.cancelOpenForListing(listingId, 'cancelled_seller');
@@ -255,7 +264,7 @@ export class ListingLifecycleService {
       setEndedAt: true,
       skipOwnershipCheck: true,
       eventType: 'listing.sold',
-      eventPayload: { source: 'payment' },
+      eventPayload: { source: 'payment', closeChannel: 'card_on_platform' },
     });
   }
 
@@ -697,7 +706,10 @@ export class ListingLifecycleService {
     await this.audit.record(params.listingId, 'status_changed', params.actorId ?? undefined, {
       fromStatus,
       toStatus: params.toStatus,
-      metadata: params.reason ? { reason: params.reason } : undefined,
+      metadata: {
+        ...(params.reason ? { reason: params.reason } : {}),
+        ...(params.eventPayload ?? {}),
+      },
     });
 
     if (params.eventType) {

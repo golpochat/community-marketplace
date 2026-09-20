@@ -8,16 +8,16 @@ This runbook is the **execution order**. The launch checklist is the **full inve
 
 ---
 
-## Current baseline (2026-06-27)
+## Current baseline (2026-09-20)
 
-| Check                                  | Result                                        |
-| -------------------------------------- | --------------------------------------------- |
-| Local API `/api/health/ready`          | ✅ DB, Redis, Meilisearch up                  |
-| Local smoke script                     | Run: `.\scripts\smoke-pilot.ps1`              |
-| Staging `api.staging.community.market` | ❌ DNS not resolving — **infra not live yet** |
-| Production `api.community.market`      | ❌ DNS not resolving — **infra not live yet** |
+| Check | Result |
+|------|--------|
+| Production API `https://api.sellnearby.ie/api/health/ready` | ✅ DB, Redis, Meilisearch up |
+| Production smoke (`.\scripts\smoke-pilot.ps1 -BaseUrl "https://api.sellnearby.ie"`) | ✅ 7/7 public endpoints |
+| Production web `https://sellnearby.ie` | ⚠️ Live but **stale copy** (“without platform commission fees”, stub Terms) until the commerce-trust commit is deployed |
+| Staging `api.staging.community.market` | Not used — pilot is Compose on OVH (`sellnearby.ie`) |
 
-**Conclusion:** Product works locally. **Next blocker is infrastructure** (cluster/host + DNS + secrets), not new features.
+**Conclusion:** Hosting is not the blocker. **Next is deploy the local trust/copy work, then Stripe live + solicitor, then [concierge GTM](./pilot-concierge-gtm.md).**
 
 ---
 
@@ -175,17 +175,19 @@ Not code — required before inviting outsiders:
 
 - [ ] Beta **Terms of Service** (solicitor-reviewed)
 - [ ] Beta **Privacy Policy** (GDPR baseline)
-- [ ] 1–2 page **internal playbook**: disputes, refunds, moderation SLA
+- [x] 1–2 page **internal playbook**: [disputes, refunds, ban SLA](./dispute-refund-playbook.md)
 - [ ] Support email on `/contact` monitored daily
 
 ---
 
 ### Day 10 — Invite pilot cohort
 
+Follow **[Concierge GTM](./pilot-concierge-gtm.md)** (Dublin household wedge, 3–5 sellers/week through verify → Connect → first card sale).
+
 - [ ] 10–20 sellers (people you know)
 - [ ] Invite-only signup (manual approval or hidden link)
 - [ ] One geographic focus if possible (e.g. one Irish city)
-- [ ] Daily admin queue check (reports, verification, payments)
+- [ ] Daily admin queue check (reports, verification, payments, [disputes/refunds](./dispute-refund-playbook.md))
 - [ ] [Pilot feedback](./pilot-feedback.md): Google Form, invite email, optional WhatsApp group
 
 **Acceptable gaps during pilot:** FCM push, keyword automation, full category tree, wallet spend, status page.
@@ -225,6 +227,8 @@ After 2 weeks of pilot usage, review:
 | ----------------------------------------------------- | -------------------------------- |
 | [deploy.md](./deploy.md)                              | Deploy procedures                |
 | [launch-checklist.md](../product/launch-checklist.md) | Full FR/NFR/legal inventory      |
+| [dispute-refund-playbook.md](./dispute-refund-playbook.md) | 48h card review + refunds   |
+| [pilot-concierge-gtm.md](./pilot-concierge-gtm.md)     | Dublin wedge seller loop         |
 | [troubleshooting.md](../troubleshooting.md)           | Local dev issues                 |
 | [dev-credentials.md](../dev-credentials.md)           | Local/staging test accounts only |
 

@@ -32,8 +32,8 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 | Launch type | Ready this month? | What's missing |
 |-------------|-------------------|----------------|
 | **Local / demo** | ✅ Yes | — |
-| **Closed pilot** (50–500 users) | ⚠️ ~70% | Prod deploy, Stripe live, real email, basic legal, support playbook |
-| **Public launch** | ❌ ~45% | Lawyer-reviewed legal pack, safety automation, GDPR tooling, observability hardening |
+| **Closed pilot** (50–500 users) | ⚠️ ~75% | Stripe **live**, solicitor sign-off, deploy stale public copy, concierge sellers |
+| **Public launch** | ❌ ~45% | Lawyer-reviewed legal pack, safety automation, observability hardening |
 
 ---
 
@@ -49,9 +49,9 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 | FR-1.4 | Profile | Name, avatar, bio, location, phone | Must | Must | ✅ (+ R2 uploads) |
 | FR-1.5 | Identity verification | ID docs, selfie, admin review | Should | Must | ✅ Seller verification flow |
 | FR-1.6 | Account status | Suspend / activate / ban | Must | Must | ✅ Admin + moderation |
-| — | Account deletion | GDPR right to erasure | Nice | Must | ❌ Not built |
-| — | Data export | GDPR portability | Nice | Must | ❌ Not built |
-| — | Cookie consent | EU cookie banner | Nice | Must | ❌ Not verified |
+| — | Account deletion | GDPR right to erasure | Nice | Must | ✅ Self-serve deactivate + anonymize |
+| — | Data export | GDPR portability | Nice | Must | ✅ `GET /users/me/data-export` |
+| — | Cookie consent | EU cookie banner | Nice | Must | ⚠️ Banner when GA/Plausible env is set; `/cookies` published |
 
 **Pilot checklist**
 
@@ -62,8 +62,8 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 **Public checklist**
 
 - [ ] Email activation enforced before sensitive actions
-- [ ] Account deletion + data export implemented
-- [ ] Cookie consent banner + policy published
+- [x] Account deletion + data export implemented
+- [x] Cookie consent banner + policy published (analytics gated on env)
 
 ---
 
@@ -134,7 +134,7 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 | — | Webhooks | `payment_intent.succeeded`, refunds, disputes | Must | Must | ✅ |
 | — | Platform fee | 10% default, 8% verified | Must | Must | ✅ |
 | — | Fraud limits | Daily payment cap, self-purchase block | Must | Must | ✅ |
-| — | Refunds | Admin / dispute-driven | Should | Must | ⚠️ Webhook path exists; ops playbook needed |
+| — | Refunds | Admin / dispute-driven | Should | Must | ⚠️ Admin approve path live; [ops playbook](../runbooks/dispute-refund-playbook.md) |
 | — | Disputes module | Buyer/seller dispute CRUD | Should | Must | ✅ UI + API |
 | — | Buyer protection SKU | Optional checkout add-on | 📋 | 📋 | ❌ Phase 5 (legal gate) |
 | — | Wallet spend at checkout | Credits + card split on listing GMV | 📋 | 📋 | ❌ Still Phase 2+ (platform purchases already support credits) |
@@ -147,7 +147,7 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 - [ ] Connect onboarding completes for test seller on prod
 - [ ] End-to-end purchase + webhook + seller payout path verified
 - [ ] Stripe webhook endpoint registered on prod URL
-- [ ] Internal refund / dispute playbook written
+- [x] Internal refund / dispute playbook written ([runbook](../runbooks/dispute-refund-playbook.md))
 
 **Public checklist**
 
@@ -446,16 +446,16 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 
 | Document | Pilot minimum | Public launch | Current status |
 |----------|---------------|---------------|----------------|
-| **Terms of Service** | Short beta terms (solicitor-reviewed) | Full Ireland consumer terms | ⚠️ Stub page only |
-| **Privacy Policy** | GDPR-aligned draft | Full policy + DPA with processors | ⚠️ Stub page only |
+| **Terms of Service** | Short beta terms (solicitor-reviewed) | Full Ireland consumer terms | ⚠️ Solicitor-ready draft published; not signed off |
+| **Privacy Policy** | GDPR-aligned draft | Full policy + DPA with processors | ⚠️ Solicitor-ready draft + export/delete in settings |
 | **Community Rules** | Published + enforced | Same + appeal process | ⚠️ Basic page ✅ |
-| **Prohibited Items Policy** | Required for trust brand | Public + linked at listing create | ❌ Blueprint only |
-| **Cookie Policy** | If analytics used | Banner + policy | ❌ |
+| **Prohibited Items Policy** | Required for trust brand | Public + linked at listing create | ✅ |
+| **Cookie Policy** | If analytics used | Banner + policy | ⚠️ Banner + `/cookies` (analytics gated on consent) |
 | **Seller Agreement** | Stripe Connect ToS + platform seller terms | Formal seller terms | ⚠️ Implicit only |
 | **Buyer checkout disclosures** | Platform fee, cashback, no escrow disclaimer | Same + refund policy | ⚠️ Partial in UI |
 | **Cashback program terms** | Earn rules, expiry, caps | Legal wording on wallet page | ⚠️ UI copy; legal review needed |
-| **Refund & dispute policy** | Manual ops doc (internal) | Public-facing | ⚠️ Disputes UI ✅; policy ❌ |
-| **GDPR** | Privacy contact + basic lawful basis | DPO/contact, ROPA, DPIA, erasure/export | ❌ No tooling |
+| **Refund & dispute policy** | Manual ops doc (internal) | Public-facing | ⚠️ [Internal playbook](../runbooks/dispute-refund-playbook.md) ✅; public policy still draft on `/safety` |
+| **GDPR** | Privacy contact + basic lawful basis | DPO/contact, ROPA, DPIA, erasure/export | ⚠️ Export + self-serve erasure; solicitor review still open |
 | **PCI** | Stripe-hosted (SAQ A) | Same | ✅ Card data not stored |
 | **VAT / tax** | Accountant advice for Ireland | Invoice / VAT registration if required | ❌ Business decision |
 | **Age restriction** | 18+ if needed for certain categories | Terms clause | ⚠️ Not explicit |
@@ -467,13 +467,13 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 - [ ] Solicitor-reviewed beta Terms of Service
 - [ ] Solicitor-reviewed Privacy Policy (GDPR baseline)
 - [ ] Privacy contact email published
-- [ ] Internal dispute / refund playbook
+- [x] Internal dispute / refund playbook
 
 **Public legal minimum**
 
 - [ ] Full Terms, Privacy, Cookie, Prohibited Items policies published
 - [ ] Cookie consent implemented
-- [ ] GDPR account deletion + data export
+- [x] GDPR account deletion + data export (self-serve; solicitor pack still unsigned)
 - [ ] Processor list (Stripe, SendGrid, R2) documented in Privacy Policy
 - [ ] VAT / tax position confirmed with accountant
 
@@ -487,8 +487,8 @@ Single canonical checklist for **closed pilot** vs **public Ireland launch**. Ti
 | **Business bank account** | Must | Must | For Stripe reconciliation |
 | **Stripe platform account** (live) | Must | Must | Connect platform profile complete |
 | **Support email / contact** | Must | Must | `/contact` page exists |
-| **Support SLA** (internal) | 24–48h manual | Published response times | ❌ |
-| **Dispute playbook** | Internal doc | Staff-trained | ⚠️ Use admin disputes UI manually |
+| **Support SLA** (internal) | 24–48h manual | Published response times | ⚠️ Card disputes: 48h review in [playbook](../runbooks/dispute-refund-playbook.md) |
+| **Dispute playbook** | Internal doc | Staff-trained | ✅ [dispute-refund-playbook.md](../runbooks/dispute-refund-playbook.md) |
 | **Moderation staffing** | Founder + admin | Rotating coverage | Manual queue OK for pilot |
 | **Incident response** | Runbooks read | On-call rotation | ⚠️ Runbooks ✅ |
 | **Status page** | Nice | Must | ❌ |
@@ -538,7 +538,7 @@ Run on **staging**, then **production** after each deploy. See also [troubleshoo
 
 ### Admin
 
-- [ ] Dashboard loads stats
+- [ ] Dashboard loads stats (incl. 7-day card vs chat/cash close mix)
 - [ ] Ban user → user cannot pay
 - [ ] Audit log records action
 - [ ] Monetization settings save
@@ -558,12 +558,12 @@ Run on **staging**, then **production** after each deploy. See also [troubleshoo
 
 **Must complete before first paying user:**
 
-1. [ ] Production deploy verified (staging → prod)
+1. [x] Production **host** verified (`api.sellnearby.ie` ready + public smoke 2026-09-20). Deploy latest commerce-trust commit before inviting paying users (homepage still says “no commission” until then).
 2. [ ] Stripe **live** + webhooks on prod URL
 3. [ ] SendGrid + domain authentication
 4. [ ] R2 prod bucket for images
 5. [ ] Solicitor-reviewed **beta Terms + Privacy**
-6. [ ] Internal dispute + moderation playbook
+6. [x] Internal dispute + refund playbook ([runbook](../runbooks/dispute-refund-playbook.md)); moderation still daily queue owner
 7. [ ] `RBAC_SEED_ENABLED=false`, secrets rotated, TLS live
 8. [ ] Section 7 smoke test matrix green on prod
 
@@ -578,7 +578,7 @@ Run on **staging**, then **production** after each deploy. See also [troubleshoo
 1. [ ] Full legal pack (Terms, Privacy, Prohibited Items, Cookie, refunds)
 2. [ ] Keyword + category safety enforcement (blueprint §6–7)
 3. [ ] Full category tree migration
-4. [ ] GDPR: account deletion + data export
+4. [x] GDPR: account deletion + data export
 5. [ ] Sentry + Grafana alerts + status page
 6. [ ] Load test to NFR targets
 7. [ ] WCAG accessibility pass

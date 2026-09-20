@@ -2,6 +2,7 @@ import type { Category, ListingSearchFilters } from '@community-marketplace/type
 import type { Metadata } from 'next';
 
 import { APP_NAME } from '@community-marketplace/config';
+import { COMMERCE_PUBLIC_COPY } from '@community-marketplace/utils';
 
 import { filtersToParamsKey as buildFiltersParamsKey } from '@/components/listings/browse/browse-url-filters';
 import { buildBrowseCanonicalPath, canonicalMetadata } from '@/lib/seo/canonical';
@@ -41,8 +42,7 @@ export function buildBrowseMetadata(
   const pageSuffix = page && page !== '1' ? ` – Page ${page}` : '';
 
   let title = 'Browse listings';
-  let description =
-    'Discover items from trusted local sellers across Ireland on SellNearby — no commission, community-first marketplace.';
+  let description = COMMERCE_PUBLIC_COPY.browseDescription;
 
   if (category && q) {
     title = `${category.name}: "${q}"`;

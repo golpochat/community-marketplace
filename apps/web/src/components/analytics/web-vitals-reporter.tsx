@@ -2,6 +2,12 @@
 
 import { useEffect } from 'react';
 
+import {
+  COOKIE_CONSENT_EVENT,
+  analyticsConsentGranted,
+  readCookieConsent,
+} from '@/lib/cookie-consent';
+
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
@@ -79,9 +85,19 @@ function observeInp() {
 export function WebVitalsReporter() {
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim()) return;
-    observeLcp();
-    observeCls();
-    observeInp();
+    let started = false;
+
+    function start() {
+      if (started || !analyticsConsentGranted(readCookieConsent())) return;
+      started = true;
+      observeLcp();
+      observeCls();
+      observeInp();
+    }
+
+    start();
+    window.addEventListener(COOKIE_CONSENT_EVENT, start);
+    return () => window.removeEventListener(COOKIE_CONSENT_EVENT, start);
   }, []);
 
   return null;

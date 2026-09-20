@@ -70,10 +70,28 @@ export const adminRequestEvidenceSchema = z.object({
   notes: z.string().trim().min(1).max(2000).optional(),
 });
 
-export const adminResolveDisputeSchema = z.object({
-  outcome: z.enum(['resolved_buyer_favored', 'resolved_seller_favored', 'closed']),
-  resolutionNotes: z.string().trim().min(1).max(5000),
-});
+export const adminResolveDisputeSchema = z
+  .object({
+    outcome: z.enum(['resolved_buyer_favored', 'resolved_seller_favored', 'closed']),
+    resolutionNotes: z.string().trim().min(1).max(5000),
+    confirmCardRefund: z.boolean().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.outcome === 'resolved_buyer_favored' && value.confirmCardRefund !== true) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['confirmCardRefund'],
+        message: 'Confirm the card refund to resolve in the buyer’s favour.',
+      });
+    }
+    if (value.outcome !== 'resolved_buyer_favored' && value.confirmCardRefund === true) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['confirmCardRefund'],
+        message: 'Card refund is only allowed when resolving in the buyer’s favour.',
+      });
+    }
+  });
 
 export type CreateDisputeInput = z.infer<typeof createDisputeSchema>;
 export type DisputeUploadEvidenceInput = z.infer<typeof disputeUploadEvidenceSchema>;

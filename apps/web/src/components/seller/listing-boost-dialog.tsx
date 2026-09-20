@@ -153,11 +153,16 @@ export function ListingBoostDialog({
 
         {catalog && !intent && (
           <div className="mt-4 space-y-2">
+            {!catalog.boostsEnabled && (
+              <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
+                Listing boosts are not available right now.
+              </p>
+            )}
             {catalog.options.map((option) => (
               <button
                 key={option.packageType}
                 type="button"
-                disabled={!option.eligible || loading}
+                disabled={!catalog.boostsEnabled || !option.eligible || loading}
                 onClick={() => void startCheckout(option.packageType)}
                 className="flex w-full items-start justify-between rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-3 text-left hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)] disabled:cursor-not-allowed disabled:opacity-50"
               >

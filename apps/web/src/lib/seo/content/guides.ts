@@ -57,7 +57,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       {
         heading: 'Why local beats national for everyday items',
         paragraphs: [
-          'Furniture, bikes, and prams are awkward to ship. Irish buyers prefer collecting within 15–30 km. A community marketplace like SellNearby surfaces nearby listings without commission — keeping more money in your pocket than national platforms with seller fees.',
+          'Furniture, bikes, and prams are awkward to ship. Irish buyers prefer collecting within 15–30 km. SellNearby is free to list and message; card checkout is optional and carries a seller service fee so both sides get a receipt.',
           'DoneDeal and Adverts.ie remain strong for cars and high-ticket items, but for neighbour-to-neighbour trades, local discovery and trust matter more than nationwide reach.',
         ],
       },
@@ -126,7 +126,7 @@ export const GUIDE_ARTICLES: GuideArticle[] = [
       {
         heading: 'Payments and holds',
         paragraphs: [
-          'Cash on collection is still common for local trades. Count it before handing over the item. Be wary of overpayment scams or requests to use unusual transfer apps.',
+          'Card checkout on SellNearby gives you a receipt and a dispute path. Cash on collection is still common — count it before handing over the item, and treat it as at your own risk. Be wary of overpayment scams or requests to use unusual transfer apps.',
           'Never send security deposits or shipping fees off-platform for "couriers" you did not arrange yourself — a frequent scam pattern in Irish classifieds.',
         ],
       },
