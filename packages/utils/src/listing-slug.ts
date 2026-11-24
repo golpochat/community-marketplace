@@ -13,10 +13,18 @@ const COMPACT_SUFFIX_PATTERN = /-([0-9a-f]{8})$/i;
 export const LISTING_COMPACT_ID_LENGTH = 8;
 const MAX_TITLE_SLUG_LENGTH = 60;
 
-/** Short stable suffix for listing URLs (matches storefront slug style). */
-export function listingCompactId(id: string): string {
+/**
+ * Last 8 hex chars of a UUID. Seed IDs share a `00000000-` prefix, so the
+ * suffix is the part that actually distinguishes records in admin UI.
+ */
+export function compactUuid(id: string): string {
   const compact = id.replace(/[^0-9a-f]/gi, '').toLowerCase();
   return compact.slice(-LISTING_COMPACT_ID_LENGTH);
+}
+
+/** Short stable suffix for listing URLs (matches storefront slug style). */
+export function listingCompactId(id: string): string {
+  return compactUuid(id);
 }
 
 /** Build SEO-friendly listing path segment: `{title-slug}-{compact-id}`. */

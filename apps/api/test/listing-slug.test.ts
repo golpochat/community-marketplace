@@ -5,6 +5,7 @@ import {
   extractListingCompactId,
   isCanonicalListingRouteParam,
   listingCompactId,
+  compactUuid,
   parseListingRouteParam,
   rewriteLegacyListingRouteParam,
 } from '@community-marketplace/utils';
@@ -53,5 +54,10 @@ describe('listing slug URLs', () => {
 
   it('does not rewrite canonical compact route params', () => {
     expect(rewriteLegacyListingRouteParam('adult-road-bike-54cm-00000148')).toBeNull();
+  });
+
+  it('uses the unique UUID suffix, not the shared 00000000 prefix', () => {
+    expect(compactUuid('00000000-0000-4000-9000-000000000100')).toBe('00000100');
+    expect(compactUuid(LISTING_ID)).toBe('00000148');
   });
 });

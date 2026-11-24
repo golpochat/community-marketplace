@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma, SellerStatus } from '@prisma/client';
 
-import type {
-  FeaturedStoreSummary,
-  ListingSummary,
-  SellerStorefront,
+import {
+  canEnterSellerNamespace,
+  type FeaturedStoreSummary,
+  type ListingSummary,
+  type RbacRole,
+  type SellerStorefront,
 } from '@community-marketplace/types';
 
 import { PrismaService } from '../../../database/prisma.service';
@@ -32,6 +34,11 @@ import { SellerTrustService } from './seller-trust.service';
 import { buildActiveFeaturedStoreWhere } from '../../monetization/lib/featured.lib';
 
 type StoreSort = 'newest' | 'price_low_to_high' | 'price_high_to_low';
+
+/** Public /store pages belong to anyone who can sell, including unified MEMBER accounts. */
+export function isPublicStorefrontOwnerRole(roleCode: string | undefined | null): boolean {
+  return Boolean(roleCode && canEnterSellerNamespace(roleCode as RbacRole));
+}
 
 type StoreContext = {
   store: {
@@ -282,15 +289,15 @@ export class StoresService {
         where: { id: slug },
         include: { user: { include: sellerInclude } },
       });
-      if (byStoreId?.user.primaryRole.code === 'SELLER') {
+      if (byStoreId && isPublicStorefrontOwnerRole(byStoreId.user.primaryRole.code)) {
         return { store: byStoreId, seller: byStoreId.user };
       }
 
       const seller = await this.prisma.user.findFirst({
-        where: { id: slug, primaryRole: { code: 'SELLER' } },
+        where: { id: slug },
         include: sellerInclude,
       });
-      if (!seller) return null;
+      if (!seller || !isPublicStorefrontOwnerRole(seller.primaryRole.code)) return null;
       const store = await this.prisma.store.findFirst({
         where: { userId: seller.id, isPrimary: true },
         orderBy: { createdAt: 'asc' },
@@ -306,7 +313,7 @@ export class StoresService {
       },
       include: { user: { include: sellerInclude } },
     });
-    if (store?.user.primaryRole.code === 'SELLER') {
+    if (store && isPublicStorefrontOwnerRole(store.user.primaryRole.code)) {
       return { store, seller: store.user };
     }
 
@@ -322,7 +329,7 @@ export class StoresService {
     },
   ): Promise<StoreContext | null> {
     const sellers = await this.prisma.user.findMany({
-      where: { primaryRole: { code: 'SELLER' } },
+      where: { primaryRole: { code: { in: ['SELLER', 'MEMBER'] } } },
       include: sellerInclude,
       take: 500,
       orderBy: { createdAt: 'asc' },
