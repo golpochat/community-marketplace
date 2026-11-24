@@ -7,13 +7,18 @@ import { useState } from 'react';
 import type { Listing } from '@community-marketplace/types';
 import { canActAsBuyer } from '@community-marketplace/types';
 import { Button, cn } from '@community-marketplace/ui';
+import { COMMERCE_PUBLIC_COPY } from '@community-marketplace/utils';
 
 import { useAuth } from '@/hooks/use-auth';
 import { WEB_APP_ROUTES } from '@/lib/rbac-routes';
 import { paymentsService } from '@/services/payments.service';
 
 interface BuyNowButtonProps {
-  listing: Pick<Listing, 'id' | 'status' | 'sellerId' | 'reservation'>;
+  listing: Pick<Listing, 'id' | 'status' | 'sellerId' | 'reservation'> & {
+    seller?: Pick<NonNullable<Listing['seller']>, 'cardCheckoutReady'>;
+    /** Chat preview may pass readiness at the top level. */
+    cardCheckoutReady?: boolean;
+  };
   className?: string;
 }
 
@@ -29,12 +34,24 @@ function formatCheckoutError(message: string): string {
     return PURCHASE_BLOCKED_MESSAGE;
   }
   if (message.includes('Stripe Connect') || message.includes('not ready to receive')) {
-    return 'This seller has not finished payout setup yet.';
+    return COMMERCE_PUBLIC_COPY.cardCheckoutUnavailableHint;
   }
   if (message.includes('not available for purchase')) {
     return 'This listing is no longer available for purchase.';
   }
   return message;
+}
+
+function resolveCardCheckoutReady(
+  listing: BuyNowButtonProps['listing'],
+): boolean | undefined {
+  if (typeof listing.cardCheckoutReady === 'boolean') {
+    return listing.cardCheckoutReady;
+  }
+  if (typeof listing.seller?.cardCheckoutReady === 'boolean') {
+    return listing.seller.cardCheckoutReady;
+  }
+  return undefined;
 }
 
 function PurchaseBlockedHint({ className }: { className?: string }) {
@@ -62,12 +79,33 @@ export function BuyNowButton({ listing, className }: BuyNowButtonProps) {
   const isReservingBuyer = Boolean(listing.reservation?.iAmReservingBuyer);
   const canBuy =
     listing.status === 'active' || (listing.status === 'reserved' && isReservingBuyer);
+  const cardCheckoutReady = resolveCardCheckoutReady(listing);
+  const cardPayBlocked = cardCheckoutReady === false;
 
   if (!canBuy) return null;
   if (isAuthenticated && user?.id === listing.sellerId) return null;
 
   if (isAuthenticated && user?.role && !canActAsBuyer(user.role)) {
     return <PurchaseBlockedHint className={className} />;
+  }
+
+  if (cardPayBlocked) {
+    return (
+      <div className={className}>
+        <Button
+          type="button"
+          className="w-full font-semibold"
+          size="default"
+          disabled
+          aria-disabled="true"
+        >
+          {COMMERCE_PUBLIC_COPY.cardCheckoutUnavailable}
+        </Button>
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          {COMMERCE_PUBLIC_COPY.cardCheckoutUnavailableHint}
+        </p>
+      </div>
+    );
   }
 
   async function handleBuy() {

@@ -48,6 +48,12 @@ export const listingInclude = {
         where: { badgeGranted: true, status: "approved" as const },
         take: 1,
       },
+      stripeConnectAccount: {
+        select: {
+          chargesEnabled: true,
+          onboardingComplete: true,
+        },
+      },
       _count: {
         select: {
           listings: { where: { status: "active" as const } },
@@ -216,6 +222,13 @@ function isSellerVerified(seller: ListingWithRelations['seller']): boolean {
   );
 }
 
+/** Matches payments assertSellerCanReceivePayments readiness (without live Stripe sync). */
+function isSellerCardCheckoutReady(seller: ListingWithRelations['seller']): boolean {
+  if (!seller || seller.sellerStatus !== 'verified') return false;
+  const connect = seller.stripeConnectAccount;
+  return Boolean(connect?.chargesEnabled && connect?.onboardingComplete);
+}
+
 function resolveSellerStoreSlug(
   seller: ListingWithRelations["seller"],
 ): string | undefined {
@@ -271,6 +284,7 @@ function mapListingSeller(
     isBusiness: seller.profile?.isBusinessAccount ?? false,
     phone: publicContact?.phone,
     storeSlug,
+    cardCheckoutReady: isSellerCardCheckoutReady(seller),
   };
 }
 

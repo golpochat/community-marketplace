@@ -32,6 +32,17 @@ export const threadInclude = {
   listing: {
     include: {
       images: { orderBy: { sortOrder: 'asc' as const }, take: 1 },
+      seller: {
+        select: {
+          sellerStatus: true,
+          stripeConnectAccount: {
+            select: {
+              chargesEnabled: true,
+              onboardingComplete: true,
+            },
+          },
+        },
+      },
     },
   },
 } satisfies Prisma.ChatThreadInclude;
@@ -112,6 +123,14 @@ export function mapChatThread(row: {
   };
 }
 
+function isListingSellerCardCheckoutReady(
+  seller: ThreadWithRelations['listing']['seller'] | null | undefined,
+): boolean {
+  if (!seller || seller.sellerStatus !== 'verified') return false;
+  const connect = seller.stripeConnectAccount;
+  return Boolean(connect?.chargesEnabled && connect?.onboardingComplete);
+}
+
 export function mapChatListingPreview(
   listing: ThreadWithRelations['listing'],
 ): ChatListingPreview {
@@ -123,6 +142,7 @@ export function mapChatListingPreview(
     currency: listing.currency,
     imageUrl: chatListingImageUrl(listing.images[0]),
     status: listing.status,
+    cardCheckoutReady: isListingSellerCardCheckoutReady(listing.seller),
   };
 }
 

@@ -240,6 +240,7 @@ export function ChatWindow({
                 id: listing.id,
                 status: listing.status as ListingStatus,
                 sellerId: listing.sellerId,
+                cardCheckoutReady: listing.cardCheckoutReady,
               }}
             />
           </div>

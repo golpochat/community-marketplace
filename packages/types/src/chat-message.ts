@@ -60,6 +60,8 @@ export interface ChatListingPreview {
   currency: string;
   imageUrl?: string;
   status: string;
+  /** When false, Buy now should be unavailable (seller Connect incomplete). */
+  cardCheckoutReady?: boolean;
 }
 
 export interface ChatInboxItem {

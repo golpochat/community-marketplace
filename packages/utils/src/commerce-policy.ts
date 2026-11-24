@@ -83,6 +83,9 @@ export const COMMERCE_PUBLIC_COPY = {
     'Pay by card for a receipt and a 48-hour dispute review. Cash or collection arranged in chat is at your own risk. SellNearby is not an escrow service.',
   heroBadgeCard: 'Card checkout & receipts',
   chatPayHint: 'Pay on SellNearby for a receipt. Cash collection stays available in chat.',
+  cardCheckoutUnavailable: 'Card pay unavailable',
+  cardCheckoutUnavailableHint:
+    "This seller hasn't finished payout setup. Message them to arrange collection, or ask them to enable card payments.",
   disputeReview:
     'Card checkout disputes are reviewed within 48 hours. Cash or collection arranged in chat is at your own risk. SellNearby is not an escrow service.',
   legalDraftNotice:

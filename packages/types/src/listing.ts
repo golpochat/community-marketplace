@@ -149,6 +149,11 @@ export interface ListingSellerSummary {
   phone?: string;
   /** Public storefront slug for /store/{slug} links */
   storeSlug?: string;
+  /**
+   * True when the seller can accept Stripe card checkout
+   * (verified + Connect charges enabled + onboarding complete).
+   */
+  cardCheckoutReady?: boolean;
 }
 
 export interface ListingReviewContext {
