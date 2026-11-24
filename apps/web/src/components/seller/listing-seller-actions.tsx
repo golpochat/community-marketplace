@@ -233,7 +233,9 @@ export function ListingSellerActions({
       actions.push(editButton);
   }
 
-  if (status !== 'removed' && status !== 'sold' && status !== 'ended') {
+  const canSellerDelete =
+    status === 'draft' || status === 'rejected' || status === 'pending_review';
+  if (canSellerDelete) {
     actions.push(
       <IconActionButton
         key="delete"

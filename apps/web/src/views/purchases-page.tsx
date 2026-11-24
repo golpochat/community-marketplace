@@ -4,29 +4,23 @@ import Link from 'next/link';
 import { Suspense, useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-import type { BuyerStatementIntentResponse, BuyerStatementStatusResponse, ListingSummary, Payment, PaymentIntentResponse, PendingReviewItem, CashbackEstimate } from '@community-marketplace/types';
+import type { BuyerStatementIntentResponse, BuyerStatementStatusResponse, Payment, PaymentIntentResponse, PendingReviewItem, CashbackEstimate } from '@community-marketplace/types';
 import { formatCurrency } from '@community-marketplace/utils';
 import { DashboardCard, PageHeader } from '@community-marketplace/ui-dashboard';
 import { useAppFeedback } from '@community-marketplace/ui';
 
 import { StripeCheckoutPanel } from '@/components/payments/stripe-checkout-form';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
+import { PayListingPicker } from '@/components/payments/pay-listing-picker';
 import { RefundRequestDialog } from '@/components/payments/refund-request-dialog';
 import { Pagination } from '@/components/shared/pagination';
 import { ReviewPromptDialog } from '@/components/trust/review-prompt-dialog';
-import { listingsService } from '@/services/listings.service';
-import { buyerService } from '@/services/marketplace.service';
 import { monetizationService } from '@/services/monetization.service';
 import type { StatementExportFormat } from '@/services/monetization.service';
 import { paymentsService } from '@/services/payments.service';
 import { trustService } from '@/services/trust.service';
 import { LoadingState } from '@/components/LoadingState';
 import { StatementExportButtons } from '@/components/dashboard/statement-export-buttons';
-
-interface PayableListing {
-  id: string;
-  label: string;
-}
 
 const HISTORY_PAGE_SIZE = 10;
 
@@ -59,7 +53,6 @@ function BuyerPurchasesContent() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [historyTotal, setHistoryTotal] = useState(0);
-  const [payableListings, setPayableListings] = useState<PayableListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedListingId, setSelectedListingId] = useState('');
@@ -100,36 +93,9 @@ function BuyerPurchasesContent() {
     }
   }, [historyPage]);
 
-  const loadPayableListings = useCallback(async () => {
-    try {
-      const [favorites, browse] = await Promise.all([
-        buyerService.getFavorites(1, 50).catch(() => ({ data: [] as ListingSummary[] })),
-        listingsService.getAll(1, 50).catch(() => ({ data: [] as ListingSummary[] })),
-      ]);
-
-      const merged = new Map<string, PayableListing>();
-      for (const listing of [...favorites.data, ...browse.data]) {
-        if (listing.status !== 'active') continue;
-        merged.set(listing.id, {
-          id: listing.id,
-          label: `${listing.title} — ${formatCurrency(listing.price, listing.currency)}`,
-        });
-      }
-      const options = Array.from(merged.values());
-      setPayableListings(options);
-      setSelectedListingId((current) => current || options[0]?.id || '');
-    } catch {
-      setPayableListings([]);
-    }
-  }, []);
-
   useEffect(() => {
     void loadHistory();
   }, [loadHistory]);
-
-  useEffect(() => {
-    void loadPayableListings();
-  }, [loadPayableListings]);
 
   useEffect(() => {
     void loadPendingReviews();
@@ -292,31 +258,21 @@ function BuyerPurchasesContent() {
       <div className="space-y-6">
         <DashboardCard title="Pay for a listing">
           <p className="mb-4 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-            Choose a listing from your favorites or the marketplace. Pay by card to earn SellNearby
-            Credit — card details are handled by Stripe Elements, never stored on our servers.
+            Search a live listing, pick a saved favorite, or paste a listing link. Prefer Buy now on
+            the listing page when you can — card details stay with Stripe.
           </p>
+          <PayListingPicker
+            selectedId={selectedListingId}
+            disabled={actionLoading}
+            onSelect={(listing) => setSelectedListingId(listing?.id ?? '')}
+          />
           {cashbackEstimate?.eligible && (
-            <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
+            <p className="mt-4 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-900">
               You will earn {formatCurrency(cashbackEstimate.amount, 'EUR')} credit. Unlocks on{' '}
               {new Date(cashbackEstimate.unlockAt).toLocaleDateString()}.
             </p>
           )}
-          <form onSubmit={handleCreateIntent} className="flex flex-col gap-3 sm:flex-row">
-            <select
-              value={selectedListingId}
-              onChange={(e) => setSelectedListingId(e.target.value)}
-              className="flex-1 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] bg-card px-3 py-2 text-sm text-[hsl(var(--dashboard-main-fg))] focus:border-[hsl(var(--dashboard-accent))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--dashboard-accent))]"
-              required
-            >
-              <option value="" disabled>
-                Select a listing…
-              </option>
-              {payableListings.map((listing) => (
-                <option key={listing.id} value={listing.id}>
-                  {listing.label}
-                </option>
-              ))}
-            </select>
+          <form onSubmit={handleCreateIntent} className="mt-4">
             <button
               type="submit"
               disabled={actionLoading || !selectedListingId}
@@ -325,11 +281,6 @@ function BuyerPurchasesContent() {
               {actionLoading ? 'Creating…' : 'Continue to payment'}
             </button>
           </form>
-          {payableListings.length === 0 && (
-            <p className="mt-3 text-sm text-[hsl(var(--dashboard-main-fg))]">
-              No active listings available. Browse listings or save favorites first.
-            </p>
-          )}
         </DashboardCard>
 
         {intent && (

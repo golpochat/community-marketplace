@@ -119,6 +119,18 @@ export const listingsService = {
     }
   },
 
+  async resolveByCompactId(compactId: string): Promise<string | null> {
+    try {
+      const response = await apiClient<{ id: string }>(
+        `${WEB_API_ROUTES.public.listings}/resolve/${compactId}`,
+      );
+      return response.data?.id ?? null;
+    } catch (error) {
+      if (error instanceof ApiClientError && error.status === 404) return null;
+      throw error;
+    }
+  },
+
   async getCategories(): Promise<Category[]> {
     try {
       const response = await apiClient<Category[]>(`${WEB_API_ROUTES.public.listings}/categories`);

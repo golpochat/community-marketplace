@@ -84,6 +84,10 @@ import {
   type ListingFormData,
 } from "@/components/seller/listing-form";
 import type { VehicleFormData } from "@/components/seller/vehicle-listing-form";
+import {
+  clearGenericListingDraft,
+  clearVehicleListingDraft,
+} from "@/lib/listing-form-draft";
 import { buildVehicleDeliverySelections } from "@/components/seller/vehicle-delivery.helpers";
 import {
   buildVehicleListingCreatePayload,
@@ -1112,6 +1116,7 @@ export function SellerCreateListingPage() {
       if (photoUploadFailed) {
         setError({ message: USER_FACING_ERRORS.draftSavedPhotoFailed });
       }
+      clearGenericListingDraft();
       setShareSuccess({
         listingId,
         listingStatus: "draft",
@@ -1129,6 +1134,7 @@ export function SellerCreateListingPage() {
       });
     } catch (err) {
       if (createdListingId) {
+        clearGenericListingDraft();
         setError({ message: USER_FACING_ERRORS.draftSavedPhotoFailed });
         setSuccess(USER_FACING_ERRORS.draftSavedPhotoFailed);
         return;
@@ -1208,6 +1214,7 @@ export function SellerCreateListingPage() {
       if (photoUploadFailed) {
         setError({ message: USER_FACING_ERRORS.draftSavedPhotoFailed });
       }
+      clearVehicleListingDraft();
       setShareSuccess({
         listingId,
         listingStatus: "draft",
@@ -1224,6 +1231,7 @@ export function SellerCreateListingPage() {
       });
     } catch (err) {
       if (createdListingId) {
+        clearVehicleListingDraft();
         setError({ message: USER_FACING_ERRORS.draftSavedPhotoFailed });
         setSuccess(USER_FACING_ERRORS.draftSavedPhotoFailed);
         return;

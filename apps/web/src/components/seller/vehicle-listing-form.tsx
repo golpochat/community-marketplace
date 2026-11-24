@@ -230,6 +230,7 @@ export function VehicleListingForm({
   const { catalog, loading: catalogLoading } = useDeliveryCatalog();
   const isCreateFlow = !listingId && !initialData;
   const draftHydratedRef = useRef(false);
+  const suppressDraftPersistRef = useRef(false);
   const [step, setStep] = useState(() => {
     if (typeof initialStep === 'number' && initialStep >= 0 && initialStep < STEPS.length) {
       return initialStep;
@@ -327,9 +328,12 @@ export function VehicleListingForm({
   }, [isCreateFlow, categoryId]);
 
   useEffect(() => {
-    if (!isCreateFlow || !draftHydratedRef.current) return;
+    if (!isCreateFlow || !draftHydratedRef.current || suppressDraftPersistRef.current) {
+      return;
+    }
     const { images: _images, ...persistable } = data;
     const timer = window.setTimeout(() => {
+      if (suppressDraftPersistRef.current) return;
       saveVehicleListingDraft({
         step,
         highestCompletedStep,
@@ -516,7 +520,10 @@ export function VehicleListingForm({
         });
       }
       setShowPricingPreview(false);
-      if (isCreateFlow) clearVehicleListingDraft();
+      if (isCreateFlow) {
+        suppressDraftPersistRef.current = true;
+        clearVehicleListingDraft();
+      }
       onSubmit?.(data);
     } catch (err) {
       setValidationError(

@@ -623,10 +623,14 @@ export class ListingsCrudService {
     const listing = await this.getOwnedOrAdmin(listingId, actorId, actorRole);
     if (!isAdmin) {
       await this.sellerListingGate.assertSellerNotSuspended(actorId);
-      const deletable = new Set(["draft", "rejected"]);
+      // Sellers may hard-delete only pre-live / rejected rows. Live inventory must be
+      // paused or ended so sale history and public URLs stay coherent.
+      const deletable = new Set(["draft", "rejected", "pending_review"]);
       if (!deletable.has(listing.status)) {
         throw new BadRequestException(
-          "Published listings cannot be deleted. Pause or end the listing instead.",
+          listing.status === "active" || listing.status === "paused"
+            ? "Live listings cannot be deleted. Pause or end the listing instead."
+            : "This listing cannot be deleted in its current status. End it from My listings, or ask an admin if you need it removed.",
         );
       }
     }

@@ -186,6 +186,7 @@ export function ListingForm({
   const { catalog, loading: catalogLoading } = useDeliveryCatalog();
   const isCreateFlow = !listingId;
   const draftHydratedRef = useRef(false);
+  const suppressDraftPersistRef = useRef(false);
 
   const [step, setStep] = useState(() => {
     if (typeof initialStep === 'number' && initialStep >= 0 && initialStep < STEPS.length) {
@@ -194,6 +195,7 @@ export function ListingForm({
     return 0;
   });
   const [highestCompletedStep, setHighestCompletedStep] = useState(-1);
+  const [resumedDraft, setResumedDraft] = useState(false);
   const [data, setData] = useState<ListingFormData>({
     ...INITIAL,
     ...normalizeInitialData(initialData),
@@ -245,15 +247,19 @@ export function ListingForm({
       ...draft.data,
       images: prev.images,
     }));
+    setResumedDraft(true);
     if (draft.data.delivery?.selectedOptionIds?.length) {
       deliverySeededRef.current = true;
     }
   }, [isCreateFlow]);
 
   useEffect(() => {
-    if (!isCreateFlow || !draftHydratedRef.current) return;
+    if (!isCreateFlow || !draftHydratedRef.current || suppressDraftPersistRef.current) {
+      return;
+    }
     const { images: _images, ...persistable } = data;
     const timer = window.setTimeout(() => {
+      if (suppressDraftPersistRef.current) return;
       saveGenericListingDraft({
         step,
         highestCompletedStep,
@@ -262,6 +268,26 @@ export function ListingForm({
     }, 400);
     return () => window.clearTimeout(timer);
   }, [isCreateFlow, step, highestCompletedStep, data]);
+
+  function discardResumedDraft() {
+    suppressDraftPersistRef.current = true;
+    clearGenericListingDraft();
+    setResumedDraft(false);
+    setStep(0);
+    setHighestCompletedStep(-1);
+    setValidationError(null);
+    setPhotosNotice(null);
+    setData({
+      ...INITIAL,
+      categoryId: categories[0]?.id ?? "",
+      delivery: EMPTY_DELIVERY,
+    });
+    deliverySeededRef.current = false;
+    // Allow autosave again for the blank form
+    window.setTimeout(() => {
+      suppressDraftPersistRef.current = false;
+    }, 0);
+  }
 
   useEffect(() => {
     if (catalog.length === 0 || deliverySeededRef.current) return;
@@ -475,7 +501,11 @@ export function ListingForm({
               : "Your price changes are pending review. Buyers still see your current prices.",
         });
       }
-      if (isCreateFlow) clearGenericListingDraft();
+      if (isCreateFlow) {
+        suppressDraftPersistRef.current = true;
+        clearGenericListingDraft();
+        setResumedDraft(false);
+      }
       setShowPricingPreview(false);
       onSubmit?.(data);
     } catch (err) {
@@ -636,6 +666,28 @@ export function ListingForm({
         highestCompletedStep={highestCompletedStep}
         onStepClick={handleStepClick}
       />
+
+      {isCreateFlow && resumedDraft && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
+          <p className="text-[hsl(var(--dashboard-main-fg))]">
+            Resuming an unfinished create form from this browser
+            {data.title.trim() ? (
+              <>
+                {" "}
+                (<span className="font-medium">({data.title.trim()})</span>
+              </>
+            ) : null}
+            . This is not your live listing.
+          </p>
+          <button
+            type="button"
+            onClick={discardResumedDraft}
+            className="shrink-0 rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-1.5 text-sm font-medium text-[hsl(var(--dashboard-main-fg))] hover:bg-[hsl(var(--dashboard-sidebar-active)/0.35)]"
+          >
+            Start fresh
+          </button>
+        </div>
+      )}
 
       {priceReviewStatus === "pending-review" && (
         <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900">
