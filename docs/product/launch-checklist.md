@@ -556,16 +556,19 @@ Run on **staging**, then **production** after each deploy. See also [troubleshoo
 
 ### Path A — Closed pilot (target: 2–3 weeks)
 
+**Executable BEP week-0 checklist:** [path-a-bep-checklist.md](../runbooks/path-a-bep-checklist.md) (deploy → Stripe live → SendGrid → R2 → smoke €1–€5 purchase). Then run [pilot-concierge-gtm.md](../runbooks/pilot-concierge-gtm.md) until ops cash BEP.
+
 **Must complete before first paying user:**
 
 1. [x] Production **host** verified (`api.sellnearby.ie` ready + public smoke 2026-09-20). Deploy latest commerce-trust commit before inviting paying users (homepage still says “no commission” until then).
 2. [ ] Stripe **live** + webhooks on prod URL
 3. [ ] SendGrid + domain authentication
 4. [ ] R2 prod bucket for images
-5. [ ] Solicitor-reviewed **beta Terms + Privacy**
+5. [ ] Solicitor-reviewed **beta Terms + Privacy** (closed pilot may use solicitor-ready drafts with known invitees; full sign-off before open Ireland)
 6. [x] Internal dispute + refund playbook ([runbook](../runbooks/dispute-refund-playbook.md)); moderation still daily queue owner
 7. [ ] `RBAC_SEED_ENABLED=false`, secrets rotated, TLS live
 8. [ ] Section 7 smoke test matrix green on prod
+9. [ ] **Path A exit:** one live €1–€5 card purchase (+ refund if needed)
 
 **Acceptable gaps for pilot:** FCM push, keyword automation, full category tree, wallet spend, automated E2E tests, status page.
 

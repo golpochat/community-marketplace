@@ -37,9 +37,22 @@ export function useSellerConnectStatus(options?: { enabled?: boolean }) {
     void load();
   }, [load]);
 
-  const isReady = Boolean(
-    connect?.onboardingComplete && connect.chargesEnabled && connect.payoutsEnabled,
+  /** Matches listing `cardCheckoutReady` / assertSellerCanReceivePayments. */
+  const isCardCheckoutReady = Boolean(
+    connect?.onboardingComplete && connect.chargesEnabled,
   );
+  /** Full Express readiness including payouts to bank. */
+  const isFullyReady = Boolean(isCardCheckoutReady && connect?.payoutsEnabled);
+  /** @deprecated Prefer isCardCheckoutReady for Buy now gates; alias kept for callers. */
+  const isReady = isCardCheckoutReady;
 
-  return { connect, loading, error, isReady, reload: load };
+  return {
+    connect,
+    loading,
+    error,
+    isReady,
+    isCardCheckoutReady,
+    isFullyReady,
+    reload: load,
+  };
 }

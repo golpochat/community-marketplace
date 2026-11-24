@@ -229,22 +229,45 @@ export function ChatWindow({
           </div>
         )}
       </div>
-      {listing &&
-        listing.status === 'active' &&
-        listing.sellerId !== currentUserId &&
-        !isBlocked && (
-          <div className="border-b border-border px-4 py-3">
-            <p className="mb-2 text-xs text-muted-foreground">{COMMERCE_PUBLIC_COPY.chatPayHint}</p>
-            <BuyNowButton
-              listing={{
-                id: listing.id,
-                status: listing.status as ListingStatus,
-                sellerId: listing.sellerId,
-                cardCheckoutReady: listing.cardCheckoutReady,
-              }}
-            />
-          </div>
-        )}
+      {listing && listing.status === 'active' && !isBlocked && (
+        <div className="border-b border-border px-4 py-3">
+          {listing.sellerId === currentUserId ? (
+            listing.cardCheckoutReady === false ? (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  {COMMERCE_PUBLIC_COPY.chatSellerConnectPrompt}
+                </p>
+                <a
+                  href="/account/earnings#connect"
+                  className="inline-flex text-sm font-medium text-primary hover:underline"
+                >
+                  Finish payout setup →
+                </a>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {COMMERCE_PUBLIC_COPY.chatSellerPayReadyHint}
+              </p>
+            )
+          ) : (
+            <>
+              <p className="mb-2 text-xs text-muted-foreground">
+                {listing.cardCheckoutReady === false
+                  ? COMMERCE_PUBLIC_COPY.cardCheckoutUnavailableHint
+                  : COMMERCE_PUBLIC_COPY.chatPayNudgeReady}
+              </p>
+              <BuyNowButton
+                listing={{
+                  id: listing.id,
+                  status: listing.status as ListingStatus,
+                  sellerId: listing.sellerId,
+                  cardCheckoutReady: listing.cardCheckoutReady,
+                }}
+              />
+            </>
+          )}
+        </div>
+      )}
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((msg) => (
           <div key={msg.id} className="group relative">

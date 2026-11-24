@@ -4,6 +4,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+  COMMERCE_PUBLIC_COPY,
   FORBIDDEN_PUBLIC_CLAIM_PATTERNS,
   formatSellerFeeDisclosure,
   resolveSellerPlatformFee,
@@ -113,6 +114,13 @@ describe('resolveSellerPlatformFee', () => {
   it('nudges Connect only at or above the listed-price threshold', () => {
     expect(shouldNudgeSellerConnect(49.99)).toBe(false);
     expect(shouldNudgeSellerConnect(50)).toBe(true);
+  });
+
+  it('exposes BEP chat and Connect copy keys', () => {
+    expect(COMMERCE_PUBLIC_COPY.chatPayNudgeReady.length).toBeGreaterThan(20);
+    expect(COMMERCE_PUBLIC_COPY.chatSellerConnectPrompt).toMatch(/payout setup/i);
+    expect(COMMERCE_PUBLIC_COPY.connectNudgeBody).toContain('{minPrice}');
+    expect(COMMERCE_PUBLIC_COPY.markSoldCloseChannelHint).toMatch(/close channel|leak/i);
   });
 });
 

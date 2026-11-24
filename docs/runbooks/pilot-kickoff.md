@@ -17,7 +17,7 @@ This runbook is the **execution order**. The launch checklist is the **full inve
 | Production web `https://sellnearby.ie` | ⚠️ Live but **stale copy** (“without platform commission fees”, stub Terms) until the commerce-trust commit is deployed |
 | Staging `api.staging.community.market` | Not used — pilot is Compose on OVH (`sellnearby.ie`) |
 
-**Conclusion:** Hosting is not the blocker. **Next is deploy the local trust/copy work, then Stripe live + solicitor, then [concierge GTM](./pilot-concierge-gtm.md).**
+**Conclusion:** Hosting is not the blocker. **Next is [Path A → BEP checklist](./path-a-bep-checklist.md)** (deploy, Stripe live, SendGrid, R2, €1–€5 smoke), then [concierge GTM](./pilot-concierge-gtm.md) until ops cash BEP.
 
 ---
 

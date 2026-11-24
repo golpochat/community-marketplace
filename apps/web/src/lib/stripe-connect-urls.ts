@@ -1,6 +1,6 @@
 /** Canonical return URL after Stripe Connect Express onboarding. */
 export function stripeConnectReturnPath(): string {
-  return '/account/earnings?connect=return';
+  return '/account/earnings?connect=return#connect';
 }
 
 export function stripeConnectReturnUrl(origin?: string): string {

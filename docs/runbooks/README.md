@@ -12,7 +12,8 @@ Step-by-step procedures for deployments and incidents.
 | **[OVH VPS deploy](./ovh-vps-deploy.md)** | Docker deploy on OVH for `sellnearby.ie` |
 | **[Pilot feedback](./pilot-feedback.md)** | Google Form setup, invite copy, check-in scripts |
 | **[Dispute & refund playbook](./dispute-refund-playbook.md)** | 48h card review, refunds, cash out of scope, bans |
-| **[Concierge GTM](./pilot-concierge-gtm.md)** | Dublin wedge: verify → Connect → first card sale |
+| **[Path A → BEP checklist](./path-a-bep-checklist.md)** | Week-0 pipes: deploy, Stripe live, SendGrid, R2, €1–€5 smoke |
+| **[Concierge GTM](./pilot-concierge-gtm.md)** | Dublin wedge: verify → Connect → first card sale → ops BEP |
 
 **Other:**
 

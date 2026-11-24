@@ -83,9 +83,20 @@ export const COMMERCE_PUBLIC_COPY = {
     'Pay by card for a receipt and a 48-hour dispute review. Cash or collection arranged in chat is at your own risk. SellNearby is not an escrow service.',
   heroBadgeCard: 'Card checkout & receipts',
   chatPayHint: 'Pay on SellNearby for a receipt. Cash collection stays available in chat.',
+  chatPayNudgeReady:
+    'Agreed a price? Pay on SellNearby for a receipt and a 48-hour dispute review. Cash collection stays at your own risk.',
+  chatSellerConnectPrompt:
+    'Buyers cannot pay by card until you finish payout setup. Open Earnings to complete Stripe Connect.',
+  chatSellerPayReadyHint:
+    'Card checkout is ready. After you agree a price, ask the buyer to use Pay on SellNearby for a receipt.',
   cardCheckoutUnavailable: 'Card pay unavailable',
   cardCheckoutUnavailableHint:
     "This seller hasn't finished payout setup. Message them to arrange collection, or ask them to enable card payments.",
+  connectNudgeTitle: 'Finish payout setup to unlock card payments',
+  connectNudgeBody:
+    'Listings at €{minPrice}+ need Stripe Connect before buyers can use Buy now. Cash and chat still work.',
+  markSoldCloseChannelHint:
+    'Pick how this sold. Card checkout is recorded automatically; cash or off-platform sales need this so we can track leak rate.',
   disputeReview:
     'Card checkout disputes are reviewed within 48 hours. Cash or collection arranged in chat is at your own risk. SellNearby is not an escrow service.',
   legalDraftNotice:

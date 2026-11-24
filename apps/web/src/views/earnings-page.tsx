@@ -108,12 +108,13 @@ function SellerEarningsContent() {
   }, [load]);
 
   useEffect(() => {
-    if (searchParams.get('connect') === 'return') {
+    if (searchParams.get('connect') !== 'return') return;
+    void load().then(() => {
       feedback.info(
         'Welcome back from Stripe',
-        'We refreshed your Connect status below.',
+        'We refreshed your payout setup status below. If Buy now is still unavailable, finish any remaining Stripe steps and tap Refresh status.',
       );
-    }
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- show once per return navigation
   }, [searchParams]);
 
@@ -198,12 +199,12 @@ function SellerEarningsContent() {
 
   const sellerVerified = isSellerVerified(verification?.sellerStatus);
 
-  const isReady = Boolean(
-    sellerVerified &&
-      connect?.onboardingComplete &&
-      connect.chargesEnabled &&
-      connect.payoutsEnabled,
+  /** Matches public listing cardCheckoutReady (charges + onboarding). */
+  const isCardCheckoutReady = Boolean(
+    sellerVerified && connect?.onboardingComplete && connect.chargesEnabled,
   );
+  const isFullyReady = Boolean(isCardCheckoutReady && connect?.payoutsEnabled);
+  const isReady = isCardCheckoutReady;
 
   return (
     <>
@@ -244,6 +245,7 @@ function SellerEarningsContent() {
             </DashboardCard>
           )}
           <DashboardCard title="Stripe Connect (required to get paid)">
+            <div id="connect" className="scroll-mt-24" />
             {!sellerVerified ? (
               <SellerStripeVerificationGate />
             ) : (
@@ -289,13 +291,21 @@ function SellerEarningsContent() {
                 <p>Charges enabled: {connect.chargesEnabled ? 'Yes' : 'No'}</p>
                 <p>Payouts enabled: {connect.payoutsEnabled ? 'Yes' : 'No'}</p>
                 <p>Onboarding complete: {connect.onboardingComplete ? 'Yes' : 'No'}</p>
-                {isReady && (
-                  <p className="font-medium text-green-700">Your account is ready to receive payments.</p>
+                {isCardCheckoutReady && (
+                  <p className="font-medium text-green-700">
+                    Card checkout is available on your listings
+                    {isFullyReady ? ' and payouts to your bank are enabled.' : '. Finish any remaining Stripe steps if payouts still show No.'}
+                  </p>
+                )}
+                {!isCardCheckoutReady && (
+                  <p className="font-medium text-amber-800">
+                    Buyers still see Card pay unavailable until charges and onboarding are complete.
+                  </p>
                 )}
               </div>
             ) : (
               <p className="text-sm text-[hsl(var(--dashboard-sidebar-muted))]">
-                Not connected to Stripe yet.
+                Not connected to Stripe yet. Finish payout setup so buyers can use Buy now.
               </p>
             )}
             <div className="mt-4 flex flex-wrap gap-2">

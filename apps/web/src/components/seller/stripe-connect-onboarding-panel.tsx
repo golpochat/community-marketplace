@@ -39,8 +39,8 @@ export function StripeConnectOnboardingPanel({
             {connectStarted ? 'Finish payout setup' : 'Set up payouts'}
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            You&apos;ll complete a short secure form on Stripe. Buyers cannot pay for your listings
-            until charges and payouts are enabled.
+            You&apos;ll complete a short secure form on Stripe. Buyers see Card pay unavailable
+            until charges are enabled and onboarding is complete.
           </p>
         </div>
 
