@@ -42,6 +42,8 @@ export const USER_FACING_ERRORS = {
     'Categories are temporarily unavailable. Please refresh the page and try again.',
   listingCreateIncomplete:
     'Your listing could not be finished. Please try saving again.',
+  draftSavedPhotoFailed:
+    'Draft saved, but we could not upload your photo. Open the listing from My listings to add photos, then submit for review.',
 } as const;
 
 export function isTechnicalErrorMessage(message: string): boolean {

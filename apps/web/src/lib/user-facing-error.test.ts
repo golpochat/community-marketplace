@@ -38,4 +38,9 @@ describe('user-facing-error', () => {
       ),
     ).toBe(USER_FACING_ERRORS.categoriesUnavailable);
   });
+
+  it('explains draft saved when photo upload fails', () => {
+    expect(USER_FACING_ERRORS.draftSavedPhotoFailed).toMatch(/Draft saved/i);
+    expect(USER_FACING_ERRORS.draftSavedPhotoFailed).toMatch(/photo/i);
+  });
 });

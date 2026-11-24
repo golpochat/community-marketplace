@@ -1065,6 +1065,7 @@ export function SellerCreateListingPage() {
     setError(null);
     setSuccess(null);
     setShareSuccess(null);
+    let createdListingId: string | undefined;
     try {
       const catalog = await deliveryService.getCatalog();
       const deliverySelections = selectionsFromDeliveryState(
@@ -1084,19 +1085,33 @@ export function SellerCreateListingPage() {
       if (!listingId) {
         throw new Error(USER_FACING_ERRORS.listingCreateIncomplete);
       }
+      createdListingId = listingId;
+
+      let photoUploadFailed = false;
       if (data.images.length > 0) {
-        await sellerService.uploadListingImages(listingId, data.images);
+        try {
+          await sellerService.uploadListingImages(listingId, data.images);
+        } catch {
+          photoUploadFailed = true;
+        }
       }
+
       let images: ListingShareSuccessContext["images"] = [];
       try {
         images = await aiMarketingService.listListingImages(listingId);
       } catch {
         images = [];
       }
-      const message = nudge
-        ? `Draft saved. ${nudge}`
-        : "Draft saved. An admin will review it before it goes live on the marketplace.";
+
+      const message = photoUploadFailed
+        ? USER_FACING_ERRORS.draftSavedPhotoFailed
+        : nudge
+          ? `Draft saved. ${nudge}`
+          : "Draft saved. An admin will review it before it goes live on the marketplace.";
       setSuccess(message);
+      if (photoUploadFailed) {
+        setError({ message: USER_FACING_ERRORS.draftSavedPhotoFailed });
+      }
       setShareSuccess({
         listingId,
         listingStatus: "draft",
@@ -1113,6 +1128,11 @@ export function SellerCreateListingPage() {
         message,
       });
     } catch (err) {
+      if (createdListingId) {
+        setError({ message: USER_FACING_ERRORS.draftSavedPhotoFailed });
+        setSuccess(USER_FACING_ERRORS.draftSavedPhotoFailed);
+        return;
+      }
       if (err instanceof ApiClientError && err.status === 403) {
         setVerificationBlocked(true);
         setGateModalOpen(true);
@@ -1131,6 +1151,7 @@ export function SellerCreateListingPage() {
     setError(null);
     setSuccess(null);
     setShareSuccess(null);
+    let createdListingId: string | undefined;
     try {
       const categoryId =
         data.categoryId || categories.find((c) => isVehicleCategory(c))?.id;
@@ -1158,9 +1179,17 @@ export function SellerCreateListingPage() {
       if (!listingId) {
         throw new Error(USER_FACING_ERRORS.listingCreateIncomplete);
       }
+      createdListingId = listingId;
+
+      let photoUploadFailed = false;
       if (data.images.length > 0) {
-        await sellerService.uploadListingImages(listingId, data.images);
+        try {
+          await sellerService.uploadListingImages(listingId, data.images);
+        } catch {
+          photoUploadFailed = true;
+        }
       }
+
       let images: ListingShareSuccessContext["images"] = [];
       try {
         images = await aiMarketingService.listListingImages(listingId);
@@ -1170,10 +1199,15 @@ export function SellerCreateListingPage() {
       const title =
         [data.year, data.make, data.model].filter(Boolean).join(" ").trim() ||
         "Vehicle listing";
-      const message = nudge
-        ? `Draft saved. ${nudge}`
-        : "Draft saved. An admin will review it before it goes live on the marketplace.";
+      const message = photoUploadFailed
+        ? USER_FACING_ERRORS.draftSavedPhotoFailed
+        : nudge
+          ? `Draft saved. ${nudge}`
+          : "Draft saved. An admin will review it before it goes live on the marketplace.";
       setSuccess(message);
+      if (photoUploadFailed) {
+        setError({ message: USER_FACING_ERRORS.draftSavedPhotoFailed });
+      }
       setShareSuccess({
         listingId,
         listingStatus: "draft",
@@ -1189,6 +1223,11 @@ export function SellerCreateListingPage() {
         message,
       });
     } catch (err) {
+      if (createdListingId) {
+        setError({ message: USER_FACING_ERRORS.draftSavedPhotoFailed });
+        setSuccess(USER_FACING_ERRORS.draftSavedPhotoFailed);
+        return;
+      }
       if (err instanceof ApiClientError && err.status === 403) {
         setVerificationBlocked(true);
         setGateModalOpen(true);
@@ -1555,6 +1594,7 @@ export function SellerEditListingPage({
   async function handleGenericSubmit(data: ListingFormData) {
     setSubmitting(true);
     setError(null);
+    let detailsSaved = false;
     try {
       const catalog = await deliveryService.getCatalog();
       const selections = selectionsFromDeliveryState(catalog, data.delivery);
@@ -1572,6 +1612,7 @@ export function SellerEditListingPage({
         includeTitle,
       );
       await sellerService.updateListing(listingId, payload);
+      detailsSaved = true;
       if (
         titleAmendRequired &&
         liveTitle &&
@@ -1588,10 +1629,25 @@ export function SellerEditListingPage({
         }
       }
       if (data.images.length > 0) {
-        await sellerService.uploadListingImages(listingId, data.images);
+        try {
+          await sellerService.uploadListingImages(listingId, data.images);
+        } catch {
+          setError({
+            message:
+              "Your listing details were saved, but we could not upload the new photo. Try adding the photo again.",
+          });
+          return;
+        }
       }
       router.push("/account/listings");
     } catch (err) {
+      if (detailsSaved) {
+        setError({
+          message:
+            "Your listing details were saved, but we could not upload the new photo. Try adding the photo again.",
+        });
+        return;
+      }
       setError(
         sellerFormErrorFromUnknown(err, "We could not update your listing. Please try again."),
       );
@@ -1603,6 +1659,7 @@ export function SellerEditListingPage({
   async function handleVehicleSubmit(data: VehicleFormData) {
     setSubmitting(true);
     setError(null);
+    let detailsSaved = false;
     try {
       const categoryId = data.categoryId || initialCategoryId;
       if (!categoryId) throw new Error("Missing category.");
@@ -1628,6 +1685,7 @@ export function SellerEditListingPage({
         includeTitle,
       );
       await sellerService.updateListing(listingId, payload);
+      detailsSaved = true;
       if (titleAmendRequired && liveTitle) {
         const fullPayload = buildVehicleListingUpdatePayload(
           data,
@@ -1655,10 +1713,25 @@ export function SellerEditListingPage({
         }
       }
       if (data.images.length > 0) {
-        await sellerService.uploadListingImages(listingId, data.images);
+        try {
+          await sellerService.uploadListingImages(listingId, data.images);
+        } catch {
+          setError({
+            message:
+              "Your listing details were saved, but we could not upload the new photo. Try adding the photo again.",
+          });
+          return;
+        }
       }
       router.push("/account/listings");
     } catch (err) {
+      if (detailsSaved) {
+        setError({
+          message:
+            "Your listing details were saved, but we could not upload the new photo. Try adding the photo again.",
+        });
+        return;
+      }
       setError(
         sellerFormErrorFromUnknown(err, "We could not update your listing. Please try again."),
       );
