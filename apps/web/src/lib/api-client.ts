@@ -5,6 +5,10 @@ import { useAuthStore } from '@/store/auth.store';
 import { API_BASE_URL } from './constants';
 import { unwrapApiResponse } from './normalize-api-response';
 import { isDashboardPath } from './route-guards';
+import {
+  USER_FACING_ERRORS,
+  resolveUserFacingMessage,
+} from './user-facing-error';
 import { refreshClientSession, resolveClientAccessToken } from './web-session';
 
 let csrfToken: string | null = null;
@@ -18,12 +22,12 @@ export async function ensureCsrfToken(): Promise<string> {
   if (csrfToken) return csrfToken;
   const response = await fetch(`${API_BASE_URL}/auth/csrf`, { credentials: 'include' });
   if (!response.ok) {
-    throw new ApiClientError('Unable to issue CSRF token', response.status, 'CSRF_ISSUE_FAILED');
+    throw new ApiClientError(USER_FACING_ERRORS.session, response.status, 'CSRF_ISSUE_FAILED');
   }
   const json = (await response.json()) as ApiResponse<{ token: string }>;
   const token = unwrapApiResponse(json).data?.token;
   if (!token) {
-    throw new ApiClientError('CSRF token missing from response', 500, 'CSRF_ISSUE_FAILED');
+    throw new ApiClientError(USER_FACING_ERRORS.session, 500, 'CSRF_ISSUE_FAILED');
   }
   csrfToken = token;
   return token;
@@ -108,11 +112,7 @@ export async function apiClient<T>(
     response = await doFetch(token);
   } catch (err) {
     if (err instanceof TypeError) {
-      throw new ApiClientError(
-        `Cannot reach the API at ${API_BASE_URL}. Start it with: pnpm --filter api dev`,
-        0,
-        'NETWORK_ERROR',
-      );
+      throw new ApiClientError(USER_FACING_ERRORS.network, 0, 'NETWORK_ERROR');
     }
     throw err;
   }
@@ -139,7 +139,7 @@ export async function apiClient<T>(
   if (!response.ok) {
     const error = (await response.json().catch(() => null)) as ApiError | null;
     throw new ApiClientError(
-      error?.message ?? `Request failed with status ${response.status}`,
+      resolveUserFacingMessage(error?.message, response.status),
       response.status,
       error?.code,
       error?.policyUrl,

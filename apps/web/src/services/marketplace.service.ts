@@ -14,6 +14,7 @@ import type { ListingSaleCloseChannel } from '@community-marketplace/utils';
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
 import { normalizePaginated } from '@/lib/normalize-api-response';
+import { USER_FACING_ERRORS } from '@/lib/user-facing-error';
 
 export const sellerService = {
   async getListings(page = 1, limit = 20, status?: string): Promise<PaginatedResult<Listing>> {
@@ -143,7 +144,7 @@ export const sellerService = {
       headers: { 'Content-Type': file.type },
     });
     if (!putResponse.ok) {
-      throw new Error(`Image upload failed (${putResponse.status}). Is the API running on port 4000?`);
+      throw new Error(USER_FACING_ERRORS.photoUpload);
     }
     const response = await apiClient<ListingImage[]>(
       `${WEB_API_ROUTES.seller.listings}/${listingId}/images/confirm`,

@@ -67,11 +67,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           ? HttpStatus.BAD_REQUEST
           : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    if (
-      !(exception instanceof HttpException) &&
-      !(exception instanceof ZodError) &&
-      process.env.NODE_ENV !== 'production'
-    ) {
+    if (!(exception instanceof HttpException) && !(exception instanceof ZodError)) {
       console.error('[GlobalExceptionFilter]', exception);
     }
 
@@ -81,14 +77,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         : exception instanceof ZodError
           ? {
               code: 'VALIDATION_ERROR',
-              message: exception.issues[0]?.message ?? 'Validation failed',
+              message: exception.issues[0]?.message ?? 'Please check your details and try again.',
             }
           : {
               code: `HTTP_${status}`,
-              message:
-                exception instanceof Error
-                  ? exception.message
-                  : 'Internal server error',
+              // Never leak raw Error.message (stack paths, SQL, etc.) to clients.
+              message: 'Something went wrong on our side. Please try again shortly.',
             };
 
     response.status(status).json(body);

@@ -12,7 +12,13 @@ async function fetchApi<T>(endpoint: string, init?: RequestInit): Promise<T> {
       ...init?.headers,
     },
   });
-  if (!response.ok) throw new Error(`API error: ${response.status}`);
+  if (!response.ok) {
+    throw new Error(
+      response.status >= 500
+        ? 'Something went wrong on our side. Please try again shortly.'
+        : 'Something went wrong. Please try again.',
+    );
+  }
   const json = (await response.json()) as ApiResponse<T>;
   return json.data;
 }

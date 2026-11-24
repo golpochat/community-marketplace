@@ -49,7 +49,7 @@ export async function adminApiClient<T>(
   } catch (err) {
     if (err instanceof TypeError) {
       throw new AdminApiClientError(
-        `Cannot reach the API at ${API_BASE_URL}. Start it with: pnpm --filter api dev`,
+        'We could not reach SellNearby right now. Please check your connection and try again.',
         0,
         'NETWORK_ERROR',
       );
@@ -67,8 +67,12 @@ export async function adminApiClient<T>(
 
   if (!response.ok) {
     const error = (await response.json().catch(() => null)) as ApiError | null;
+    const fallback =
+      response.status >= 500
+        ? 'Something went wrong on our side. Please try again shortly.'
+        : 'Something went wrong. Please try again.';
     throw new AdminApiClientError(
-      error?.message ?? `API error: ${response.status}`,
+      error?.message?.trim() || fallback,
       response.status,
       error?.code,
     );

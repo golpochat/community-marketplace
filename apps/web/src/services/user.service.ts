@@ -58,7 +58,9 @@ export const userService = {
       headers: { 'Content-Type': file.type },
     });
     if (!putResponse.ok) {
-      throw new Error('Failed to upload store logo');
+      throw new Error(
+        'We could not upload that logo. Please try again, or choose a different JPG or PNG image.',
+      );
     }
     const response = await apiClient<UserProfile>(WEB_API_ROUTES.users.meAvatar, {
       method: 'PATCH',
@@ -86,7 +88,9 @@ export const userService = {
       headers: { 'Content-Type': file.type },
     });
     if (!putResponse.ok) {
-      throw new Error('Failed to upload storefront banner');
+      throw new Error(
+        'We could not upload that banner. Please try again, or choose a different JPG or PNG image.',
+      );
     }
     const response = await apiClient<UserProfile>(WEB_API_ROUTES.users.meStoreBanner, {
       method: 'PATCH',

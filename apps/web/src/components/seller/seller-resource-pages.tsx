@@ -104,6 +104,10 @@ import { monetizationService } from "@/services/monetization.service";
 import { sellerVerificationService } from "@/services/seller-verification.service";
 import { aiMarketingService } from "@/services/ai-marketing.service";
 import { ApiClientError } from "@/lib/api-client";
+import {
+  USER_FACING_ERRORS,
+  userFacingErrorMessage,
+} from "@/lib/user-facing-error";
 import { listingsService } from "@/services/listings.service";
 import { ReviewBuyerPromptDialog } from "@/components/trust/review-buyer-prompt-dialog";
 import { trustService } from "@/services/trust.service";
@@ -114,14 +118,9 @@ type SellerFormError = {
 };
 
 function sellerFormErrorFromUnknown(err: unknown, fallback: string): SellerFormError {
-  if (err instanceof ApiClientError) {
-    return {
-      message: err.message || fallback,
-      policyUrl: err.policyUrl,
-    };
-  }
   return {
-    message: err instanceof Error ? err.message : fallback,
+    message: userFacingErrorMessage(err, fallback),
+    policyUrl: err instanceof ApiClientError ? err.policyUrl : undefined,
   };
 }
 
@@ -154,9 +153,7 @@ function buildListingCreatePayload(
 ) {
   const categoryId = data.categoryId || categories[0]?.id;
   if (!categoryId) {
-    throw new Error(
-      "No categories are available. Run `pnpm seed` from the repo root, then refresh this page.",
-    );
+    throw new Error(USER_FACING_ERRORS.categoriesUnavailable);
   }
   const salePrice = Number(data.salePrice);
   const originalPrice = data.originalPrice.trim()
@@ -1042,18 +1039,16 @@ export function SellerCreateListingPage() {
       .then((cats) => {
         if (cancelled) return;
         if (cats.length === 0) {
-          setCategoriesError(
-            "No categories are configured. Run `pnpm seed` from the repo root, then refresh this page.",
-          );
+          setCategoriesError(USER_FACING_ERRORS.categoriesUnavailable);
           setCategories([]);
           return;
         }
         setCategories(cats.map((c) => ({ id: c.id, name: c.name, slug: c.slug })));
       })
-      .catch((err: Error) => {
+      .catch((err: unknown) => {
         if (!cancelled) {
           setCategoriesError(
-            err.message || "Failed to load categories from the API.",
+            userFacingErrorMessage(err, USER_FACING_ERRORS.categoriesUnavailable),
           );
         }
       })
@@ -1087,7 +1082,7 @@ export function SellerCreateListingPage() {
         ?.sellerNudgeMessage;
       if (nudge) setNudgeMessage(nudge);
       if (!listingId) {
-        throw new Error("Listing was created but no id was returned.");
+        throw new Error(USER_FACING_ERRORS.listingCreateIncomplete);
       }
       if (data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
@@ -1123,7 +1118,9 @@ export function SellerCreateListingPage() {
         setGateModalOpen(true);
         setBlockMessage(err.message);
       }
-      setError(sellerFormErrorFromUnknown(err, "Failed to save listing draft"));
+      setError(
+        sellerFormErrorFromUnknown(err, "We could not save your draft. Please try again."),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -1159,7 +1156,7 @@ export function SellerCreateListingPage() {
         ?.sellerNudgeMessage;
       if (nudge) setNudgeMessage(nudge);
       if (!listingId) {
-        throw new Error("Listing was created but no id was returned.");
+        throw new Error(USER_FACING_ERRORS.listingCreateIncomplete);
       }
       if (data.images.length > 0) {
         await sellerService.uploadListingImages(listingId, data.images);
@@ -1197,7 +1194,9 @@ export function SellerCreateListingPage() {
         setGateModalOpen(true);
         setBlockMessage(err.message);
       }
-      setError(sellerFormErrorFromUnknown(err, "Failed to save listing draft"));
+      setError(
+        sellerFormErrorFromUnknown(err, "We could not save your draft. Please try again."),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -1223,7 +1222,9 @@ export function SellerCreateListingPage() {
         "Submitted for review. Keep preparing share assets while you wait.",
       );
     } catch (err) {
-      setError(sellerFormErrorFromUnknown(err, "Failed to submit for review"));
+      setError(
+        sellerFormErrorFromUnknown(err, "We could not submit your listing for review. Please try again."),
+      );
     } finally {
       setSubmittingReview(false);
     }
@@ -1499,7 +1500,9 @@ export function SellerEditListingPage({
           }
         }
       } catch (err) {
-        setError(sellerFormErrorFromUnknown(err, "Failed to load listing"));
+        setError(
+          sellerFormErrorFromUnknown(err, "We could not load this listing. Please try again."),
+        );
       } finally {
         setLoading(false);
       }
@@ -1526,7 +1529,9 @@ export function SellerEditListingPage({
       );
       setExistingImages(reordered);
     } catch (err) {
-      setError(sellerFormErrorFromUnknown(err, "Failed to reorder photos"));
+      setError(
+        sellerFormErrorFromUnknown(err, "We could not reorder your photos. Please try again."),
+      );
     } finally {
       setReorderingImages(false);
     }
@@ -1539,7 +1544,9 @@ export function SellerEditListingPage({
       await sellerService.removeListingImage(listingId, imageId);
       setExistingImages((prev) => prev.filter((image) => image.id !== imageId));
     } catch (err) {
-      setError(sellerFormErrorFromUnknown(err, "Failed to remove photo"));
+      setError(
+        sellerFormErrorFromUnknown(err, "We could not remove that photo. Please try again."),
+      );
     } finally {
       setRemovingImageId(null);
     }
@@ -1585,7 +1592,9 @@ export function SellerEditListingPage({
       }
       router.push("/account/listings");
     } catch (err) {
-      setError(sellerFormErrorFromUnknown(err, "Failed to update listing"));
+      setError(
+        sellerFormErrorFromUnknown(err, "We could not update your listing. Please try again."),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -1650,7 +1659,9 @@ export function SellerEditListingPage({
       }
       router.push("/account/listings");
     } catch (err) {
-      setError(sellerFormErrorFromUnknown(err, "Failed to update listing"));
+      setError(
+        sellerFormErrorFromUnknown(err, "We could not update your listing. Please try again."),
+      );
     } finally {
       setSubmitting(false);
     }

@@ -12,9 +12,12 @@ import type {
   ListingImage,
 } from '@community-marketplace/types';
 
+import { compactUuid } from '@community-marketplace/utils';
+
 import { apiClient, ApiClientError } from '@/lib/api-client';
 import { API_BASE_URL } from '@/lib/constants';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
+import { resolveUserFacingMessage } from '@/lib/user-facing-error';
 import { resolveClientAccessToken, refreshClientSession } from '@/lib/web-session';
 
 export interface AiMarketingGeneratePayload {
@@ -173,7 +176,7 @@ export const aiMarketingService = {
         code?: string;
       } | null;
       throw new ApiClientError(
-        error?.message ?? `Request failed with status ${response.status}`,
+        resolveUserFacingMessage(error?.message, response.status),
         response.status,
         error?.code,
       );
@@ -182,7 +185,7 @@ export const aiMarketingService = {
     const blob = await response.blob();
     const disposition = response.headers.get('Content-Disposition') ?? '';
     const match = /filename="([^"]+)"/.exec(disposition);
-    const filename = match?.[1] ?? `sellnearby-campaign-${listingId.slice(0, 8)}.zip`;
+    const filename = match?.[1] ?? `sellnearby-campaign-${compactUuid(listingId)}.zip`;
     const objectUrl = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = objectUrl;

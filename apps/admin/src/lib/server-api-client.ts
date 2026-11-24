@@ -74,7 +74,12 @@ export async function serverAdminApiClient<T>(endpoint: string, init: RequestIni
 
   if (!response.ok) {
     const error = (await response.json().catch(() => null)) as ApiError | null;
-    throw new Error(error?.message ?? `API error: ${response.status}`);
+    throw new Error(
+      error?.message?.trim() ||
+        (response.status >= 500
+          ? 'Something went wrong on our side. Please try again shortly.'
+          : 'Something went wrong. Please try again.'),
+    );
   }
 
   const json = (await response.json()) as ApiResponse<T>;

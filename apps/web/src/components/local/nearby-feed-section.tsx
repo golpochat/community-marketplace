@@ -99,8 +99,8 @@ export function NearbyFeedSection({ initialListings = [] }: NearbyFeedSectionPro
         setListings([]);
         setFeedError(
           err instanceof ApiClientError && err.code === 'NETWORK_ERROR'
-            ? 'Unable to reach the server. Make sure the API is running, then try again.'
-            : 'Could not load nearby listings.',
+            ? err.message
+            : 'Could not load nearby listings. Please try again.',
         );
       } finally {
         setFeedLoading(false);
