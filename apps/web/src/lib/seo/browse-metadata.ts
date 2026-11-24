@@ -42,7 +42,8 @@ export function buildBrowseMetadata(
   const pageSuffix = page && page !== '1' ? ` – Page ${page}` : '';
 
   let title = 'Browse listings';
-  let description = COMMERCE_PUBLIC_COPY.browseDescription;
+  // `COMMERCE_PUBLIC_COPY` is `as const`; widen so filtered browse copy can vary.
+  let description: string = COMMERCE_PUBLIC_COPY.browseDescription;
 
   if (category && q) {
     title = `${category.name}: "${q}"`;
