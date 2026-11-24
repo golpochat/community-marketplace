@@ -130,7 +130,9 @@ export class AuthController {
     return result;
   }
 
+  /** Refresh is authenticated by the refresh token / cookie, not by CSRF. */
   @Public()
+  @SkipCsrf()
   @Post('refresh')
   async refreshToken(@Body() body: unknown, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const cookieToken = req.cookies?.[REFRESH_TOKEN_COOKIE] as string | undefined;

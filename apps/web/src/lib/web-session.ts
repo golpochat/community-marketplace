@@ -1,5 +1,6 @@
 import type { LoginResponse } from '@community-marketplace/types';
 
+import { clearCsrfToken, ensureCsrfToken } from '@/lib/api-client';
 import { API_BASE_URL } from '@/lib/constants';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
 import {
@@ -18,13 +19,25 @@ export function resolveClientRefreshToken(): string | null {
 }
 
 async function requestSessionRefresh(body: Record<string, unknown>): Promise<LoginResponse | null> {
-  const response = await fetch(`${API_BASE_URL}${WEB_API_ROUTES.public.auth.refresh}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(body),
-    cache: 'no-store',
-  });
+  const doRefresh = async (csrf: string) =>
+    fetch(`${API_BASE_URL}${WEB_API_ROUTES.public.auth.refresh}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': csrf,
+      },
+      credentials: 'include',
+      body: JSON.stringify(body),
+      cache: 'no-store',
+    });
+
+  let csrf = await ensureCsrfToken();
+  let response = await doRefresh(csrf);
+  if (response.status === 403) {
+    clearCsrfToken();
+    csrf = await ensureCsrfToken();
+    response = await doRefresh(csrf);
+  }
 
   if (!response.ok) return null;
 
