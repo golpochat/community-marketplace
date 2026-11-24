@@ -1,8 +1,10 @@
 import type { Category } from '@community-marketplace/types';
 import type { LucideIcon } from 'lucide-react';
 import {
+  Baby,
   Car,
   Flower2,
+  Gift,
   Laptop,
   Package,
   Shirt,
@@ -20,6 +22,8 @@ const SLUG_ICON_MAP: Record<string, LucideIcon> = {
   services: Wrench,
   'sports-outdoors': Trophy,
   vehicles: Car,
+  'mum-baby': Baby,
+  freebies: Gift,
 };
 
 const NAME_ICON_MAP: Record<string, LucideIcon> = {
@@ -31,6 +35,8 @@ const NAME_ICON_MAP: Record<string, LucideIcon> = {
   Services: Wrench,
   'Sports & Outdoors': Trophy,
   Vehicles: Car,
+  'Mum & Baby': Baby,
+  Freebies: Gift,
 };
 
 export function getCategoryIcon(category: Category): LucideIcon {

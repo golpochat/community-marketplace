@@ -78,9 +78,10 @@ export default function ProhibitedItemsPolicyPage() {
 
       <h3 className="mt-6 text-lg font-semibold">Restricted (may need review)</h3>
       <p>
-        Some categories are allowed but always reviewed before going live — for example perfumes,
-        herbal/wellness products, supplements, and empty collectible bottles. Describe items
-        accurately and avoid medical or prescription claims.
+        Some categories are allowed but always reviewed before going live — for example
+        herbal/wellness products and empty collectible bottles. Fragrance and supplement listings
+        may still be soft-flagged by keyword checks. Describe items accurately and avoid medical or
+        prescription claims.
       </p>
 
       <h3 className="mt-6 text-lg font-semibold">Prohibited services</h3>

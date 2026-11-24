@@ -17,24 +17,13 @@ const {
 
 const prisma = new PrismaClient();
 
+/** Soft-review categories only. Mum & Baby / Freebies replace Perfumes / Supplements — see replace-pilot-categories.js */
 const RESTRICTED_CATEGORIES = [
-  {
-    id: '00000000-0000-4000-8000-000000000210',
-    slug: 'perfumes',
-    name: 'Perfumes',
-    description: 'Fragrances — always reviewed (alcohol base).',
-  },
   {
     id: '00000000-0000-4000-8000-000000000211',
     slug: 'wellness',
     name: 'Wellness',
     description: 'Herbal / wellness — always reviewed.',
-  },
-  {
-    id: '00000000-0000-4000-8000-000000000212',
-    slug: 'supplements',
-    name: 'Supplements',
-    description: 'Supplements — always reviewed.',
   },
   {
     id: '00000000-0000-4000-8000-000000000213',

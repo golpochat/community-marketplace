@@ -26,7 +26,7 @@
 1. [x] Migrations applied (`keyword_filters`, `category_review_flags`)
 2. [x] Matcher smoke: hard `PROHIBITED_ALCOHOL`, soft perfume, image `IMAGE_FLAG_WEAPON`
 3. [x] `keywordFilters.enabled = true` on local `platform_settings`
-4. [x] Restricted categories created with `requiresReview`: perfumes, wellness, supplements, collectibles
+4. [x] Restricted categories with `requiresReview`: wellness, collectibles (Perfumes/Supplements replaced by Mum & Baby / Freebies for pilot browse)
 5. [x] Public `GET /api/listings/categories` returns the new flagged categories
 
 Apply again anytime: `cd apps/api && node scripts/haram-rollout-apply.js`  
