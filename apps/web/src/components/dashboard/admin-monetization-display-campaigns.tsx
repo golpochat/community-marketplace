@@ -9,6 +9,7 @@ import type {
 import { DISPLAY_AD_PLACEMENTS } from '@community-marketplace/types';
 import { DashboardCard } from '@community-marketplace/ui-dashboard';
 
+import { putBrowserUpload } from '@/lib/browser-upload';
 import { monetizationService } from '@/services/monetization.service';
 import type { AdminServiceRole } from '@/services/admin.service';
 
@@ -152,13 +153,9 @@ export function AdminMonetizationDisplayCampaigns({
         contentType,
         fileName: file.name,
       });
-      const put = await fetch(upload.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': contentType },
-        body: file,
-      });
+      const put = await putBrowserUpload(upload.uploadUrl, file, contentType);
       if (!put.ok) {
-        throw new Error(`Upload failed (${put.status})`);
+        throw new Error('We could not upload that creative. Please try again.');
       }
       setImageKey(upload.key);
       setImageUrl(upload.publicUrl);

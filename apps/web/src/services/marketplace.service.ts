@@ -13,6 +13,7 @@ import type { ListingSaleCloseChannel } from '@community-marketplace/utils';
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
+import { putBrowserUpload } from '@/lib/browser-upload';
 import { normalizePaginated } from '@/lib/normalize-api-response';
 import { USER_FACING_ERRORS } from '@/lib/user-facing-error';
 
@@ -138,11 +139,7 @@ export const sellerService = {
 
   async uploadListingImage(listingId: string, file: File): Promise<ListingImage[]> {
     const upload = await this.requestListingImageUploadUrl(listingId, file);
-    const putResponse = await fetch(upload.uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type },
-    });
+    const putResponse = await putBrowserUpload(upload.uploadUrl, file);
     if (!putResponse.ok) {
       throw new Error(USER_FACING_ERRORS.photoUpload);
     }

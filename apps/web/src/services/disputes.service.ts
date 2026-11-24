@@ -7,6 +7,7 @@ import type { CreateDisputeInput } from '@community-marketplace/validation';
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
+import { putBrowserUpload } from '@/lib/browser-upload';
 import { normalizePaginated } from '@/lib/normalize-api-response';
 
 export const disputesService = {
@@ -74,11 +75,10 @@ export const disputesService = {
     description?: string,
   ): Promise<string> {
     const upload = await this.requestEvidenceUploadUrl(disputeId, file, description);
-    await fetch(upload.uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type },
-    });
+    const putResponse = await putBrowserUpload(upload.uploadUrl, file);
+    if (!putResponse.ok) {
+      throw new Error('We could not upload that evidence file. Please try again.');
+    }
     await this.confirmEvidenceUpload(disputeId, upload.key, description);
     return upload.publicUrl;
   },
@@ -96,11 +96,10 @@ export const disputesService = {
         input.file,
         input.evidenceDescription,
       );
-      await fetch(upload.uploadUrl, {
-        method: 'PUT',
-        body: input.file,
-        headers: { 'Content-Type': input.file.type },
-      });
+      const putResponse = await putBrowserUpload(upload.uploadUrl, input.file);
+      if (!putResponse.ok) {
+        throw new Error('We could not upload that evidence file. Please try again.');
+      }
       filePath = upload.key;
     }
 

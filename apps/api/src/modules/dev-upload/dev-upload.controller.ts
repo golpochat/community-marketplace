@@ -12,13 +12,19 @@ import {
 import type { Request, Response } from 'express';
 
 import { Public } from '../../common/decorators/public.decorator';
+import { SkipCsrf } from '../../common/decorators/skip-csrf.decorator';
 import { toProcessedWebpKey } from '../../libs/asset-url.lib';
 import { R2StorageService } from '../users/services/r2-storage.service';
 import { DevUploadService } from './dev-upload.service';
 
 type RawBodyRequest = Request & { rawBody?: Buffer };
 
+/**
+ * Browser file PUTs use a capability URL (`?key=...`), like a presigned upload.
+ * Skip CSRF so sellers are not blocked with 403 when the web app PUTs the file body.
+ */
 @Public()
+@SkipCsrf()
 @Controller('dev-upload')
 export class DevUploadController {
   constructor(

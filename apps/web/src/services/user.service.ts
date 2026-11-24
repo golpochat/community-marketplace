@@ -8,6 +8,7 @@ import type {
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
+import { putBrowserUpload } from '@/lib/browser-upload';
 import { downloadAuthenticatedFile } from '@/lib/download-file';
 
 export const userService = {
@@ -52,11 +53,7 @@ export const userService = {
 
   async uploadAvatar(file: File): Promise<UserProfile> {
     const upload = await this.createAvatarUploadUrl(file);
-    const putResponse = await fetch(upload.uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type },
-    });
+    const putResponse = await putBrowserUpload(upload.uploadUrl, file);
     if (!putResponse.ok) {
       throw new Error(
         'We could not upload that logo. Please try again, or choose a different JPG or PNG image.',
@@ -82,11 +79,7 @@ export const userService = {
 
   async uploadStoreBanner(file: File): Promise<UserProfile> {
     const upload = await this.createStoreBannerUploadUrl(file);
-    const putResponse = await fetch(upload.uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type },
-    });
+    const putResponse = await putBrowserUpload(upload.uploadUrl, file);
     if (!putResponse.ok) {
       throw new Error(
         'We could not upload that banner. Please try again, or choose a different JPG or PNG image.',

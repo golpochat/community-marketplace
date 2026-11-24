@@ -6,6 +6,7 @@ import type {
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
+import { putBrowserUpload } from '@/lib/browser-upload';
 
 export const chatService = {
   async getInbox(page = 1, limit = 20) {
@@ -108,11 +109,10 @@ export const chatService = {
 
   async uploadAttachment(threadId: string, file: File): Promise<string> {
     const { uploadUrl, publicUrl } = await this.getAttachmentUploadUrl(threadId, file);
-    await fetch(uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type },
-    });
+    const putResponse = await putBrowserUpload(uploadUrl, file);
+    if (!putResponse.ok) {
+      throw new Error('We could not upload that file. Please try again.');
+    }
     return publicUrl;
   },
 };

@@ -10,6 +10,7 @@ import type {
 
 import { apiClient } from '@/lib/api-client';
 import { WEB_API_ROUTES } from '@/lib/api-routes';
+import { putBrowserUpload } from '@/lib/browser-upload';
 import { normalizePaginated } from '@/lib/normalize-api-response';
 
 export const sellerVerificationService = {
@@ -114,11 +115,10 @@ export const sellerVerificationService = {
         : kind === 'selfie'
           ? await this.requestSelfieUploadUrl(file)
           : await this.requestAddressUploadUrl(file);
-    await fetch(upload.uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type },
-    });
+    const putResponse = await putBrowserUpload(upload.uploadUrl, file);
+    if (!putResponse.ok) {
+      throw new Error('We could not upload that document. Please try again.');
+    }
     await this.storeDocumentPath(kind, upload.publicUrl);
     return upload.publicUrl;
   },
