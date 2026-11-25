@@ -33,13 +33,16 @@ import type {
   FeaturedStoreCatalogResponse,
   FeaturedStoreIntentResponse,
   MarketingHubAnalyticsResponse,
+  PlatformCoupon,
   WalletTransaction,
 } from '@community-marketplace/types';
 import type {
   CreateBoostIntentInput,
+  CreateCouponInput,
   CreateFeaturedIntentInput,
   CreateAiCreditPackIntentInput,
   CreateFeaturedStoreIntentInput,
+  CreateGrowthPackIntentInput,
   CreateStoreSlotIntentInput,
   PlatformSettingsUpdateInput,
   MonetizationProductUpsertInput,
@@ -95,6 +98,7 @@ export const monetizationService = {
   async createEarlyCashbackUnlockIntent(body: {
     grantId: string;
     creditsAmount?: number;
+    couponCode?: string;
   }): Promise<EarlyCashbackUnlockIntentResponse> {
     const response = await apiClient<EarlyCashbackUnlockIntentResponse>(
       WEB_API_ROUTES.buyer.earlyUnlockIntent,
@@ -127,6 +131,7 @@ export const monetizationService = {
   async createPriorityMessageIntent(body: {
     threadId: string;
     creditsAmount?: number;
+    couponCode?: string;
   }): Promise<PriorityMessageIntentResponse> {
     const response = await apiClient<PriorityMessageIntentResponse>(
       WEB_API_ROUTES.buyer.priorityMessageIntent,
@@ -193,12 +198,14 @@ export const monetizationService = {
     return response.data!;
   },
 
-  async createGrowthPackIntent(): Promise<GrowthPackIntentResponse> {
+  async createGrowthPackIntent(
+    body: CreateGrowthPackIntentInput = {},
+  ): Promise<GrowthPackIntentResponse> {
     const response = await apiClient<GrowthPackIntentResponse>(
       WEB_API_ROUTES.seller.growthPackIntent,
       {
         method: 'POST',
-        body: JSON.stringify({}),
+        body: JSON.stringify(body),
       },
     );
     return response.data!;
@@ -307,6 +314,7 @@ export const monetizationService = {
 
   async createFastTrackIntent(body?: {
     creditsAmount?: number;
+    couponCode?: string;
   }): Promise<FastTrackIntentResponse> {
     const response = await apiClient<FastTrackIntentResponse>(WEB_API_ROUTES.seller.fastTrackIntent, {
       method: 'POST',
@@ -376,12 +384,20 @@ export const monetizationService = {
     return response.data!;
   },
 
-  async createBuyerStatementIntent(year: number, month: number): Promise<BuyerStatementIntentResponse> {
+  async createBuyerStatementIntent(
+    year: number,
+    month: number,
+    couponCode?: string,
+  ): Promise<BuyerStatementIntentResponse> {
     const response = await apiClient<BuyerStatementIntentResponse>(
       WEB_API_ROUTES.buyer.statementsIntent,
       {
         method: 'POST',
-        body: JSON.stringify({ year, month }),
+        body: JSON.stringify({
+          year,
+          month,
+          ...(couponCode?.trim() ? { couponCode: couponCode.trim() } : {}),
+        }),
       },
     );
     return response.data!;
@@ -448,6 +464,35 @@ export const monetizationService = {
       },
     );
     return response.data;
+  },
+
+  async listCoupons(role: AdminApiRole): Promise<PlatformCoupon[]> {
+    const response = await apiClient<PlatformCoupon[]>(
+      adminApiPath(role, '/monetization/coupons'),
+    );
+    return response.data ?? [];
+  },
+
+  async createCoupon(role: AdminApiRole, body: CreateCouponInput): Promise<PlatformCoupon> {
+    const response = await apiClient<PlatformCoupon>(
+      adminApiPath(role, '/monetization/coupons'),
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      },
+    );
+    return response.data!;
+  },
+
+  async deactivateCoupon(role: AdminApiRole, couponId: string): Promise<PlatformCoupon> {
+    const response = await apiClient<PlatformCoupon>(
+      adminApiPath(role, '/monetization/coupons/deactivate'),
+      {
+        method: 'POST',
+        body: JSON.stringify({ couponId }),
+      },
+    );
+    return response.data!;
   },
 
   async listSellerFeeOverrides(role: AdminApiRole): Promise<SellerFeeOverrideEntry[]> {

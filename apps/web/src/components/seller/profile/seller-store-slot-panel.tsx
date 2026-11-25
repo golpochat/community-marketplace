@@ -9,6 +9,10 @@ import type {
 import { Card } from '@community-marketplace/ui-dashboard';
 
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
+import {
+  CouponCodeField,
+  couponCodePayload,
+} from '@/components/monetization/coupon-code-field';
 import { monetizationService } from '@/services/monetization.service';
 
 interface SellerStoreSlotPanelProps {
@@ -23,6 +27,7 @@ export function SellerStoreSlotPanel({ onUpdated }: SellerStoreSlotPanelProps) {
     StoreSlotCatalogResponse['options'][number]['sku'] | null
   >(null);
   const [intent, setIntent] = useState<StoreSlotIntentResponse | null>(null);
+  const [couponCode, setCouponCode] = useState('');
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
@@ -63,7 +68,10 @@ export function SellerStoreSlotPanel({ onUpdated }: SellerStoreSlotPanelProps) {
     setError(null);
     setSelectedSku(sku);
     try {
-      const response = await monetizationService.createStoreSlotIntent({ sku });
+      const response = await monetizationService.createStoreSlotIntent({
+        sku,
+        ...couponCodePayload(couponCode),
+      });
       setIntent(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start checkout');
@@ -80,6 +88,15 @@ export function SellerStoreSlotPanel({ onUpdated }: SellerStoreSlotPanelProps) {
         {catalog.storeSlotLimit === 1 ? '' : 's'}. Purchase an unlock to add another shop brand.
       </p>
       {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+      {!intent ? (
+        <div className="mt-3">
+          <CouponCodeField
+            value={couponCode}
+            onChange={setCouponCode}
+            disabled={checkoutLoading}
+          />
+        </div>
+      ) : null}
       {intent ? (
         <div className="mt-4">
           <BoostCheckoutPanel

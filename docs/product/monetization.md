@@ -12,6 +12,12 @@ It includes monetization, pricing, rollout, revenue model, competitive positioni
 
 **Implementation status (2026-07-24):** Foundation through Growth Phases 1 / 1.5 / 2 / 3 are live, plus wallet spend (boosts / fast-track / early unlock), buyer statements, **priority message**, store slots, featured storefront, AI credit packs, and Seller Growth Pack. Featured listing slots remain **card-only** (no credit mix). GMV listing checkout remains **card-only**. Still open: buyer protection (legal), Starter/Pro/Premium ledger packages, advertiser self-serve ads, GMV wallet+card mix — see [§1.2 Revenue streams](./master-blueprint-v1.md#12-revenue-streams) and [Growth phases](./master-blueprint-v1.md#growth-phases).
 
+### SKU coupons (exclude commission)
+
+Admin → Monetization → **Coupons** creates redeemable codes (percent or fixed EUR) for **platform-purchase SKUs only** (boosts, featured, AI packs, growth pack, store slots, fast-track, priority message, early unlock, buyer statement). Sellers/buyers enter the code at SKU checkout.
+
+**Never** applies to card listing checkout / seller service fee (commission). First successful card sale fee waiver and admin fee overrides stay separate. A coupon on a boost skips first-boost / Growth Pack auto-discounts for that purchase (no stacking).
+
 ### External display advertising (brands / sponsors)
 
 **Admin campaign MVP (Phases 1–2):** ops upload a creative and schedule it into existing slots — homepage leaderboard, browse/category sidebar, and search/browse inline are live. Payment stays offline. Gated by `ADS_SYSTEM_ENABLED` + `displayAdsEnabled` (optional `ADS_PREVIEW_MODE` for empty shells). See [display-ads-admin-campaigns.md](./display-ads-admin-campaigns.md).

@@ -237,6 +237,12 @@ function SellerEarningsContent() {
                     ? ' (custom override)'
                     : ' (default)'}
               </p>
+              {platformFee.firstCardFeeWaivedEligible ? (
+                <p className="mt-2 text-sm text-[hsl(var(--dashboard-main-fg))]">
+                  First successful card sale: <strong>0% fee</strong>. The rate above applies after
+                  that.
+                </p>
+              ) : null}
               <p className="mt-2 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                 Charged only on card checkout. Cash or collection arranged in chat has no seller
                 service fee. Cashback for buyers is funded by the platform, not deducted from your

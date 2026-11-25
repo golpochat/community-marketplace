@@ -12,6 +12,10 @@ import { formatCurrency } from '@community-marketplace/utils';
 
 import { monetizationService } from '@/services/monetization.service';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
+import {
+  CouponCodeField,
+  couponCodePayload,
+} from '@/components/monetization/coupon-code-field';
 
 interface ListingBoostDialogProps {
   open: boolean;
@@ -33,6 +37,7 @@ export function ListingBoostDialog({
   const [wallet, setWallet] = useState<BuyerWalletSummary | null>(null);
   const [useCredits, setUseCredits] = useState(false);
   const [intent, setIntent] = useState<BoostIntentResponse | null>(null);
+  const [couponCode, setCouponCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +47,7 @@ export function ListingBoostDialog({
       setWallet(null);
       setUseCredits(false);
       setIntent(null);
+      setCouponCode('');
       setError(null);
       return;
     }
@@ -89,6 +95,7 @@ export function ListingBoostDialog({
         packageType,
         source,
         ...(creditsAmount && creditsAmount > 0 ? { creditsAmount } : {}),
+        ...couponCodePayload(couponCode),
       });
       setIntent(response);
     } catch (err) {
@@ -146,6 +153,12 @@ export function ListingBoostDialog({
             </span>
           </label>
         )}
+
+        {catalog && !intent ? (
+          <div className="mt-4">
+            <CouponCodeField value={couponCode} onChange={setCouponCode} disabled={loading} />
+          </div>
+        ) : null}
 
         {loading && !catalog && !intent && (
           <p className="mt-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading boost options…</p>

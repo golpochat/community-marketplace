@@ -57,6 +57,69 @@ export const platformSettingsUpdateSchema = z.object({
 
 export const boostPackageTypeSchema = z.enum(['PAID_7D', 'PAID_30D']);
 
+/** Optional SKU coupon code (never applies to card commission). */
+export const couponCodeFieldSchema = z
+  .string()
+  .trim()
+  .min(3)
+  .max(40)
+  .regex(/^[A-Za-z0-9_-]+$/, 'Use letters, numbers, hyphen, or underscore')
+  .optional();
+
+export const platformPurchaseTypeSchema = z.enum([
+  'listing_boost',
+  'featured_slot',
+  'fast_track_verification',
+  'store_slot_2',
+  'store_slot_3',
+  'store_bundle_3',
+  'buyer_statement',
+  'seller_growth_pack',
+  'ai_credit_2',
+  'ai_credit_5',
+  'ai_credit_10',
+  'featured_store',
+  'early_cashback_unlock',
+  'priority_message',
+]);
+
+export const createCouponSchema = z
+  .object({
+    code: z
+      .string()
+      .trim()
+      .min(3)
+      .max(40)
+      .regex(/^[A-Za-z0-9_-]+$/, 'Use letters, numbers, hyphen, or underscore'),
+    discountType: z.enum(['percent', 'fixed']),
+    discountValue: z.number().positive().max(10_000),
+    allowedPurchaseTypes: z.array(platformPurchaseTypeSchema).max(20).default([]),
+    maxRedemptions: z.number().int().min(1).max(1_000_000).nullable().optional(),
+    maxPerUser: z.number().int().min(1).max(100).default(1),
+    startsAt: z.string().datetime().nullable().optional(),
+    endsAt: z.string().datetime().nullable().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.discountType === 'percent' && value.discountValue > 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Percent discount cannot exceed 100',
+        path: ['discountValue'],
+      });
+    }
+    if (value.startsAt && value.endsAt && value.startsAt > value.endsAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'startsAt must be on or before endsAt',
+        path: ['endsAt'],
+      });
+    }
+  });
+
+export const deactivateCouponSchema = z.object({
+  couponId: uuidSchema,
+});
+
 export const createBoostIntentSchema = z.object({
   listingId: uuidSchema,
   packageType: boostPackageTypeSchema,
@@ -65,6 +128,7 @@ export const createBoostIntentSchema = z.object({
     .optional(),
   /** EUR credits to apply (0..price). Omitted/0 = card only. */
   creditsAmount: z.number().min(0).max(999).optional(),
+  couponCode: couponCodeFieldSchema,
 });
 
 export const confirmBoostSchema = z.object({
@@ -73,12 +137,14 @@ export const confirmBoostSchema = z.object({
 
 export const createFastTrackIntentSchema = z.object({
   creditsAmount: z.number().min(0).max(999).optional(),
+  couponCode: couponCodeFieldSchema,
 });
 
 export const createEarlyCashbackUnlockIntentSchema = z.object({
   grantId: uuidSchema,
   /** EUR credits to apply (0..price). Omitted/0 = card only. */
   creditsAmount: z.number().min(0).max(999).optional(),
+  couponCode: couponCodeFieldSchema,
 });
 
 export const confirmEarlyCashbackUnlockSchema = z.object({
@@ -89,13 +155,16 @@ export const createPriorityMessageIntentSchema = z.object({
   threadId: uuidSchema,
   /** EUR credits to apply (0..price). Omitted/0 = card only. */
   creditsAmount: z.number().min(0).max(999).optional(),
+  couponCode: couponCodeFieldSchema,
 });
 
 export const confirmPriorityMessageSchema = z.object({
   purchaseId: uuidSchema,
 });
 
-export const createGrowthPackIntentSchema = z.object({});
+export const createGrowthPackIntentSchema = z.object({
+  couponCode: couponCodeFieldSchema,
+});
 
 export const confirmGrowthPackSchema = z.object({
   purchaseId: uuidSchema,
@@ -109,6 +178,7 @@ export const aiCreditPackSkuSchema = z.enum([
 
 export const createAiCreditPackIntentSchema = z.object({
   sku: aiCreditPackSkuSchema,
+  couponCode: couponCodeFieldSchema,
 });
 
 export const confirmAiCreditPackSchema = z.object({
@@ -117,6 +187,7 @@ export const confirmAiCreditPackSchema = z.object({
 
 export const createFeaturedStoreIntentSchema = z.object({
   storeId: uuidSchema,
+  couponCode: couponCodeFieldSchema,
 });
 
 export const confirmFeaturedStoreSchema = z.object({
@@ -130,6 +201,7 @@ export const createFeaturedIntentSchema = z
     listingId: uuidSchema,
     placement: featuredPlacementSchema,
     categoryId: uuidSchema.optional(),
+    couponCode: couponCodeFieldSchema,
   })
   .superRefine((value, ctx) => {
     if (value.placement === 'category' && !value.categoryId) {
@@ -153,6 +225,7 @@ export const storeSlotSkuSchema = z.enum(['store_slot_2', 'store_slot_3', 'store
 
 export const createStoreSlotIntentSchema = z.object({
   sku: storeSlotSkuSchema,
+  couponCode: couponCodeFieldSchema,
 });
 
 export const confirmStoreSlotSchema = z.object({
@@ -244,7 +317,9 @@ export const adminFinanceActivityStatementQuerySchema = z
     }
   });
 
-export const createBuyerStatementIntentSchema = statementPeriodQuerySchema;
+export const createBuyerStatementIntentSchema = statementPeriodQuerySchema.extend({
+  couponCode: couponCodeFieldSchema,
+});
 
 export const confirmBuyerStatementSchema = z.object({
   purchaseId: uuidSchema,
@@ -318,6 +393,8 @@ export const featuredListingsQuerySchema = z
     }
   });
 
+export type CreateCouponInput = z.infer<typeof createCouponSchema>;
+export type DeactivateCouponInput = z.infer<typeof deactivateCouponSchema>;
 export type CreateBoostIntentInput = z.infer<typeof createBoostIntentSchema>;
 export type ConfirmBoostInput = z.infer<typeof confirmBoostSchema>;
 export type CreateGrowthPackIntentInput = z.infer<typeof createGrowthPackIntentSchema>;

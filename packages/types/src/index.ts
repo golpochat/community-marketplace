@@ -349,6 +349,9 @@ export type {
   StoreSlotCatalogOption,
   StoreSlotCatalogResponse,
   SellerPlatformFeeInfo,
+  CouponDiscountType,
+  PlatformCoupon,
+  CouponQuote,
   WalletTransaction,
   CashbackGrant,
   PendingCashbackUnlock,
@@ -366,6 +369,7 @@ export type {
 export {
   BOOST_PACKAGE_TYPES,
   FEATURED_PLACEMENTS,
+  PLATFORM_PURCHASE_TYPES,
   isBoostPackageType,
   isFeaturedPlacement,
 } from './monetization';

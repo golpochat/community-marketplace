@@ -52,8 +52,9 @@ export default function TermsPage() {
       <h2 className="text-xl font-semibold">4. Payments — card vs cash</h2>
       <p>
         Card checkout is optional. When a buyer pays by card, the seller pays a seller service fee
-        on that payout. Buyers pay the listed price. Cash or collection arranged in chat has no
-        seller service fee.
+        on that payout (a seller&apos;s first successful card sale has no seller service fee; the
+        live rate applies after that). Buyers pay the listed price. Cash or collection arranged in
+        chat has no seller service fee.
       </p>
       <p>{COMMERCE_PUBLIC_COPY.disputeReview}</p>
       <p>

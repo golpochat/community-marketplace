@@ -8,6 +8,10 @@ import type {
 } from '@community-marketplace/types';
 
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
+import {
+  CouponCodeField,
+  couponCodePayload,
+} from '@/components/monetization/coupon-code-field';
 import { monetizationService } from '@/services/monetization.service';
 
 interface FeaturedStoreDialogProps {
@@ -25,6 +29,7 @@ export function FeaturedStoreDialog({
 }: FeaturedStoreDialogProps) {
   const [catalog, setCatalog] = useState<FeaturedStoreCatalogResponse | null>(null);
   const [intent, setIntent] = useState<FeaturedStoreIntentResponse | null>(null);
+  const [couponCode, setCouponCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,6 +37,7 @@ export function FeaturedStoreDialog({
     if (!open) {
       setCatalog(null);
       setIntent(null);
+      setCouponCode('');
       setError(null);
       return;
     }
@@ -68,6 +74,7 @@ export function FeaturedStoreDialog({
     try {
       const response = await monetizationService.createFeaturedStoreIntent({
         storeId,
+        ...couponCodePayload(couponCode),
       });
       setIntent(response);
     } catch (err) {
@@ -114,6 +121,7 @@ export function FeaturedStoreDialog({
 
         {option && !intent && catalog?.featuredEnabled && (
           <div className="mt-4 space-y-3">
+            <CouponCodeField value={couponCode} onChange={setCouponCode} disabled={loading} />
             <div className="rounded-lg border border-[hsl(var(--dashboard-sidebar-border))] px-3 py-3">
               <p className="text-sm font-medium text-[hsl(var(--dashboard-main-fg))]">
                 €{option.amount.toFixed(2)} · {option.durationHours}h homepage

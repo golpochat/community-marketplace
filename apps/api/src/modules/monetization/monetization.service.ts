@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import type {
+  CreateCouponInput,
   PlatformSettingsUpdateInput,
   SellerFeeOverrideInput,
   SellerAiFreeUnitsOverrideInput,
@@ -14,6 +15,7 @@ import type {
 import { BuyerWalletService } from './services/buyer-wallet.service';
 import { BuyerCashbackService } from './services/buyer-cashback.service';
 import { CashbackGrantsService } from './services/cashback-grants.service';
+import { CouponService } from './services/coupon.service';
 import { MonetizationProductService } from './services/monetization-product.service';
 import { PlatformFeeService } from './services/platform-fee.service';
 import { PlatformPurchaseService } from './services/platform-purchase.service';
@@ -30,6 +32,7 @@ export class MonetizationService {
     private readonly settings: PlatformSettingsService,
     private readonly adsSystem: AdsSystemService,
     private readonly fees: PlatformFeeService,
+    private readonly coupons: CouponService,
     private readonly aiQuota: AiMarketingQuotaService,
     private readonly grants: CashbackGrantsService,
     private readonly wallet: BuyerWalletService,
@@ -72,6 +75,18 @@ export class MonetizationService {
 
   listSellerFeeOverrides() {
     return this.fees.listSellerFeeOverrides();
+  }
+
+  listCoupons() {
+    return this.coupons.listCoupons();
+  }
+
+  createCoupon(adminId: string, input: CreateCouponInput) {
+    return this.coupons.createCoupon(adminId, input);
+  }
+
+  deactivateCoupon(couponId: string) {
+    return this.coupons.deactivateCoupon(couponId);
   }
 
   setSellerAiFreeUnitsOverride(

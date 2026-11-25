@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 
 import type { Listing, ListingStatus } from '@community-marketplace/types';
-import { formatCurrency } from '@community-marketplace/utils';
+import { compactUuid, formatCurrency } from '@community-marketplace/utils';
 import { useAppFeedback } from '@community-marketplace/ui';
 import {
   Card,
@@ -20,6 +20,10 @@ import { DashboardPageShell, DataTable } from '@/components/dashboard/async-reso
 import { DashboardTableBody } from '@/components/dashboard/dashboard-filtered-empty-state';
 import { ReasonPromptDialog } from '@/components/shared/reason-prompt-dialog';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
+import {
+  LISTING_REJECT_REASON_PRESETS,
+  LISTING_REMOVE_REASON_PRESETS,
+} from '@/lib/listing-moderation-reasons';
 import { ListingMediaImage } from '@/components/listings/listing-media-image';
 import { adminService, type AdminServiceRole } from '@/services/admin.service';
 
@@ -131,7 +135,7 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
     return [
       <ListingThumb key={`thumb-${listing.id}`} listing={listing} />,
       <TruncatedText key={`title-${listing.id}`} text={listing.title} />,
-      listing.seller?.displayName ?? listing.sellerId.slice(0, 8),
+      listing.seller?.displayName ?? compactUuid(listing.sellerId),
       formatCurrency(listing.price, listing.currency),
       <ListingStatusBadge key={`status-${listing.id}`} status={listing.status} />,
       <TruncatedText key={`reason-${listing.id}`} text={reason} />,
@@ -223,9 +227,10 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
         open={listingPrompt?.kind === 'reject'}
         elevated
         title="Reject listing"
-        description="Provide a reason the seller will see."
+        description="Pick a common cause, then add detail the seller will see."
         label="Rejection reason"
-        placeholder="Explain why this listing was rejected…"
+        presets={LISTING_REJECT_REASON_PRESETS}
+        detailPlaceholder="Optional — what should the seller fix before resubmitting…"
         confirmLabel="Reject listing"
         variant="destructive"
         required
@@ -240,9 +245,10 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
         open={listingPrompt?.kind === 'remove'}
         elevated
         title="Remove listing"
-        description="Provide a reason the seller will see."
+        description="Pick a common cause, then add detail the seller will see."
         label="Removal reason"
-        placeholder="Explain why this listing was removed…"
+        presets={LISTING_REMOVE_REASON_PRESETS}
+        detailPlaceholder="Optional — extra context for audit and the seller…"
         confirmLabel="Remove listing"
         variant="destructive"
         required

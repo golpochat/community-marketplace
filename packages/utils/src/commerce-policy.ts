@@ -22,11 +22,15 @@ export function isListingSaleCloseChannel(
   return (LISTING_SALE_CLOSE_CHANNELS as readonly string[]).includes(value);
 }
 
+/** Onboarding: first completed card sale for a seller has 0% platform fee. */
+export const FIRST_CARD_SALE_PLATFORM_FEE_FREE = true;
+
 export function resolveSellerPlatformFee(input: {
   sellerStatus?: string | null;
   customPlatformFeePercent?: number | null;
   defaultPlatformFeePercent: number;
   verifiedSellerFeePercent: number;
+  firstCardFeeWaivedEligible?: boolean;
 }): SellerPlatformFeeInfo {
   const defaultFeePercent = input.defaultPlatformFeePercent;
   const verifiedSellerFeePercent = input.verifiedSellerFeePercent;
@@ -34,6 +38,7 @@ export function resolveSellerPlatformFee(input: {
   const policyPercent = isVerified ? verifiedSellerFeePercent : defaultFeePercent;
   const hasCustom = input.customPlatformFeePercent != null;
   const custom = hasCustom ? Number(input.customPlatformFeePercent) : null;
+  const firstCardFeeWaivedEligible = Boolean(input.firstCardFeeWaivedEligible);
 
   if (hasCustom && custom != null && custom !== policyPercent) {
     return {
@@ -42,6 +47,7 @@ export function resolveSellerPlatformFee(input: {
       defaultFeePercent,
       verifiedSellerFeePercent,
       isVerifiedRate: false,
+      firstCardFeeWaivedEligible,
     };
   }
 
@@ -51,19 +57,36 @@ export function resolveSellerPlatformFee(input: {
     defaultFeePercent,
     verifiedSellerFeePercent,
     isVerifiedRate: isVerified,
+    firstCardFeeWaivedEligible,
   };
+}
+
+/** Percent charged on the next card checkout (0 when first-sale waiver still applies). */
+export function resolveCheckoutPlatformFeePercent(info: SellerPlatformFeeInfo): number {
+  if (
+    FIRST_CARD_SALE_PLATFORM_FEE_FREE &&
+    info.firstCardFeeWaivedEligible &&
+    info.effectiveFeePercent > 0
+  ) {
+    return 0;
+  }
+  return info.effectiveFeePercent;
 }
 
 export function formatSellerFeeDisclosure(info: SellerPlatformFeeInfo): string {
   const rate = info.effectiveFeePercent;
   const verified = info.verifiedSellerFeePercent ?? rate;
+  const firstFree =
+    FIRST_CARD_SALE_PLATFORM_FEE_FREE && info.firstCardFeeWaivedEligible
+      ? ' Your first successful card sale has no seller service fee; the rate below applies after that.'
+      : '';
   if (info.isCustomOverride) {
-    return `Your seller service fee is ${rate}% on card checkout (custom rate). Cash or collection arranged in chat has no seller service fee. Buyers pay the listed price.`;
+    return `Your seller service fee is ${rate}% on card checkout (custom rate).${firstFree} Cash or collection arranged in chat has no seller service fee. Buyers pay the listed price.`;
   }
   if (info.isVerifiedRate) {
-    return `Your seller service fee is ${rate}% on card checkout (verified rate). Cash or collection arranged in chat has no seller service fee. Buyers pay the listed price.`;
+    return `Your seller service fee is ${rate}% on card checkout (verified rate).${firstFree} Cash or collection arranged in chat has no seller service fee. Buyers pay the listed price.`;
   }
-  return `Your seller service fee is ${rate}% on card checkout. Verified sellers pay ${verified}%. Cash or collection arranged in chat has no seller service fee. Buyers pay the listed price.`;
+  return `Your seller service fee is ${rate}% on card checkout. Verified sellers pay ${verified}%.${firstFree} Cash or collection arranged in chat has no seller service fee. Buyers pay the listed price.`;
 }
 
 export const COMMERCE_PUBLIC_COPY = {

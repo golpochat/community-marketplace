@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { Category, ListingStatus, ModerationReport, Payment, PaymentRefund, PlatformGovernanceSettings, PlatformGovernanceStatus, SuperAdminActivityEvent, UserProfile } from '@community-marketplace/types';
 import { isPrivilegedSystemRole } from '@community-marketplace/types';
-import { formatCurrency, formatDateTime } from '@community-marketplace/utils';
+import { capitalize, compactUuid, formatCurrency, formatDateTime } from '@community-marketplace/utils';
 import {
   Card,
   IconActionButton,
@@ -16,6 +16,10 @@ import {
 import { useAppFeedback } from '@community-marketplace/ui';
 
 import { ReasonPromptDialog } from '@/components/shared/reason-prompt-dialog';
+import {
+  LISTING_REJECT_REASON_PRESETS,
+  LISTING_REMOVE_REASON_PRESETS,
+} from '@/lib/listing-moderation-reasons';
 import { AdminRbacManager } from '@/components/dashboard/admin-rbac-manager';
 import { AdminEmailSettingsCard } from '@/components/dashboard/admin-email-settings';
 import { AdminPlatformGovernanceCard } from '@/components/dashboard/admin-platform-governance';
@@ -42,6 +46,7 @@ import {
   NotificationDeliveryStatusBadge,
 } from '@/components/notifications/notification-delivery-labels';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
+import { formatAdminRecordRef } from '@/lib/admin-record-ref';
 import {
   formatActivityDetail,
   formatActivityEventType,
@@ -595,9 +600,10 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
         open={listingPrompt?.kind === 'reject'}
         elevated
         title="Reject listing"
-        description="Tell the seller why this listing was rejected."
+        description="Pick a common cause, then add detail the seller will see."
         label="Rejection reason"
-        placeholder="Explain what must change before resubmission…"
+        presets={LISTING_REJECT_REASON_PRESETS}
+        detailPlaceholder="Optional — what should the seller fix before resubmitting…"
         confirmLabel="Reject listing"
         variant="destructive"
         required
@@ -611,12 +617,13 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
         open={listingPrompt?.kind === 'remove'}
         elevated
         title="Remove listing"
-        description="This hides the listing from buyers. A reason helps audit and seller communication."
+        description="This hides the listing from buyers. Pick a cause, then add optional detail."
         label="Removal reason"
-        placeholder="Policy violation, fraud concern, etc."
+        presets={LISTING_REMOVE_REASON_PRESETS}
+        detailPlaceholder="Optional — extra context for audit and the seller…"
         confirmLabel="Remove listing"
         variant="destructive"
-        required={false}
+        required
         loading={actingListingId === listingPrompt?.listingId}
         onConfirm={(reason) => void handleListingPromptConfirm(reason)}
         onClose={() => {
@@ -766,10 +773,14 @@ export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
   const paymentRows =
     activeTab === 'payments'
       ? (data as Payment[]).map((payment) => [
-          payment.id.slice(0, 8),
+          formatAdminRecordRef(payment.id, payment.receiptNumber),
           formatCurrency(payment.amount, payment.currency),
-          payment.status,
-          payment.listingId.slice(0, 8),
+          capitalize(payment.status.replace(/_/g, ' ')),
+          <TruncatedText
+            key={`${payment.id}-listing`}
+            text={payment.listingTitle ?? compactUuid(payment.listingId)}
+            className="max-w-[14rem]"
+          />,
         ])
       : [];
 
@@ -779,12 +790,12 @@ export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
           const isActing = actingRefundId === refund.id;
 
           return [
-            refund.id.slice(0, 8),
+            formatAdminRecordRef(refund.id),
             <TruncatedText key={`${refund.id}-listing`} text={refund.listingTitle ?? '—'} className="max-w-[10rem]" />,
             refund.buyerEmail ?? '—',
             formatCurrency(refund.amount),
             <TruncatedText key={`${refund.id}-reason`} text={refund.reason ?? '—'} className="max-w-[10rem]" />,
-            refund.status,
+            capitalize(refund.status.replace(/_/g, ' ')),
             <div key={refund.id} className="flex flex-wrap gap-2">
               <IconActionGroup>
                 <IconActionButton
@@ -810,7 +821,7 @@ export function AdminPaymentsPage({ role }: { role: AdminServiceRole }) {
   const rows = activeTab === 'payments' ? paymentRows : refundRows;
   const columns =
     activeTab === 'payments'
-      ? ['ID', 'Amount', 'Status', 'Listing']
+      ? ['Reference', 'Amount', 'Status', 'Listing']
       : ['Refund', 'Listing', 'Buyer', 'Amount', 'Reason', 'Status', 'Actions'];
 
   return (
@@ -914,7 +925,7 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
         ...(actionType === 'warn' && notes ? { warnMessage: notes } : {}),
         ...(actionType === 'delete_listing' ? { autoHideListing: true } : {}),
       });
-      feedback.success('Moderation action recorded', `Report ${report.id.slice(0, 8)} updated.`);
+      feedback.success('Moderation action recorded', `Report ${compactUuid(report.id)} updated.`);
       setModerationPrompt(null);
       await reload();
     } catch (err) {
@@ -932,9 +943,9 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
     const canAct = report.status === 'pending';
 
     return [
-      report.id.slice(0, 8),
+      compactUuid(report.id),
       report.reason,
-      report.status,
+      capitalize(report.status.replace(/_/g, ' ')),
       moderationReportTarget(report),
       <div key={report.id} className="flex flex-wrap gap-2">
         <IconActionGroup>
@@ -1003,7 +1014,7 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
         }
         description={
           moderationPrompt
-            ? `Add notes for report ${moderationPrompt.report.id.slice(0, 8)}.`
+            ? `Add notes for report ${compactUuid(moderationPrompt.report.id)}.`
             : undefined
         }
         label="Moderation notes"
@@ -1035,9 +1046,9 @@ export function AdminReportsPage({ role }: { role: AdminServiceRole }) {
         if (cancelled) return;
         setRows(
           result.data.map((report) => [
-            report.id.slice(0, 8),
+            compactUuid(report.id),
             report.reason,
-            report.status,
+            capitalize(report.status.replace(/_/g, ' ')),
             moderationReportTarget(report),
           ]),
         );

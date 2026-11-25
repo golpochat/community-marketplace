@@ -329,6 +329,11 @@ enum PlatformPurchaseStatus {
   refunded
 }
 
+enum CouponDiscountType {
+  percent
+  fixed
+}
+
 enum ChatMessageType {
   text
   image
@@ -580,6 +585,8 @@ model User {
   displayAdCampaignsCreated  DisplayAdCampaign[] @relation("DisplayAdCampaignAdmin")
   listingReservesAsBuyer     ListingReserve[]    @relation("ListingReserveBuyer")
   listingReservesAsSeller    ListingReserve[]    @relation("ListingReserveSeller")
+  couponsCreated             Coupon[]            @relation("CouponCreator")
+  couponRedemptions          CouponRedemption[]
 
   @@index([primaryRoleId])
   @@index([status])
@@ -1390,6 +1397,7 @@ model PlatformPurchase {
   providerPaymentId String?                @map("provider_payment_id")
   clientSecret      String?                @map("client_secret")
   metadata          Json?
+  couponId          String?                @map("coupon_id")
   fulfilledAt       DateTime?              @map("fulfilled_at")
   receiptNumber     String?                @unique @map("receipt_number")
   receiptKey        String?                @map("receipt_key")
@@ -1397,14 +1405,59 @@ model PlatformPurchase {
   createdAt         DateTime               @default(now()) @map("created_at")
   updatedAt         DateTime               @updatedAt @map("updated_at")
 
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  listing Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing    Listing?          @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  coupon     Coupon?           @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  redemption CouponRedemption?
 
   @@index([userId, createdAt(sort: Desc)])
   @@index([listingId])
   @@index([providerPaymentId])
   @@index([status])
+  @@index([couponId])
   @@map("platform_purchases")
+}
+
+/// Admin-issued codes for platform-purchase SKUs only (never card commission).
+model Coupon {
+  id                   String              @id @default(uuid())
+  code                 String              @unique
+  discountType         CouponDiscountType  @map("discount_type")
+  discountValue        Decimal             @map("discount_value") @db.Decimal(12, 2)
+  /// Empty array = all PlatformPurchaseType values are allowed.
+  allowedPurchaseTypes Json                @default("[]") @map("allowed_purchase_types")
+  maxRedemptions       Int?                @map("max_redemptions")
+  maxPerUser           Int                 @default(1) @map("max_per_user")
+  startsAt             DateTime?           @map("starts_at")
+  endsAt               DateTime?           @map("ends_at")
+  active               Boolean             @default(true)
+  createdById          String              @map("created_by_id")
+  createdAt            DateTime            @default(now()) @map("created_at")
+  updatedAt            DateTime            @updatedAt @map("updated_at")
+
+  createdBy   User               @relation("CouponCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  redemptions CouponRedemption[]
+  purchases   PlatformPurchase[]
+
+  @@index([active, endsAt])
+  @@map("coupons")
+}
+
+model CouponRedemption {
+  id                String   @id @default(uuid())
+  couponId          String   @map("coupon_id")
+  userId            String   @map("user_id")
+  platformPurchaseId String  @unique @map("platform_purchase_id")
+  amountSaved       Decimal  @map("amount_saved") @db.Decimal(12, 2)
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  coupon           Coupon           @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platformPurchase PlatformPurchase @relation(fields: [platformPurchaseId], references: [id], onDelete: Cascade)
+
+  @@index([couponId, createdAt(sort: Desc)])
+  @@index([userId, couponId])
+  @@map("coupon_redemptions")
 }
 
 model BuyerWallet {

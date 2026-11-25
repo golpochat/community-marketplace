@@ -34,8 +34,8 @@ export class SellerGrowthPackController {
     @Body() body: unknown,
   ) {
     await this.aiMarketingAccess.assertEffective();
-    createGrowthPackIntentSchema.parse(body ?? {});
-    return this.purchases.createGrowthPackIntent(user.id);
+    const dto = createGrowthPackIntentSchema.parse(body ?? {});
+    return this.purchases.createGrowthPackIntent(user.id, dto);
   }
 
   @RequirePermissions(PERMISSIONS.EDIT_LISTING)

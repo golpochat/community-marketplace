@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
 
 import type { SellerPlatformFeeInfo } from '@community-marketplace/types';
-import { resolveSellerPlatformFee } from '@community-marketplace/utils';
+import {
+  FIRST_CARD_SALE_PLATFORM_FEE_FREE,
+  resolveCheckoutPlatformFeePercent,
+  resolveSellerPlatformFee,
+} from '@community-marketplace/utils';
 
 import { PrismaService } from '../../../database/prisma.service';
 import { roundMoney } from '../mappers/monetization.mapper';
 import { PlatformSettingsService } from './platform-settings.service';
+
+/** Completed (or settled-after-complete) card sales consume the first-sale fee waiver. */
+const FIRST_CARD_FEE_CONSUMING_STATUSES = ['succeeded', 'refunded', 'disputed'] as const;
 
 @Injectable()
 export class PlatformFeeService {
@@ -16,7 +23,7 @@ export class PlatformFeeService {
 
   async getEffectiveFeePercent(sellerId: string): Promise<number> {
     const info = await this.getSellerFeeInfo(sellerId);
-    return info.effectiveFeePercent;
+    return resolveCheckoutPlatformFeePercent(info);
   }
 
   async calculatePlatformFee(
@@ -29,12 +36,13 @@ export class PlatformFeeService {
   }
 
   async getSellerFeeInfo(sellerId: string): Promise<SellerPlatformFeeInfo> {
-    const [seller, platform] = await Promise.all([
+    const [seller, platform, firstCardFeeWaivedEligible] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: sellerId },
         select: { customPlatformFeePercent: true, sellerStatus: true },
       }),
       this.settings.get(),
+      this.isFirstCardFeeWaivedEligible(sellerId),
     ]);
 
     const defaultFeePercent = platform.defaultPlatformFeePercent;
@@ -47,7 +55,20 @@ export class PlatformFeeService {
           : null,
       defaultPlatformFeePercent: defaultFeePercent,
       verifiedSellerFeePercent,
+      firstCardFeeWaivedEligible,
     });
+  }
+
+  /** True until the seller has at least one completed card payment. */
+  async isFirstCardFeeWaivedEligible(sellerId: string): Promise<boolean> {
+    if (!FIRST_CARD_SALE_PLATFORM_FEE_FREE) return false;
+    const completed = await this.prisma.payment.count({
+      where: {
+        sellerId,
+        status: { in: [...FIRST_CARD_FEE_CONSUMING_STATUSES] },
+      },
+    });
+    return completed === 0;
   }
 
   async setSellerFeeOverride(

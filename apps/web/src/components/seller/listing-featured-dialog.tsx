@@ -10,6 +10,10 @@ import type {
 
 import { monetizationService } from '@/services/monetization.service';
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
+import {
+  CouponCodeField,
+  couponCodePayload,
+} from '@/components/monetization/coupon-code-field';
 
 interface ListingFeaturedDialogProps {
   open: boolean;
@@ -35,6 +39,7 @@ export function ListingFeaturedDialog({
   const [intent, setIntent] = useState<FeaturedIntentResponse | null>(null);
   const [completedPurchaseId, setCompletedPurchaseId] = useState<string | null>(null);
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +48,7 @@ export function ListingFeaturedDialog({
       setCatalog(null);
       setIntent(null);
       setCompletedPurchaseId(null);
+      setCouponCode('');
       setError(null);
       return;
     }
@@ -85,6 +91,7 @@ export function ListingFeaturedDialog({
         listingId,
         placement,
         ...(placement === 'category' ? { categoryId: categoryId! } : {}),
+        ...couponCodePayload(couponCode),
       });
       setIntent(response);
     } catch (err) {
@@ -110,6 +117,12 @@ export function ListingFeaturedDialog({
         </p>
 
         {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+
+        {catalog && !intent ? (
+          <div className="mt-4">
+            <CouponCodeField value={couponCode} onChange={setCouponCode} disabled={loading} />
+          </div>
+        ) : null}
 
         {loading && !catalog && !intent && (
           <p className="mt-4 text-sm text-[hsl(var(--dashboard-sidebar-muted))]">Loading featured options…</p>

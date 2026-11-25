@@ -11,7 +11,7 @@ import type {
   HighRiskUserSummary,
 } from '@community-marketplace/types';
 import { FRAUD_SIGNAL_LABELS, fraudRiskLevel, fraudSignalStatus } from '@community-marketplace/types';
-import { formatListedAgo } from '@community-marketplace/utils';
+import { formatListedAgo, compactUuid } from '@community-marketplace/utils';
 import {
   Button,
   IconActionButton,
@@ -26,6 +26,7 @@ import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-t
 import { DashboardPageShell, DataTable } from '@/components/dashboard/async-resource';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { usePaginatedQuery } from '@/hooks/use-paginated-query';
+import { LISTING_REMOVE_REASON_PRESETS } from '@/lib/listing-moderation-reasons';
 import { adminFraudService } from '@/services/admin-fraud.service';
 import { adminSellerVerificationService } from '@/services/admin-seller-verification.service';
 import { adminService, type AdminServiceRole } from '@/services/admin.service';
@@ -142,7 +143,7 @@ const SIGNAL_EMPTY_COPY: Record<SignalFilter, { title: string; description: stri
 function formatSubjectLabel(signal: FraudSignalListItem): string {
   if (signal.userLabel?.trim()) return signal.userLabel.trim();
   if (signal.userEmail) return signal.userEmail;
-  return `User ${signal.userId.slice(0, 8)}`;
+  return `User ${compactUuid(signal.userId)}`;
 }
 
 function SignalStatusBadge({ status }: { status: FraudSignalStatus }) {
@@ -368,7 +369,7 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
   const userRows = usersQuery.data.map((user: HighRiskUserSummary) => [
     <QueueCellText
       key={`seller-${user.userId}`}
-      text={user.displayName ?? user.email ?? user.userId.slice(0, 8)}
+      text={user.displayName ?? user.email ?? compactUuid(user.userId)}
     />,
     <QueueCellText key={`email-${user.userId}`} text={user.email ?? '—'} />,
     <QueueCellText key={`status-${user.userId}`} text={user.sellerStatus ?? '—'} />,
@@ -387,7 +388,7 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
     <TruncatedText key={`title-${listing.listingId}`} text={listing.title} className="max-w-full" />,
     <QueueCellText
       key={`seller-${listing.listingId}`}
-      text={listing.sellerName ?? listing.sellerId.slice(0, 8)}
+      text={listing.sellerName ?? compactUuid(listing.sellerId)}
     />,
     <QueueCellText key={`status-${listing.listingId}`} text={listing.status} />,
     <RiskBadge key={`risk-${listing.listingId}`} score={listing.riskScore} />,
@@ -705,7 +706,7 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
         : dialogAction?.kind === 'remove-listing'
           ? {
               title: 'Remove listing',
-              description: 'This listing will be removed from the marketplace.',
+              description: 'Pick a common cause, then add detail the seller will see.',
               confirmLabel: 'Remove listing',
               variant: 'destructive' as const,
             }
@@ -804,6 +805,10 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
         confirmLabel={dialogCopy.confirmLabel}
         variant={dialogCopy.variant}
         loading={acting}
+        presets={
+          dialogAction?.kind === 'remove-listing' ? LISTING_REMOVE_REASON_PRESETS : undefined
+        }
+        detailPlaceholder="Optional — extra context for audit and the seller…"
         required={
           dialogAction?.kind !== 'escalate' && dialogAction?.kind !== 'escalate-signal'
         }

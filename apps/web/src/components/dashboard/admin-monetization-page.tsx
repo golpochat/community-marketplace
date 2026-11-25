@@ -13,6 +13,7 @@ import { DashboardCard } from '@community-marketplace/ui-dashboard';
 import { AdminMonetizationAdvertising } from '@/components/dashboard/admin-monetization-advertising';
 import { AdminMonetizationAiMarketing } from '@/components/dashboard/admin-monetization-ai-marketing';
 import { AdminMonetizationBuyerCashbackOverrides } from '@/components/dashboard/admin-monetization-buyer-cashback-overrides';
+import { AdminMonetizationCoupons } from '@/components/dashboard/admin-monetization-coupons';
 import { AdminMonetizationFeeOverrides } from '@/components/dashboard/admin-monetization-fee-overrides';
 import { AdminMonetizationProductCatalog } from '@/components/dashboard/admin-monetization-product-catalog';
 import { DashboardPageShell } from '@/components/dashboard/async-resource';
@@ -25,7 +26,7 @@ interface AdminMonetizationPageProps {
   role: AdminServiceRole;
 }
 
-type MonetizationTab = 'advertising' | 'ai-marketing' | 'fees' | 'catalog';
+type MonetizationTab = 'advertising' | 'ai-marketing' | 'fees' | 'catalog' | 'coupons';
 type FeesSubTab = 'seller' | 'buyer';
 
 const MONETIZATION_TABS: { id: MonetizationTab; label: string }[] = [
@@ -33,6 +34,7 @@ const MONETIZATION_TABS: { id: MonetizationTab; label: string }[] = [
   { id: 'ai-marketing', label: 'AI Marketing' },
   { id: 'fees', label: 'Platform fees & cashback' },
   { id: 'catalog', label: 'Listing promotions' },
+  { id: 'coupons', label: 'Coupons' },
 ];
 
 const PAGE_TITLES: Record<MonetizationTab, string> = {
@@ -40,6 +42,7 @@ const PAGE_TITLES: Record<MonetizationTab, string> = {
   'ai-marketing': 'AI Marketing',
   fees: 'Platform fees & cashback',
   catalog: 'Listing promotions',
+  coupons: 'SKU coupons',
 };
 
 const PAGE_DESCRIPTIONS: Record<MonetizationTab, string> = {
@@ -48,6 +51,7 @@ const PAGE_DESCRIPTIONS: Record<MonetizationTab, string> = {
     'AI Marketing Hub publish, free units, per-seller overrides, and usage analytics.',
   fees: 'Platform fee defaults, cashback settings, and per-user overrides.',
   catalog: 'Manage listing boost and featured placement SKUs.',
+  coupons: 'Create redeemable codes for paid products — never for card commission.',
 };
 
 const FEES_SUB_TABS: { id: FeesSubTab; label: string }[] = [
@@ -466,6 +470,10 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                 onError={handlePanelError}
                 onGoToAdvertising={() => setActiveTab('advertising')}
               />
+            </div>
+
+            <div hidden={activeTab !== 'coupons'}>
+              <AdminMonetizationCoupons role={role} />
             </div>
           </>
         )}

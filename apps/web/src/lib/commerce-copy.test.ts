@@ -7,6 +7,7 @@ import {
   COMMERCE_PUBLIC_COPY,
   FORBIDDEN_PUBLIC_CLAIM_PATTERNS,
   formatSellerFeeDisclosure,
+  resolveCheckoutPlatformFeePercent,
   resolveSellerPlatformFee,
   shouldNudgeSellerConnect,
   classifySaleCloseChannel,
@@ -109,6 +110,41 @@ describe('resolveSellerPlatformFee', () => {
         isVerifiedRate: true,
       }),
     ).toMatch(/8% on card checkout \(verified rate\)/);
+  });
+
+  it('mentions first card sale free when eligible', () => {
+    expect(
+      formatSellerFeeDisclosure({
+        effectiveFeePercent: 10,
+        isCustomOverride: false,
+        defaultFeePercent: 10,
+        verifiedSellerFeePercent: 8,
+        isVerifiedRate: false,
+        firstCardFeeWaivedEligible: true,
+      }),
+    ).toMatch(/first successful card sale has no seller service fee/i);
+  });
+
+  it('resolves checkout fee to 0% while first-sale waiver is eligible', () => {
+    expect(
+      resolveCheckoutPlatformFeePercent({
+        effectiveFeePercent: 10,
+        isCustomOverride: false,
+        defaultFeePercent: 10,
+        verifiedSellerFeePercent: 8,
+        firstCardFeeWaivedEligible: true,
+      }),
+    ).toBe(0);
+    expect(
+      resolveCheckoutPlatformFeePercent({
+        effectiveFeePercent: 8,
+        isCustomOverride: false,
+        defaultFeePercent: 10,
+        verifiedSellerFeePercent: 8,
+        isVerifiedRate: true,
+        firstCardFeeWaivedEligible: false,
+      }),
+    ).toBe(8);
   });
 
   it('nudges Connect only at or above the listed-price threshold', () => {

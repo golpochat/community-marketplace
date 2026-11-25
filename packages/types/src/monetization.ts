@@ -30,6 +30,53 @@ export type PlatformPurchaseType =
 
 export type PlatformPurchaseStatus = 'pending' | 'succeeded' | 'failed' | 'refunded';
 
+export type CouponDiscountType = 'percent' | 'fixed';
+
+export const PLATFORM_PURCHASE_TYPES = [
+  'listing_boost',
+  'featured_slot',
+  'fast_track_verification',
+  'store_slot_2',
+  'store_slot_3',
+  'store_bundle_3',
+  'buyer_statement',
+  'seller_growth_pack',
+  'ai_credit_2',
+  'ai_credit_5',
+  'ai_credit_10',
+  'featured_store',
+  'early_cashback_unlock',
+  'priority_message',
+] as const satisfies readonly PlatformPurchaseType[];
+
+export interface PlatformCoupon {
+  id: string;
+  code: string;
+  discountType: CouponDiscountType;
+  discountValue: number;
+  /** Empty = all platform-purchase SKUs. */
+  allowedPurchaseTypes: PlatformPurchaseType[];
+  maxRedemptions?: number;
+  maxPerUser: number;
+  startsAt?: string;
+  endsAt?: string;
+  active: boolean;
+  redemptionCount: number;
+  createdById: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CouponQuote {
+  couponId: string;
+  code: string;
+  discountType: CouponDiscountType;
+  discountValue: number;
+  baseAmount: number;
+  finalAmount: number;
+  amountSaved: number;
+}
+
 export type BoostPackageType = Extract<ListingPackageType, 'PAID_7D' | 'PAID_30D'>;
 
 /** Attribution for boost checkout (hub conversion tracking). */
@@ -412,11 +459,17 @@ export interface FastTrackStatusResponse {
 }
 
 export interface SellerPlatformFeeInfo {
+  /** Ongoing rate after any first-card waiver (override / verified / default). */
   effectiveFeePercent: number;
   isCustomOverride: boolean;
   defaultFeePercent: number;
   verifiedSellerFeePercent?: number;
   isVerifiedRate?: boolean;
+  /**
+   * When true, the next card checkout charges 0% platform fee once.
+   * Cleared after the seller’s first completed card payment.
+   */
+  firstCardFeeWaivedEligible?: boolean;
 }
 
 export interface WalletTransaction {

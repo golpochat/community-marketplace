@@ -40,6 +40,7 @@ import { BuyerCashbackService } from './services/buyer-cashback.service';
 import { CashbackGrantsService } from './services/cashback-grants.service';
 import { CashbackJobsService } from './services/cashback-jobs.service';
 import { MonetizationProductService } from './services/monetization-product.service';
+import { CouponService } from './services/coupon.service';
 import { PlatformFeeService } from './services/platform-fee.service';
 import { PlatformPurchaseService } from './services/platform-purchase.service';
 import { PlatformPurchaseReceiptService } from './services/platform-purchase-receipt.service';
@@ -92,6 +93,7 @@ import { AiMarketingModule } from '../ai-marketing/ai-marketing.module';
     MonetizationProductService,
     BuyerCashbackService,
     PlatformFeeService,
+    CouponService,
     CashbackGrantsService,
     BuyerWalletService,
     WalletSpendService,
@@ -116,6 +118,7 @@ import { AiMarketingModule } from '../ai-marketing/ai-marketing.module';
   ],
   exports: [
     PlatformFeeService,
+    CouponService,
     PlatformSettingsService,
     AiMarketingQuotaService,
     AdsSystemService,

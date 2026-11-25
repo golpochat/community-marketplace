@@ -76,7 +76,8 @@ From a Windows PC:
 
 - [ ] Public smoke green
 - [ ] Manual: login as seller → Connect status loads on `/account/earnings`
-- [ ] **Exit gate:** one **€1–€5 live card purchase**, then refund via [dispute-refund-playbook](./dispute-refund-playbook.md) if needed
+- [ ] Manual: Earnings shows **first successful card sale: 0% fee** for a seller with no prior card sales
+- [ ] **Exit gate:** one **€1–€5 live card purchase** (expect **0%** platform fee on that first sale), then refund via [dispute-refund-playbook](./dispute-refund-playbook.md) if needed
 
 ---
 

@@ -11,6 +11,7 @@ import type { ConfirmBuyerStatementInput, CreateBuyerStatementIntentInput } from
 import { PrismaService } from '../../../database/prisma.service';
 import { mapPlatformPurchase } from '../../monetization/mappers/monetization.mapper';
 import { roundMoney } from '../../monetization/lib/boost.lib';
+import { CouponService } from '../../monetization/services/coupon.service';
 import { StripeConnectService } from '../../payments/services/stripe-connect.service';
 import { statementPeriodBounds } from '../lib/account-statement.types';
 import { AccountStatementService } from './account-statement.service';
@@ -24,6 +25,7 @@ export class BuyerStatementPurchaseService {
     private readonly stripeConnect: StripeConnectService,
     private readonly statements: AccountStatementService,
     private readonly fulfillment: BuyerStatementFulfillmentService,
+    private readonly coupons: CouponService,
   ) {}
 
   async createIntent(
@@ -49,7 +51,27 @@ export class BuyerStatementPurchaseService {
       };
     }
 
-    const amount = roundMoney(pricing.amount);
+    const baseAmount = roundMoney(pricing.amount);
+    let amount = baseAmount;
+    let couponId: string | undefined;
+    const couponMeta: Record<string, unknown> = {};
+    if (dto.couponCode) {
+      const quote = await this.coupons.validateAndQuote(
+        dto.couponCode,
+        buyerId,
+        'buyer_statement',
+        baseAmount,
+      );
+      amount = quote.finalAmount;
+      couponId = quote.couponId;
+      couponMeta.couponCode = quote.code;
+      couponMeta.couponId = quote.couponId;
+      couponMeta.couponDiscountType = quote.discountType;
+      couponMeta.couponDiscountValue = quote.discountValue;
+      couponMeta.couponAmountSaved = quote.amountSaved;
+      couponMeta.couponBaseAmount = quote.baseAmount;
+    }
+
     const purchase = await this.prisma.platformPurchase.create({
       data: {
         userId: buyerId,
@@ -57,11 +79,14 @@ export class BuyerStatementPurchaseService {
         status: 'pending',
         amount,
         currency: pricing.currency,
+        couponId,
         metadata: {
           year,
           month,
           periodLabel: formatStatementPeriodLabel(year, month),
           priceAtPurchase: amount,
+          basePrice: baseAmount,
+          ...couponMeta,
         },
       },
     });
@@ -120,6 +145,7 @@ export class BuyerStatementPurchaseService {
       where: { id: purchase.id },
     });
     if (row.status === 'succeeded') {
+      await this.coupons.recordRedemption(row.id);
       await this.ensureStatementStored(row);
     }
     return mapPlatformPurchase(row);

@@ -12,6 +12,8 @@ import { PERMISSIONS } from '@community-marketplace/types';
 import {
   buyerCashbackOverrideSchema,
   cashbackGrantsAdminFiltersSchema,
+  createCouponSchema,
+  deactivateCouponSchema,
   displayAdCampaignCreateSchema,
   displayAdCampaignStatusActionSchema,
   displayAdCampaignUpdateSchema,
@@ -76,6 +78,26 @@ export class AdminMonetizationController {
   @Get('seller-fee-overrides')
   listSellerFeeOverrides() {
     return this.monetization.listSellerFeeOverrides();
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Get('coupons')
+  listCoupons() {
+    return this.monetization.listCoupons();
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Post('coupons')
+  createCoupon(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown) {
+    const dto = createCouponSchema.parse(body);
+    return this.monetization.createCoupon(user.id, dto);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Post('coupons/deactivate')
+  deactivateCoupon(@Body() body: unknown) {
+    const dto = deactivateCouponSchema.parse(body);
+    return this.monetization.deactivateCoupon(dto.couponId);
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)

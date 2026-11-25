@@ -14,6 +14,7 @@ import type {
   AiCreditPackIntentResponse,
   BoostIntentResponse,
   BoostPackageType,
+  CouponQuote,
   EarlyCashbackUnlockIntentResponse,
   FastTrackIntentResponse,
   FastTrackStatusResponse,
@@ -23,6 +24,7 @@ import type {
   GrowthPackCatalogResponse,
   GrowthPackIntentResponse,
   PlatformPurchase,
+  PlatformPurchaseType,
   PriorityMessageConfigResponse,
   PriorityMessageIntentResponse,
   StoreSlotIntentResponse,
@@ -43,6 +45,7 @@ import type {
   CreateFeaturedIntentInput,
   CreateFeaturedStoreIntentInput,
   CreateFastTrackIntentInput,
+  CreateGrowthPackIntentInput,
   CreatePriorityMessageIntentInput,
   CreateStoreSlotIntentInput,
 } from '@community-marketplace/validation';
@@ -71,6 +74,7 @@ import {
 import { mapPlatformPurchase } from '../mappers/monetization.mapper';
 import { BoostCatalogService } from './boost-catalog.service';
 import { BoostFulfillmentService } from './boost-fulfillment.service';
+import { CouponService } from './coupon.service';
 import {
   FAST_TRACK_COOLDOWN_DAYS,
   FastTrackFulfillmentService,
@@ -112,6 +116,7 @@ export class PlatformPurchaseService {
     private readonly storeSlotCatalog: StoreSlotCatalogService,
     private readonly storeSlotFulfillment: StoreSlotFulfillmentService,
     private readonly growthPackFulfillment: GrowthPackFulfillmentService,
+    private readonly coupons: CouponService,
     private readonly stripeConnect: StripeConnectService,
     private readonly purchaseReceipts: PlatformPurchaseReceiptService,
     private readonly walletSpend: WalletSpendService,
@@ -138,13 +143,37 @@ export class PlatformPurchaseService {
     }
 
     const settings = await this.settings.get();
-    const { amount, discountPercent, growthPackPurchaseId, discountKind } =
-      await this.resolveBoostPrice(
+    let amount: number;
+    let discountPercent = 0;
+    let growthPackPurchaseId: string | undefined;
+    let discountKind: 'none' | 'first_boost' | 'growth_pack' | 'coupon' = 'none';
+    let couponQuote: CouponQuote | null = null;
+
+    if (dto.couponCode) {
+      couponQuote = await this.coupons.validateAndQuote(
+        dto.couponCode,
+        sellerId,
+        'listing_boost',
+        option.price,
+      );
+      amount = couponQuote.finalAmount;
+      discountPercent =
+        couponQuote.baseAmount > 0
+          ? roundMoney((couponQuote.amountSaved / couponQuote.baseAmount) * 100)
+          : 0;
+      discountKind = 'coupon';
+    } else {
+      const priced = await this.resolveBoostPrice(
         sellerId,
         dto.packageType,
         option.price,
         dto.source,
       );
+      amount = priced.amount;
+      discountPercent = priced.discountPercent;
+      growthPackPurchaseId = priced.growthPackPurchaseId;
+      discountKind = priced.discountKind;
+    }
 
     const mix = await this.resolveCreditsMix(sellerId, amount, dto.creditsAmount);
 
@@ -157,6 +186,7 @@ export class PlatformPurchaseService {
         currency: settings.pricing.currency.toUpperCase(),
         listingId: dto.listingId,
         packageType: dto.packageType,
+        couponId: couponQuote?.couponId,
         metadata: {
           boostDays: dto.packageType === 'PAID_7D' ? 7 : 30,
           priceAtPurchase: amount,
@@ -165,6 +195,7 @@ export class PlatformPurchaseService {
           discountPercent,
           discountKind,
           growthPackPurchaseId: growthPackPurchaseId ?? null,
+          ...this.couponMetadata(couponQuote),
           creditsApplied: mix.creditsApplied,
           amountChargedCard: mix.amountDue,
           paymentMix: mix.paymentMix,
@@ -260,6 +291,7 @@ export class PlatformPurchaseService {
 
   async createGrowthPackIntent(
     sellerId: string,
+    dto: CreateGrowthPackIntentInput = {},
   ): Promise<GrowthPackIntentResponse> {
     await this.assertIntentRateLimit(sellerId, 'seller_growth_pack');
     const catalog = await this.getGrowthPackCatalog(sellerId);
@@ -270,7 +302,12 @@ export class PlatformPurchaseService {
     }
 
     const settings = await this.settings.get();
-    const amount = roundMoney(catalog.option.amount);
+    const { amount, couponQuote } = await this.applyOptionalCoupon(
+      dto.couponCode,
+      sellerId,
+      'seller_growth_pack',
+      catalog.option.amount,
+    );
 
     const purchase = await this.prisma.platformPurchase.create({
       data: {
@@ -279,12 +316,15 @@ export class PlatformPurchaseService {
         status: 'pending',
         amount,
         currency: settings.pricing.currency.toUpperCase(),
+        couponId: couponQuote?.couponId,
         metadata: {
           sku: 'seller_growth_pack',
           walletCreditEur: catalog.option.walletCreditEur,
           boostDiscountPercent: catalog.option.boostDiscountPercent,
           boostDiscountConsumed: false,
           priceAtPurchase: amount,
+          basePrice: catalog.option.amount,
+          ...this.couponMetadata(couponQuote),
         },
       },
     });
@@ -363,7 +403,12 @@ export class PlatformPurchaseService {
     }
 
     const settings = await this.settings.get();
-    const amount = roundMoney(option.amount);
+    const { amount, couponQuote } = await this.applyOptionalCoupon(
+      dto.couponCode,
+      sellerId,
+      sku,
+      option.amount,
+    );
 
     const purchase = await this.prisma.platformPurchase.create({
       data: {
@@ -372,11 +417,14 @@ export class PlatformPurchaseService {
         status: 'pending',
         amount,
         currency: settings.pricing.currency.toUpperCase(),
+        couponId: couponQuote?.couponId,
         metadata: {
           sku,
           walletCreditEur: option.walletCreditEur,
           approxUnits: option.approxUnits,
           priceAtPurchase: amount,
+          basePrice: option.amount,
+          ...this.couponMetadata(couponQuote),
         },
       },
     });
@@ -433,7 +481,12 @@ export class PlatformPurchaseService {
     }
 
     const settings = await this.settings.get();
-    const amount = roundMoney(option.price);
+    const { amount, couponQuote } = await this.applyOptionalCoupon(
+      dto.couponCode,
+      sellerId,
+      'featured_slot',
+      option.price,
+    );
 
     const purchase = await this.prisma.platformPurchase.create({
       data: {
@@ -443,10 +496,13 @@ export class PlatformPurchaseService {
         amount,
         currency: settings.pricing.currency.toUpperCase(),
         listingId: dto.listingId,
+        couponId: couponQuote?.couponId,
         metadata: {
           placement: dto.placement,
           categoryId: categoryId ?? null,
           priceAtPurchase: amount,
+          basePrice: option.price,
+          ...this.couponMetadata(couponQuote),
         },
       },
     });
@@ -501,7 +557,12 @@ export class PlatformPurchaseService {
     }
 
     const settings = await this.settings.get();
-    const amount = roundMoney(catalog.option.amount);
+    const { amount, couponQuote } = await this.applyOptionalCoupon(
+      dto.couponCode,
+      sellerId,
+      'featured_store',
+      catalog.option.amount,
+    );
 
     const purchase = await this.prisma.platformPurchase.create({
       data: {
@@ -510,12 +571,15 @@ export class PlatformPurchaseService {
         status: 'pending',
         amount,
         currency: settings.pricing.currency.toUpperCase(),
+        couponId: couponQuote?.couponId,
         metadata: {
           sku: 'featured_store_homepage',
           storeId: dto.storeId,
           placement: 'homepage',
           durationHours: catalog.option.durationHours,
           priceAtPurchase: amount,
+          basePrice: catalog.option.amount,
+          ...this.couponMetadata(couponQuote),
         },
       },
     });
@@ -638,7 +702,12 @@ export class PlatformPurchaseService {
     }
 
     const settings = await this.settings.get();
-    const amount = roundMoney(status.price);
+    const { amount, couponQuote } = await this.applyOptionalCoupon(
+      dto.couponCode,
+      sellerId,
+      'fast_track_verification',
+      status.price,
+    );
     const mix = await this.resolveCreditsMix(sellerId, amount, dto.creditsAmount);
 
     const purchase = await this.prisma.platformPurchase.create({
@@ -648,8 +717,11 @@ export class PlatformPurchaseService {
         status: 'pending',
         amount,
         currency: settings.pricing.currency.toUpperCase(),
+        couponId: couponQuote?.couponId,
         metadata: {
           priceAtPurchase: amount,
+          basePrice: status.price,
+          ...this.couponMetadata(couponQuote),
           creditsApplied: mix.creditsApplied,
           amountChargedCard: mix.amountDue,
           paymentMix: mix.paymentMix,
@@ -746,7 +818,12 @@ export class PlatformPurchaseService {
       );
     }
 
-    const amount = roundMoney(Number(sku.amount));
+    const { amount, couponQuote } = await this.applyOptionalCoupon(
+      dto.couponCode,
+      buyerId,
+      'early_cashback_unlock',
+      Number(sku.amount),
+    );
     const mix = await this.resolveCreditsMix(buyerId, amount, dto.creditsAmount);
 
     const purchase = await this.prisma.platformPurchase.create({
@@ -756,11 +833,14 @@ export class PlatformPurchaseService {
         status: 'pending',
         amount,
         currency: settings.pricing.currency.toUpperCase(),
+        couponId: couponQuote?.couponId,
         metadata: {
           grantId: dto.grantId,
           paymentId: grant.paymentId,
           grantAmount: Number(grant.amount),
           priceAtPurchase: amount,
+          basePrice: Number(sku.amount),
+          ...this.couponMetadata(couponQuote),
           creditsApplied: mix.creditsApplied,
           amountChargedCard: mix.amountDue,
           paymentMix: mix.paymentMix,
@@ -892,7 +972,12 @@ export class PlatformPurchaseService {
       );
     }
 
-    const amount = roundMoney(Number(sku.amount));
+    const { amount, couponQuote } = await this.applyOptionalCoupon(
+      dto.couponCode,
+      buyerId,
+      'priority_message',
+      Number(sku.amount),
+    );
     const mix = await this.resolveCreditsMix(buyerId, amount, dto.creditsAmount);
 
     const purchase = await this.prisma.platformPurchase.create({
@@ -902,10 +987,13 @@ export class PlatformPurchaseService {
         status: 'pending',
         amount,
         currency: settings.pricing.currency.toUpperCase(),
+        couponId: couponQuote?.couponId,
         metadata: {
           threadId: dto.threadId,
           listingId: thread.listingId,
           priceAtPurchase: amount,
+          basePrice: Number(sku.amount),
+          ...this.couponMetadata(couponQuote),
           creditsApplied: mix.creditsApplied,
           amountChargedCard: mix.amountDue,
           paymentMix: mix.paymentMix,
@@ -995,7 +1083,13 @@ export class PlatformPurchaseService {
     dto: CreateStoreSlotIntentInput,
   ): Promise<StoreSlotIntentResponse> {
     await this.assertIntentRateLimit(sellerId, dto.sku);
-    const amount = await this.storeSlotCatalog.assertSkuEligible(sellerId, dto.sku);
+    const baseAmount = await this.storeSlotCatalog.assertSkuEligible(sellerId, dto.sku);
+    const { amount, couponQuote } = await this.applyOptionalCoupon(
+      dto.couponCode,
+      sellerId,
+      dto.sku,
+      baseAmount,
+    );
 
     const settings = await this.settings.get();
     const user = await this.prisma.user.findUniqueOrThrow({
@@ -1012,11 +1106,14 @@ export class PlatformPurchaseService {
         status: 'pending',
         amount,
         currency: settings.pricing.currency.toUpperCase(),
+        couponId: couponQuote?.couponId,
         metadata: {
           sku: dto.sku,
           slotsGranted,
           targetStoreSlotLimit: targetLimit,
           priceAtPurchase: amount,
+          basePrice: baseAmount,
+          ...this.couponMetadata(couponQuote),
         },
       },
     });
@@ -1123,6 +1220,7 @@ export class PlatformPurchaseService {
         break;
       case 'buyer_statement':
         await this.buyerStatementPurchases.fulfillFromWebhook(purchase.id);
+        await this.afterPurchaseSucceeded(purchase.id);
         return true;
       case 'seller_growth_pack':
         fulfilled = await this.growthPackFulfillment.fulfillGrowthPack(
@@ -1274,6 +1372,9 @@ export class PlatformPurchaseService {
       select: { id: true, userId: true, type: true, status: true, receiptGeneratedAt: true },
     });
     if (!purchase || purchase.status !== 'succeeded') return;
+
+    await this.coupons.recordRedemption(purchaseId);
+
     if (purchase.type === 'buyer_statement') return;
 
     if (!purchase.receiptGeneratedAt) {
@@ -1291,6 +1392,36 @@ export class PlatformPurchaseService {
         error instanceof Error ? error.stack : undefined,
       );
     });
+  }
+
+  private couponMetadata(quote: CouponQuote | null): Record<string, unknown> {
+    if (!quote) return {};
+    return {
+      couponCode: quote.code,
+      couponId: quote.couponId,
+      couponDiscountType: quote.discountType,
+      couponDiscountValue: quote.discountValue,
+      couponAmountSaved: quote.amountSaved,
+      couponBaseAmount: quote.baseAmount,
+    };
+  }
+
+  private async applyOptionalCoupon(
+    couponCode: string | undefined,
+    userId: string,
+    purchaseType: PlatformPurchaseType,
+    baseAmount: number,
+  ): Promise<{ amount: number; couponQuote: CouponQuote | null }> {
+    if (!couponCode) {
+      return { amount: roundMoney(baseAmount), couponQuote: null };
+    }
+    const couponQuote = await this.coupons.validateAndQuote(
+      couponCode,
+      userId,
+      purchaseType,
+      baseAmount,
+    );
+    return { amount: couponQuote.finalAmount, couponQuote };
   }
 
   private async createStripeIntent(

@@ -9,6 +9,10 @@ import type {
 } from '@community-marketplace/types';
 
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
+import {
+  CouponCodeField,
+  couponCodePayload,
+} from '@/components/monetization/coupon-code-field';
 import { monetizationService } from '@/services/monetization.service';
 
 interface AiCreditPackDialogProps {
@@ -25,6 +29,7 @@ export function AiCreditPackDialog({
   const [catalog, setCatalog] = useState<AiCreditPackCatalogResponse | null>(null);
   const [intent, setIntent] = useState<AiCreditPackIntentResponse | null>(null);
   const [selectedSku, setSelectedSku] = useState<AiCreditPackSku | null>(null);
+  const [couponCode, setCouponCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,6 +38,7 @@ export function AiCreditPackDialog({
       setCatalog(null);
       setIntent(null);
       setSelectedSku(null);
+      setCouponCode('');
       setError(null);
       return;
     }
@@ -68,7 +74,10 @@ export function AiCreditPackDialog({
     setError(null);
     setSelectedSku(sku);
     try {
-      const response = await monetizationService.createAiCreditPackIntent({ sku });
+      const response = await monetizationService.createAiCreditPackIntent({
+        sku,
+        ...couponCodePayload(couponCode),
+      });
       setIntent(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start checkout');
@@ -98,6 +107,12 @@ export function AiCreditPackDialog({
           Add SellNearby Credit for Marketing Hub overage (€0.05 per unit after your free
           monthly allowance).
         </p>
+
+        {catalog && !intent ? (
+          <div className="mt-4">
+            <CouponCodeField value={couponCode} onChange={setCouponCode} disabled={loading} />
+          </div>
+        ) : null}
 
         {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
 

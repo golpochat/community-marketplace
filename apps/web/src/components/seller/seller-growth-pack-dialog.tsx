@@ -5,6 +5,10 @@ import { useEffect, useState } from 'react';
 import type { GrowthPackCatalogResponse, GrowthPackIntentResponse } from '@community-marketplace/types';
 
 import { BoostCheckoutPanel } from '@/components/payments/boost-checkout-panel';
+import {
+  CouponCodeField,
+  couponCodePayload,
+} from '@/components/monetization/coupon-code-field';
 import { monetizationService } from '@/services/monetization.service';
 
 interface SellerGrowthPackDialogProps {
@@ -20,6 +24,7 @@ export function SellerGrowthPackDialog({
 }: SellerGrowthPackDialogProps) {
   const [catalog, setCatalog] = useState<GrowthPackCatalogResponse | null>(null);
   const [intent, setIntent] = useState<GrowthPackIntentResponse | null>(null);
+  const [couponCode, setCouponCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,6 +32,7 @@ export function SellerGrowthPackDialog({
     if (!open) {
       setCatalog(null);
       setIntent(null);
+      setCouponCode('');
       setError(null);
       return;
     }
@@ -59,7 +65,9 @@ export function SellerGrowthPackDialog({
     setLoading(true);
     setError(null);
     try {
-      const response = await monetizationService.createGrowthPackIntent();
+      const response = await monetizationService.createGrowthPackIntent({
+        ...couponCodePayload(couponCode),
+      });
       setIntent(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start checkout');
@@ -96,6 +104,12 @@ export function SellerGrowthPackDialog({
             Loading…
           </p>
         )}
+
+        {option && !intent ? (
+          <div className="mt-4">
+            <CouponCodeField value={couponCode} onChange={setCouponCode} disabled={loading} />
+          </div>
+        ) : null}
 
         {option && !intent && (
           <div className="mt-4 space-y-3">

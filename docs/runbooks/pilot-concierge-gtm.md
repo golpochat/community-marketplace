@@ -70,9 +70,21 @@ Every week, personally take **3–5 serious sellers** through this path. Target 
 
 Do **not** pitch boosts, featured, display ads, or AI packs until search in that wedge has competing listings.
 
-### 5. Concierge fee override (ops only)
+### 5. First card sale is free (product default)
 
-If a serious pilot seller stalls on 10% and will complete Connect at a lower rate:
+Every seller’s **first successful card payment** charges **0%** seller service fee. After that, verified 8% / default 10% (or their admin override) applies. Pitch it as onboarding, not “SellNearby is free forever.”
+
+- Eligible until they have a payment in `succeeded` / `refunded` / `disputed`
+- Shown on Earnings and the listing fee notice
+- Do **not** also stack a permanent 0% mental model in WhatsApp copy
+
+### 5b. SKU coupons (optional, not commission)
+
+Admin → Monetization → Coupons can issue codes for **paid products** (boost / featured / AI / etc.). Coupons **do not** change the seller service fee. Prefer concierge hand-holding over burning coupons until the wedge has density; do not pitch boosts early.
+
+### 6. Concierge fee override (ops only)
+
+If a serious pilot seller still stalls after the free first sale and will complete Connect at a lower ongoing rate:
 
 1. Admin → Monetization → seller fee override (3–15%)
 2. Cap at **5–10** sellers
@@ -108,7 +120,7 @@ Month-3 gate: **fewer than 5 card sales** → shrink again. **Do not** launch a 
 
 **Seller invite (WhatsApp):**
 
-> I’m running a small Dublin pilot on SellNearby — free to list, optional card checkout so buyers get a receipt. I’ll help you verify, set up payouts, and get the first listing live. Cash collection still works in chat. Card sales take a seller service fee (verified rate is lower). Interested in listing [item type] this week?
+> I’m running a small Dublin pilot on SellNearby — free to list, optional card checkout so buyers get a receipt. I’ll help you verify, set up payouts, and get the first listing live. Cash collection still works in chat. Your first successful card sale has no seller service fee; after that the verified rate is lower than the standard rate. Interested in listing [item type] this week?
 
 **Buyer nudge after they agree a price in chat:**
 
