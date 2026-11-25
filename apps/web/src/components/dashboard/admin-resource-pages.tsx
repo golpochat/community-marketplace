@@ -616,8 +616,8 @@ export function AdminListingsPage({ role }: { role: AdminServiceRole }) {
       <ReasonPromptDialog
         open={listingPrompt?.kind === 'remove'}
         elevated
-        title="Remove listing"
-        description="This hides the listing from buyers. Pick a cause, then add optional detail."
+        title="Remove listing?"
+        description="This permanently hides the listing from buyers. Confirm only if you are sure, then pick a cause."
         label="Removal reason"
         presets={LISTING_REMOVE_REASON_PRESETS}
         detailPlaceholder="Optional — extra context for audit and the seller…"
@@ -1009,17 +1009,23 @@ export function AdminModerationPage({ role }: { role: AdminServiceRole }) {
           moderationPrompt?.actionType === 'warn'
             ? 'Warn user'
             : moderationPrompt?.actionType === 'delete_listing'
-              ? 'Remove listing'
+              ? 'Remove listing?'
               : 'Suspend user'
         }
         description={
-          moderationPrompt
-            ? `Add notes for report ${compactUuid(moderationPrompt.report.id)}.`
-            : undefined
+          moderationPrompt?.actionType === 'delete_listing'
+            ? `This permanently hides the listing from buyers for report ${compactUuid(moderationPrompt.report.id)}. Confirm only if you are sure.`
+            : moderationPrompt
+              ? `Add notes for report ${compactUuid(moderationPrompt.report.id)}.`
+              : undefined
         }
         label="Moderation notes"
         placeholder="Explain the action taken…"
-        confirmLabel="Confirm action"
+        confirmLabel={
+          moderationPrompt?.actionType === 'delete_listing'
+            ? 'Remove listing'
+            : 'Confirm action'
+        }
         variant={moderationPrompt?.actionType === 'warn' ? 'default' : 'destructive'}
         required={false}
         loading={actingReportId === moderationPrompt?.report.id}

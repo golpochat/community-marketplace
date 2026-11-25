@@ -705,8 +705,9 @@ export function AdminFraudPage({ role }: { role: AdminServiceRole }) {
           }
         : dialogAction?.kind === 'remove-listing'
           ? {
-              title: 'Remove listing',
-              description: 'Pick a common cause, then add detail the seller will see.',
+              title: 'Remove listing?',
+              description:
+                'This permanently hides the listing from buyers. Confirm only if you are sure, then pick a cause the seller will see.',
               confirmLabel: 'Remove listing',
               variant: 'destructive' as const,
             }

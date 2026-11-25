@@ -631,7 +631,7 @@ export const monetizationService = {
       `${adminApiPath(role, '/monetization/wallet-transactions')}?${query.toString()}`,
     );
     return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
-  }
+  },
 
   async listPlatformPurchases(
     role: AdminApiRole,
@@ -656,7 +656,7 @@ export const monetizationService = {
       page: params.page ?? 1,
       limit: params.limit ?? 20,
     });
-  }
+  },
 
   async refundPlatformPurchase(
     role: AdminApiRole,

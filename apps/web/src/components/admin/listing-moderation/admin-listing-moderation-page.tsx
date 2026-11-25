@@ -244,8 +244,8 @@ export function AdminListingModerationPage({ role }: { role: AdminServiceRole })
       <ReasonPromptDialog
         open={listingPrompt?.kind === 'remove'}
         elevated
-        title="Remove listing"
-        description="Pick a common cause, then add detail the seller will see."
+        title="Remove listing?"
+        description="This permanently hides the listing from buyers. Confirm only if you are sure, then pick a cause the seller will see."
         label="Removal reason"
         presets={LISTING_REMOVE_REASON_PRESETS}
         detailPlaceholder="Optional — extra context for audit and the seller…"

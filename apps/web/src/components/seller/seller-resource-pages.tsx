@@ -53,6 +53,7 @@ import { ListingPackageDialog } from "@/components/seller/listing-package-dialog
 import { ListingBoostDialog } from "@/components/seller/listing-boost-dialog";
 import { ListingFeaturedDialog } from "@/components/seller/listing-featured-dialog";
 import { MarkSoldDialog } from "@/components/seller/mark-sold-dialog";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import {
   ListingShareSuccessPanel,
   type ListingShareSuccessContext,
@@ -273,6 +274,7 @@ export function SellerListingsPage() {
   const [boostDialogListingId, setBoostDialogListingId] = useState<string | null>(null);
   const [featuredDialogListingId, setFeaturedDialogListingId] = useState<string | null>(null);
   const [soldListingId, setSoldListingId] = useState<string | null>(null);
+  const [deleteListingId, setDeleteListingId] = useState<string | null>(null);
   const [boostsEnabled, setBoostsEnabled] = useState(true);
   const [featuredEnabled, setFeaturedEnabled] = useState(true);
 
@@ -367,8 +369,9 @@ export function SellerListingsPage() {
           break;
         }
         case "delete":
-          await sellerService.deleteListing(listingId);
-          break;
+          setActionId(null);
+          setDeleteListingId(listingId);
+          return;
         default:
           break;
       }
@@ -378,6 +381,26 @@ export function SellerListingsPage() {
         setShowGateModal(true);
       }
       setError(err instanceof Error ? err.message : "Action failed");
+    } finally {
+      setActionId(null);
+    }
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteListingId) return;
+    const listingId = deleteListingId;
+    setActionId(listingId);
+    setError(null);
+    try {
+      await sellerService.deleteListing(listingId);
+      setDeleteListingId(null);
+      feedback.success("Listing deleted", "It has been removed from your listings.");
+      await load();
+    } catch (err) {
+      if (err instanceof ApiClientError && err.status === 403) {
+        setShowGateModal(true);
+      }
+      setError(err instanceof Error ? err.message : "Failed to delete listing");
     } finally {
       setActionId(null);
     }
@@ -623,6 +646,22 @@ export function SellerListingsPage() {
           if (!actionId) setSoldListingId(null);
         }}
         onConfirm={(closeChannel) => void handleSoldConfirm(closeChannel)}
+      />
+      <ConfirmDialog
+        open={deleteListingId != null}
+        title="Delete listing?"
+        message={
+          deleteListingId
+            ? `Delete “${listings.find((item) => item.id === deleteListingId)?.title ?? "this listing"}”? This cannot be undone.`
+            : "Delete this listing? This cannot be undone."
+        }
+        confirmLabel="Delete listing"
+        tone="danger"
+        loading={Boolean(deleteListingId && actionId === deleteListingId)}
+        onCancel={() => {
+          if (!actionId) setDeleteListingId(null);
+        }}
+        onConfirm={() => void handleDeleteConfirm()}
       />
       <SellerVerificationModal
         open={showGateModal}
