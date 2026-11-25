@@ -74,7 +74,8 @@ export function AdminMonetizationPurchases({ role }: AdminMonetizationPurchasesP
         type: type === 'all' ? undefined : (type as PlatformPurchase['type']),
       });
       setRows(result.data);
-      setTotalPages(result.meta.totalPages);
+      const limit = result.meta.limit || 20;
+      setTotalPages(Math.max(1, Math.ceil((result.meta.total || 0) / limit)));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load purchases');
     } finally {
