@@ -339,6 +339,7 @@ export {
 
 export {
   platformSettingsUpdateSchema,
+  platformPricingPatchSchema,
   sellerFeeOverrideSchema,
   sellerAiFreeUnitsOverrideSchema,
   buyerCashbackOverrideSchema,

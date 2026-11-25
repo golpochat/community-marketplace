@@ -17,6 +17,7 @@ import { AdminMonetizationCoupons } from '@/components/dashboard/admin-monetizat
 import { AdminMonetizationFeeOverrides } from '@/components/dashboard/admin-monetization-fee-overrides';
 import { AdminMonetizationProductCatalog } from '@/components/dashboard/admin-monetization-product-catalog';
 import { AdminMonetizationPurchases } from '@/components/dashboard/admin-monetization-purchases';
+import { AdminMonetizationSkuPricing } from '@/components/dashboard/admin-monetization-sku-pricing';
 import { DashboardPageShell } from '@/components/dashboard/async-resource';
 import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
 import { adsService } from '@/services/ads.service';
@@ -31,6 +32,7 @@ type MonetizationTab =
   | 'advertising'
   | 'ai-marketing'
   | 'fees'
+  | 'pricing'
   | 'catalog'
   | 'coupons'
   | 'purchases';
@@ -40,6 +42,7 @@ const MONETIZATION_TABS: { id: MonetizationTab; label: string }[] = [
   { id: 'advertising', label: 'Advertising' },
   { id: 'ai-marketing', label: 'AI Marketing' },
   { id: 'fees', label: 'Platform fees & cashback' },
+  { id: 'pricing', label: 'SKU pricing' },
   { id: 'catalog', label: 'Listing promotions' },
   { id: 'coupons', label: 'Coupons' },
   { id: 'purchases', label: 'SKU purchases' },
@@ -49,6 +52,7 @@ const PAGE_TITLES: Record<MonetizationTab, string> = {
   advertising: 'Advertising',
   'ai-marketing': 'AI Marketing',
   fees: 'Platform fees & cashback',
+  pricing: 'SKU pricing',
   catalog: 'Listing promotions',
   coupons: 'SKU coupons',
   purchases: 'SKU purchases',
@@ -59,6 +63,8 @@ const PAGE_DESCRIPTIONS: Record<MonetizationTab, string> = {
   'ai-marketing':
     'AI Marketing Hub publish, free units, per-seller overrides, and usage analytics.',
   fees: 'Platform fee defaults, cashback settings, and per-user overrides.',
+  pricing:
+    'Pilot prices for boosts, featured, Keep Live, store slots, packs, and Shop Shelf caps.',
   catalog: 'Manage listing boost and featured placement SKUs.',
   coupons: 'Create redeemable codes for paid products — never for card commission.',
   purchases: 'Refund succeeded platform SKU purchases (boosts, packs, slots, AI credits).',
@@ -188,6 +194,49 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
     }
   }
 
+  async function handleSaveSkuPricing(event: React.FormEvent) {
+    event.preventDefault();
+    if (!settings) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const { pricing } = settings;
+      const updated = await monetizationService.updateMonetizationSettings(role, {
+        pricing: {
+          skus: {
+            boost_7d: pricing.skus.boost_7d,
+            boost_30d: pricing.skus.boost_30d,
+            featured_homepage: pricing.skus.featured_homepage,
+            featured_category: pricing.skus.featured_category,
+            fast_track_verification: pricing.skus.fast_track_verification,
+            store_slot_2: pricing.skus.store_slot_2,
+            store_slot_3: pricing.skus.store_slot_3,
+            store_bundle_3: pricing.skus.store_bundle_3,
+            buyer_statement: pricing.skus.buyer_statement,
+            priority_message: pricing.skus.priority_message,
+            early_cashback_unlock: pricing.skus.early_cashback_unlock,
+            seller_growth_pack: pricing.skus.seller_growth_pack,
+            ai_credit_2: pricing.skus.ai_credit_2,
+            ai_credit_5: pricing.skus.ai_credit_5,
+            ai_credit_10: pricing.skus.ai_credit_10,
+            featured_store_homepage: pricing.skus.featured_store_homepage,
+            keep_live_7d: pricing.skus.keep_live_7d,
+            keep_live_30d: pricing.skus.keep_live_30d,
+          },
+          promos: pricing.promos,
+          featured: pricing.featured,
+          shopShelf: pricing.shopShelf,
+        },
+      });
+      setSettings(updated);
+      feedbackSuccess('Settings saved', 'SKU pricing and Shop Shelf caps updated.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save SKU pricing');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function refreshAdsSystemStatus() {
     try {
       const adsStatus = await adsService.getAdsSystemStatus(role);
@@ -258,6 +307,15 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
                 onMessage={handlePanelMessage}
                 onError={handlePanelError}
                 onGoToAdvertising={() => setActiveTab('advertising')}
+              />
+            )}
+
+            {activeTab === 'pricing' && (
+              <AdminMonetizationSkuPricing
+                settings={settings}
+                saving={saving}
+                onSettingsChange={setSettings}
+                onSave={handleSaveSkuPricing}
               />
             )}
 

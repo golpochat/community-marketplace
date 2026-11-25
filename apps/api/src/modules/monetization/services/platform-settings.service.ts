@@ -31,6 +31,7 @@ export class PlatformSettingsService {
   async update(input: PlatformSettingsUpdateInput): Promise<MonetizationSettings> {
     const current = await this.ensureDefaults();
     const pricing = mergePricingUpdate(current.pricing, {
+      pricing: input.pricing,
       boostPrice7d: input.boostPrice7d,
       boostPrice30d: input.boostPrice30d,
       featuredHomepagePrice: input.featuredHomepagePrice,
@@ -45,6 +46,7 @@ export class PlatformSettingsService {
     });
 
     const pricingChanged =
+      input.pricing !== undefined ||
       input.boostPrice7d !== undefined ||
       input.boostPrice30d !== undefined ||
       input.featuredHomepagePrice !== undefined ||

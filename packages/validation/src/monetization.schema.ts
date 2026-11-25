@@ -8,6 +8,73 @@ import {
 } from './common.schema';
 
 const feePercentSchema = z.number().min(3).max(15);
+const skuAmountSchema = z.number().min(0).max(999);
+const skuConfigPatchSchema = z
+  .object({
+    amount: skuAmountSchema.optional(),
+    enabled: z.boolean().optional(),
+    walletCreditEur: z.number().min(0).max(999).optional(),
+    boostDiscountPercent: z.number().min(0).max(100).optional(),
+  })
+  .strict();
+
+/** Nested pricing patch — preferred for admin SKU catalog edits. */
+export const platformPricingPatchSchema = z
+  .object({
+    skus: z
+      .object({
+        boost_7d: skuConfigPatchSchema.optional(),
+        boost_30d: skuConfigPatchSchema.optional(),
+        featured_homepage: skuConfigPatchSchema.optional(),
+        featured_category: skuConfigPatchSchema.optional(),
+        fast_track_verification: skuConfigPatchSchema.optional(),
+        store_slot_2: skuConfigPatchSchema.optional(),
+        store_slot_3: skuConfigPatchSchema.optional(),
+        store_bundle_3: skuConfigPatchSchema.optional(),
+        buyer_statement: skuConfigPatchSchema.optional(),
+        priority_message: skuConfigPatchSchema.optional(),
+        early_cashback_unlock: skuConfigPatchSchema.optional(),
+        seller_growth_pack: skuConfigPatchSchema.optional(),
+        ai_credit_2: skuConfigPatchSchema.optional(),
+        ai_credit_5: skuConfigPatchSchema.optional(),
+        ai_credit_10: skuConfigPatchSchema.optional(),
+        featured_store_homepage: skuConfigPatchSchema.optional(),
+        keep_live_7d: skuConfigPatchSchema.optional(),
+        keep_live_30d: skuConfigPatchSchema.optional(),
+      })
+      .strict()
+      .optional(),
+    promos: z
+      .object({
+        first_boost_discount_percent: z.number().min(0).max(100).optional(),
+      })
+      .strict()
+      .optional(),
+    featured: z
+      .object({
+        homepage_slots_per_day: z.number().int().min(1).max(100).optional(),
+        category_slots_per_day: z.number().int().min(1).max(100).optional(),
+        store_homepage_slots_per_day: z.number().int().min(1).max(100).optional(),
+      })
+      .strict()
+      .optional(),
+    shopShelf: z
+      .object({
+        primaryFreeLive: z.number().int().min(0).max(100).optional(),
+        extraStoreFreeLive: z.number().int().min(0).max(100).optional(),
+        earnBackExtraDays: z.number().int().min(0).max(90).optional(),
+        enforceHardCap: z.boolean().optional(),
+      })
+      .strict()
+      .optional(),
+    aiMarketing: z
+      .object({
+        freeUnitsMonthly: z.number().int().min(0).max(500).optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
 
 export const platformSettingsUpdateSchema = z.object({
   defaultPlatformFeePercent: feePercentSchema.optional(),
@@ -25,14 +92,17 @@ export const platformSettingsUpdateSchema = z.object({
   aiMarketingEnabled: z.boolean().optional(),
   /** Monthly free AI units for verified sellers (0–500). */
   aiMarketingFreeUnitsMonthly: z.number().int().min(0).max(500).optional(),
-  boostPrice7d: z.number().min(0).max(999).optional(),
-  boostPrice30d: z.number().min(0).max(999).optional(),
-  featuredHomepagePrice: z.number().min(0).max(999).optional(),
-  featuredCategoryPrice: z.number().min(0).max(999).optional(),
-  fastTrackVerificationPrice: z.number().min(0).max(999).optional(),
-  storeSlot2Price: z.number().min(0).max(999).optional(),
-  storeSlot3Price: z.number().min(0).max(999).optional(),
-  storeBundle3Price: z.number().min(0).max(999).optional(),
+  /** Preferred nested pricing update (all SKUs, shelf, slots, promos). */
+  pricing: platformPricingPatchSchema.optional(),
+  /** @deprecated Prefer `pricing.skus` — kept for older clients. */
+  boostPrice7d: skuAmountSchema.optional(),
+  boostPrice30d: skuAmountSchema.optional(),
+  featuredHomepagePrice: skuAmountSchema.optional(),
+  featuredCategoryPrice: skuAmountSchema.optional(),
+  fastTrackVerificationPrice: skuAmountSchema.optional(),
+  storeSlot2Price: skuAmountSchema.optional(),
+  storeSlot3Price: skuAmountSchema.optional(),
+  storeBundle3Price: skuAmountSchema.optional(),
   homepageSlotsPerDay: z.number().int().min(1).max(100).optional(),
   categorySlotsPerDay: z.number().int().min(1).max(100).optional(),
   /** Replace keyword filter config (haram / prohibited content). */

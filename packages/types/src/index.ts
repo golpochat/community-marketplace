@@ -313,6 +313,7 @@ export type {
   MarketingHubBoostSourceStats,
   MarketingHubAnalyticsResponse,
   PlatformSkuConfig,
+  ShopShelfConfig,
   SellerGrowthPackSkuConfig,
   AiCreditPackSkuConfig,
   PlatformPricingConfig,

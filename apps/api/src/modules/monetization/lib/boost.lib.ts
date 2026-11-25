@@ -68,6 +68,8 @@ export const DEFAULT_PLATFORM_PRICING: PlatformPricingConfig = {
     ai_credit_5: { amount: 4.99, enabled: true, walletCreditEur: 5 },
     ai_credit_10: { amount: 9.99, enabled: true, walletCreditEur: 10 },
     featured_store_homepage: { amount: 2.99, enabled: true },
+    keep_live_7d: { amount: 1.99, enabled: true },
+    keep_live_30d: { amount: 4.99, enabled: true },
   },
   promos: { first_boost_discount_percent: 50 },
   featured: {
@@ -78,7 +80,20 @@ export const DEFAULT_PLATFORM_PRICING: PlatformPricingConfig = {
   aiMarketing: {
     freeUnitsMonthly: 10,
   },
+  shopShelf: {
+    primaryFreeLive: 5,
+    extraStoreFreeLive: 3,
+    earnBackExtraDays: 7,
+    enforceHardCap: false,
+  },
 };
+
+function clampNonNegInt(value: unknown, fallback: number, max: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+    return fallback;
+  }
+  return Math.min(max, Math.floor(value));
+}
 
 export function parsePlatformPricing(value: unknown): PlatformPricingConfig {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -92,6 +107,8 @@ export function parsePlatformPricing(value: unknown): PlatformPricingConfig {
     freeUnitsRaw >= 0
       ? Math.min(500, Math.floor(freeUnitsRaw))
       : DEFAULT_PLATFORM_PRICING.aiMarketing!.freeUnitsMonthly;
+  const shelfDefaults = DEFAULT_PLATFORM_PRICING.shopShelf!;
+  const shelfRaw = raw.shopShelf;
   return {
     currency: raw.currency ?? DEFAULT_PLATFORM_PRICING.currency,
     skus: {
@@ -102,6 +119,27 @@ export function parsePlatformPricing(value: unknown): PlatformPricingConfig {
     featured: { ...DEFAULT_PLATFORM_PRICING.featured, ...(raw.featured ?? {}) },
     aiMarketing: {
       freeUnitsMonthly,
+    },
+    shopShelf: {
+      primaryFreeLive: clampNonNegInt(
+        shelfRaw?.primaryFreeLive,
+        shelfDefaults.primaryFreeLive,
+        100,
+      ),
+      extraStoreFreeLive: clampNonNegInt(
+        shelfRaw?.extraStoreFreeLive,
+        shelfDefaults.extraStoreFreeLive,
+        100,
+      ),
+      earnBackExtraDays: clampNonNegInt(
+        shelfRaw?.earnBackExtraDays,
+        shelfDefaults.earnBackExtraDays,
+        90,
+      ),
+      enforceHardCap:
+        typeof shelfRaw?.enforceHardCap === 'boolean'
+          ? shelfRaw.enforceHardCap
+          : shelfDefaults.enforceHardCap,
     },
   };
 }

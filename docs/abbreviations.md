@@ -93,6 +93,7 @@
 | S3 | Amazon Simple Storage Service; R2 speaks the same API |
 | SAQ | Self-assessment questionnaire; PCI SAQ A because we do not store card numbers |
 | SEO | Search engine optimization |
+| Shop Shelf | Free live listing cap per storefront; over-cap uses Keep Live |
 | SKU | Stock-keeping unit; a priced product such as a boost, featured slot, or credit pack |
 | SLA | Service-level agreement; uptime or response-time promise |
 | SMS | Short message service |

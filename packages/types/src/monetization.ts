@@ -140,6 +140,21 @@ export interface AiCreditPackSkuConfig extends PlatformSkuConfig {
   walletCreditEur: number;
 }
 
+/** Shop Shelf free-live caps and Keep Live earn-back (admin-configurable). */
+export interface ShopShelfConfig {
+  /** Free live listings on the seller's primary store. */
+  primaryFreeLive: number;
+  /** Free live listings on each extra storefront. */
+  extraStoreFreeLive: number;
+  /** Extra days of free shelf after a card sale on that listing. */
+  earnBackExtraDays: number;
+  /**
+   * When false, caps are stored for UI/copy only (soft pilot).
+   * Hard pause-over-cap enforcement is a later switch.
+   */
+  enforceHardCap: boolean;
+}
+
 export interface PlatformPricingConfig {
   currency: string;
   skus: {
@@ -159,6 +174,9 @@ export interface PlatformPricingConfig {
     ai_credit_5?: AiCreditPackSkuConfig;
     ai_credit_10?: AiCreditPackSkuConfig;
     featured_store_homepage?: PlatformSkuConfig;
+    /** Extend live window without boost ranking (Shop Shelf over-cap / renew). */
+    keep_live_7d?: PlatformSkuConfig;
+    keep_live_30d?: PlatformSkuConfig;
   };
   promos?: {
     first_boost_discount_percent?: number;
@@ -172,6 +190,8 @@ export interface PlatformPricingConfig {
   aiMarketing?: {
     freeUnitsMonthly: number;
   };
+  /** Free live listing caps per storefront + Keep Live earn-back. */
+  shopShelf?: ShopShelfConfig;
 }
 
 export interface MonetizationSettings {
