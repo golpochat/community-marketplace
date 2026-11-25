@@ -13,6 +13,7 @@ import {
   MarketingHubShell,
   MarketingHubWidget,
 } from "@/components/seller/marketing-hub/marketing-hub-shell";
+import type { ListingAiPreviewMap } from "@/lib/listing-form-draft";
 
 export { MarketingHubRoot } from "@/components/seller/marketing-hub/marketing-hub-shell";
 
@@ -50,6 +51,8 @@ interface ListingMarketingHubProps {
   onApplySuggestedPrice?: (price: string) => void;
   onListingImagesChange?: (images: ListingImage[]) => void;
   onBoostListing?: () => void;
+  aiPreviews?: ListingAiPreviewMap;
+  onAiPreviewsChange?: (previews: ListingAiPreviewMap) => void;
 }
 
 const STEP_COPY: Record<
@@ -59,7 +62,7 @@ const STEP_COPY: Record<
   details: {
     title: "Need help writing?",
     description:
-      "Accept fills title/description · Copy is for social apps · free units first, then €0.05/unit",
+      "AI fills title/description into the fields · Copy is for social apps · free units first, then €0.05/unit",
   },
   pricing: {
     title: "Price guidance",
@@ -89,13 +92,15 @@ function DetailsTitleAssist(props: ListingMarketingHubProps) {
     hiddenTasks = [],
     onAcceptTitle,
     onAcceptDescription,
+    aiPreviews,
+    onAiPreviewsChange,
   } = props;
 
   return (
     <MarketingHubWidget
       title="Improve title"
-      description="AI SEO title applies into the field above"
-      badge="Accept"
+      description="AI SEO title applies into the field above and is kept in your draft"
+      badge="Applies now"
       collapsible
       defaultOpen={false}
       compact
@@ -113,6 +118,8 @@ function DetailsTitleAssist(props: ListingMarketingHubProps) {
         hiddenTasks={[...hiddenTasks, "description"]}
         onAcceptTitle={onAcceptTitle ?? (() => undefined)}
         onAcceptDescription={onAcceptDescription ?? (() => undefined)}
+        initialPreviews={aiPreviews}
+        onPreviewsChange={onAiPreviewsChange}
       />
     </MarketingHubWidget>
   );
@@ -128,17 +135,19 @@ function DetailsDescriptionAssist(props: ListingMarketingHubProps) {
     location,
     price,
     hiddenTasks = [],
-    descriptionAcceptLabel,
+    descriptionAcceptLabel = "Re-apply to field",
     descriptionAssistTitle = "Improve description",
     onAcceptTitle,
     onAcceptDescription,
+    aiPreviews,
+    onAiPreviewsChange,
   } = props;
 
   return (
     <MarketingHubWidget
       title={descriptionAssistTitle}
-      description="AI copy applies into the field above"
-      badge="Accept"
+      description="AI copy applies into the field above and is kept in your draft"
+      badge="Applies now"
       collapsible
       defaultOpen={false}
       compact
@@ -157,6 +166,8 @@ function DetailsDescriptionAssist(props: ListingMarketingHubProps) {
         descriptionAcceptLabel={descriptionAcceptLabel}
         onAcceptTitle={onAcceptTitle ?? (() => undefined)}
         onAcceptDescription={onAcceptDescription ?? (() => undefined)}
+        initialPreviews={aiPreviews}
+        onPreviewsChange={onAiPreviewsChange}
       />
     </MarketingHubWidget>
   );
@@ -176,6 +187,8 @@ function DetailsExtrasAssist(props: ListingMarketingHubProps) {
     descriptionAcceptLabel,
     onAcceptTitle,
     onAcceptDescription,
+    aiPreviews,
+    onAiPreviewsChange,
   } = props;
   const titleReady = title.trim().length >= LISTING_TITLE_MIN_LENGTH;
 
@@ -208,6 +221,8 @@ function DetailsExtrasAssist(props: ListingMarketingHubProps) {
           descriptionAcceptLabel={descriptionAcceptLabel}
           onAcceptTitle={onAcceptTitle ?? (() => undefined)}
           onAcceptDescription={onAcceptDescription ?? (() => undefined)}
+          initialPreviews={aiPreviews}
+          onPreviewsChange={onAiPreviewsChange}
         />
       </MarketingHubWidget>
       <MarketingHubWidget
@@ -271,6 +286,8 @@ export function ListingMarketingHub({
   onApplySuggestedPrice,
   onListingImagesChange,
   onBoostListing,
+  aiPreviews,
+  onAiPreviewsChange,
 }: ListingMarketingHubProps) {
   const copy = STEP_COPY[step];
   const titleReady = title.trim().length >= LISTING_TITLE_MIN_LENGTH;
@@ -298,6 +315,8 @@ export function ListingMarketingHub({
     onApplySuggestedPrice,
     onListingImagesChange,
     onBoostListing,
+    aiPreviews,
+    onAiPreviewsChange,
   };
 
   // Field-scoped details sections: parent should wrap with MarketingHubRoot.
@@ -398,6 +417,8 @@ export function ListingMarketingHub({
               hiddenTasks={hiddenTasks}
               onAcceptTitle={onAcceptTitle ?? (() => undefined)}
               onAcceptDescription={onAcceptDescription ?? (() => undefined)}
+              initialPreviews={aiPreviews}
+              onPreviewsChange={onAiPreviewsChange}
             />
           </MarketingHubWidget>
           <MarketingHubWidget

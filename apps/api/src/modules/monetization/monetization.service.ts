@@ -19,6 +19,7 @@ import { CouponService } from './services/coupon.service';
 import { MonetizationProductService } from './services/monetization-product.service';
 import { PlatformFeeService } from './services/platform-fee.service';
 import { PlatformPurchaseService } from './services/platform-purchase.service';
+import { PlatformPurchaseRefundService } from './services/platform-purchase-refund.service';
 import { PlatformSettingsService } from './services/platform-settings.service';
 import { AiMarketingQuotaService } from './services/ai-marketing-quota.service';
 import { AdsSystemService } from './services/ads-system.service';
@@ -37,6 +38,7 @@ export class MonetizationService {
     private readonly grants: CashbackGrantsService,
     private readonly wallet: BuyerWalletService,
     private readonly purchases: PlatformPurchaseService,
+    private readonly purchaseRefunds: PlatformPurchaseRefundService,
     private readonly products: MonetizationProductService,
     private readonly buyerCashback: BuyerCashbackService,
     private readonly marketingHubAnalytics: MarketingHubAnalyticsService,
@@ -156,6 +158,14 @@ export class MonetizationService {
 
   listPlatformPurchases(filters: Parameters<PlatformPurchaseService['listAdmin']>[0]) {
     return this.purchases.listAdmin(filters);
+  }
+
+  refundPlatformPurchase(
+    adminId: string,
+    purchaseId: string,
+    reason: string,
+  ) {
+    return this.purchaseRefunds.refundPurchase(adminId, purchaseId, reason);
   }
 
   getMarketingHubAnalytics(

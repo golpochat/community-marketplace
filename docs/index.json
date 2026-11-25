@@ -1,8 +1,18 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2026-07-22T16:35:42.985Z",
-  "docCount": 96,
+  "generatedAt": "2026-11-25T08:03:57.296Z",
+  "docCount": 103,
   "categories": {
+    "abbreviations.md": {
+      "label": "abbreviations.md",
+      "files": [
+        {
+          "path": "abbreviations.md",
+          "title": "Abbreviations",
+          "updatedAt": "2026-11-25"
+        }
+      ]
+    },
     "admin-panel.md": {
       "label": "admin-panel.md",
       "files": [
@@ -44,7 +54,7 @@
         {
           "path": "admin/seller-verification.md",
           "title": "Seller Verification (Admin)",
-          "updatedAt": "2026-07-15"
+          "updatedAt": "2026-07-22"
         },
         {
           "path": "admin/settings.md",
@@ -64,7 +74,7 @@
         {
           "path": "api/admin.md",
           "title": "Admin & Super-Admin API",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-20"
         },
         {
           "path": "api/auth.md",
@@ -89,27 +99,27 @@
         {
           "path": "api/notifications.md",
           "title": "Notifications API",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-19"
         },
         {
           "path": "api/payments.md",
           "title": "Payments API",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-07-24"
         },
         {
           "path": "api/README.md",
           "title": "API Documentation",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-19"
         },
         {
           "path": "api/search.md",
           "title": "Search API",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-19"
         },
         {
           "path": "api/users.md",
           "title": "Users API",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-20"
         }
       ]
     },
@@ -119,7 +129,7 @@
         {
           "path": "architecture/data-flow.md",
           "title": "Data Flow Diagrams",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-19"
         },
         {
           "path": "architecture/deployment-architecture.md",
@@ -134,7 +144,7 @@
         {
           "path": "architecture/event-driven.md",
           "title": "Event-Driven Architecture",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-09-19"
         },
         {
           "path": "architecture/modular-monolith.md",
@@ -144,7 +154,7 @@
         {
           "path": "architecture/module-boundaries.md",
           "title": "Module Boundaries",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-19"
         },
         {
           "path": "architecture/README.md",
@@ -319,7 +329,7 @@
         {
           "path": "infrastructure/README.md",
           "title": "Infrastructure — Community Marketplace",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-19"
         }
       ]
     },
@@ -349,7 +359,7 @@
         {
           "path": "onboarding/queues.md",
           "title": "Running Queues (BullMQ)",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-09-19"
         },
         {
           "path": "onboarding/quickstart.md",
@@ -384,12 +394,17 @@
         {
           "path": "product/functional-requirements.md",
           "title": "Functional Requirements",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-07-24"
+        },
+        {
+          "path": "product/haram-enforcement-roadmap.md",
+          "title": "Haram / prohibited content enforcement roadmap",
+          "updatedAt": "2026-11-24"
         },
         {
           "path": "product/launch-checklist.md",
           "title": "Launch Readiness Checklist",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-11-24"
         },
         {
           "path": "product/listing-reserve.md",
@@ -399,12 +414,12 @@
         {
           "path": "product/master-blueprint-v1.md",
           "title": "SellNearby — Master Blueprint (v1)",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-08-19"
         },
         {
           "path": "product/monetization.md",
           "title": "Monetization",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-07-24"
         },
         {
           "path": "product/non-functional-requirements.md",
@@ -414,22 +429,27 @@
         {
           "path": "product/README.md",
           "title": "Product Documentation",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-19"
+        },
+        {
+          "path": "product/revenue-stream-competitive-report.md",
+          "title": "SellNearby revenue streams — competitive report",
+          "updatedAt": "2026-09-19"
         },
         {
           "path": "product/roadmap.md",
           "title": "Product Roadmap",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-08-19"
         },
         {
           "path": "product/seo-audit.md",
           "title": "SellNearby.ie — Comprehensive SEO Audit & Enterprise Roadmap",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-20"
         },
         {
           "path": "product/seo-operations.md",
           "title": "SellNearby.ie — SEO keyword priority & monthly operations",
-          "updatedAt": "2026-07-15"
+          "updatedAt": "2026-09-20"
         },
         {
           "path": "product/storefront-model.md",
@@ -449,7 +469,7 @@
         {
           "path": "README.md",
           "title": "Community Marketplace — Documentation",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-11-25"
         }
       ]
     },
@@ -469,12 +489,27 @@
         {
           "path": "runbooks/deploy.md",
           "title": "Runbook: Deploy",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-09-19"
+        },
+        {
+          "path": "runbooks/dispute-refund-playbook.md",
+          "title": "Dispute and refund playbook (internal)",
+          "updatedAt": "2026-09-20"
         },
         {
           "path": "runbooks/ovh-vps-deploy.md",
           "title": "OVH VPS deploy — SellNearby pilot",
-          "updatedAt": "2026-07-09"
+          "updatedAt": "2026-09-19"
+        },
+        {
+          "path": "runbooks/path-a-bep-checklist.md",
+          "title": "Path A → ops cash BEP checklist",
+          "updatedAt": "2026-11-24"
+        },
+        {
+          "path": "runbooks/pilot-concierge-gtm.md",
+          "title": "Concierge GTM — Dublin wedge (internal)",
+          "updatedAt": "2026-11-24"
         },
         {
           "path": "runbooks/pilot-feedback.md",
@@ -484,22 +519,27 @@
         {
           "path": "runbooks/pilot-kickoff.md",
           "title": "Pilot kickoff runbook",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-11-24"
+        },
+        {
+          "path": "runbooks/pilot-testing.md",
+          "title": "SellNearby pilot testing guide",
+          "updatedAt": "2026-08-19"
         },
         {
           "path": "runbooks/pilot-vps-day-by-day.md",
           "title": "SellNearby.ie — VPS pilot day-by-day checklist",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-20"
         },
         {
           "path": "runbooks/README.md",
           "title": "Operational Runbooks",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-11-24"
         },
         {
           "path": "runbooks/restore-backup.md",
           "title": "Runbook: Restore Backup",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-09-19"
         },
         {
           "path": "runbooks/rollback.md",
@@ -524,7 +564,7 @@
         {
           "path": "security/api-security.md",
           "title": "API Security",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-09-20"
         },
         {
           "path": "security/authentication.md",
@@ -534,12 +574,12 @@
         {
           "path": "security/checklist.md",
           "title": "Developer Security Checklist",
-          "updatedAt": "2026-06-24"
+          "updatedAt": "2026-09-19"
         },
         {
           "path": "security/rbac.md",
           "title": "RBAC Security Model",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-19"
         },
         {
           "path": "security/README.md",
@@ -564,7 +604,7 @@
         {
           "path": "TESTING.md",
           "title": "Testing Guide",
-          "updatedAt": "2026-07-22"
+          "updatedAt": "2026-09-19"
         }
       ]
     },
@@ -580,6 +620,13 @@
     }
   },
   "files": [
+    {
+      "path": "abbreviations.md",
+      "title": "Abbreviations",
+      "category": "abbreviations.md",
+      "categoryId": "abbreviations.md",
+      "updatedAt": "2026-11-25"
+    },
     {
       "path": "admin-panel.md",
       "title": "Admin Panel (moved)",
@@ -627,7 +674,7 @@
       "title": "Seller Verification (Admin)",
       "category": "Admin Guide",
       "categoryId": "admin",
-      "updatedAt": "2026-07-15"
+      "updatedAt": "2026-07-22"
     },
     {
       "path": "admin/settings.md",
@@ -648,7 +695,7 @@
       "title": "Admin & Super-Admin API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-20"
     },
     {
       "path": "api/auth.md",
@@ -683,42 +730,42 @@
       "title": "Notifications API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "api/payments.md",
       "title": "Payments API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-07-24"
     },
     {
       "path": "api/README.md",
       "title": "API Documentation",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "api/search.md",
       "title": "Search API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "api/users.md",
       "title": "Users API",
       "category": "API Reference",
       "categoryId": "api",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-20"
     },
     {
       "path": "architecture/data-flow.md",
       "title": "Data Flow Diagrams",
       "category": "Architecture",
       "categoryId": "architecture",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "architecture/deployment-architecture.md",
@@ -739,7 +786,7 @@
       "title": "Event-Driven Architecture",
       "category": "Architecture",
       "categoryId": "architecture",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "architecture/modular-monolith.md",
@@ -753,7 +800,7 @@
       "title": "Module Boundaries",
       "category": "Architecture",
       "categoryId": "architecture",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "architecture/README.md",
@@ -956,7 +1003,7 @@
       "title": "Infrastructure — Community Marketplace",
       "category": "Infrastructure",
       "categoryId": "infrastructure",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "onboarding/deployment.md",
@@ -991,7 +1038,7 @@
       "title": "Running Queues (BullMQ)",
       "category": "Developer Onboarding",
       "categoryId": "onboarding",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "onboarding/quickstart.md",
@@ -1033,14 +1080,21 @@
       "title": "Functional Requirements",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-07-24"
+    },
+    {
+      "path": "product/haram-enforcement-roadmap.md",
+      "title": "Haram / prohibited content enforcement roadmap",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-11-24"
     },
     {
       "path": "product/launch-checklist.md",
       "title": "Launch Readiness Checklist",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-11-24"
     },
     {
       "path": "product/listing-reserve.md",
@@ -1054,14 +1108,14 @@
       "title": "SellNearby — Master Blueprint (v1)",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-08-19"
     },
     {
       "path": "product/monetization.md",
       "title": "Monetization",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-07-24"
     },
     {
       "path": "product/non-functional-requirements.md",
@@ -1075,28 +1129,35 @@
       "title": "Product Documentation",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-19"
+    },
+    {
+      "path": "product/revenue-stream-competitive-report.md",
+      "title": "SellNearby revenue streams — competitive report",
+      "category": "Product",
+      "categoryId": "product",
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "product/roadmap.md",
       "title": "Product Roadmap",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-08-19"
     },
     {
       "path": "product/seo-audit.md",
       "title": "SellNearby.ie — Comprehensive SEO Audit & Enterprise Roadmap",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-20"
     },
     {
       "path": "product/seo-operations.md",
       "title": "SellNearby.ie — SEO keyword priority & monthly operations",
       "category": "Product",
       "categoryId": "product",
-      "updatedAt": "2026-07-15"
+      "updatedAt": "2026-09-20"
     },
     {
       "path": "product/storefront-model.md",
@@ -1117,7 +1178,7 @@
       "title": "Community Marketplace — Documentation",
       "category": "README.md",
       "categoryId": "README.md",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-11-25"
     },
     {
       "path": "RELEASE.md",
@@ -1131,14 +1192,35 @@
       "title": "Runbook: Deploy",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-09-19"
+    },
+    {
+      "path": "runbooks/dispute-refund-playbook.md",
+      "title": "Dispute and refund playbook (internal)",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-09-20"
     },
     {
       "path": "runbooks/ovh-vps-deploy.md",
       "title": "OVH VPS deploy — SellNearby pilot",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-07-09"
+      "updatedAt": "2026-09-19"
+    },
+    {
+      "path": "runbooks/path-a-bep-checklist.md",
+      "title": "Path A → ops cash BEP checklist",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-11-24"
+    },
+    {
+      "path": "runbooks/pilot-concierge-gtm.md",
+      "title": "Concierge GTM — Dublin wedge (internal)",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-11-24"
     },
     {
       "path": "runbooks/pilot-feedback.md",
@@ -1152,28 +1234,35 @@
       "title": "Pilot kickoff runbook",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-11-24"
+    },
+    {
+      "path": "runbooks/pilot-testing.md",
+      "title": "SellNearby pilot testing guide",
+      "category": "Runbooks",
+      "categoryId": "runbooks",
+      "updatedAt": "2026-08-19"
     },
     {
       "path": "runbooks/pilot-vps-day-by-day.md",
       "title": "SellNearby.ie — VPS pilot day-by-day checklist",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-20"
     },
     {
       "path": "runbooks/README.md",
       "title": "Operational Runbooks",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-11-24"
     },
     {
       "path": "runbooks/restore-backup.md",
       "title": "Runbook: Restore Backup",
       "category": "Runbooks",
       "categoryId": "runbooks",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "runbooks/rollback.md",
@@ -1201,7 +1290,7 @@
       "title": "API Security",
       "category": "Security",
       "categoryId": "security",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-09-20"
     },
     {
       "path": "security/authentication.md",
@@ -1215,14 +1304,14 @@
       "title": "Developer Security Checklist",
       "category": "Security",
       "categoryId": "security",
-      "updatedAt": "2026-06-24"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "security/rbac.md",
       "title": "RBAC Security Model",
       "category": "Security",
       "categoryId": "security",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "security/README.md",
@@ -1243,7 +1332,7 @@
       "title": "Testing Guide",
       "category": "TESTING.md",
       "categoryId": "TESTING.md",
-      "updatedAt": "2026-07-22"
+      "updatedAt": "2026-09-19"
     },
     {
       "path": "troubleshooting.md",

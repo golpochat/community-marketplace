@@ -193,3 +193,187 @@ export const IRELAND_COUNTIES: IrelandCounty[] = [
 ];
 
 export const USER_LOCATION_STORAGE_KEY = 'cm-user-location';
+
+export const IRELAND_COUNTY_NAMES = IRELAND_COUNTIES.map((county) => county.name);
+
+function normalizeLocationToken(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/['’]/g, '')
+    .replace(/\s+/g, ' ');
+}
+
+/** Counties longest-first so "Westmeath" wins over "Meath" in substring matches. */
+function countiesLongestFirst(): IrelandCounty[] {
+  return [...IRELAND_COUNTIES].sort((a, b) => b.name.length - a.name.length);
+}
+
+export function findIrelandCounty(name: string): IrelandCounty | undefined {
+  const needle = normalizeLocationToken(name);
+  if (!needle) return undefined;
+  return IRELAND_COUNTIES.find(
+    (county) => normalizeLocationToken(county.name) === needle,
+  );
+}
+
+export function findIrelandPlace(
+  county: IrelandCounty,
+  placeName: string,
+): IrelandPlace | undefined {
+  const needle = normalizeLocationToken(placeName);
+  if (!needle) return undefined;
+  return county.places.find(
+    (place) => normalizeLocationToken(place.name) === needle,
+  );
+}
+
+/** Best-effort match for free-text store/listing labels onto a county. */
+export function matchIrelandCounty(
+  raw?: string | null,
+): IrelandCounty | undefined {
+  if (!raw?.trim()) return undefined;
+  const normalized = normalizeLocationToken(raw);
+  const exact = findIrelandCounty(normalized);
+  if (exact) return exact;
+
+  for (const county of countiesLongestFirst()) {
+    for (const place of county.places) {
+      if (normalizeLocationToken(place.name) === normalized) {
+        return county;
+      }
+    }
+  }
+
+  for (const county of countiesLongestFirst()) {
+    const countyToken = normalizeLocationToken(county.name);
+    if (
+      normalized === countyToken ||
+      normalized.startsWith(`${countyToken} `) ||
+      normalized.endsWith(` ${countyToken}`) ||
+      normalized.includes(`, ${countyToken}`) ||
+      normalized.includes(`${countyToken},`)
+    ) {
+      return county;
+    }
+  }
+
+  return undefined;
+}
+
+export function matchIrelandPlaceInCounty(
+  county: IrelandCounty,
+  raw?: string | null,
+): IrelandPlace | undefined {
+  if (!raw?.trim()) return undefined;
+  const normalized = normalizeLocationToken(raw);
+  const exact = findIrelandPlace(county, normalized);
+  if (exact) return exact;
+
+  // Labels like "Dundrum, Dublin" or legacy "Dublin 8" near a known place name.
+  for (const place of county.places) {
+    const placeToken = normalizeLocationToken(place.name);
+    if (
+      normalized === placeToken ||
+      normalized.startsWith(`${placeToken},`) ||
+      normalized.startsWith(`${placeToken} `) ||
+      normalized.includes(`, ${placeToken}`)
+    ) {
+      return place;
+    }
+  }
+
+  return undefined;
+}
+
+export function formatIrelandListingLocationLabel(
+  placeName: string,
+  countyName: string,
+): string {
+  return `${placeName.trim()}, ${countyName.trim()}`;
+}
+
+export type ParsedIrelandLocation = {
+  county: IrelandCounty;
+  place: IrelandPlace | null;
+  label: string;
+};
+
+/** Parse "Town, County" (preferred) or a single county/town token. */
+export function parseIrelandLocationLabel(
+  raw?: string | null,
+): ParsedIrelandLocation | null {
+  if (!raw?.trim()) return null;
+  const trimmed = raw.trim();
+  const parts = trimmed
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (parts.length >= 2) {
+    const placePart = parts[0]!;
+    const countyPart = parts[parts.length - 1]!;
+    const county =
+      findIrelandCounty(countyPart) ?? matchIrelandCounty(countyPart);
+    if (!county) return null;
+    const place =
+      findIrelandPlace(county, placePart) ??
+      matchIrelandPlaceInCounty(county, placePart);
+    return {
+      county,
+      place: place ?? null,
+      label: place
+        ? formatIrelandListingLocationLabel(place.name, county.name)
+        : county.name,
+    };
+  }
+
+  const asCounty = matchIrelandCounty(trimmed);
+  if (asCounty && normalizeLocationToken(asCounty.name) === normalizeLocationToken(trimmed)) {
+    return { county: asCounty, place: null, label: asCounty.name };
+  }
+
+  if (asCounty) {
+    const place = matchIrelandPlaceInCounty(asCounty, trimmed);
+    if (place) {
+      return {
+        county: asCounty,
+        place,
+        label: formatIrelandListingLocationLabel(place.name, asCounty.name),
+      };
+    }
+    return { county: asCounty, place: null, label: asCounty.name };
+  }
+
+  return null;
+}
+
+export type ResolvedIrelandGeo = {
+  label: string;
+  latitude: number;
+  longitude: number;
+  countyName: string;
+  placeName: string;
+};
+
+/**
+ * Resolve listing geo from a structured "Town, County" label.
+ * Falls back to the county's first town only when a place cannot be resolved.
+ */
+export function resolveIrelandListingGeo(
+  raw?: string | null,
+): ResolvedIrelandGeo | null {
+  const parsed = parseIrelandLocationLabel(raw);
+  if (!parsed) return null;
+  const place = parsed.place ?? parsed.county.places[0];
+  if (!place) return null;
+  return {
+    label: formatIrelandListingLocationLabel(place.name, parsed.county.name),
+    latitude: place.latitude,
+    longitude: place.longitude,
+    countyName: parsed.county.name,
+    placeName: place.name,
+  };
+}

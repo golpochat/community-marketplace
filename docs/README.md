@@ -25,6 +25,7 @@
 ```
 docs/
 ├── README.md                 ← You are here
+├── abbreviations.md          ← Living abbreviation glossary
 ├── STANDARDS.md              ← Writing & formatting standards
 ├── index.json                ← Machine-readable index (search integration)
 ├── architecture/             ← System design & diagrams
@@ -127,6 +128,7 @@ Also live (see [api/README](./api/README.md)): monetization `/api/ads`, AI marke
 - [Release process](./RELEASE.md) — semver & tagging
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — code & docs contributions
 - [Documentation standards](./STANDARDS.md) — formatting rules
+- [Abbreviations](./abbreviations.md) — short forms used in docs and ops notes
 
 ---
 

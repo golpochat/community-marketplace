@@ -55,10 +55,18 @@ import {
 } from "@/components/seller/listing-image-previews";
 import { ListingPreviewDialog } from "@/components/seller/listing-preview-dialog";
 import {
+  defaultListingLocationFromStore,
+  IrelandCountyPlaceFields,
+  isCompleteIrelandListingLocation,
+} from "@/components/seller/ireland-location-fields";
+import {
   clearGenericListingDraft,
   loadGenericListingDraft,
+  sanitizeAiPreviews,
   saveGenericListingDraft,
+  type ListingAiPreviewMap,
 } from "@/lib/listing-form-draft";
+import { parseIrelandLocationLabel } from "@/lib/ireland-locations";
 import { deliveryService } from "@/services/delivery.service";
 import {
   pricingInputFromForm,
@@ -128,6 +136,8 @@ function normalizeInitialData(
 interface ListingFormProps {
   categories?: Array<{ id: string; name: string }>;
   initialData?: Partial<ListingFormData>;
+  /** Storefront county/area — seeds listing location on create. */
+  defaultStoreLocation?: string;
   initialDeliverySelections?: ListingDeliverySelection[];
   existingImages?: ListingImage[];
   listingId?: string;
@@ -158,6 +168,7 @@ interface ListingFormProps {
 export function ListingForm({
   categories = [],
   initialData,
+  defaultStoreLocation,
   initialDeliverySelections = [],
   existingImages = [],
   listingId,
@@ -187,6 +198,7 @@ export function ListingForm({
   const isCreateFlow = !listingId;
   const draftHydratedRef = useRef(false);
   const suppressDraftPersistRef = useRef(false);
+  const locationTouchedRef = useRef(Boolean(initialData?.location?.trim()));
 
   const [step, setStep] = useState(() => {
     if (typeof initialStep === 'number' && initialStep >= 0 && initialStep < STEPS.length) {
@@ -196,6 +208,7 @@ export function ListingForm({
   });
   const [highestCompletedStep, setHighestCompletedStep] = useState(-1);
   const [resumedDraft, setResumedDraft] = useState(false);
+  const [aiPreviews, setAiPreviews] = useState<ListingAiPreviewMap>({});
   const [data, setData] = useState<ListingFormData>({
     ...INITIAL,
     ...normalizeInitialData(initialData),
@@ -247,11 +260,42 @@ export function ListingForm({
       ...draft.data,
       images: prev.images,
     }));
+    const restoredAi = sanitizeAiPreviews(draft.aiPreviews);
+    if (restoredAi) setAiPreviews(restoredAi);
+    if (draft.data.location?.trim()) {
+      locationTouchedRef.current = true;
+    }
     setResumedDraft(true);
     if (draft.data.delivery?.selectedOptionIds?.length) {
       deliverySeededRef.current = true;
     }
   }, [isCreateFlow]);
+
+  useEffect(() => {
+    if (!isCreateFlow || !defaultStoreLocation) return;
+    const seeded = defaultListingLocationFromStore(defaultStoreLocation);
+    if (!seeded) return;
+
+    setData((prev) => {
+      const currentComplete = isCompleteIrelandListingLocation(prev.location);
+      const currentCounty = parseIrelandLocationLabel(prev.location)?.county.name;
+      if (locationTouchedRef.current && currentComplete) {
+        if (currentCounty === seeded.countyName) return prev;
+        // Storefront county changed after a completed pick — follow the store.
+      }
+      if (
+        locationTouchedRef.current &&
+        currentCounty === seeded.countyName &&
+        !currentComplete
+      ) {
+        return prev;
+      }
+      if (!prev.location.trim() || currentCounty !== seeded.countyName) {
+        return { ...prev, location: seeded.label };
+      }
+      return prev;
+    });
+  }, [isCreateFlow, defaultStoreLocation]);
 
   useEffect(() => {
     if (!isCreateFlow || !draftHydratedRef.current || suppressDraftPersistRef.current) {
@@ -264,15 +308,18 @@ export function ListingForm({
         step,
         highestCompletedStep,
         data: persistable,
+        aiPreviews,
       });
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [isCreateFlow, step, highestCompletedStep, data]);
+  }, [isCreateFlow, step, highestCompletedStep, data, aiPreviews]);
 
   function discardResumedDraft() {
     suppressDraftPersistRef.current = true;
     clearGenericListingDraft();
     setResumedDraft(false);
+    setAiPreviews({});
+    locationTouchedRef.current = false;
     setStep(0);
     setHighestCompletedStep(-1);
     setValidationError(null);
@@ -281,6 +328,8 @@ export function ListingForm({
       ...INITIAL,
       categoryId: categories[0]?.id ?? "",
       delivery: EMPTY_DELIVERY,
+      location:
+        defaultListingLocationFromStore(defaultStoreLocation)?.label ?? "",
     });
     deliverySeededRef.current = false;
     // Allow autosave again for the blank form
@@ -371,7 +420,9 @@ export function ListingForm({
         return "Select a category.";
     }
     if (stepIndex === 2) {
-      if (!data.location.trim()) return "Enter a location label.";
+      if (!isCompleteIrelandListingLocation(data.location)) {
+        return "Select a county and town/area.";
+      }
       return validateDeliveryForm(catalog, data.delivery);
     }
     return null;
@@ -505,6 +556,7 @@ export function ListingForm({
         suppressDraftPersistRef.current = true;
         clearGenericListingDraft();
         setResumedDraft(false);
+        setAiPreviews({});
       }
       setShowPricingPreview(false);
       onSubmit?.(data);
@@ -820,6 +872,8 @@ export function ListingForm({
                 price={data.salePrice}
                 onAcceptTitle={(next) => update({ title: next })}
                 onAcceptDescription={(next) => update({ description: next })}
+                aiPreviews={aiPreviews}
+                onAiPreviewsChange={setAiPreviews}
               />
             </div>
             <div>
@@ -862,6 +916,8 @@ export function ListingForm({
                 price={data.salePrice}
                 onAcceptTitle={(next) => update({ title: next })}
                 onAcceptDescription={(next) => update({ description: next })}
+                aiPreviews={aiPreviews}
+                onAiPreviewsChange={setAiPreviews}
               />
             </div>
             <ListingMarketingHub
@@ -879,6 +935,8 @@ export function ListingForm({
               price={data.salePrice}
               onAcceptTitle={(next) => update({ title: next })}
               onAcceptDescription={(next) => update({ description: next })}
+              aiPreviews={aiPreviews}
+              onAiPreviewsChange={setAiPreviews}
             />
           </div>
         </MarketingHubRoot>
@@ -1025,18 +1083,15 @@ export function ListingForm({
 
       {step === 2 && (
         <div className="space-y-6">
-          <div>
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={data.location}
-              onChange={(e) => update({ location: e.target.value })}
-              placeholder="City or area (e.g. Dublin)"
-            />
-            <p className="mt-1 text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
-              Where buyers can collect the item or where delivery starts from.
-            </p>
-          </div>
+          <IrelandCountyPlaceFields
+            value={data.location}
+            disabled={disabled}
+            required
+            onChange={(next) => {
+              locationTouchedRef.current = true;
+              update({ location: next.label });
+            }}
+          />
 
           <div className="border-t border-[hsl(var(--dashboard-sidebar-border))] pt-6">
             {isFreeListing && (

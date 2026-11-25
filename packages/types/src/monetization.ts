@@ -219,6 +219,8 @@ export interface PlatformPurchase {
   invoiceAvailable?: boolean;
   createdAt: string;
   updatedAt: string;
+  /** Present on admin purchase lists. */
+  userEmail?: string;
 }
 
 export interface BoostIntentResponse {

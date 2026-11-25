@@ -23,6 +23,7 @@ import {
   monetizationProductUpsertSchema,
   monetizationSellerSearchSchema,
   platformPurchasesAdminFiltersSchema,
+  refundPlatformPurchaseSchema,
   platformSettingsUpdateSchema,
   sellerFeeOverrideSchema,
   sellerAiFreeUnitsOverrideSchema,
@@ -241,6 +242,17 @@ export class AdminMonetizationController {
       userId: query.userId,
     });
     return this.monetization.listPlatformPurchases(filters);
+  }
+
+  @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)
+  @Post('platform-purchases/:id/refund')
+  refundPlatformPurchase(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() body: unknown,
+  ) {
+    const dto = refundPlatformPurchaseSchema.parse(body);
+    return this.monetization.refundPlatformPurchase(user.id, id, dto.reason);
   }
 
   @RequirePermissions(PERMISSIONS.MANAGE_PAYMENTS)

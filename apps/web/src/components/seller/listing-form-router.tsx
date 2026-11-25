@@ -150,6 +150,9 @@ export function ListingFormRouter({
     genericInitialData?.storeId ||
     '';
 
+  const selectedStore = stores.find((store) => store.id === resolvedStoreId);
+  const defaultStoreLocation = selectedStore?.location;
+
   const formDisabled = disabled || storesLoading || stores.length === 0;
 
   function withStoreId<T extends { storeId?: string }>(data: T): T {
@@ -197,6 +200,7 @@ export function ListingFormRouter({
         <VehicleListingForm
           categoryId={categoryId}
           initialData={vehicleInitialData}
+          defaultStoreLocation={isCreateFlow ? defaultStoreLocation : undefined}
           initialDeliverySelections={initialDeliverySelections}
           existingImages={existingImages}
           listingId={listingId}
@@ -226,6 +230,7 @@ export function ListingFormRouter({
         <ListingForm
           categories={categories}
           initialData={{ ...genericInitialData, categoryId }}
+          defaultStoreLocation={isCreateFlow ? defaultStoreLocation : undefined}
           initialDeliverySelections={initialDeliverySelections}
           existingImages={existingImages}
           listingId={listingId}

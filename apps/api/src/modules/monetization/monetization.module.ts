@@ -43,6 +43,7 @@ import { MonetizationProductService } from './services/monetization-product.serv
 import { CouponService } from './services/coupon.service';
 import { PlatformFeeService } from './services/platform-fee.service';
 import { PlatformPurchaseService } from './services/platform-purchase.service';
+import { PlatformPurchaseRefundService } from './services/platform-purchase-refund.service';
 import { PlatformPurchaseReceiptService } from './services/platform-purchase-receipt.service';
 import { PlatformSettingsService } from './services/platform-settings.service';
 import { AiMarketingQuotaService } from './services/ai-marketing-quota.service';
@@ -112,6 +113,7 @@ import { AiMarketingModule } from '../ai-marketing/ai-marketing.module';
     GrowthPackFulfillmentService,
     MarketingHubAnalyticsService,
     PlatformPurchaseService,
+    PlatformPurchaseRefundService,
     PlatformPurchaseReceiptService,
     BoostExpiryJobService,
     VerificationFeeListener,

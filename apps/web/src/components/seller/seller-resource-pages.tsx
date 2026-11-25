@@ -94,6 +94,7 @@ import {
   buildVehicleListingUpdatePayload,
   vehicleFormDataFromListing,
 } from "@/lib/vehicle-listing-payload";
+import { resolveIrelandListingGeo } from "@/lib/ireland-locations";
 import { isVehicleCategory } from "@/lib/vehicle-catalog";
 import { selectionsFromDeliveryState } from "@/components/seller/delivery-options-section";
 import { useAuth } from "@/hooks/use-auth";
@@ -163,6 +164,10 @@ function buildListingCreatePayload(
   const originalPrice = data.originalPrice.trim()
     ? Number(data.originalPrice)
     : undefined;
+  const geo = resolveIrelandListingGeo(data.location);
+  if (!geo) {
+    throw new Error("Select a county and town/area for the listing location.");
+  }
   return {
     title: data.title.trim(),
     description: data.description.trim(),
@@ -173,9 +178,9 @@ function buildListingCreatePayload(
     categoryId,
     condition: data.condition,
     location: {
-      label: data.location.trim() || "Ireland",
-      latitude: 53.3498,
-      longitude: -6.2603,
+      label: geo.label,
+      latitude: geo.latitude,
+      longitude: geo.longitude,
     },
     deliverySelections: deliverySelections.map((s) => ({
       deliveryOptionId: s.deliveryOptionId,

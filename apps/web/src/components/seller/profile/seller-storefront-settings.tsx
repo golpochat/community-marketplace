@@ -15,8 +15,10 @@ import { Button, Input, Label, useAppFeedback } from '@community-marketplace/ui'
 import { Card } from '@community-marketplace/ui-dashboard';
 
 import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
+import { IrelandCountySelect } from '@/components/seller/ireland-location-fields';
 import { StoreMarketingHub } from '@/components/seller/marketing-hub/store-marketing-hub';
 import { formatStoreLimits } from '@/hooks/use-seller-store-data';
+import { matchIrelandCounty } from '@/lib/ireland-locations';
 import { getPublicStorefrontPath } from '@/lib/storefront-path';
 import { sellerService } from '@/services/marketplace.service';
 
@@ -107,7 +109,11 @@ export function SellerStorefrontSettings({
     if (activeStore) {
       setName(activeStore.name ?? '');
       setDescription(activeStore.description ?? '');
-      setLocation(activeStore.location ?? '');
+      setLocation(
+        matchIrelandCounty(activeStore.location)?.name ??
+          activeStore.location ??
+          '',
+      );
       setContact(mergeStoreContact(activeStore.contact));
       setOpeningHours(mergeStoreOpeningHours(activeStore.openingHours));
       setPolicies(mergeStorePolicies(activeStore.policies));
@@ -122,13 +128,19 @@ export function SellerStorefrontSettings({
   }, []);
 
   const handleCreate = useCallback(async () => {
+    if (!createName.trim()) return;
+    const county = matchIrelandCounty(createLocation);
+    if (!county) {
+      setError('Select an Irish county for the storefront location.');
+      return;
+    }
     setCreating(true);
     setError(null);
     try {
       const created = await sellerService.createStore({
         name: createName.trim(),
         description: createDescription.trim() || undefined,
-        location: createLocation.trim() || undefined,
+        location: county.name,
       });
       setStores((current) => [...current, created]);
       setActiveStoreId(created.id);
@@ -147,13 +159,18 @@ export function SellerStorefrontSettings({
 
   const handleSave = useCallback(async () => {
     if (!activeStore) return;
+    const county = matchIrelandCounty(location);
+    if (!county) {
+      setError('Select an Irish county for the storefront location.');
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       const updated = await sellerService.updateStore(activeStore.id, {
         name: name.trim(),
         description: description.trim() || undefined,
-        location: location.trim() || undefined,
+        location: county.name,
         contact: {
           ...contact,
           phone: contact.phone?.trim() || undefined,
@@ -222,18 +239,23 @@ export function SellerStorefrontSettings({
                 className={TEXTAREA_CLASSES}
               />
             </div>
-            <div>
-              <Label htmlFor="create-store-location">Store location</Label>
-              <Input
-                id="create-store-location"
-                value={createLocation}
-                onChange={(e) => setCreateLocation(e.target.value)}
-                placeholder="e.g. Dublin"
-              />
-            </div>
+            <IrelandCountySelect
+              id="create-store-location"
+              label="Store county"
+              value={createLocation}
+              onChange={setCreateLocation}
+              disabled={creating}
+              required
+              hint="Used as the default county when you create listings."
+            />
             <Button
               type="button"
-              disabled={creating || !createName.trim() || limits?.canCreateStore === false}
+              disabled={
+                creating ||
+                !createName.trim() ||
+                !matchIrelandCounty(createLocation) ||
+                limits?.canCreateStore === false
+              }
               onClick={() => void handleCreate()}
             >
               {creating ? 'Creating…' : 'Create storefront'}
@@ -302,19 +324,23 @@ export function SellerStorefrontSettings({
                   className={TEXTAREA_CLASSES}
                 />
               </div>
-              <div>
-                <Label htmlFor="add-store-location">Store location</Label>
-                <Input
-                  id="add-store-location"
-                  value={createLocation}
-                  onChange={(e) => setCreateLocation(e.target.value)}
-                  placeholder="e.g. Dublin"
-                />
-              </div>
+              <IrelandCountySelect
+                id="add-store-location"
+                label="Store county"
+                value={createLocation}
+                onChange={setCreateLocation}
+                disabled={creating}
+                required
+                hint="Used as the default county when you create listings."
+              />
               <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
-                  disabled={creating || !createName.trim()}
+                  disabled={
+                    creating ||
+                    !createName.trim() ||
+                    !matchIrelandCounty(createLocation)
+                  }
                   onClick={() => void handleCreate()}
                 >
                   {creating ? 'Creating…' : 'Create storefront'}
@@ -413,15 +439,15 @@ export function SellerStorefrontSettings({
                       />
                     </div>
 
-                    <div>
-                      <Label htmlFor="storefront-location">Store location</Label>
-                      <Input
-                        id="storefront-location"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        placeholder="e.g. Dublin"
-                      />
-                    </div>
+                    <IrelandCountySelect
+                      id="storefront-location"
+                      label="Store county"
+                      value={location}
+                      onChange={setLocation}
+                      disabled={saving}
+                      required
+                      hint="Used as the default county when you create listings."
+                    />
 
                     <p className="text-xs text-[hsl(var(--dashboard-sidebar-muted))]">
                       Public URL: /store/{activeStore.slug}

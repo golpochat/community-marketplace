@@ -16,6 +16,7 @@ import { AdminMonetizationBuyerCashbackOverrides } from '@/components/dashboard/
 import { AdminMonetizationCoupons } from '@/components/dashboard/admin-monetization-coupons';
 import { AdminMonetizationFeeOverrides } from '@/components/dashboard/admin-monetization-fee-overrides';
 import { AdminMonetizationProductCatalog } from '@/components/dashboard/admin-monetization-product-catalog';
+import { AdminMonetizationPurchases } from '@/components/dashboard/admin-monetization-purchases';
 import { DashboardPageShell } from '@/components/dashboard/async-resource';
 import { DashboardSectionTabs } from '@/components/dashboard/dashboard-section-tabs';
 import { adsService } from '@/services/ads.service';
@@ -26,7 +27,13 @@ interface AdminMonetizationPageProps {
   role: AdminServiceRole;
 }
 
-type MonetizationTab = 'advertising' | 'ai-marketing' | 'fees' | 'catalog' | 'coupons';
+type MonetizationTab =
+  | 'advertising'
+  | 'ai-marketing'
+  | 'fees'
+  | 'catalog'
+  | 'coupons'
+  | 'purchases';
 type FeesSubTab = 'seller' | 'buyer';
 
 const MONETIZATION_TABS: { id: MonetizationTab; label: string }[] = [
@@ -35,6 +42,7 @@ const MONETIZATION_TABS: { id: MonetizationTab; label: string }[] = [
   { id: 'fees', label: 'Platform fees & cashback' },
   { id: 'catalog', label: 'Listing promotions' },
   { id: 'coupons', label: 'Coupons' },
+  { id: 'purchases', label: 'SKU purchases' },
 ];
 
 const PAGE_TITLES: Record<MonetizationTab, string> = {
@@ -43,6 +51,7 @@ const PAGE_TITLES: Record<MonetizationTab, string> = {
   fees: 'Platform fees & cashback',
   catalog: 'Listing promotions',
   coupons: 'SKU coupons',
+  purchases: 'SKU purchases',
 };
 
 const PAGE_DESCRIPTIONS: Record<MonetizationTab, string> = {
@@ -52,6 +61,7 @@ const PAGE_DESCRIPTIONS: Record<MonetizationTab, string> = {
   fees: 'Platform fee defaults, cashback settings, and per-user overrides.',
   catalog: 'Manage listing boost and featured placement SKUs.',
   coupons: 'Create redeemable codes for paid products — never for card commission.',
+  purchases: 'Refund succeeded platform SKU purchases (boosts, packs, slots, AI credits).',
 };
 
 const FEES_SUB_TABS: { id: FeesSubTab; label: string }[] = [
@@ -474,6 +484,10 @@ export function AdminMonetizationPage({ role }: AdminMonetizationPageProps) {
 
             <div hidden={activeTab !== 'coupons'}>
               <AdminMonetizationCoupons role={role} />
+            </div>
+
+            <div hidden={activeTab !== 'purchases'}>
+              <AdminMonetizationPurchases role={role} />
             </div>
           </>
         )}

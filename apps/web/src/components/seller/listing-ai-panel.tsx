@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@community-marketplace/ui";
 import {
@@ -13,6 +13,7 @@ import {
 
 import { ApiClientError } from "@/lib/api-client";
 import { useMarketingHubOptional } from "@/components/seller/marketing-hub/marketing-hub-context";
+import type { ListingAiPreviewMap } from "@/lib/listing-form-draft";
 import { aiMarketingService } from "@/services/ai-marketing.service";
 
 interface ListingAiPanelProps {
@@ -31,6 +32,10 @@ interface ListingAiPanelProps {
   requireTitleMinLength?: number;
   onAcceptTitle: (title: string) => void;
   onAcceptDescription: (description: string) => void;
+  /** Restored AI outputs from create-listing draft (survives refresh). */
+  initialPreviews?: ListingAiPreviewMap;
+  /** Persist AI outputs so spent credits keep their text after refresh. */
+  onPreviewsChange?: (previews: ListingAiPreviewMap) => void;
   /** When true, omit outer card/quota chrome (Marketing hub provides it). */
   embedded?: boolean;
 }
@@ -77,6 +82,33 @@ function taskButtonLabel(task: AiMarketingTask, busy: boolean): string {
   return `${name} · ${formatAiMarketingTaskCostLabel(task)}`;
 }
 
+function pickRestoredPreview(
+  previews: ListingAiPreviewMap | undefined,
+  taskGroup: "listing" | "social" | "all",
+  hidden: Set<AiMarketingTask>,
+): { task: AiMarketingTask; text: string } | null {
+  if (!previews) return null;
+  const preferred =
+    taskGroup === "listing"
+      ? (["seo_title", "description"] as const)
+      : taskGroup === "social"
+        ? ([...SOCIAL_TASKS, ...OUTREACH_TASKS] as const)
+        : ([
+            "seo_title",
+            "description",
+            ...SOCIAL_TASKS,
+            ...OUTREACH_TASKS,
+          ] as const);
+  for (const task of preferred) {
+    if (hidden.has(task)) continue;
+    const text = previews[task];
+    if (typeof text === "string" && text.trim()) {
+      return { task, text };
+    }
+  }
+  return null;
+}
+
 export function ListingAiPanel({
   listingId,
   title,
@@ -86,11 +118,13 @@ export function ListingAiPanel({
   location,
   price,
   hiddenTasks = [],
-  descriptionAcceptLabel = "Accept",
+  descriptionAcceptLabel = "Applied",
   taskGroup = "all",
   requireTitleMinLength,
   onAcceptTitle,
   onAcceptDescription,
+  initialPreviews,
+  onPreviewsChange,
   embedded = false,
 }: ListingAiPanelProps) {
   const hub = useMarketingHubOptional();
@@ -101,12 +135,32 @@ export function ListingAiPanel({
   const [busyTask, setBusyTask] = useState<AiMarketingTask | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copyNotice, setCopyNotice] = useState<string | null>(null);
+  const [previewsByTask, setPreviewsByTask] = useState<ListingAiPreviewMap>(
+    () => initialPreviews ?? {},
+  );
+  const hidden = useMemo(() => new Set(hiddenTasks), [hiddenTasks]);
   const [preview, setPreview] = useState<{
     task: AiMarketingTask;
     text: string;
-  } | null>(null);
+  } | null>(() => pickRestoredPreview(initialPreviews, taskGroup, new Set(hiddenTasks)));
 
-  const hidden = new Set(hiddenTasks);
+  // Parent may hydrate draft previews after first paint — merge without wiping newer local keys.
+  const initialPreviewsKey = JSON.stringify(initialPreviews ?? {});
+  useEffect(() => {
+    if (!initialPreviews || Object.keys(initialPreviews).length === 0) return;
+    setPreviewsByTask((prev) => ({ ...initialPreviews, ...prev }));
+    setPreview((current) => {
+      if (current) return current;
+      return pickRestoredPreview(
+        initialPreviews,
+        taskGroup,
+        new Set(hiddenTasks),
+      );
+    });
+    // Content key avoids re-running when parent passes a new object with the same map.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
+  }, [initialPreviewsKey, taskGroup]);
+
   const quota = embedded ? hub?.quota ?? null : localQuota;
   const titleReady =
     requireTitleMinLength == null ||
@@ -132,6 +186,11 @@ export function ListingAiPanel({
     void refreshQuota();
   }, [embedded, refreshQuota]);
 
+  function commitPreviews(next: ListingAiPreviewMap) {
+    setPreviewsByTask(next);
+    onPreviewsChange?.(next);
+  }
+
   if (!embedded && quota && (!quota.published || !quota.deployEnabled)) {
     return null;
   }
@@ -152,7 +211,21 @@ export function ListingAiPanel({
         location: location || undefined,
         price: price || undefined,
       });
+      const nextPreviews = {
+        ...(initialPreviews ?? {}),
+        ...previewsByTask,
+        [result.task]: result.text,
+      };
+      commitPreviews(nextPreviews);
       setPreview({ task: result.task, text: result.text });
+      // Apply listing fields immediately so create-draft persistence keeps paid text.
+      if (result.task === "seo_title") {
+        onAcceptTitle(result.text);
+        setCopyNotice("SEO title applied above — edit anytime. Saved in this browser draft.");
+      } else if (result.task === "description") {
+        onAcceptDescription(result.text);
+        setCopyNotice("Description applied above — edit anytime. Saved in this browser draft.");
+      }
       if (embedded) {
         hub?.patchQuota({
           freeUnitsRemaining: result.freeUnitsRemaining,
@@ -189,7 +262,6 @@ export function ListingAiPanel({
     if (!preview) return;
     if (preview.task === "seo_title") onAcceptTitle(preview.text);
     else if (preview.task === "description") onAcceptDescription(preview.text);
-    setPreview(null);
   }
 
   async function copyPreview() {
@@ -283,8 +355,10 @@ export function ListingAiPanel({
             {isListingApplyTask ? (
               <Button type="button" size="sm" onClick={acceptPreview}>
                 {preview.task === "description"
-                  ? descriptionAcceptLabel
-                  : "Accept"}
+                  ? descriptionAcceptLabel === "Accept"
+                    ? "Re-apply to field"
+                    : descriptionAcceptLabel
+                  : "Re-apply to field"}
               </Button>
             ) : (
               <Button type="button" size="sm" onClick={() => void copyPreview()}>

@@ -23,9 +23,10 @@ SellNearby is **not an escrow service**. Favouring the buyer **does** refund a s
 Owner: whoever is on support that day (founder is fine for pilot).
 
 1. **Disputes** — `/admin/disputes` or `/super-admin/disputes` → **Open**.
-2. **Refunds** — `/admin/payments` or `/super-admin/payments` → **Pending refunds**.
-3. **Sale close mix** — admin dashboard, 7-day card vs sold-without-card (leakage, not a dispute queue).
-4. Reply on `/contact` / `support@sellnearby.ie` the same day if someone mailed instead of using the product.
+2. **Refunds** — `/admin/payments` or `/super-admin/payments` → **Pending refunds** (listing card GMV).
+3. **SKU refunds** — Monetization → **SKU purchases** for boost/pack/slot mistakes (not the GMV queue).
+4. **Sale close mix** — admin dashboard, 7-day card vs sold-without-card (leakage, not a dispute queue).
+5. Reply on `/contact` / `support@sellnearby.ie` the same day if someone mailed instead of using the product.
 
 Clock for the 48-hour SLA: **dispute `createdAt`**, not the first time you noticed the email.
 
@@ -69,7 +70,18 @@ Buyer used **Request refund** on a succeeded payment. Row lands on **Pending ref
 
 Approve runs **Stripe refund** (and reverses the Connect transfer when Stripe metadata has `transfer_id`). Local/dev payments with `pi_test_` skip Stripe.
 
-Do not approve refunds for **boosts / featured / other platform SKUs** from this queue — those are platform purchases, not listing GMV. Handle SKU mistakes as a support exception, not this playbook.
+---
+
+## Platform SKU purchases (boosts, packs, slots, AI credits)
+
+These are **not** listing GMV. Do **not** use Payments → Pending refunds.
+
+1. Open **Monetization → SKU purchases** (`/admin` or `/super-admin` monetization).
+2. Filter **succeeded**, find the purchase, click **Refund**, enter a short reason.
+3. The API: Stripe-refunds any card amount on the purchase intent, restores wallet credits used to pay, ends boost/featured/store-featured windows, claws back unused AI/growth-pack credit where balance allows, and reduces unused store-slot headroom (never below stores already created).
+4. One-shot perks (fast-track, priority message, early cashback unlock, buyer statement PDF) are **not** unwound beyond money/credits — note that in the reason if needed.
+
+Cash / meetup still out of scope.
 
 ---
 

@@ -631,6 +631,46 @@ export const monetizationService = {
       `${adminApiPath(role, '/monetization/wallet-transactions')}?${query.toString()}`,
     );
     return normalizePaginated(response, { page: params.page ?? 1, limit: params.limit ?? 20 });
+  }
+
+  async listPlatformPurchases(
+    role: AdminApiRole,
+    params: {
+      page?: number;
+      limit?: number;
+      status?: string;
+      type?: PlatformPurchase['type'];
+      userId?: string;
+    } = {},
+  ): Promise<PaginatedResult<PlatformPurchase>> {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.status) query.set('status', params.status);
+    if (params.type) query.set('type', params.type);
+    if (params.userId) query.set('userId', params.userId);
+    const response = await apiClient<PlatformPurchase[]>(
+      `${adminApiPath(role, '/monetization/platform-purchases')}?${query.toString()}`,
+    );
+    return normalizePaginated(response, {
+      page: params.page ?? 1,
+      limit: params.limit ?? 20,
+    });
+  }
+
+  async refundPlatformPurchase(
+    role: AdminApiRole,
+    purchaseId: string,
+    reason: string,
+  ): Promise<PlatformPurchase> {
+    const response = await apiClient<PlatformPurchase>(
+      adminApiPath(role, `/monetization/platform-purchases/${purchaseId}/refund`),
+      {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+      },
+    );
+    return response.data!;
   },
 
   async getMarketingHubAnalytics(

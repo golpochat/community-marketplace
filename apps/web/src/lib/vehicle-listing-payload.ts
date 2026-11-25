@@ -9,6 +9,7 @@ import { stripEmptyVehicleAttributes } from '@community-marketplace/validation';
 import { buildVehicleDisplayTitle } from '@community-marketplace/utils';
 
 import type { VehicleFormData } from '@/components/seller/vehicle-listing-form';
+import { resolveIrelandListingGeo } from '@/lib/ireland-locations';
 import {
   VEHICLE_CONDITION_OPTIONS,
   buildVehicleListingTitle,
@@ -152,11 +153,17 @@ export function buildVehicleListingCreatePayload(
     currency: 'EUR' as const,
     categoryId,
     condition: resolveListingCondition(data),
-    location: {
-      label: data.location.trim() || 'Ireland',
-      latitude: 53.3498,
-      longitude: -6.2603,
-    },
+    location: (() => {
+      const geo = resolveIrelandListingGeo(data.location);
+      if (!geo) {
+        throw new Error('Select a county and town/area for the listing location.');
+      }
+      return {
+        label: geo.label,
+        latitude: geo.latitude,
+        longitude: geo.longitude,
+      };
+    })(),
     deliverySelections: deliverySelections.map((s) => ({
       deliveryOptionId: s.deliveryOptionId,
       customLabel: s.customLabel,

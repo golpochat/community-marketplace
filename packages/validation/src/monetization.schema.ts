@@ -348,6 +348,11 @@ export const platformPurchasesAdminFiltersSchema = paginationSchema.extend({
   userId: uuidSchema.optional(),
 });
 
+/** Admin-initiated refund of a succeeded platform SKU purchase. */
+export const refundPlatformPurchaseSchema = z.object({
+  reason: z.string().trim().min(3).max(500),
+});
+
 const MAX_MARKETING_HUB_ANALYTICS_RANGE_DAYS = 366;
 
 export const marketingHubAnalyticsQuerySchema = z
@@ -433,6 +438,9 @@ export type AdminFinanceActivityStatementQueryInput = z.infer<
 >;
 export type PlatformPurchasesAdminFiltersInput = z.infer<
   typeof platformPurchasesAdminFiltersSchema
+>;
+export type RefundPlatformPurchaseInput = z.infer<
+  typeof refundPlatformPurchaseSchema
 >;
 export type MarketingHubAnalyticsQueryInput = z.infer<
   typeof marketingHubAnalyticsQuerySchema

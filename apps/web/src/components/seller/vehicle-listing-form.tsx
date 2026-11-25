@@ -38,10 +38,18 @@ import {
   SelectedFilePreviews,
 } from "@/components/seller/listing-image-previews";
 import {
+  defaultListingLocationFromStore,
+  IrelandCountyPlaceFields,
+  isCompleteIrelandListingLocation,
+} from "@/components/seller/ireland-location-fields";
+import {
   clearVehicleListingDraft,
   loadVehicleListingDraft,
+  sanitizeAiPreviews,
   saveVehicleListingDraft,
+  type ListingAiPreviewMap,
 } from "@/lib/listing-form-draft";
+import { parseIrelandLocationLabel } from "@/lib/ireland-locations";
 import { deliveryService } from "@/services/delivery.service";
 import {
   pricingInputFromForm,
@@ -167,6 +175,8 @@ const INITIAL: VehicleFormData = {
 interface VehicleListingFormProps {
   categoryId: string;
   initialData?: Partial<VehicleFormData>;
+  /** Storefront county/area — seeds listing location on create. */
+  defaultStoreLocation?: string;
   initialDeliverySelections?: ListingDeliverySelection[];
   existingImages?: ListingImage[];
   listingId?: string;
@@ -202,6 +212,7 @@ function FieldError({ message }: { message?: string }) {
 export function VehicleListingForm({
   categoryId,
   initialData,
+  defaultStoreLocation,
   initialDeliverySelections = [],
   existingImages = [],
   listingId,
@@ -231,6 +242,7 @@ export function VehicleListingForm({
   const isCreateFlow = !listingId && !initialData;
   const draftHydratedRef = useRef(false);
   const suppressDraftPersistRef = useRef(false);
+  const locationTouchedRef = useRef(Boolean(initialData?.location?.trim()));
   const [step, setStep] = useState(() => {
     if (typeof initialStep === 'number' && initialStep >= 0 && initialStep < STEPS.length) {
       return initialStep;
@@ -238,6 +250,7 @@ export function VehicleListingForm({
     return 0;
   });
   const [highestCompletedStep, setHighestCompletedStep] = useState(-1);
+  const [aiPreviews, setAiPreviews] = useState<ListingAiPreviewMap>({});
   const [data, setData] = useState<VehicleFormData>({
     ...INITIAL,
     ...initialData,
@@ -325,7 +338,37 @@ export function VehicleListingForm({
       categoryId: draft.data.categoryId || categoryId,
       images: prev.images,
     }));
+    const restoredAi = sanitizeAiPreviews(draft.aiPreviews);
+    if (restoredAi) setAiPreviews(restoredAi);
+    if (draft.data.location?.trim()) {
+      locationTouchedRef.current = true;
+    }
   }, [isCreateFlow, categoryId]);
+
+  useEffect(() => {
+    if (!isCreateFlow || !defaultStoreLocation) return;
+    const seeded = defaultListingLocationFromStore(defaultStoreLocation);
+    if (!seeded) return;
+
+    setData((prev) => {
+      const currentComplete = isCompleteIrelandListingLocation(prev.location);
+      const currentCounty = parseIrelandLocationLabel(prev.location)?.county.name;
+      if (locationTouchedRef.current && currentComplete) {
+        if (currentCounty === seeded.countyName) return prev;
+      }
+      if (
+        locationTouchedRef.current &&
+        currentCounty === seeded.countyName &&
+        !currentComplete
+      ) {
+        return prev;
+      }
+      if (!prev.location.trim() || currentCounty !== seeded.countyName) {
+        return { ...prev, location: seeded.label };
+      }
+      return prev;
+    });
+  }, [isCreateFlow, defaultStoreLocation]);
 
   useEffect(() => {
     if (!isCreateFlow || !draftHydratedRef.current || suppressDraftPersistRef.current) {
@@ -338,10 +381,11 @@ export function VehicleListingForm({
         step,
         highestCompletedStep,
         data: persistable,
+        aiPreviews,
       });
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [isCreateFlow, step, highestCompletedStep, data]);
+  }, [isCreateFlow, step, highestCompletedStep, data, aiPreviews]);
 
   useEffect(() => {
     deliverySeededRef.current = false;
@@ -417,7 +461,9 @@ export function VehicleListingForm({
         else if (sale >= original)
           errors.originalPrice = "Discount price must be lower than original";
       }
-      if (!data.location.trim()) errors.location = "Enter a location";
+      if (!isCompleteIrelandListingLocation(data.location)) {
+        errors.location = "Select a county and town/area";
+      }
     }
     return errors;
   }
@@ -428,7 +474,9 @@ export function VehicleListingForm({
       setFieldErrors(errors);
       return "Complete all required fields before publishing.";
     }
-    if (!data.location.trim()) return "Enter a location.";
+    if (!isCompleteIrelandListingLocation(data.location)) {
+      return "Select a county and town/area.";
+    }
     return null;
   }
 
@@ -523,6 +571,7 @@ export function VehicleListingForm({
       if (isCreateFlow) {
         suppressDraftPersistRef.current = true;
         clearVehicleListingDraft();
+        setAiPreviews({});
       }
       onSubmit?.(data);
     } catch (err) {
@@ -964,6 +1013,8 @@ export function VehicleListingForm({
                 descriptionAssistTitle="Improve seller notes"
                 onAcceptTitle={() => undefined}
                 onAcceptDescription={(next) => update({ sellerNotes: next })}
+                aiPreviews={aiPreviews}
+                onAiPreviewsChange={setAiPreviews}
               />
             </MarketingHubRoot>
           </div>
@@ -1047,13 +1098,14 @@ export function VehicleListingForm({
             </p>
           </div>
           <div>
-            <Label htmlFor="location">Location *</Label>
-            <Input
-              id="location"
+            <IrelandCountyPlaceFields
               value={data.location}
-              onChange={(e) => update({ location: e.target.value })}
-              placeholder="e.g. Dublin 8"
               disabled={disabled}
+              required
+              onChange={(next) => {
+                locationTouchedRef.current = true;
+                update({ location: next.label });
+              }}
             />
             <FieldError message={fieldErrors.location} />
           </div>

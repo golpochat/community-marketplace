@@ -1296,11 +1296,15 @@ export class PlatformPurchaseService {
         orderBy: { createdAt: 'desc' },
         skip: (filters.page - 1) * filters.limit,
         take: filters.limit,
+        include: { user: { select: { email: true } } },
       }),
       this.prisma.platformPurchase.count({ where }),
     ]);
     return {
-      data: rows.map(mapPlatformPurchase),
+      data: rows.map((row) => ({
+        ...mapPlatformPurchase(row),
+        userEmail: row.user.email ?? undefined,
+      })),
       meta: {
         page: filters.page,
         limit: filters.limit,
