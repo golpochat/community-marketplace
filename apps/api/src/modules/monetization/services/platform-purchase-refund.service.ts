@@ -124,13 +124,16 @@ export class PlatformPurchaseRefundService {
       throw new BadRequestException('Payment intent was canceled; cannot refund');
     }
 
-    const alreadyRefunded =
-      intent.amount_received > 0 &&
-      intent.amount_received === (intent.amount_refunded ?? 0);
-    if (alreadyRefunded || intent.status === 'requires_payment_method') {
-      return intent.latest_charge
-        ? `already_refunded_${String(intent.latest_charge)}`
-        : `already_refunded_${purchase.id}`;
+    // PaymentIntent has no amount_refunded — check existing refunds instead.
+    const existingRefunds = await stripe!.refunds.list({
+      payment_intent: providerPaymentId,
+      limit: 10,
+    });
+    const prior = existingRefunds.data.find(
+      (row) => row.status === 'succeeded' || row.status === 'pending',
+    );
+    if (prior) {
+      return prior.id;
     }
 
     const stripeRefund = await stripe!.refunds.create({
